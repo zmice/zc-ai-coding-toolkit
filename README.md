@@ -25,7 +25,7 @@ cd ai-coding
 
 ```bash
 # 一键安装
-qwen extensions install <your-repo-url>
+qwen extensions install https://codeup.aliyun.com/6892c510e5ba87aaf500637d/basic/ai-coding.git
 
 # 更新
 qwen extensions update ai-coding-toolkit

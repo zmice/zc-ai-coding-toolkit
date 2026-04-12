@@ -4,7 +4,7 @@
 #
 # Qoder-first: installs all skills as proper Qoder skill directories.
 # Also supports Cursor rules installation.
-# For Qwen Code, use the extension approach: qwen extensions install <github-url>
+# For Qwen Code, use the extension approach: qwen extensions install https://codeup.aliyun.com/6892c510e5ba87aaf500637d/basic/ai-coding.git
 #
 # Usage:
 #   ./install.sh --global                    Install globally (all projects)
@@ -250,7 +250,7 @@ Options:
   --update       Pull upstream agent-skills-repo updates before installing
 
 Note: For Qwen Code, use the extension approach:
-  qwen extensions install <github-url>
+  qwen extensions install https://codeup.aliyun.com/6892c510e5ba87aaf500637d/basic/ai-coding.git
 
 EOF
         exit 0

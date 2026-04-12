@@ -5,7 +5,7 @@
 .DESCRIPTION
     Installs all agent skills to Qoder (.qoder/skills/) and Cursor (.cursor/rules/).
     Qoder is the primary target: each skill is installed as a proper Qoder skill directory.
-    For Qwen Code, use the extension approach: qwen extensions install <github-url>
+    For Qwen Code, use the extension approach: qwen extensions install https://codeup.aliyun.com/6892c510e5ba87aaf500637d/basic/ai-coding.git
 
 .PARAMETER Global
     Install skills globally (~/.qoder/skills/ and ~/.cursor/rules/).
@@ -239,7 +239,7 @@ Options:
   -Update     Pull upstream agent-skills-repo updates before installing
 
 Note: For Qwen Code, use the extension approach:
-  qwen extensions install <github-url>
+  qwen extensions install https://codeup.aliyun.com/6892c510e5ba87aaf500637d/basic/ai-coding.git
 
 "@
     exit 0
