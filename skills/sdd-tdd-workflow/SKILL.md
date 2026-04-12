@@ -1,6 +1,6 @@
 ---
 name: sdd-tdd-workflow
-description: Orchestrates the full SDD+TDD development lifecycle. Use when starting any new feature, project, or significant change. Enforces spec-first, test-first discipline through four gated phases - Specify, Plan, Build (TDD), Review. Also provides /debug for systematic troubleshooting and /context for long-session quality management. Triggers on /spec, /plan, /build, /review, /debug, /context, or /sdd-tdd for the full workflow.
+description: Orchestrates the full SDD+TDD development lifecycle. Use when starting any new feature, project, or significant change. Enforces spec-first, test-first discipline through four gated phases - Specify, Plan, Build (TDD), Review. Also provides on-demand skills for debugging, context management, simplification, performance, security, API design, documentation, shipping, migration, frontend, and idea refinement. Triggers on /spec, /task-plan, /build, /quality-review, /debug, /ctx-health, /simplify, /perf, /secure, /api, /doc, /ship, /migrate, /ui, /idea, or /sdd-tdd for the full workflow.
 ---
 
 # SDD + TDD Development Workflow
@@ -10,7 +10,7 @@ description: Orchestrates the full SDD+TDD development lifecycle. Use when start
 This skill orchestrates the complete Spec-Driven Development + Test-Driven Development lifecycle. Every non-trivial development task flows through four gated phases. No phase advances until the previous one is validated.
 
 ```
-/spec ──→ /plan ──→ /build ──→ /review
+/spec ──→ /task-plan ──→ /build ──→ /quality-review
   │          │         │          │
   ▼          ▼         ▼          ▼
 Specify    Plan     Build+TDD   Review
@@ -18,7 +18,7 @@ Specify    Plan     Build+TDD   Review
                     →Refactor)   quality)
 
 On-demand:  /debug (systematic troubleshooting)
-            /context (long-session quality management)
+            /ctx-health (long-session quality management)
 ```
 
 ## Commands
@@ -27,11 +27,20 @@ On-demand:  /debug (systematic troubleshooting)
 |---------|-------|-------------|
 | `/sdd-tdd` | Full workflow | Run all 4 phases sequentially with gates |
 | `/spec` | Phase 1 | Write specification before any code |
-| `/plan` | Phase 2 | Break spec into verifiable tasks |
+| `/task-plan` | Phase 2 | Break spec into verifiable tasks |
 | `/build` | Phase 3 | Implement with strict TDD (Red-Green-Refactor) |
-| `/review` | Phase 4 | Five-axis code review before merge |
+| `/quality-review` | Phase 4 | Five-axis code review before merge |
 | `/debug` | On-demand | Systematic root-cause debugging (Stop-the-Line) |
-| `/context` | On-demand | Context management for long sessions |
+| `/ctx-health` | On-demand | Context management for long sessions |
+| `/simplify` | On-demand | Code simplification — reduce complexity, preserve behavior |
+| `/perf` | On-demand | Performance optimization — measure first, then optimize |
+| `/secure` | On-demand | Security hardening — OWASP Top 10, input validation |
+| `/api` | On-demand | API & interface design — contract first, consistent errors |
+| `/doc` | On-demand | Documentation & ADRs — record decisions, not just code |
+| `/ship` | On-demand | Shipping & launch — pre-launch checklist, staged rollout |
+| `/migrate` | On-demand | Deprecation & migration — strangler pattern, safe removal |
+| `/ui` | On-demand | Frontend UI engineering — component patterns, accessibility |
+| `/idea` | On-demand | Idea refinement — refine vague ideas into actionable specs |
 
 ## Phase 1: Specify (`/spec`)
 
@@ -52,7 +61,7 @@ ASSUMPTIONS I'M MAKING:
 
 **Output:** A spec document saved to the repository.
 
-## Phase 2: Plan (`/plan`)
+## Phase 2: Plan (`/task-plan`)
 
 Follow the `planning-and-task-breakdown` skill. Key actions:
 
@@ -94,11 +103,11 @@ test     code       still pass
 Bug reported → Write reproduction test (FAILS) → Fix code → Test PASSES → Run full suite
 ```
 
-**Quality checkpoint:** Every 3-5 tasks, trigger a mini `/review` to catch drift early.
+**Quality checkpoint:** Every 3-5 tasks, trigger a mini `/quality-review` to catch drift early.
 
 **Gate:** All tests pass, build succeeds, each slice committed.
 
-## Phase 4: Review (`/review`)
+## Phase 4: Review (`/quality-review`)
 
 Follow the `code-review-and-quality` skill. Five-axis review:
 
@@ -125,7 +134,7 @@ Follow the `debugging-and-error-recovery` skill. Use when anything unexpected ha
 
 **Key principle:** Fix the root cause, not the symptom. Never skip a failing test to work on new features.
 
-## On-Demand: Context Management (`/context`)
+## On-Demand: Context Management (`/ctx-health`)
 
 Follow the `context-engineering` skill. Use to maintain output quality in long sessions.
 
@@ -196,11 +205,11 @@ When triggered, execute all 4 phases with explicit gates:
 
 ```
 1. /spec    → Write and validate spec         → [Human approves]
-2. /plan    → Break into tasks                → [Human approves]
+2. /task-plan → Break into tasks                → [Human approves]
 3. /build   → Implement each task with TDD    → [Tests pass per slice]
    ├── After every 3-5 tasks: Quality Checkpoint
    └── On any failure: /debug (Stop-the-Line)
-4. /review  → Five-axis review                → [All issues resolved]
+4. /quality-review → Five-axis review                → [All issues resolved]
 ```
 
 At each gate, **STOP and wait for human confirmation** before proceeding.
@@ -211,7 +220,7 @@ At each gate, **STOP and wait for human confirmation** before proceeding.
 - **Pure config changes:** No behavioral impact, no TDD needed
 - **Documentation-only updates:** No spec needed
 
-For these cases, use individual commands (`/build` for small fixes, `/review` for any change).
+For these cases, use individual commands (`/build` for small fixes, `/quality-review` for any change).
 
 ## Core Behaviors (Always Active)
 
@@ -222,6 +231,22 @@ For these cases, use individual commands (`/build` for small fixes, `/review` fo
 5. **Verify, don't assume** — Every phase has a verification step; "seems right" is never done
 6. **Scope discipline** — Touch only what the task requires; note but don't fix unrelated issues
 7. **Context awareness** — Reload relevant context when switching tasks; summarize progress at boundaries
+
+## On-Demand Skills (Extended Toolkit)
+
+| Command | Skill | When to Use |
+|---------|-------|------------|
+| `/simplify` | code-simplification | Code works but is harder to read/maintain than it should be. Refactoring for clarity. |
+| `/perf` | performance-optimization | Performance requirements exist, users report slowness, or Core Web Vitals need improvement. |
+| `/secure` | security-and-hardening | Handling user input, auth, data storage, or external integrations. |
+| `/api` | api-and-interface-design | Designing new APIs, module boundaries, or component interfaces. |
+| `/doc` | documentation-and-adrs | Making architectural decisions, changing public APIs, or recording context for the future. |
+| `/ship` | shipping-and-launch | Preparing to deploy — pre-launch checklist, feature flags, rollback strategy. |
+| `/migrate` | deprecation-and-migration | Replacing old systems, sunsetting features, or removing dead code. |
+| `/ui` | frontend-ui-engineering | Building UI components, handling accessibility, responsive design. |
+| `/idea` | idea-refine | Turning vague ideas into concrete, actionable specifications. |
+
+These are invoked on-demand and do not require the full SDD-TDD gate flow.
 
 ## Red Flags
 
@@ -234,3 +259,6 @@ For these cases, use individual commands (`/build` for small fixes, `/review` fo
 - Agent output quality declining without context reload
 - Pushing past failures instead of stopping to debug
 - No structured summary between tasks in long sessions
+- Optimizing without measurement data
+- Security added as an afterthought
+- API design without contract-first approach
