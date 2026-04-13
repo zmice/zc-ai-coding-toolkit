@@ -2,13 +2,23 @@
 
 > 基于 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 构建的 **SDD+TDD 全流程 AI 编码工具包**，支持 Qoder、Qwen Code 和 Cursor。
 
+## 核心特性
+
+**三层架构，覆盖 AI 编码全流程：**
+
+- **29 Skills（技能）** — 深度工作流引擎：SDD 规格驱动、TDD 测试驱动、Debug 系统化调试、安全加固……每个 Skill 内置门控、阶段和检查点，模型自主触发
+- **24 Commands（指令）** — 快捷启动器：`/sdd-tdd` `/spec` `/build` `/debug` `/quality-review` 等，一条斜杠命令驱动完整流程
+- **8 Agents（智能体）** — 专家团：架构师、代码审查官、安全审计、测试工程师……按需切换，各司其职
+
+核心工作流：**需求 → `/spec` 规格 → `/task-plan` 拆解 → `/build` TDD 实现 → `/quality-review` 审查**，每个阶段门控确认，杜绝跳步。
+
 ## 快速开始
 
 ### Qoder / Cursor（安装脚本）
 
 ```bash
 # 克隆仓库
-git clone <your-repo-url> ai-coding
+git clone https://codeup.aliyun.com/6892c510e5ba87aaf500637d/basic/ai-coding.git ai-coding
 cd ai-coding
 
 # 全局安装（Windows）
@@ -45,18 +55,18 @@ qwen extensions uninstall ai-coding-toolkit
 
 | 类型 | 数量 | 安装位置 |
 |------|------|--------|
-| Skills（技能） | 19 个 | `~/.qoder/skills/<name>/SKILL.md` |
-| Commands（指令） | 16 个 | `~/.qoder/commands/<name>.md` |
-| Agents（智能体） | 10 个 | `~/.qoder/agents/<name>.md` |
+| Skills（技能） | 29 个 | `~/.qoder/skills/<name>/SKILL.md` |
+| Commands（指令） | 24 个 | `~/.qoder/commands/<name>.md` |
+| Agents（智能体） | 8 个 | `~/.qoder/agents/<name>.md` |
 | Instructions（全局指令） | 1 个 | `~/.qoder/instructions.md` |
 
 ### Qwen Code（扩展）
 
 | 类型 | 数量 | 安装位置 |
 |------|------|--------|
-| Skills（技能） | 19 个 | `~/.qwen/extensions/ai-coding-toolkit/skills/` |
-| Commands（指令） | 16 个 | `~/.qwen/extensions/ai-coding-toolkit/commands/` |
-| Agents（智能体） | 10 个 | `~/.qwen/extensions/ai-coding-toolkit/agents/` |
+| Skills（技能） | 29 个 | `~/.qwen/extensions/ai-coding-toolkit/skills/` |
+| Commands（指令） | 24 个 | `~/.qwen/extensions/ai-coding-toolkit/commands/` |
+| Agents（智能体） | 8 个 | `~/.qwen/extensions/ai-coding-toolkit/agents/` |
 | Context（上下文） | 1 个 | `QWEN.md`（自动加载到每个会话） |
 
 ### Skills vs Commands vs Agents
@@ -69,6 +79,31 @@ qwen extensions uninstall ai-coding-toolkit
 | 存储格式 | `SKILL.md`（目录结构） | `<name>.md`（单文件） | `<name>.md`（单文件） |
 
 > **简单记忆**：**Skill** 是「深度教练」，**Command** 是「快捷启动器」，**Agent** 是「专家团成员」。
+
+## 更新方式
+
+### Qoder / Cursor
+
+```bash
+# 1. 拉取最新源码
+cd ai-coding
+git pull
+
+# 2. 重新安装（覆盖更新）
+./install.ps1 -Global -Force          # Windows
+./install.sh --global --force          # Linux/Mac
+```
+
+### Qwen Code
+
+```bash
+qwen extensions update ai-coding-toolkit
+```
+
+### 更新说明
+
+- **覆盖安装**：安装脚本只覆盖工具包自身的 Skills、Commands、Agents 和 `instructions.md`，不会影响 `~/.qoder/` 或 `~/.cursor/` 下其他自定义文件
+- **版本规模**：当前体系包含 **29 Skills + 24 Commands + 8 Agents**，持续迭代中
 
 ---
 
@@ -195,20 +230,18 @@ Ask 模式: 直接回答，不操作文件
 
 ### 二、专家团模式（自定义智能体）
 
-本工具包内置 3 个专家智能体，在 Qoder 设置中可切换：
+本工具包内置多个专家智能体，在 Qoder 设置中可切换：
 
 | 智能体 | 角色 | 何时切换 |
 |--------|------|---------|
-| **code-reviewer** | 资深代码审查专家 | 代码写完后做审查，或调用 `/quality-review` |
-| **test-engineer** | QA 测试工程师 | 需要写测试、评估覆盖率、设计测试策略 |
+| **product-owner** | 产品负责人 | 产品战略、需求拆解、用户故事、验收标准 |
+| **architect** | 架构师 | 系统设计、技术选型、数据库架构、模块边界 |
+| **code-reviewer** | 代码审查官 | 代码审查、重构建议、开发者体验评审 |
 | **security-auditor** | 安全审计专家 | 处理认证/授权、用户输入、敏感数据时 |
-| **architect** | 软件架构师 | 系统设计、技术选型、模块边界、架构权衡 |
-| **performance-engineer** | 性能工程师 | 性能剖析、瓶颈定位、benchmark 验证 |
-| **refactoring-expert** | 重构专家 | 代码简化、坏味道识别、技术债务清理 |
-| **database-architect** | 数据库架构师 | Schema 设计、查询优化、索引策略、迁移 |
+| **test-engineer** | 测试工程师 | 需要写测试、评估覆盖率、设计测试策略 |
+| **backend-specialist** | 后端专家 | 后端架构、API 实现、数据处理、服务端逻辑 |
 | **frontend-specialist** | 前端专家 | 组件设计、响应式布局、无障碍、前端性能 |
-| **product-manager** | 产品经理 | 产品战略、功能优先级、用户研究、MVP 定义 |
-| **requirements-engineer** | 需求工程师 | 需求拆解、用户故事、验收标准定义 |
+| **performance-engineer** | 性能工程师 | 性能剖析、瓶颈定位、benchmark 验证 |
 
 **使用方式：**
 
@@ -460,7 +493,7 @@ Agent [idea-refine]:
 
 ---
 
-### 六、16 个命令速查
+### 六、24 个命令速查
 
 | 命令 | 用途 | 典型场景 |
 |------|------|---------|
@@ -480,6 +513,12 @@ Agent [idea-refine]:
 | `/migrate` | 迁移废弃 | 替换旧系统 |
 | `/ui` | 前端工程 | 组件、布局、交互 |
 | `/idea` | 想法细化 | 模糊创意→具体方案 |
+| `/retro` | Sprint 回顾 | 开发周期结束后回顾 |
+| `/careful` | 危险命令预警 | 操作生产环境/关键资源 |
+| `/freeze` | 文件/目录锁定 | 锁定关键文件防误改 |
+| `/guard` | 全面防护模式 | careful + freeze 组合 |
+| `/qa` | 浏览器 QA 测试 | 前端真实浏览器验证 |
+| `/plan-review` | 多视角评审 | 产品/工程/设计/DevEx |
 
 ---
 
@@ -500,8 +539,8 @@ Agent [idea-refine]:
 
 ```
 ai-coding/
-├── skills/                           # 19 个 Skill（Qoder 原生格式）
-│   ├── sdd-tdd-workflow/SKILL.md     # 整合入口（16 个命令）
+├── skills/                           # 29 个 Skill（Qoder 原生格式）
+│   ├── sdd-tdd-workflow/SKILL.md     # 整合入口（24 个命令）
 │   ├── spec-driven-development/      # /spec
 │   ├── planning-and-task-breakdown/  # /task-plan
 │   ├── incremental-implementation/   # /build
@@ -518,17 +557,19 @@ ai-coding/
 │   ├── deprecation-and-migration/    # /migrate
 │   ├── frontend-ui-engineering/      # /ui
 │   ├── idea-refine/                  # /idea
+│   ├── sprint-retrospective/         # /retro
+│   ├── safety-guardrails/            # /careful /freeze /guard
+│   ├── browser-qa-testing/           # /qa
+│   ├── multi-perspective-review/     # /plan-review
 │   ├── git-workflow-and-versioning/  # Git 纪律
 │   └── using-agent-skills/           # 技能发现元规则
-├── agents/                           # 10 个自定义智能体
+├── agents/                           # 8 个自定义智能体
 │   ├── architect.md
+│   ├── backend-specialist.md
 │   ├── code-reviewer.md
-│   ├── database-architect.md
 │   ├── frontend-specialist.md
 │   ├── performance-engineer.md
-│   ├── product-manager.md
-│   ├── refactoring-expert.md
-│   ├── requirements-engineer.md
+│   ├── product-owner.md
 │   ├── security-auditor.md
 │   └── test-engineer.md
 ├── instructions.md                   # 全局指令（Qoder）
@@ -539,17 +580,13 @@ ai-coding/
 └── .gitignore
 ```
 
-## 更新
+## 致谢与参考
 
-```bash
-# Qoder/Cursor: 从上游拉取最新 Skill 并重新安装
-./install.ps1 -Global -Update -Force
+本工具包基于 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 构建，角色体系设计参考了以下标杆项目：
 
-# Qwen Code: 更新扩展
-qwen extensions update ai-coding-toolkit
-```
-
-## 致谢
-
-- [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) — 核心 Skill 来源
-- [Daz - How I Work with AI Coding Agents](https://daz.is/blog/how-i-work-with-ai-coding-agents/) — 三阶段审查、40% 法则等实践
+| 项目 | 核心启发 |
+|------|---------|
+| [obra/superpowers](https://github.com/obra/superpowers) | 两级审查模式（Deep/Quick Review）、"角色即技能"哲学 |
+| [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) | Agent 膨胀反面教训，印证"宁少勿多"精简原则 |
+| [garrytan/gstack](https://github.com/garrytan/gstack) | 战略过滤器、"角色嵌入命令"哲学 |
+| [Daz - How I Work with AI Coding Agents](https://daz.is/blog/how-i-work-with-ai-coding-agents/) | 三阶段审查、40% 法则等实践 |
