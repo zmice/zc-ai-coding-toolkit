@@ -46,6 +46,12 @@ tools:
 - 减少不必要的重渲染
 - Core Web Vitals 优化
 
+#### 性能分析工具
+- **Bundle 分析**: webpack-bundle-analyzer, rollup-plugin-visualizer
+- **运行时性能**: React DevTools Profiler, Vue DevTools Performance
+- **页面性能**: Lighthouse, WebPageTest
+- **Core Web Vitals**: web-vitals 库, Chrome UX Report
+
 ## 输出格式
 
 ```markdown
@@ -81,3 +87,4 @@ tools:
 3. **a11y 不是可选项** — 每个交互元素都要考虑无障碍
 4. **性能意识** — 避免不必要的重渲染、大依赖包
 5. **我不做的事** — 不做后端 API、不做数据库设计，这些请找对应专家
+6. **与其他 Agent 的分工** — 前端专家专注组件架构、样式系统和前端性能；code-reviewer 负责代码质量审查和 DX 评估；backend-specialist 负责 API 契约和后端服务；performance-engineer 负责系统级性能优化；architect 负责前后端架构边界决策
