@@ -1,31 +1,43 @@
 ---
 name: sdd-tdd-workflow
-description: Orchestrates the full SDD+TDD development lifecycle. Use when starting any new feature, project, or significant change. Enforces spec-first, test-first discipline through four gated phases - Specify, Plan, Build (TDD), Review. Also provides on-demand skills for debugging, context management, simplification, performance, security, API design, documentation, shipping, migration, frontend, and idea refinement. Triggers on /spec, /task-plan, /build, /quality-review, /debug, /ctx-health, /simplify, /perf, /secure, /api, /doc, /ship, /migrate, /ui, /idea, or /sdd-tdd for the full workflow.
+description: Orchestrates the full SDD+TDD development lifecycle. Use when starting any new feature, project, or significant change. Enforces spec-first, test-first discipline through five gated phases - Brainstorm (optional), Specify, Plan, Build (TDD with optional subagent-driven mode), Review. Also provides on-demand skills for debugging, context management, verification, onboarding, simplification, performance, security, API design, documentation, shipping, migration, frontend, and idea refinement. Triggers on /spec, /task-plan, /build, /quality-review, /verify, /onboard, /debug, /ctx-health, /simplify, /perf, /secure, /api, /doc, /ship, /migrate, /ui, /idea, or /sdd-tdd for the full workflow.
 ---
 
 # SDD + TDD Development Workflow
 
 ## Overview
 
-This skill orchestrates the complete Spec-Driven Development + Test-Driven Development lifecycle. Every non-trivial development task flows through four gated phases. No phase advances until the previous one is validated.
+This skill orchestrates the complete Spec-Driven Development + Test-Driven Development lifecycle. Every non-trivial development task flows through gated phases. No phase advances until the previous one is validated.
 
 ```
-/spec ──→ /task-plan ──→ /build ──→ /quality-review
-  │          │         │          │
-  ▼          ▼         ▼          ▼
-Specify    Plan     Build+TDD   Review
-(SDD)    (Tasks)   (Red→Green   (5-axis
-                    →Refactor)   quality)
+[/idea] ──→ [brainstorm] ──→ /spec ──→ /task-plan ──→ /build ──→ /quality-review ──→ /retro
+ (optional)   (optional)       │          │            │          │                    │
+                               ▼          ▼            ▼          ▼                    ▼
+                            Specify    Plan        Build+TDD   Review              Reflect
+                            (SDD)    (Tasks)      (Red→Green   (5-axis            (Retro
+                                                   →Refactor)   quality)            +Learn)
 
-On-demand:  /debug (systematic troubleshooting)
-            /ctx-health (long-session quality management)
+ Build modes:  Manual (default) or Subagent-Driven (for independent tasks)
+ On-demand:    /debug /ctx-health /verify /onboard /simplify /perf /secure
+               /api /doc /ship /migrate /ui /idea /careful /freeze /guard /qa /plan-review
+```
+
+完整 Sprint 生命周期（v2）:
+
+```
+/spec → /plan-review → /task-plan → /build → /quality-review → /retro
+  |         |              |           |            |              |
+  v         v              v           v            v              v
+Specify  Multi-View     Plan      Build+TDD     5-Axis        Retro
+(SDD)    Review       (Tasks)   (Red→Green    Review       (Reflect
+                                 →Refactor)                  +Learn)
 ```
 
 ## Commands
 
 | Command | Phase | What It Does |
 |---------|-------|-------------|
-| `/sdd-tdd` | Full workflow | Run all 4 phases sequentially with gates |
+| `/sdd-tdd` | Full workflow | Run all phases sequentially with gates |
 | `/spec` | Phase 1 | Write specification before any code |
 | `/task-plan` | Phase 2 | Break spec into verifiable tasks |
 | `/build` | Phase 3 | Implement with strict TDD (Red-Green-Refactor) |
@@ -41,6 +53,26 @@ On-demand:  /debug (systematic troubleshooting)
 | `/migrate` | On-demand | Deprecation & migration — strangler pattern, safe removal |
 | `/ui` | On-demand | Frontend UI engineering — component patterns, accessibility |
 | `/idea` | On-demand | Idea refinement — refine vague ideas into actionable specs |
+| `/verify` | On-demand | Verification before completion — evidence before assertions |
+| `/onboard` | On-demand | Codebase onboarding — systematically understand a new project |
+| `/retro` | Phase 5 | Sprint 回顾，统计产出和改进项 |
+| `/careful` | On-demand | 激活危险命令预警模式 |
+| `/freeze` | On-demand | 锁定指定目录/文件禁止编辑 |
+| `/guard` | On-demand | 同时激活 careful + freeze 全面防护 |
+| `/qa` | On-demand | 执行浏览器 QA 测试 |
+| `/plan-review` | Phase 1→2 | 多视角计划评审（产品/工程/设计/DevEx） |
+
+## Phase 0 (Optional): Brainstorm
+
+When requirements are vague or multiple approaches exist, use `brainstorming-and-design` skill before writing a formal spec:
+
+1. **Explore project context** — Check files, docs, recent commits
+2. **Ask clarifying questions** — One at a time, understand purpose/constraints
+3. **Propose 2-3 approaches** — With trade-offs and your recommendation
+4. **Present design** — In sections, get user approval
+5. **Gate:** User approves the design before proceeding to spec
+
+Skip this phase when requirements are already clear and specific.
 
 ## Phase 1: Specify (`/spec`)
 
@@ -90,6 +122,12 @@ failing  minimal    while tests
 test     code       still pass
 ```
 
+**Build modes:**
+
+- **Manual (default):** You implement each task directly, one at a time
+- **Subagent-Driven:** When tasks are mostly independent, use `subagent-driven-development` to dispatch fresh subagent per task with two-stage review (spec compliance → code quality)
+- **Parallel:** When tasks are independent AND >2, use `parallel-agent-dispatch` for concurrent execution
+
 **Build rules:**
 1. **Test first, always.** Write a failing test before any implementation code
 2. **One slice at a time.** Implement → Test → Verify → Commit → Next slice
@@ -97,6 +135,7 @@ test     code       still pass
 4. **Simplicity first.** Ask "What is the simplest thing that could work?"
 5. **Scope discipline.** Touch only what the task requires — no side quests
 6. **Git discipline.** Atomic commits per slice, descriptive messages (follow `git-workflow-and-versioning`)
+7. **Verify before claiming done.** Follow `verification-before-completion` — run the command, read the output, then claim (see `/verify`)
 
 **Bug fixes use the Prove-It Pattern:**
 ```
@@ -105,7 +144,9 @@ Bug reported → Write reproduction test (FAILS) → Fix code → Test PASSES �
 
 **Quality checkpoint:** Every 3-5 tasks, trigger a mini `/quality-review` to catch drift early.
 
-**Gate:** All tests pass, build succeeds, each slice committed.
+**Gate:** All tests pass, build succeeds, each slice committed. Run `/verify` to confirm with evidence.
+
+**Context budget check:** If the session is getting long, run `context-budget-audit` to assess context headroom before continuing.
 
 ## Phase 4: Review (`/quality-review`)
 
@@ -118,6 +159,19 @@ Follow the `code-review-and-quality` skill. Five-axis review:
 5. **Performance** — No N+1? No unbounded operations?
 
 **Gate:** All Critical/Important issues resolved before merge.
+
+## Phase 5: Reflect (`/retro`)
+
+Follow the `sprint-retrospective` skill. Key actions:
+
+1. **Collect data** — Git statistics, test coverage changes, LOC metrics
+2. **Review outcomes** — What went well, what didn't, key decisions
+3. **Check spec drift** — Compare final delivery against original spec
+4. **Assess process health** — TDD compliance, verification pass rate, review pass rate
+5. **Generate action items** — Concrete improvements with owners and deadlines
+6. **Capture learnings** — Document lessons for future reference
+
+**Gate:** Action items reviewed and assigned before starting next sprint.
 
 ## On-Demand: Debug (`/debug`)
 
@@ -201,15 +255,17 @@ QUALITY CHECKPOINT after Tasks [X-Y]:
 
 ## Full Workflow (`/sdd-tdd`)
 
-When triggered, execute all 4 phases with explicit gates:
+When triggered, execute all 5 phases with explicit gates:
 
 ```
-1. /spec    → Write and validate spec         → [Human approves]
-2. /task-plan → Break into tasks                → [Human approves]
-3. /build   → Implement each task with TDD    → [Tests pass per slice]
+1. /spec        → Write and validate spec              → [Human approves]
+2. /plan-review → Multi-perspective review (optional)   → [Human approves]
+3. /task-plan   → Break into tasks                      → [Human approves]
+4. /build       → Implement each task with TDD          → [Tests pass per slice]
    ├── After every 3-5 tasks: Quality Checkpoint
    └── On any failure: /debug (Stop-the-Line)
-4. /quality-review → Five-axis review                → [All issues resolved]
+5. /quality-review → Five-axis review                   → [All issues resolved]
+6. /retro       → Sprint retrospective                  → [Action items assigned]
 ```
 
 At each gate, **STOP and wait for human confirmation** before proceeding.
@@ -245,8 +301,25 @@ For these cases, use individual commands (`/build` for small fixes, `/quality-re
 | `/migrate` | deprecation-and-migration | Replacing old systems, sunsetting features, or removing dead code. |
 | `/ui` | frontend-ui-engineering | Building UI components, handling accessibility, responsive design. |
 | `/idea` | idea-refine | Turning vague ideas into concrete, actionable specifications. |
+| `/verify` | verification-before-completion | Before claiming work is done — evidence before assertions. |
+| `/onboard` | codebase-onboarding | Entering an unfamiliar codebase — systematic project understanding. |
+| `/careful` | safety-guardrails | 操作生产环境或关键基础设施，需要预防破坏性误操作 |
+| `/freeze` | safety-guardrails | 需要锁定关键文件/目录防止意外修改 |
+| `/guard` | safety-guardrails | 组合防护模式，同时激活预警和锁定 |
+| `/qa` | browser-qa-testing | 前端开发完成后，需要真实浏览器 QA 验证 |
+| `/plan-review` | multi-perspective-review | Spec/Plan 完成后，需要多视角评审发现盲点 |
+| `/retro` | sprint-retrospective | Sprint/开发周期结束后，回顾总结和持续改进 |
 
 These are invoked on-demand and do not require the full SDD-TDD gate flow.
+
+## Subagent Skills (Advanced)
+
+| Skill | When to Use |
+|-------|------------|
+| `subagent-driven-development` | Executing plans with independent tasks — fresh subagent per task with 2-stage review |
+| `parallel-agent-dispatch` | Multiple independent tasks that can run concurrently — fan-out/fan-in pattern |
+| `brainstorming-and-design` | Before spec phase when requirements are vague — collaborative design exploration |
+| `context-budget-audit` | Session feels sluggish or after adding components — quantify context overhead |
 
 ## Red Flags
 
@@ -262,3 +335,6 @@ These are invoked on-demand and do not require the full SDD-TDD gate flow.
 - Optimizing without measurement data
 - Security added as an afterthought
 - API design without contract-first approach
+- Claiming "done" without running verification commands
+- Trusting subagent success reports without independent verification
+- Parallel tasks modifying the same files
