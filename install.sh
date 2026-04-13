@@ -11,7 +11,6 @@
 #   ./install.sh --global --qoder-only       Install Qoder skills only
 #   ./install.sh --project /path/to/project  Install to a specific project
 #   ./install.sh --global --force            Skip overwrite prompts
-#   ./install.sh --global --update           Update from upstream first
 
 set -euo pipefail
 
@@ -37,7 +36,6 @@ err()     { echo -e "  ${RED}[ERR]${NC} $1"; }
 MODE=""
 PROJECT_DIR=""
 FORCE=false
-UPDATE=false
 QODER_ONLY=false
 INSTALLED_QODER=0
 INSTALLED_CURSOR=0
@@ -50,7 +48,6 @@ while [[ $# -gt 0 ]]; do
         --global)      MODE="global"; shift ;;
         --project)     MODE="project"; PROJECT_DIR="$2"; shift 2 ;;
         --force)       FORCE=true; shift ;;
-        --update)      UPDATE=true; shift ;;
         --qoder-only)  QODER_ONLY=true; shift ;;
         -h|--help)     MODE="help"; shift ;;
         *) echo "Unknown option: $1"; exit 1 ;;
@@ -174,37 +171,6 @@ install_skills() {
     fi
 }
 
-# --- Update upstream ---
-
-if $UPDATE; then
-    header "Updating upstream agent-skills-repo"
-    REPO_DIR="$SCRIPT_DIR/.agent-skills-repo"
-    if [[ -d "$REPO_DIR" ]]; then
-        (cd "$REPO_DIR" && git pull origin main 2>&1 >/dev/null)
-        ok "Upstream updated"
-
-        header "Syncing updated skills"
-        SKILL_NAMES=(
-            "spec-driven-development" "test-driven-development"
-            "planning-and-task-breakdown" "incremental-implementation"
-            "code-review-and-quality" "context-engineering"
-            "debugging-and-error-recovery" "git-workflow-and-versioning"
-            "using-agent-skills"
-        )
-        for name in "${SKILL_NAMES[@]}"; do
-            src="$REPO_DIR/skills/$name/SKILL.md"
-            dst="$SKILLS_DIR/$name/SKILL.md"
-            if [[ -f "$src" ]]; then
-                mkdir -p "$SKILLS_DIR/$name"
-                cp "$src" "$dst"
-                ok "Synced $name"
-            fi
-        done
-    else
-        err "No .agent-skills-repo found. Clone it first."
-    fi
-fi
-
 # --- Install ---
 
 case "$MODE" in
@@ -240,14 +206,12 @@ Usage:
   ./install.sh --global --qoder-only       Install Qoder skills only
   ./install.sh --project /path/to/project  Install to a specific project
   ./install.sh --global --force            Skip overwrite prompts
-  ./install.sh --global --update           Update from upstream first
 
 Options:
   --global       Install to ~/.qoder/skills/ and ~/.cursor/rules/
   --project      Install to <project>/.qoder/skills/ and <project>/.cursor/rules/
   --qoder-only   Skip Cursor rules (Qoder-first)
   --force        Skip confirmation prompts
-  --update       Pull upstream agent-skills-repo updates before installing
 
 Note: For Qwen Code, use the extension approach:
   qwen extensions install https://codeup.aliyun.com/6892c510e5ba87aaf500637d/basic/ai-coding.git
@@ -267,8 +231,6 @@ if ! $QODER_ONLY; then echo "  Cursor rules:   $INSTALLED_CURSOR installed"; fi
 echo ""
 echo -e "  ${GREEN}Commands: /sdd-tdd /spec /task-plan /build /quality-review /debug /ctx-health${NC}"
 echo -e "  ${GREEN}         /simplify /perf /secure /api /doc /ship /migrate /ui /idea${NC}"
-echo -e "  ${GREEN}Agents:  code-reviewer, test-engineer, security-auditor${NC}"
-echo -e "  ${GREEN}         architect, performance-engineer, refactoring-expert${NC}"
-echo -e "  ${GREEN}         database-architect, frontend-specialist${NC}"
-echo -e "  ${GREEN}         product-manager, requirements-engineer${NC}"
+echo -e "  ${GREEN}Agents:  product-owner, architect, code-reviewer, security-auditor${NC}"
+echo -e "  ${GREEN}         test-engineer, backend-specialist, frontend-specialist, performance-engineer${NC}"
 echo ""

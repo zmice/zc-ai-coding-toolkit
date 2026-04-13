@@ -16,9 +16,6 @@
 .PARAMETER Force
     Skip overwrite confirmation prompts.
 
-.PARAMETER Update
-    Pull latest changes from upstream agent-skills-repo before installing.
-
 .PARAMETER QoderOnly
     Only install Qoder skills (skip Cursor rules).
 
@@ -26,14 +23,13 @@
     ./install.ps1 -Global
     ./install.ps1 -Global -QoderOnly
     ./install.ps1 -Project "D:\my-project"
-    ./install.ps1 -Global -Force -Update
+    ./install.ps1 -Global -Force
 #>
 
 param(
     [switch]$Global,
     [string]$Project,
     [switch]$Force,
-    [switch]$Update,
     [switch]$QoderOnly
 )
 
@@ -156,39 +152,6 @@ function Install-Skills($targetQoderSkillsDir, $targetCursorRulesDir) {
     return @{ Qoder = $installedQoder; Cursor = $installedCursor; Agents = $installedAgents; Commands = $installedCommands }
 }
 
-# --- Update upstream ---
-
-if ($Update) {
-    Write-Header "Updating upstream agent-skills-repo"
-    $repoDir = Join-Path $ScriptDir ".agent-skills-repo"
-    if (Test-Path $repoDir) {
-        Push-Location $repoDir
-        git pull origin main 2>&1 | Out-Null
-        Pop-Location
-        Write-Ok "Upstream updated"
-
-        Write-Header "Syncing updated skills"
-        $skillNames = @(
-            "spec-driven-development", "test-driven-development",
-            "planning-and-task-breakdown", "incremental-implementation",
-            "code-review-and-quality", "context-engineering",
-            "debugging-and-error-recovery", "git-workflow-and-versioning",
-            "using-agent-skills"
-        )
-        foreach ($name in $skillNames) {
-            $src = Join-Path $repoDir "skills" $name "SKILL.md"
-            $dst = Join-Path $SkillsDir $name "SKILL.md"
-            if (Test-Path $src) {
-                New-Item -ItemType Directory -Path (Join-Path $SkillsDir $name) -Force | Out-Null
-                Copy-Item $src $dst -Force
-                Write-Ok "Synced $name"
-            }
-        }
-    } else {
-        Write-Err "No .agent-skills-repo found. Clone it first."
-    }
-}
-
 # --- Install ---
 
 if ($Global) {
@@ -229,14 +192,12 @@ Usage:
   ./install.ps1 -Global -QoderOnly        Install Qoder skills only (skip Cursor)
   ./install.ps1 -Project "D:\my-project"  Install to a specific project
   ./install.ps1 -Global -Force            Skip overwrite prompts
-  ./install.ps1 -Global -Update           Update from upstream first
 
 Options:
   -Global     Install to ~/.qoder/skills/ and ~/.cursor/rules/
   -Project    Install to <project>/.qoder/skills/ and <project>/.cursor/rules/
   -QoderOnly  Skip Cursor rules installation (Qoder-first)
   -Force      Skip confirmation prompts
-  -Update     Pull upstream agent-skills-repo updates before installing
 
 Note: For Qwen Code, use the extension approach:
   qwen extensions install https://codeup.aliyun.com/6892c510e5ba87aaf500637d/basic/ai-coding.git
@@ -255,8 +216,6 @@ if (-not $QoderOnly) { Write-Host "  Cursor rules:   $($result.Cursor) installed
 Write-Host ""
 Write-Host "  Commands: /sdd-tdd /spec /task-plan /build /quality-review /debug /ctx-health" -ForegroundColor Green
 Write-Host "           /simplify /perf /secure /api /doc /ship /migrate /ui /idea" -ForegroundColor Green
-Write-Host "  Agents:  code-reviewer, test-engineer, security-auditor" -ForegroundColor Green
-Write-Host "           architect, performance-engineer, refactoring-expert" -ForegroundColor Green
-Write-Host "           database-architect, frontend-specialist" -ForegroundColor Green
-Write-Host "           product-manager, requirements-engineer" -ForegroundColor Green
+Write-Host "  Agents:  product-owner, architect, code-reviewer, security-auditor" -ForegroundColor Green
+Write-Host "           test-engineer, backend-specialist, frontend-specialist, performance-engineer" -ForegroundColor Green
 Write-Host ""
