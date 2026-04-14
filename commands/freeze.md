@@ -1,34 +1,28 @@
-## 概述
-锁定指定目录或文件，禁止 AI 编辑。保护关键文件不被意外修改。
+---
+name: freeze
+description: 锁定指定目录或文件，禁止 AI 编辑，保护关键文件不被意外修改。
+---
 
-## 对应技能
-safety-guardrails
+调用 safety-guardrails 技能。锁定指定路径，只读保护。
+
+1. 解析用户指定的路径和 glob 模式（支持多个路径）
+2. 确认锁定范围和受影响文件数
+3. 对锁定文件拒绝编辑操作，只读操作不受影响
+4. 使用 `/unfreeze` 或 `/unfreeze <路径>` 解除锁定
 
 ## 使用方式
-`/freeze src/core/** *.env migrations/` — 指定要锁定的路径或 glob 模式
 
-## 工作流程
+`/freeze <路径...>` — 指定要锁定的路径或 glob 模式。
 
-### 1. 接收锁定路径
-- 解析用户指定的路径和 glob 模式
-- 支持多个路径同时锁定
-- 支持 glob 通配符（`*`、`**`、`?`）
+### 示例
 
-### 2. 确认锁定范围
 ```
-🔒 Freeze 锁定确认
-  锁定范围:
-    - src/core/**（[N] 个文件）
-    - *.env（[N] 个文件）
-    - migrations/（[N] 个文件）
-  总计: [N] 个文件将被保护
+# 锁定关键目录和文件
+/freeze src/core/** *.env migrations/
+
+# 锁定配置文件
+/freeze docker-compose.prod* config/production*
+
+# 解除锁定
+/unfreeze
 ```
-
-### 3. 激活锁定
-- 对锁定范围内的文件拒绝任何编辑操作
-- 尝试编辑时提示：`🔒 该文件已被 Freeze 锁定，无法编辑`
-- 只读操作（读取、搜索）不受影响
-
-### 4. 解除锁定
-- `/unfreeze` — 解除所有锁定
-- `/unfreeze src/core/**` — 解除指定路径的锁定
