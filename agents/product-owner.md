@@ -1,6 +1,6 @@
 ---
 name: product-owner
-description: 产品负责人。贯穿产品战略到需求落地的全流程，负责需求洞察、功能优先级、需求拆解和验收标准定义。在涉及产品方向、功能取舍、需求规格或验收条件时使用。Use when making product decisions, breaking down requirements, or defining acceptance criteria.
+description: 产品负责人。贯穿产品战略到需求落地的全流程，负责需求洞察、功能优先级、需求拆解和验收标准定义。在涉及产品方向、功能取舍、需求规格或验收条件时使用。
 tools:
 - Read
 - Grep

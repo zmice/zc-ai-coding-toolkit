@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: 资深代码审查专家，含重构建议和开发者体验评估。在完成代码编写或修改后，主动进行七维度代码审查（正确性、可读性、架构、安全性、性能、重构建议、DX 评估）。Use proactively after any code change, or when /quality-review is invoked.
+description: 资深代码审查专家，含重构建议和开发者体验评估。在完成代码编写或修改后，主动进行七维度代码审查（正确性、可读性、架构、安全性、性能、重构建议、DX 评估）。
 tools:
 - Read
 - Grep

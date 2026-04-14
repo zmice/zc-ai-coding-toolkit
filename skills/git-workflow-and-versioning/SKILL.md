@@ -1,238 +1,237 @@
 ---
 name: git-workflow-and-versioning
-description: Structures git workflow practices. Use when making any code change. Use when committing, branching, resolving conflicts, or when you need to organize work across multiple parallel streams.
+description: Git 工作流规范。在进行任何代码变更时使用。包括提交、分支、冲突解决，以及多并行流的组织方式。
 ---
 
-# Git Workflow and Versioning
+# Git 工作流与版本管理
 
-## Overview
+## 概述
 
-Git is your safety net. Treat commits as save points, branches as sandboxes, and history as documentation. With AI agents generating code at high speed, disciplined version control is the mechanism that keeps changes manageable, reviewable, and reversible.
+Git 是你的安全网。把提交当存档点，把分支当沙箱，把历史当文档。AI Agent 高速生成代码的环境下，规范的版本控制是保持变更可管理、可审查、可回滚的核心机制。
 
-## When to Use
+## 何时使用
 
-Always. Every code change flows through git.
+始终使用。所有代码变更都经过 git。
 
-## Core Principles
+## 核心原则
 
-### Trunk-Based Development (Recommended)
+### 主干开发（推荐）
 
-Keep `main` always deployable. Work in short-lived feature branches that merge back within 1-3 days. Long-lived development branches are hidden costs — they diverge, create merge conflicts, and delay integration. DORA research consistently shows trunk-based development correlates with high-performing engineering teams.
+保持 `main` 始终可部署。在短生命周期的 feature 分支上工作，1-3 天内合回。长期存活的开发分支是隐性成本 — 它们会分叉、产生合并冲突、延迟集成。DORA 研究持续表明，主干开发与高效能工程团队强相关。
 
 ```
-main ──●──●──●──●──●──●──●──●──●──  (always deployable)
+main ──●──●──●──●──●──●──●──●──●──  （始终可部署）
         ╲      ╱  ╲    ╱
-         ●──●─╱    ●──╱    ← short-lived feature branches (1-3 days)
+         ●──●─╱    ●──╱    ← 短生命周期 feature 分支（1-3 天）
 ```
 
-This is the recommended default. Teams using gitflow or long-lived branches can adapt the principles (atomic commits, small changes, descriptive messages) to their branching model — the commit discipline matters more than the specific branching strategy.
+这是推荐的默认策略。使用 gitflow 或长期分支的团队可以调整原则（原子提交、小变更、描述性消息）以适配自己的分支模型 — 提交纪律比具体的分支策略更重要。
 
-- **Dev branches are costs.** Every day a branch lives, it accumulates merge risk.
-- **Release branches are acceptable.** When you need to stabilize a release while main moves forward.
-- **Feature flags > long branches.** Prefer deploying incomplete work behind flags rather than keeping it on a branch for weeks.
+- **开发分支是成本。** 分支每多存活一天，合并风险就多一分。
+- **发布分支可以接受。** 当需要稳定发布版本而 main 继续前进时。
+- **Feature Flag > 长期分支。** 优先使用 flag 部署未完成的功能，而非在分支上放几周。
 
-### 1. Commit Early, Commit Often
+### 1. 早提交，勤提交
 
-Each successful increment gets its own commit. Don't accumulate large uncommitted changes.
-
-```
-Work pattern:
-  Implement slice → Test → Verify → Commit → Next slice
-
-Not this:
-  Implement everything → Hope it works → Giant commit
-```
-
-Commits are save points. If the next change breaks something, you can revert to the last known-good state instantly.
-
-### 2. Atomic Commits
-
-Each commit does one logical thing:
+每个成功的增量都应有自己的提交。不要积累大量未提交的变更。
 
 ```
-# Good: Each commit is self-contained
+工作模式：
+  实现切片 → 测试 → 验证 → 提交 → 下一个切片
+
+不要这样：
+  实现所有功能 → 祈祷能跑 → 一个巨大提交
+```
+
+提交是存档点。如果下一个变更出了问题，你可以立即回到上一个已知正常的状态。
+
+### 2. 原子提交
+
+每个提交只做一件逻辑上完整的事：
+
+```
+# 好的：每个提交自包含
 git log --oneline
-a1b2c3d Add task creation endpoint with validation
-d4e5f6g Add task creation form component
-h7i8j9k Connect form to API and add loading state
-m1n2o3p Add task creation tests (unit + integration)
+a1b2c3d feat: 添加任务创建接口及校验
+d4e5f6g feat: 添加任务创建表单组件
+h7i8j9k feat: 表单对接 API 并添加加载状态
+m1n2o3p test: 添加任务创建测试（单元 + 集成）
 
-# Bad: Everything mixed together
+# 差的：所有东西混在一起
 git log --oneline
-x1y2z3a Add task feature, fix sidebar, update deps, refactor utils
+x1y2z3a 添加任务功能、修侧边栏、更新依赖、重构工具函数
 ```
 
-### 3. Descriptive Messages
+## 3. 描述性消息
 
-Commit messages explain the *why*, not just the *what*:
-
-```
-# Good: Explains intent
-feat: add email validation to registration endpoint
-
-Prevents invalid email formats from reaching the database.
-Uses Zod schema validation at the route handler level,
-consistent with existing validation patterns in auth.ts.
-
-# Bad: Describes what's obvious from the diff
-update auth.ts
-```
-
-**Format:**
-```
-<type>: <short description>
-
-<optional body explaining why, not what>
-```
-
-**Types:**
-- `feat` — New feature
-- `fix` — Bug fix
-- `refactor` — Code change that neither fixes a bug nor adds a feature
-- `test` — Adding or updating tests
-- `docs` — Documentation only
-- `chore` — Tooling, dependencies, config
-
-### 4. Keep Concerns Separate
-
-Don't combine formatting changes with behavior changes. Don't combine refactors with features. Each type of change should be a separate commit — and ideally a separate PR:
+提交消息解释 *为什么*，而非仅仅描述 *做了什么*：
 
 ```
-# Good: Separate concerns
-git commit -m "refactor: extract validation logic to shared utility"
-git commit -m "feat: add phone number validation to registration"
+# 好的：解释意图
+feat: 注册接口添加邮箱格式校验
 
-# Bad: Mixed concerns
-git commit -m "refactor validation and add phone number field"
+防止无效邮箱格式写入数据库。
+在路由处理层使用 Zod schema 校验，与 auth.ts 中现有校验模式一致。
+
+# 差的：描述 diff 中显而易见的内容
+更新 auth.ts
 ```
 
-**Separate refactoring from feature work.** A refactoring change and a feature change are two different changes — submit them separately. This makes each change easier to review, revert, and understand in history. Small cleanups (renaming a variable) can be included in a feature commit at reviewer discretion.
-
-### 5. Size Your Changes
-
-Target ~100 lines per commit/PR. Changes over ~1000 lines should be split. See the splitting strategies in `code-review-and-quality` for how to break down large changes.
-
+**格式：**
 ```
-~100 lines  → Easy to review, easy to revert
-~300 lines  → Acceptable for a single logical change
-~1000 lines → Split into smaller changes
+<type>: <中文简述>
+
+<可选的详细说明，解释"为什么"而非"做了什么">
 ```
 
-## Branching Strategy
+**类型前缀：**
+- `feat` — 新功能
+- `fix` — Bug 修复
+- `refactor` — 既不修 bug 也不加功能的代码重构
+- `test` — 添加或更新测试
+- `docs` — 仅文档变更
+- `chore` — 工具链、依赖、配置
 
-### Feature Branches
+### 4. 关注点分离
+
+不要把格式化变更和行为变更混在一起。不要把重构和新功能混在一起。每种变更应独立提交，最好也是独立的 PR：
 
 ```
-main (always deployable)
+# 好的：关注点分离
+git commit -m "refactor: 提取校验逻辑到共享工具模块"
+git commit -m "feat: 注册流程添加手机号校验"
+
+# 差的：关注点混杂
+git commit -m "重构校验并添加手机号字段"
+```
+
+**重构和功能开发分开提交。** 重构和功能是两种不同的变更 — 分开提交。这使每个变更更容易审查、回滚和在历史中理解。小清理（如重命名变量）可以酌情包含在功能提交中。
+
+### 5. 控制变更规模
+
+目标每次提交/PR 约 100 行。超过 1000 行的变更应拆分。参见 `code-review-and-quality` 中的拆分策略。
+
+```
+~100 行  → 容易审查，容易回滚
+~300 行  → 单个逻辑变更可以接受
+~1000 行 → 必须拆分为更小的变更
+```
+
+## 分支策略
+
+### Feature 分支
+
+```
+main（始终可部署）
   │
-  ├── feature/task-creation    ← One feature per branch
-  ├── feature/user-settings    ← Parallel work
-  └── fix/duplicate-tasks      ← Bug fixes
+  ├── feature/task-creation    ← 每个分支一个功能
+  ├── feature/user-settings    ← 并行开发
+  └── fix/duplicate-tasks      ← Bug 修复
 ```
 
-- Branch from `main` (or the team's default branch)
-- Keep branches short-lived (merge within 1-3 days) — long-lived branches are hidden costs
-- Delete branches after merge
-- Prefer feature flags over long-lived branches for incomplete features
+- 从 `main`（或团队默认分支）创建分支
+- 保持分支短生命周期（1-3 天内合并）— 长期分支是隐性成本
+- 合并后删除分支
+- 优先使用 Feature Flag 而非长期分支来管理未完成的功能
 
-### Branch Naming
+### 分支命名
 
 ```
-feature/<short-description>   → feature/task-creation
-fix/<short-description>       → fix/duplicate-tasks
-chore/<short-description>     → chore/update-deps
-refactor/<short-description>  → refactor/auth-module
+feature/<简短描述>   → feature/task-creation
+fix/<简短描述>       → fix/duplicate-tasks
+chore/<简短描述>     → chore/update-deps
+refactor/<简短描述>  → refactor/auth-module
 ```
 
-## Working with Worktrees
+## Git Worktree 并行开发
 
-For parallel AI agent work, use git worktrees to run multiple branches simultaneously:
+当多个 AI Agent 需要并行工作时，使用 git worktree 同时运行多个分支：
 
 ```bash
-# Create a worktree for a feature branch
+# 为 feature 分支创建 worktree
 git worktree add ../project-feature-a feature/task-creation
 git worktree add ../project-feature-b feature/user-settings
 
-# Each worktree is a separate directory with its own branch
-# Agents can work in parallel without interfering
+# 每个 worktree 是独立目录，各自有自己的分支
+# Agent 可以并行工作互不干扰
 ls ../
-  project/              ← main branch
-  project-feature-a/    ← task-creation branch
-  project-feature-b/    ← user-settings branch
+  project/              ← main 分支
+  project-feature-a/    ← task-creation 分支
+  project-feature-b/    ← user-settings 分支
 
-# When done, merge and clean up
+# 完成后合并并清理
 git worktree remove ../project-feature-a
 ```
 
-Benefits:
-- Multiple agents can work on different features simultaneously
-- No branch switching needed (each directory has its own branch)
-- If one experiment fails, delete the worktree — nothing is lost
-- Changes are isolated until explicitly merged
+优势：
+- 多个 Agent 可以同时工作在不同功能上
+- 无需切换分支（每个目录有自己的分支）
+- 实验失败时直接删除 worktree — 不会丢失任何东西
+- 变更相互隔离，直到显式合并
 
-## The Save Point Pattern
+## 存档点模式
 
 ```
-Agent starts work
+Agent 开始工作
     │
-    ├── Makes a change
-    │   ├── Test passes? → Commit → Continue
-    │   └── Test fails? → Revert to last commit → Investigate
+    ├── 做了一个变更
+    │   ├── 测试通过？ → 提交 → 继续
+    │   └── 测试失败？ → 回退到上次提交 → 调查
     │
-    ├── Makes another change
-    │   ├── Test passes? → Commit → Continue
-    │   └── Test fails? → Revert to last commit → Investigate
+    ├── 做了另一个变更
+    │   ├── 测试通过？ → 提交 → 继续
+    │   └── 测试失败？ → 回退到上次提交 → 调查
     │
-    └── Feature complete → All commits form a clean history
+    └── 功能完成 → 所有提交形成干净的历史
 ```
 
-This pattern means you never lose more than one increment of work. If an agent goes off the rails, `git reset --hard HEAD` takes you back to the last successful state.
+这个模式意味着你永远不会丢失超过一个增量的工作。如果 Agent 走偏了，`git reset --hard HEAD` 就能回到上一个成功状态。
 
-## Change Summaries
+## 变更摘要
 
-After any modification, provide a structured summary. This makes review easier, documents scope discipline, and surfaces unintended changes:
+每次修改后提供结构化摘要。这使审查更容易，记录范围纪律，暴露意外变更：
 
 ```
-CHANGES MADE:
-- src/routes/tasks.ts: Added validation middleware to POST endpoint
-- src/lib/validation.ts: Added TaskCreateSchema using Zod
+变更内容:
+- src/routes/tasks.ts: 为 POST 端点添加校验中间件
+- src/lib/validation.ts: 添加 TaskCreateSchema（使用 Zod）
 
-THINGS I DIDN'T TOUCH (intentionally):
-- src/routes/auth.ts: Has similar validation gap but out of scope
-- src/middleware/error.ts: Error format could be improved (separate task)
+未修改（有意为之）:
+- src/routes/auth.ts: 有类似校验缺口但不在本次范围内
+- src/middleware/error.ts: 错误格式可优化（单独任务）
 
-POTENTIAL CONCERNS:
-- The Zod schema is strict — rejects extra fields. Confirm this is desired.
-- Added zod as a dependency (72KB gzipped) — already in package.json
+潜在关注点:
+- Zod schema 为严格模式 — 会拒绝多余字段，请确认是否预期行为
+- zod 作为依赖添加（72KB gzipped）— package.json 中已存在
 ```
 
-This pattern catches wrong assumptions early and gives reviewers a clear map of the change. The "DIDN'T TOUCH" section is especially important — it shows you exercised scope discipline and didn't go on an unsolicited renovation.
+这个模式能尽早发现错误假设，给审查者提供清晰的变更地图。“未修改”部分尤其重要 — 它展示了你的范围纪律。
 
-## Pre-Commit Hygiene
+## 提交前检查
 
-Before every commit:
+每次提交前：
 
 ```bash
-# 1. Check what you're about to commit
+# 1. 检查即将提交的内容
 git diff --staged
 
-# 2. Ensure no secrets
+# 2. 确保没有密钥泄露
 git diff --staged | grep -i "password\|secret\|api_key\|token"
 
-# 3. Run tests
+# 3. 运行测试
 npm test
 
-# 4. Run linting
+# 4. 运行 lint
 npm run lint
 
-# 5. Run type checking
+# 5. 类型检查
 npx tsc --noEmit
 ```
 
-Automate this with git hooks:
+使用 git hooks 自动化：
 
 ```json
-// package.json (using lint-staged + husky)
+// package.json（使用 lint-staged + husky）
 {
   "lint-staged": {
     "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
@@ -241,60 +240,60 @@ Automate this with git hooks:
 }
 ```
 
-## Handling Generated Files
+## 生成文件处理
 
-- **Commit generated files** only if the project expects them (e.g., `package-lock.json`, Prisma migrations)
-- **Don't commit** build output (`dist/`, `.next/`), environment files (`.env`), or IDE config (`.vscode/settings.json` unless shared)
-- **Have a `.gitignore`** that covers: `node_modules/`, `dist/`, `.env`, `.env.local`, `*.pem`
+- **提交生成文件** 仅在项目需要时（如 `package-lock.json`、Prisma 迁移）
+- **不提交** 构建产物（`dist/`、`.next/`）、环境文件（`.env`）、IDE 配置（`.vscode/settings.json`，除非共享）
+- **配置 `.gitignore`** 覆盖：`node_modules/`、`dist/`、`.env`、`.env.local`、`*.pem`
 
-## Using Git for Debugging
+## 使用 Git 调试
 
 ```bash
-# Find which commit introduced a bug
+# 查找哪个提交引入了 bug
 git bisect start
 git bisect bad HEAD
-git bisect good <known-good-commit>
-# Git checkouts midpoints; run your test at each to narrow down
+git bisect good <已知正常的提交>
+# Git 二分检出中点；在每个点运行测试来缩小范围
 
-# View what changed recently
+# 查看最近的变更
 git log --oneline -20
 git diff HEAD~5..HEAD -- src/
 
-# Find who last changed a specific line
+# 查找谁最后修改了某行
 git blame src/services/task.ts
 
-# Search commit messages for a keyword
-git log --grep="validation" --oneline
+# 搜索提交消息关键词
+git log --grep="校验" --oneline
 ```
 
-## Common Rationalizations
+## 常见借口
 
-| Rationalization | Reality |
-|---|---|
-| "I'll commit when the feature is done" | One giant commit is impossible to review, debug, or revert. Commit each slice. |
-| "The message doesn't matter" | Messages are documentation. Future you (and future agents) will need to understand what changed and why. |
-| "I'll squash it all later" | Squashing destroys the development narrative. Prefer clean incremental commits from the start. |
-| "Branches add overhead" | Short-lived branches are free and prevent conflicting work from colliding. Long-lived branches are the problem — merge within 1-3 days. |
-| "I'll split this change later" | Large changes are harder to review, riskier to deploy, and harder to revert. Split before submitting, not after. |
-| "I don't need a .gitignore" | Until `.env` with production secrets gets committed. Set it up immediately. |
+| 借口 | 现实 |
+|------|------|
+| “等功能做完再提交” | 一个巨大提交无法审查、调试或回滚。每个切片都提交。 |
+| “提交消息无所谓” | 消息就是文档。未来的你（和未来的 Agent）需要理解改了什么以及为什么。 |
+| “回头再 squash” | Squash 会破坏开发叙事。从一开始就做干净的增量提交。 |
+| “分支太麻烦” | 短生命周期分支是免费的，能防止工作冲突。长期分支才是问题 — 1-3 天内合并。 |
+| “回头再拆分” | 大变更更难审查、部署风险更高、更难回滚。提交前拆分，不要事后。 |
+| “不需要 .gitignore” | 直到带生产密钥的 `.env` 被提交。立即配置。 |
 
-## Red Flags
+## 危险信号
 
-- Large uncommitted changes accumulating
-- Commit messages like "fix", "update", "misc"
-- Formatting changes mixed with behavior changes
-- No `.gitignore` in the project
-- Committing `node_modules/`, `.env`, or build artifacts
-- Long-lived branches that diverge significantly from main
-- Force-pushing to shared branches
+- 大量未提交的变更在累积
+- 提交消息像 “fix”、“更新”、“杂项”
+- 格式化变更和行为变更混在一起
+- 项目没有 `.gitignore`
+- 提交了 `node_modules/`、`.env` 或构建产物
+- 长期分支与 main 严重分叉
+- 在共享分支上 force-push
 
-## Verification
+## 提交检查清单
 
-For every commit:
+每次提交前确认：
 
-- [ ] Commit does one logical thing
-- [ ] Message explains the why, follows type conventions
-- [ ] Tests pass before committing
-- [ ] No secrets in the diff
-- [ ] No formatting-only changes mixed with behavior changes
-- [ ] `.gitignore` covers standard exclusions
+- [ ] 提交只做一件逻辑上完整的事
+- [ ] 消息解释了“为什么”，遵循 type 规范
+- [ ] 提交前测试通过
+- [ ] diff 中没有密钥
+- [ ] 没有把格式化变更和行为变更混在一起
+- [ ] `.gitignore` 覆盖了标准排除项

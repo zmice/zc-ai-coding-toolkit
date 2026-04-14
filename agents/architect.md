@@ -1,6 +1,6 @@
 ---
 name: architect
-description: 软件架构师。负责系统设计决策、技术选型评估、模块边界划分和架构权衡分析。在涉及系统设计、技术选型、大规模重构或跨模块变更时使用。Use when making architectural decisions, evaluating technology choices, or designing system boundaries.
+description: 软件架构师。负责系统设计决策、技术选型评估、模块边界划分和架构权衡分析。在涉及系统设计、技术选型、大规模重构或跨模块变更时使用。
 tools:
 - Read
 - Grep

@@ -6,7 +6,7 @@
 
 **三层架构，覆盖 AI 编码全流程：**
 
-- **30 Skills（技能）** — 深度工作流引擎：SDD 规格驱动、TDD 测试驱动、Debug 系统化调试、安全加固、持续学习……每个 Skill 内置门控、阶段和检查点，模型自主触发
+- **31 Skills（技能）** — 深度工作流引擎：SDD 规格驱动、TDD 测试驱动、Debug 系统化调试、安全加固、持续学习……每个 Skill 内置门控、阶段和检查点，模型自主触发
 - **25 Commands（指令）** — 快捷启动器：`/sdd-tdd` `/spec` `/build` `/debug` `/quality-review` `/learn` 等，一条斜杠命令驱动完整流程
 - **8 Agents（智能体）** — 专家团：架构师、代码审查官、安全审计、测试工程师……按需切换，各司其职
 
@@ -55,7 +55,7 @@ qwen extensions uninstall ai-coding-toolkit
 
 | 类型 | 数量 | 安装位置 |
 |------|------|--------|
-| Skills（技能） | 30 个 | `~/.qoder/skills/<name>/SKILL.md` |
+| Skills（技能） | 31 个 | `~/.qoder/skills/<name>/SKILL.md` |
 | Commands（指令） | 25 个 | `~/.qoder/commands/<name>.md` |
 | Agents（智能体） | 8 个 | `~/.qoder/agents/<name>.md` |
 | Instructions（全局指令） | 1 个 | `~/.qoder/instructions.md` |
@@ -65,7 +65,7 @@ qwen extensions uninstall ai-coding-toolkit
 
 | 类型 | 数量 | 安装位置 |
 |------|------|--------|
-| Skills（技能） | 30 个 | `~/.qwen/extensions/ai-coding-toolkit/skills/` |
+| Skills（技能） | 31 个 | `~/.qwen/extensions/ai-coding-toolkit/skills/` |
 | Commands（指令） | 25 个 | `~/.qwen/extensions/ai-coding-toolkit/commands/` |
 | Agents（智能体） | 8 个 | `~/.qwen/extensions/ai-coding-toolkit/agents/` |
 | Context（上下文） | 1 个 | `QWEN.md`（自动加载到每个会话） |
@@ -104,7 +104,7 @@ qwen extensions update ai-coding-toolkit
 ### 更新说明
 
 - **覆盖安装**：安装脚本只覆盖工具包自身的 Skills、Commands、Agents 和 `instructions.md`，不会影响 `~/.qoder/` 或 `~/.cursor/` 下其他自定义文件
-- **版本规模**：当前体系包含 **30 Skills + 25 Commands + 8 Agents**，持续迭代中
+- **版本规模**：当前体系包含 **31 Skills + 25 Commands + 8 Agents**，持续迭代中
 
 ---
 
@@ -541,7 +541,7 @@ Agent [idea-refine]:
 
 ```
 ai-coding/
-├── skills/                           # 30 个 Skill（Qoder 原生格式）
+├── skills/                           # 31 个 Skill（Qoder 原生格式）
 │   ├── sdd-tdd-workflow/SKILL.md     # 整合入口（25 个命令）
 │   ├── spec-driven-development/      # /spec
 │   ├── planning-and-task-breakdown/  # /task-plan
@@ -565,6 +565,7 @@ ai-coding/
 │   ├── multi-perspective-review/     # /plan-review
 │   ├── continuous-learning/          # /learn（Hook 驱动持续学习）
 │   ├── git-workflow-and-versioning/  # Git 纪律
+│   ├── source-driven-development/    # 基于官方文档的实现规范
 │   └── using-agent-skills/           # 技能发现元规则
 ├── agents/                           # 8 个自定义智能体
 │   ├── architect.md
@@ -593,3 +594,5 @@ ai-coding/
 | [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) | Continuous Learning v2 Instinct 架构、Agent 膨胀反面教训 |
 | [garrytan/gstack](https://github.com/garrytan/gstack) | 战略过滤器、"角色嵌入命令"哲学 |
 | [Daz - How I Work with AI Coding Agents](https://daz.is/blog/how-i-work-with-ai-coding-agents/) | 三阶段审查、40% 法则等实践 |
+
+> 各上游项目的版本追踪详见 [UPSTREAM.md](UPSTREAM.md)，升级时请参照其中的检查清单。

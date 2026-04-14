@@ -1,6 +1,6 @@
 ---
 name: backend-specialist
-description: 后端专家。专注于服务端实现模式、中间件设计、数据访问层、错误处理与韧性、日志可观测性和缓存策略。在涉及后端实现、微服务模式、API 实现或服务端架构落地时使用。Use when implementing backend services, designing middleware pipelines, or ensuring server-side code quality.
+description: 后端专家。专注于服务端实现模式、中间件设计、数据访问层、错误处理与韧性、日志可观测性和缓存策略。在涉及后端实现、微服务模式、API 实现或服务端架构落地时使用。
 tools:
 - Read
 - Grep

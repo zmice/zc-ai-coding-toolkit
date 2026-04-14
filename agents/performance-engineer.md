@@ -1,6 +1,6 @@
 ---
 name: performance-engineer
-description: 性能工程师。专注于性能剖析、瓶颈定位、优化方案设计和 benchmark 验证。在涉及性能问题、负载测试、查询调优或前端性能时使用。Use when profiling, benchmarking, or optimizing application performance.
+description: 性能工程师。专注于性能剖析、瓶颈定位、优化方案设计和 benchmark 验证。在涉及性能问题、负载测试、查询调优或前端性能时使用。
 tools:
 - Read
 - Grep

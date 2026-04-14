@@ -1,6 +1,6 @@
 ---
 name: security-auditor
-description: 安全审计专家。专注于漏洞检测、威胁建模和安全编码实践。在涉及用户输入、认证、数据存储或外部集成时主动使用。Use proactively for security-sensitive code changes.
+description: 安全审计专家。专注于漏洞检测、威胁建模和安全编码实践。在涉及用户输入、认证、数据存储或外部集成时主动使用。
 tools:
 - Read
 - Grep
