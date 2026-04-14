@@ -56,6 +56,7 @@ Specify  Multi-View     Plan      Build+TDD     5-Axis        Retro
 | `/verify` | On-demand | Verification before completion — evidence before assertions |
 | `/onboard` | On-demand | Codebase onboarding — systematically understand a new project |
 | `/retro` | Phase 5 | Sprint 回顾，统计产出和改进项 |
+| `/learn` | On-demand | 手动触发会话模式提取与学习 |
 | `/careful` | On-demand | 激活危险命令预警模式 |
 | `/freeze` | On-demand | 锁定指定目录/文件禁止编辑 |
 | `/guard` | On-demand | 同时激活 careful + freeze 全面防护 |
@@ -127,6 +128,7 @@ test     code       still pass
 - **Manual (default):** You implement each task directly, one at a time
 - **Subagent-Driven:** When tasks are mostly independent, use `subagent-driven-development` to dispatch fresh subagent per task with two-stage review (spec compliance → code quality)
 - **Parallel:** When tasks are independent AND >2, use `parallel-agent-dispatch` for concurrent execution
+- **Cascade:** When tasks have layered dependencies, use `parallel-agent-dispatch` Cascade mode — parallel within layers, serial between layers, with gate verification at each level
 
 **Build rules:**
 1. **Test first, always.** Write a failing test before any implementation code
@@ -170,6 +172,7 @@ Follow the `sprint-retrospective` skill. Key actions:
 4. **Assess process health** — TDD compliance, verification pass rate, review pass rate
 5. **Generate action items** — Concrete improvements with owners and deadlines
 6. **Capture learnings** — Document lessons for future reference
+7. **Extract instincts** — Run `/learn` to extract reusable patterns from this cycle into instincts. Auto-sync high-confidence instincts to Agent Memory for cross-session persistence.
 
 **Gate:** Action items reviewed and assigned before starting next sprint.
 
@@ -309,6 +312,7 @@ For these cases, use individual commands (`/build` for small fixes, `/quality-re
 | `/qa` | browser-qa-testing | 前端开发完成后，需要真实浏览器 QA 验证 |
 | `/plan-review` | multi-perspective-review | Spec/Plan 完成后，需要多视角评审发现盲点 |
 | `/retro` | sprint-retrospective | Sprint/开发周期结束后，回顾总结和持续改进 |
+| `/learn` | continuous-learning | 手动触发会话模式提取，生成 instincts 并持久化到 Memory |
 
 These are invoked on-demand and do not require the full SDD-TDD gate flow.
 
@@ -317,7 +321,7 @@ These are invoked on-demand and do not require the full SDD-TDD gate flow.
 | Skill | When to Use |
 |-------|------------|
 | `subagent-driven-development` | Executing plans with independent tasks — fresh subagent per task with 2-stage review |
-| `parallel-agent-dispatch` | Multiple independent tasks that can run concurrently — fan-out/fan-in pattern |
+| `parallel-agent-dispatch` | Multiple independent tasks that can run concurrently — fan-out/fan-in pattern, Worktree isolation, or Cascade layered execution |
 | `brainstorming-and-design` | Before spec phase when requirements are vague — collaborative design exploration |
 | `context-budget-audit` | Session feels sluggish or after adding components — quantify context overhead |
 
@@ -338,3 +342,5 @@ These are invoked on-demand and do not require the full SDD-TDD gate flow.
 - Claiming "done" without running verification commands
 - Trusting subagent success reports without independent verification
 - Parallel tasks modifying the same files
+- Skipping `/learn` at the end of a development cycle (missing learning opportunities)
+- Cascade mode without layer-gate verification

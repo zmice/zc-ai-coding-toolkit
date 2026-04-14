@@ -42,6 +42,8 @@ INSTALLED_CURSOR=0
 INSTALLED_AGENTS=0
 INSTALLED_COMMANDS=0
 
+INSTALLED_HOOKS=false
+
 # --- Parse args ---
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -147,6 +149,68 @@ install_skills() {
         fi
     fi
 
+    # --- Qoder Hooks: Install continuous-learning hooks ---
+    local hooks_source="$SKILLS_DIR/continuous-learning/hooks"
+    if [[ -d "$hooks_source" ]]; then
+        header "Installing Continuous-Learning Hooks"
+        local target_hooks="$qoder_base/hooks/continuous-learning"
+        mkdir -p "$target_hooks"
+
+        # Copy hook scripts (sh + ps1)
+        for hf in observe.sh session-end.sh observe.ps1 session-end.ps1; do
+            if [[ -f "$hooks_source/$hf" ]]; then
+                cp "$hooks_source/$hf" "$target_hooks/$hf"
+                chmod +x "$target_hooks/$hf" 2>/dev/null || true
+                ok "$hf"
+            fi
+        done
+
+        # Create homunculus directory structure
+        local homunculus_dir="$qoder_base/homunculus"
+        mkdir -p "$homunculus_dir/instincts/personal"
+        mkdir -p "$homunculus_dir/instincts/inherited"
+        mkdir -p "$homunculus_dir/projects"
+        if [[ ! -f "$homunculus_dir/projects.json" ]]; then
+            echo '{}' > "$homunculus_dir/projects.json"
+        fi
+        ok "homunculus directory structure"
+
+        # Update settings.json with hook configuration
+        local settings_file="$qoder_base/settings.json"
+        if [[ ! -f "$settings_file" ]]; then
+            echo '{}' > "$settings_file"
+        fi
+        local obs_cmd="$target_hooks/observe.sh"
+        local end_cmd="$target_hooks/session-end.sh"
+        if command -v jq &>/dev/null; then
+            local tmp_settings
+            tmp_settings=$(mktemp)
+            jq --arg obs "$obs_cmd" --arg end "$end_cmd" '
+                .hooks //= {} |
+                .hooks.PostToolUse //= [] |
+                (if (.hooks.PostToolUse | map(select(.hooks[0].command | test("continuous-learning"))) | length) == 0 then
+                    .hooks.PostToolUse += [{"matcher": "*", "hooks": [{"type": "command", "command": $obs}]}]
+                else . end) |
+                .hooks.UserPromptSubmit //= [] |
+                (if (.hooks.UserPromptSubmit | map(select(.hooks[0].command | test("continuous-learning"))) | length) == 0 then
+                    .hooks.UserPromptSubmit += [{"hooks": [{"type": "command", "command": $obs}]}]
+                else . end) |
+                .hooks.PostToolUseFailure //= [] |
+                (if (.hooks.PostToolUseFailure | map(select(.hooks[0].command | test("continuous-learning"))) | length) == 0 then
+                    .hooks.PostToolUseFailure += [{"matcher": "*", "hooks": [{"type": "command", "command": $obs}]}]
+                else . end) |
+                .hooks.Stop //= [] |
+                (if (.hooks.Stop | map(select(.hooks[0].command | test("continuous-learning"))) | length) == 0 then
+                    .hooks.Stop += [{"hooks": [{"type": "command", "command": $end}]}]
+                else . end)
+            ' "$settings_file" > "$tmp_settings" 2>/dev/null && mv "$tmp_settings" "$settings_file"
+            ok "settings.json hooks configuration"
+        else
+            skip "jq not found - configure hooks manually in $settings_file"
+        fi
+        INSTALLED_HOOKS=true
+    fi
+
     # --- Cursor: Copy skill/<name>/SKILL.md -> .cursor/rules/<name>.md ---
     if ! $QODER_ONLY && [[ -n "$target_cursor" ]]; then
         header "Installing Cursor Rules"
@@ -227,10 +291,11 @@ header "Installation Complete"
 echo "  Qoder skills:   $INSTALLED_QODER installed"
 echo "  Qoder agents:   $INSTALLED_AGENTS installed"
 echo "  Qoder commands:  $INSTALLED_COMMANDS installed"
+if $INSTALLED_HOOKS; then echo "  Hooks:           continuous-learning (auto-observation)"; fi
 if ! $QODER_ONLY; then echo "  Cursor rules:   $INSTALLED_CURSOR installed"; fi
 echo ""
 echo -e "  ${GREEN}Commands: /sdd-tdd /spec /task-plan /build /quality-review /debug /ctx-health${NC}"
-echo -e "  ${GREEN}         /simplify /perf /secure /api /doc /ship /migrate /ui /idea${NC}"
+echo -e "  ${GREEN}         /simplify /perf /secure /api /doc /ship /migrate /ui /idea /learn${NC}"
 echo -e "  ${GREEN}Agents:  product-owner, architect, code-reviewer, security-auditor${NC}"
 echo -e "  ${GREEN}         test-engineer, backend-specialist, frontend-specialist, performance-engineer${NC}"
 echo ""

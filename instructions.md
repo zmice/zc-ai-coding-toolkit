@@ -52,6 +52,13 @@
 - 使用 `/retro` 在 Sprint 结束时进行结构化回顾：统计产出数据、检查 Spec 偏差、评估流程健康度、输出可操作的改进清单
 - 不回顾的团队会重复犯同样的错误
 
+### 10. Continuous Learning（持续学习）
+- 每次会话都是学习机会——通过 Hook 自动观察工具使用和用户纠正
+- 反复出现的模式提炼为 **Instinct（本能）**，置信度 0.3→0.9 渐进演化
+- 使用 `/learn` 手动触发模式提取；Hook 在会话结束时自动提醒
+- 学习成果双层持久化：本地文件（项目级）+ Agent Memory（跨项目）
+- 参见 `continuous-learning` 技能获取完整指南
+
 ## 三阶段审查（Validate → Evaluate → Verify）
 
 不要把所有审查放到最后。在三个关键节点施加人类判断：
@@ -129,6 +136,7 @@ DEVIATION LOG:
 | 任务有依赖链（A→B→C） | 手动串行或 `subagent-driven-development` |
 | 任务独立且 ≤2 个 | 手动串行（简单高效） |
 | 任务独立且 >2 个 | `parallel-agent-dispatch`（并行扇出） |
+| 任务有依赖图（层内独立、层间依赖） | `parallel-agent-dispatch` Cascade 模式（级联执行） |
 
 **子代理铁律：**
 - 每个子代理使用隔离的上下文，不继承主会话历史
@@ -164,3 +172,4 @@ DEVIATION LOG:
 - `/guard` — 全面防护模式
 - `/qa` — 浏览器 QA 测试
 - `/plan-review` — 多视角计划评审
+- `/learn` — 会话模式提取与持续学习

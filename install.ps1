@@ -129,6 +129,66 @@ function Install-Skills($targetQoderSkillsDir, $targetCursorRulesDir) {
         }
     }
 
+    # --- Qoder Hooks: Install continuous-learning hooks ---
+    $hooksSourceDir = Join-Path $SkillsDir 'continuous-learning' 'hooks'
+    if (Test-Path $hooksSourceDir) {
+        Write-Header "Installing Continuous-Learning Hooks"
+        $targetHooksDir = Join-Path $qoderBaseDir 'hooks' 'continuous-learning'
+        New-Item -ItemType Directory -Path $targetHooksDir -Force | Out-Null
+
+        # Copy hook scripts (ps1 + sh)
+        $hookFiles = @('observe.ps1', 'session-end.ps1', 'observe.sh', 'session-end.sh')
+        foreach ($hf in $hookFiles) {
+            $src = Join-Path $hooksSourceDir $hf
+            if (Test-Path $src) {
+                Copy-Item $src (Join-Path $targetHooksDir $hf) -Force
+                Write-Ok $hf
+            }
+        }
+
+        # Create homunculus directory structure
+        $homunculusDir = Join-Path $qoderBaseDir 'homunculus'
+        @(
+            (Join-Path $homunculusDir 'instincts' 'personal'),
+            (Join-Path $homunculusDir 'instincts' 'inherited'),
+            (Join-Path $homunculusDir 'projects')
+        ) | ForEach-Object { New-Item -ItemType Directory -Path $_ -Force | Out-Null }
+        $projFile = Join-Path $homunculusDir 'projects.json'
+        if (-not (Test-Path $projFile)) { '{}' | Set-Content $projFile -Encoding UTF8 }
+        Write-Ok "homunculus directory structure"
+
+        # Update settings.json with hook configuration
+        $settingsFile = Join-Path $qoderBaseDir 'settings.json'
+        if (-not (Test-Path $settingsFile)) { '{}' | Set-Content $settingsFile -Encoding UTF8 }
+        try {
+            $settings = Get-Content $settingsFile -Raw -Encoding UTF8 | ConvertFrom-Json
+            if (-not ($settings.PSObject.Properties.Name -contains 'hooks')) {
+                $settings | Add-Member -NotePropertyName 'hooks' -NotePropertyValue ([PSCustomObject]@{})
+            }
+            $obsCmd  = "pwsh -NoProfile -File `"$(Join-Path $targetHooksDir 'observe.ps1')`""
+            $endCmd  = "pwsh -NoProfile -File `"$(Join-Path $targetHooksDir 'session-end.ps1')`""
+            $hookMap = @{
+                PostToolUse        = @{ matcher = '*'; hooks = @(@{ type = 'command'; command = $obsCmd }) }
+                UserPromptSubmit   = @{ hooks = @(@{ type = 'command'; command = $obsCmd }) }
+                PostToolUseFailure = @{ matcher = '*'; hooks = @(@{ type = 'command'; command = $obsCmd }) }
+                Stop               = @{ hooks = @(@{ type = 'command'; command = $endCmd }) }
+            }
+            foreach ($evt in $hookMap.Keys) {
+                if (-not ($settings.hooks.PSObject.Properties.Name -contains $evt)) {
+                    $settings.hooks | Add-Member -NotePropertyName $evt -NotePropertyValue @()
+                }
+                $existing = @($settings.hooks.$evt | Where-Object { $_.hooks[0].command -match 'continuous-learning' })
+                if ($existing.Count -eq 0) {
+                    $settings.hooks.$evt = @($settings.hooks.$evt) + @([PSCustomObject]$hookMap[$evt])
+                }
+            }
+            $settings | ConvertTo-Json -Depth 10 | Set-Content $settingsFile -Encoding UTF8
+            Write-Ok "settings.json hooks configuration"
+        } catch {
+            Write-Skip "settings.json update failed: $_ (configure hooks manually)"
+        }
+    }
+
     # --- Cursor: Copy each skill/<name>/SKILL.md -> target/.cursor/rules/<name>.md ---
     if (-not $QoderOnly -and $targetCursorRulesDir) {
         Write-Header "Installing Cursor Rules"
@@ -149,7 +209,7 @@ function Install-Skills($targetQoderSkillsDir, $targetCursorRulesDir) {
         }
     }
 
-    return @{ Qoder = $installedQoder; Cursor = $installedCursor; Agents = $installedAgents; Commands = $installedCommands }
+    return @{ Qoder = $installedQoder; Cursor = $installedCursor; Agents = $installedAgents; Commands = $installedCommands; Hooks = (Test-Path $hooksSourceDir) }
 }
 
 # --- Install ---
@@ -212,10 +272,11 @@ Write-Header "Installation Complete"
 Write-Host "  Qoder skills:   $($result.Qoder) installed"
 Write-Host "  Qoder agents:   $($result.Agents) installed"
 Write-Host "  Qoder commands:  $($result.Commands) installed"
+if ($result.Hooks) { Write-Host "  Hooks:           continuous-learning (auto-observation)" }
 if (-not $QoderOnly) { Write-Host "  Cursor rules:   $($result.Cursor) installed" }
 Write-Host ""
 Write-Host "  Commands: /sdd-tdd /spec /task-plan /build /quality-review /debug /ctx-health" -ForegroundColor Green
-Write-Host "           /simplify /perf /secure /api /doc /ship /migrate /ui /idea" -ForegroundColor Green
+Write-Host "           /simplify /perf /secure /api /doc /ship /migrate /ui /idea /learn" -ForegroundColor Green
 Write-Host "  Agents:  product-owner, architect, code-reviewer, security-auditor" -ForegroundColor Green
 Write-Host "           test-engineer, backend-specialist, frontend-specialist, performance-engineer" -ForegroundColor Green
 Write-Host ""
