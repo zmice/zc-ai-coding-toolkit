@@ -6,8 +6,8 @@
 
 **三层架构，覆盖 AI 编码全流程：**
 
-- **31 Skills（技能）** — 深度工作流引擎：SDD 规格驱动、TDD 测试驱动、Debug 系统化调试、安全加固、持续学习……每个 Skill 内置门控、阶段和检查点，模型自主触发
-- **25 Commands（指令）** — 快捷启动器：`/sdd-tdd` `/spec` `/build` `/debug` `/quality-review` `/learn` 等，一条斜杠命令驱动完整流程
+- **32 Skills（技能）** — 深度工作流引擎：SDD 规格驱动、TDD 测试驱动、CI/CD 自动化、Debug 系统化调试、安全加固、持续学习……每个 Skill 内置门控、阶段和检查点，模型自主触发
+- **27 Commands（指令）** — 快捷启动器：`/sdd-tdd` `/spec` `/build` `/debug` `/quality-review` `/ci` `/commit` 等，一条斜杠命令驱动完整流程
 - **8 Agents（智能体）** — 专家团：架构师、代码审查官、安全审计、测试工程师……按需切换，各司其职
 
 核心工作流：**需求 → `/spec` 规格 → `/task-plan` 拆解 → `/build` TDD 实现 → `/quality-review` 审查**，每个阶段门控确认，杜绝跳步。
@@ -55,8 +55,8 @@ qwen extensions uninstall ai-coding-toolkit
 
 | 类型 | 数量 | 安装位置 |
 |------|------|--------|
-| Skills（技能） | 31 个 | `~/.qoder/skills/<name>/SKILL.md` |
-| Commands（指令） | 25 个 | `~/.qoder/commands/<name>.md` |
+| Skills（技能） | 32 个 | `~/.qoder/skills/<name>/SKILL.md` |
+| Commands（指令） | 27 个 | `~/.qoder/commands/<name>.md` |
 | Agents（智能体） | 8 个 | `~/.qoder/agents/<name>.md` |
 | Instructions（全局指令） | 1 个 | `~/.qoder/instructions.md` |
 | Hooks（持续学习） | 4 事件 | `~/.qoder/hooks/continuous-learning/` |
@@ -65,8 +65,8 @@ qwen extensions uninstall ai-coding-toolkit
 
 | 类型 | 数量 | 安装位置 |
 |------|------|--------|
-| Skills（技能） | 31 个 | `~/.qwen/extensions/ai-coding-toolkit/skills/` |
-| Commands（指令） | 25 个 | `~/.qwen/extensions/ai-coding-toolkit/commands/` |
+| Skills（技能） | 32 个 | `~/.qwen/extensions/ai-coding-toolkit/skills/` |
+| Commands（指令） | 27 个 | `~/.qwen/extensions/ai-coding-toolkit/commands/` |
 | Agents（智能体） | 8 个 | `~/.qwen/extensions/ai-coding-toolkit/agents/` |
 | Context（上下文） | 1 个 | `QWEN.md`（自动加载到每个会话） |
 
@@ -75,7 +75,7 @@ qwen extensions uninstall ai-coding-toolkit
 | 维度 | Skills（技能） | Commands（指令） | Agents（智能体） |
 |------|---------------|-----------------|------------------|
 | 触发方式 | 模型自主触发 / 手动 `/skill` | 用户在对话框输入 `/name` | 代码变更时自动触发 |
-| 内容深度 | 完整工作流指导（门控、阶段、检查点） | 精简提示词模板（结构化 Checklist） | 角色定义 + 专业行为准则 |
+| 内容深度 | 完整工作流指导（门控、阶段、检查点） | 薄调度器（调用 Skill + 关键步骤引导） | 角色定义 + 专业行为准则 |
 | 适用场景 | 深度开发任务（SDD/TDD/Debug 全流程） | 快速启动常见任务 | 审查、测试、安全审计 |
 | 存储格式 | `SKILL.md`（目录结构） | `<name>.md`（单文件） | `<name>.md`（单文件） |
 
@@ -104,7 +104,7 @@ qwen extensions update ai-coding-toolkit
 ### 更新说明
 
 - **覆盖安装**：安装脚本只覆盖工具包自身的 Skills、Commands、Agents 和 `instructions.md`，不会影响 `~/.qoder/` 或 `~/.cursor/` 下其他自定义文件
-- **版本规模**：当前体系包含 **31 Skills + 25 Commands + 8 Agents**，持续迭代中
+- **版本规模**：当前体系包含 **32 Skills + 27 Commands + 8 Agents**，持续迭代中
 
 ---
 
@@ -494,7 +494,7 @@ Agent [idea-refine]:
 
 ---
 
-### 六、25 个命令速查
+### 六、27 个命令速查
 
 | 命令 | 用途 | 典型场景 |
 |------|------|---------|
@@ -504,6 +504,8 @@ Agent [idea-refine]:
 | `/build` | TDD 编码 | 逐个任务实现 |
 | `/quality-review` | 代码审查 | 合并前审查 |
 | `/debug` | 系统化调试 | Bug、错误、异常 |
+| `/verify` | 完成前验证 | 证据先于断言 |
+| `/onboard` | 代码库入门 | 理解陌生项目 |
 | `/ctx-health` | 上下文管理 | 长会话质量下降 |
 | `/simplify` | 代码简化 | 重构复杂代码 |
 | `/perf` | 性能优化 | 慢查询、大文件 |
@@ -511,6 +513,8 @@ Agent [idea-refine]:
 | `/api` | API 设计 | 新增接口 |
 | `/doc` | 文档/ADR | 架构决策记录 |
 | `/ship` | 发布上线 | 部署前检查 |
+| `/ci` | CI/CD 管道 | 搭建、优化自动化管道 |
+| `/commit` | 规范化提交 | 原子提交、描述性消息 |
 | `/migrate` | 迁移废弃 | 替换旧系统 |
 | `/ui` | 前端工程 | 组件、布局、交互 |
 | `/idea` | 想法细化 | 模糊创意→具体方案 |
@@ -520,7 +524,7 @@ Agent [idea-refine]:
 | `/guard` | 全面防护模式 | careful + freeze 组合 |
 | `/qa` | 浏览器 QA 测试 | 前端真实浏览器验证 |
 | `/plan-review` | 多视角评审 | 产品/工程/设计/DevEx |
-| `/learn` | 持续学习 | 审查观察、巩固本能、知识提取 |
+| `/learn` | 持续学习 | 提取模式、巩固本能 |
 
 ---
 
@@ -541,7 +545,7 @@ Agent [idea-refine]:
 
 ```
 ai-coding/
-├── skills/                           # 31 个 Skill（Qoder 原生格式）
+├── skills/                           # 32 个 Skill（Qoder 原生格式）
 │   ├── sdd-tdd-workflow/SKILL.md     # 整合入口（25 个命令）
 │   ├── spec-driven-development/      # /spec
 │   ├── planning-and-task-breakdown/  # /task-plan
@@ -556,6 +560,7 @@ ai-coding/
 │   ├── api-and-interface-design/     # /api
 │   ├── documentation-and-adrs/       # /doc
 │   ├── shipping-and-launch/          # /ship
+│   ├── ci-cd-and-automation/         # /ci
 │   ├── deprecation-and-migration/    # /migrate
 │   ├── frontend-ui-engineering/      # /ui
 │   ├── idea-refine/                  # /idea
@@ -564,7 +569,7 @@ ai-coding/
 │   ├── browser-qa-testing/           # /qa
 │   ├── multi-perspective-review/     # /plan-review
 │   ├── continuous-learning/          # /learn（Hook 驱动持续学习）
-│   ├── git-workflow-and-versioning/  # Git 纪律
+│   ├── git-workflow-and-versioning/  # /commit + Git 纪律
 │   ├── source-driven-development/    # 基于官方文档的实现规范
 │   └── using-agent-skills/           # 技能发现元规则
 ├── agents/                           # 8 个自定义智能体

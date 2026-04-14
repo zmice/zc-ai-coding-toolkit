@@ -276,7 +276,7 @@ if ($result.Hooks) { Write-Host "  Hooks:           continuous-learning (auto-ob
 if (-not $QoderOnly) { Write-Host "  Cursor rules:   $($result.Cursor) installed" }
 Write-Host ""
 Write-Host "  Commands: /sdd-tdd /spec /task-plan /build /quality-review /debug /ctx-health" -ForegroundColor Green
-Write-Host "           /simplify /perf /secure /api /doc /ship /migrate /ui /idea /learn" -ForegroundColor Green
+Write-Host "           /simplify /perf /secure /api /doc /ship /ci /commit /migrate /ui /idea /learn" -ForegroundColor Green
 Write-Host "  Agents:  product-owner, architect, code-reviewer, security-auditor" -ForegroundColor Green
 Write-Host "           test-engineer, backend-specialist, frontend-specialist, performance-engineer" -ForegroundColor Green
 Write-Host ""

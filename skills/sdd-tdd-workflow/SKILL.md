@@ -1,6 +1,6 @@
 ---
 name: sdd-tdd-workflow
-description: Orchestrates the full SDD+TDD development lifecycle. Use when starting any new feature, project, or significant change. Enforces spec-first, test-first discipline through five gated phases - Brainstorm (optional), Specify, Plan, Build (TDD with optional subagent-driven mode), Review. Also provides on-demand skills for debugging, context management, verification, onboarding, simplification, performance, security, API design, documentation, shipping, migration, frontend, and idea refinement. Triggers on /spec, /task-plan, /build, /quality-review, /verify, /onboard, /debug, /ctx-health, /simplify, /perf, /secure, /api, /doc, /ship, /migrate, /ui, /idea, or /sdd-tdd for the full workflow.
+description: Orchestrates the full SDD+TDD development lifecycle. Use when starting any new feature, project, or significant change. Enforces spec-first, test-first discipline through five gated phases - Brainstorm (optional), Specify, Plan, Build (TDD with optional subagent-driven mode), Review. Also provides on-demand skills for debugging, context management, verification, onboarding, simplification, performance, security, API design, documentation, shipping, CI/CD, git commit, migration, frontend, and idea refinement. Triggers on /spec, /task-plan, /build, /quality-review, /verify, /onboard, /debug, /ctx-health, /simplify, /perf, /secure, /api, /doc, /ship, /ci, /commit, /migrate, /ui, /idea, or /sdd-tdd for the full workflow.
 ---
 
 # SDD + TDD Development Workflow
@@ -19,7 +19,7 @@ This skill orchestrates the complete Spec-Driven Development + Test-Driven Devel
 
  Build modes:  Manual (default) or Subagent-Driven (for independent tasks)
  On-demand:    /debug /ctx-health /verify /onboard /simplify /perf /secure
-               /api /doc /ship /migrate /ui /idea /careful /freeze /guard /qa /plan-review
+               /api /doc /ship /ci /commit /migrate /ui /idea /careful /freeze /guard /qa /plan-review
 ```
 
 完整 Sprint 生命周期（v2）:
@@ -50,6 +50,8 @@ Specify  Multi-View     Plan      Build+TDD     5-Axis        Retro
 | `/api` | On-demand | API & interface design — contract first, consistent errors |
 | `/doc` | On-demand | Documentation & ADRs — record decisions, not just code |
 | `/ship` | On-demand | Shipping & launch — pre-launch checklist, staged rollout |
+| `/ci` | On-demand | CI/CD 管道搭建与优化，质量门禁配置 |
+| `/commit` | On-demand | 规范化 Git 提交，原子提交 + 描述性消息 |
 | `/migrate` | On-demand | Deprecation & migration — strangler pattern, safe removal |
 | `/ui` | On-demand | Frontend UI engineering — component patterns, accessibility |
 | `/idea` | On-demand | Idea refinement — refine vague ideas into actionable specs |
@@ -301,6 +303,8 @@ For these cases, use individual commands (`/build` for small fixes, `/quality-re
 | `/api` | api-and-interface-design | Designing new APIs, module boundaries, or component interfaces. |
 | `/doc` | documentation-and-adrs | Making architectural decisions, changing public APIs, or recording context for the future. |
 | `/ship` | shipping-and-launch | Preparing to deploy — pre-launch checklist, feature flags, rollback strategy. |
+| `/ci` | ci-cd-and-automation | 搭建或优化 CI/CD 管道，配置质量门禁、部署策略、CI 失败反馈循环。 |
+| `/commit` | git-workflow-and-versioning | 引导规范化 Git 提交，原子提交、描述性消息、提交前检查。 |
 | `/migrate` | deprecation-and-migration | Replacing old systems, sunsetting features, or removing dead code. |
 | `/ui` | frontend-ui-engineering | Building UI components, handling accessibility, responsive design. |
 | `/idea` | idea-refine | Turning vague ideas into concrete, actionable specifications. |

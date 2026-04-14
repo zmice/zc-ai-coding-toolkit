@@ -295,7 +295,7 @@ if $INSTALLED_HOOKS; then echo "  Hooks:           continuous-learning (auto-obs
 if ! $QODER_ONLY; then echo "  Cursor rules:   $INSTALLED_CURSOR installed"; fi
 echo ""
 echo -e "  ${GREEN}Commands: /sdd-tdd /spec /task-plan /build /quality-review /debug /ctx-health${NC}"
-echo -e "  ${GREEN}         /simplify /perf /secure /api /doc /ship /migrate /ui /idea /learn${NC}"
+echo -e "  ${GREEN}         /simplify /perf /secure /api /doc /ship /ci /commit /migrate /ui /idea /learn${NC}"
 echo -e "  ${GREEN}Agents:  product-owner, architect, code-reviewer, security-auditor${NC}"
 echo -e "  ${GREEN}         test-engineer, backend-specialist, frontend-specialist, performance-engineer${NC}"
 echo ""

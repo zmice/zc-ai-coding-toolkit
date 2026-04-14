@@ -163,6 +163,8 @@ DEVIATION LOG:
 - `/api` — API 接口设计
 - `/doc` — 文档与 ADR
 - `/ship` — 发布上线
+- `/ci` — CI/CD 管道搭建与优化
+- `/commit` — 规范化 Git 提交
 - `/migrate` — 迁移废弃
 - `/ui` — 前端 UI 工程
 - `/idea` — 想法细化
