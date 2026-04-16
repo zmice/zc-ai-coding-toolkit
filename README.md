@@ -47,32 +47,19 @@ qwen extensions uninstall ai-coding-toolkit
 /extensions manage
 ```
 
-### Codex
-
-#### 全局安装（推荐，所有项目通用）
-
-```powershell
-# Windows
-./install.ps1 -Global -Force
-```
+### Codex（项目级 AGENTS.md）
 
 ```bash
-# Linux / macOS
-./install.sh --global --force
-```
+# 克隆仓库
+git clone https://codeup.aliyun.com/6892c510e5ba87aaf500637d/basic/ai-coding.git ai-coding
+cd ai-coding
 
-全局安装后 Codex 会从 `~/.codex/AGENTS.md` 读取全局指令，Skills 位于 `~/.codex/skills/`，在所有项目中自动可用。
+# 方式 1：安装脚本（推荐）
+./install.ps1 -CodexProject /path/to/your/project          # Windows
+./install.sh --codex-project /path/to/your/project          # Linux/Mac
 
-#### 项目级安装（可选，覆盖全局设置）
-
-```powershell
-# Windows
-./install.ps1 -CodexProject C:\path\to\project -Force
-```
-
-```bash
-# Linux / macOS
-./install.sh --codex-project /path/to/project --force
+# 方式 2：手动复制
+cp AGENTS.md /path/to/your/project/AGENTS.md
 ```
 
 项目级安装会将 `AGENTS.md` 复制到目标项目根目录，并将所有 Skills 部署到 `<project>/.codex/skills/` 目录。Codex 启动时自动读取 `AGENTS.md` 作为上下文。
@@ -100,16 +87,7 @@ qwen extensions uninstall ai-coding-toolkit
 | Agents（智能体） | 8 个 | `~/.qwen/extensions/ai-coding-toolkit/agents/` |
 | Context（上下文） | 1 个 | `QWEN.md`（自动加载到每个会话） |
 
-### Codex
-
-#### 全局安装
-
-| 类型 | 数量 | 安装位置 |
-|------|------|--------|
-| Skills（技能） | 32 个 | `~/.codex/skills/<name>/SKILL.md` |
-| Context（上下文） | 1 个 | `~/.codex/AGENTS.md`（Codex 自动读取） |
-
-#### 项目级安装
+### Codex（项目级安装）
 
 | 类型 | 数量 | 安装位置 |
 |------|------|--------|
