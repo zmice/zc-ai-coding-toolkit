@@ -25,18 +25,19 @@
 
 | 项目 | Commit | 日期 | 分支 | 核心启发 |
 |------|--------|------|------|---------|
-| [obra/superpowers](https://github.com/obra/superpowers) | `917e5f53b16b` | 2026-04-07 | main | 两级审查模式、"角色即技能"哲学 |
-| [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) | `e0ddb331f67b` | 2026-04-13 | main | CL v2 Instinct 架构、Agent 膨胀反面教训 |
-| [garrytan/gstack](https://github.com/garrytan/gstack) | `7e96fe299b08` | 2026-04-13 | main | 战略过滤器、"角色嵌入命令"哲学 |
+| [obra/superpowers](https://github.com/obra/superpowers) | `c4bbe651cb1b` | 2026-04-15 | main | 两级审查模式、"角色即技能"哲学 |
+| [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) | `7eb7c598fba3` | 2026-04-14 | main | CL v2 Instinct 架构、Agent 膨胀反面教训 |
+| [garrytan/gstack](https://github.com/garrytan/gstack) | `230006726732` | 2026-04-14 | main | 战略过滤器、"角色嵌入命令"哲学 |
+| [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | `c9a44ae835fa` | 2026-04-16 | main | Karpathy LLM 行为矫正四原则、"先想后做"编码纪律 |
 
 ## 本工具包
 
 | 字段 | 值 |
 |------|------|
 | 名称 | ai-coding-toolkit |
-| 版本 | 1.3.0 |
+| 版本 | 1.3.1 |
 | 组件 | 31 Skills, 25 Commands, 8 Agents |
-| 记录日期 | 2026-04-14 |
+| 记录日期 | 2026-04-16 |
 
 ## 升级检查清单
 

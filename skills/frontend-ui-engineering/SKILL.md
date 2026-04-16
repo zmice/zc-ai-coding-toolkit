@@ -313,10 +313,17 @@ For detailed accessibility requirements and testing tools, see `references/acces
 
 After building UI:
 
+### 工程质量
 - [ ] Component renders without console errors
 - [ ] All interactive elements are keyboard accessible (Tab through the page)
-- [ ] Screen reader can convey the page's content and structure
+- [ ] Screen reader can convey the page’s content and structure
 - [ ] Responsive: works at 320px, 768px, 1024px, 1440px
 - [ ] Loading, error, and empty states all handled
-- [ ] Follows the project's design system (spacing, colors, typography)
+- [ ] Follows the project’s design system (spacing, colors, typography)
 - [ ] No accessibility warnings in dev tools or axe-core
+
+### UX 可用性自检（参考 Steve Krug "Don't Make Me Think"）
+- [ ] **Trunk Test** — 用户能否立即识别：这是什么网站？我在哪个页面？如何搜索/导航？
+- [ ] **3秒扫描** — 用户打开页面 3 秒内能否找到主要操作入口？视觉焦点是否引导到正确位置？
+- [ ] **无脑选择** — 每个点击操作是否感觉显而易见？用户是否需要思考"这个能点吗？"
+- [ ] **废话检测** — 页面上是否有大段无人阅读的文字？能否精简或移除？
