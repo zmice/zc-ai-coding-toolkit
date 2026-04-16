@@ -1,6 +1,6 @@
 # AI Coding Toolkit
 
-> 基于 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 构建的 **SDD+TDD 全流程 AI 编码工具包**，支持 Qoder、Qwen Code 和 Cursor。
+> 基于 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 构建的 **SDD+TDD 全流程 AI 编码工具包**，支持 Qoder、Qwen Code、Cursor 和 Codex。
 
 ## 核心特性
 
@@ -47,7 +47,37 @@ qwen extensions uninstall ai-coding-toolkit
 /extensions manage
 ```
 
-安装完成后，Qoder/Qwen Code 会自动发现所有 Skills、Commands 和 Agents。
+### Codex
+
+#### 全局安装（推荐，所有项目通用）
+
+```powershell
+# Windows
+./install.ps1 -Global -Force
+```
+
+```bash
+# Linux / macOS
+./install.sh --global --force
+```
+
+全局安装后 Codex 会从 `~/.codex/AGENTS.md` 读取全局指令，Skills 位于 `~/.codex/skills/`，在所有项目中自动可用。
+
+#### 项目级安装（可选，覆盖全局设置）
+
+```powershell
+# Windows
+./install.ps1 -CodexProject C:\path\to\project -Force
+```
+
+```bash
+# Linux / macOS
+./install.sh --codex-project /path/to/project --force
+```
+
+项目级安装会将 `AGENTS.md` 复制到目标项目根目录，并将所有 Skills 部署到 `<project>/.codex/skills/` 目录。Codex 启动时自动读取 `AGENTS.md` 作为上下文。
+
+安装完成后，Qoder/Qwen Code/Codex 会自动发现所有 Skills、Commands 和 Agents。
 
 ## 安装内容
 
@@ -69,6 +99,22 @@ qwen extensions uninstall ai-coding-toolkit
 | Commands（指令） | 27 个 | `~/.qwen/extensions/ai-coding-toolkit/commands/` |
 | Agents（智能体） | 8 个 | `~/.qwen/extensions/ai-coding-toolkit/agents/` |
 | Context（上下文） | 1 个 | `QWEN.md`（自动加载到每个会话） |
+
+### Codex
+
+#### 全局安装
+
+| 类型 | 数量 | 安装位置 |
+|------|------|--------|
+| Skills（技能） | 32 个 | `~/.codex/skills/<name>/SKILL.md` |
+| Context（上下文） | 1 个 | `~/.codex/AGENTS.md`（Codex 自动读取） |
+
+#### 项目级安装
+
+| 类型 | 数量 | 安装位置 |
+|------|------|--------|
+| Skills（技能） | 32 个 | `<project>/.codex/skills/<name>/SKILL.md` |
+| Context（上下文） | 1 个 | `<project>/AGENTS.md`（Codex 自动读取） |
 
 ### Skills vs Commands vs Agents
 
@@ -584,6 +630,7 @@ ai-coding/
 ├── instructions.md                   # 全局指令（Qoder）
 ├── QWEN.md                           # 全局指令（Qwen Code 扩展上下文）
 ├── qwen-extension.json               # Qwen Code 扩展清单
+├── AGENTS.md                            # 全局指令（Codex 项目级上下文）
 ├── install.ps1                       # Windows 安装脚本（Qoder/Cursor）
 ├── install.sh                        # Linux/Mac 安装脚本（Qoder/Cursor）
 └── .gitignore

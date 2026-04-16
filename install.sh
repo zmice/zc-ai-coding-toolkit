@@ -3,13 +3,15 @@
 # AI Coding Toolkit - SDD+TDD Workflow Installer (Linux/Mac)
 #
 # Qoder-first: installs all skills as proper Qoder skill directories.
-# Also supports Cursor rules installation.
+# Also supports Cursor rules, Codex global installation, and Codex project-level installation.
+# Global install (--global) also installs Codex globally to ~/.codex/ (AGENTS.md + skills).
 # For Qwen Code, use the extension approach: qwen extensions install https://codeup.aliyun.com/6892c510e5ba87aaf500637d/basic/ai-coding.git
 #
 # Usage:
-#   ./install.sh --global                    Install globally (all projects)
-#   ./install.sh --global --qoder-only       Install Qoder skills only
+#   ./install.sh --global                    Install globally (Qoder + Cursor + Codex)
+#   ./install.sh --global --qoder-only       Install Qoder skills only (skip Cursor & Codex)
 #   ./install.sh --project /path/to/project  Install to a specific project
+#   ./install.sh --codex-project /path/to/project  Install Codex context to a project
 #   ./install.sh --global --force            Skip overwrite prompts
 
 set -euo pipefail
@@ -19,6 +21,7 @@ SKILLS_DIR="$SCRIPT_DIR/skills"
 AGENTS_DIR="$SCRIPT_DIR/agents"
 COMMANDS_DIR="$SCRIPT_DIR/commands"
 INSTRUCTIONS_FILE="$SCRIPT_DIR/instructions.md"
+AGENTS_MD_FILE="$SCRIPT_DIR/AGENTS.md"
 
 # --- Colors ---
 RED='\033[0;31m'
@@ -35,6 +38,7 @@ err()     { echo -e "  ${RED}[ERR]${NC} $1"; }
 # --- Defaults ---
 MODE=""
 PROJECT_DIR=""
+CODEX_PROJECT=""
 FORCE=false
 QODER_ONLY=false
 INSTALLED_QODER=0
@@ -43,12 +47,15 @@ INSTALLED_AGENTS=0
 INSTALLED_COMMANDS=0
 
 INSTALLED_HOOKS=false
+CODEX_GLOBAL_INSTALLED_SKILLS=0
+CODEX_GLOBAL_INSTALLED_AGENTS_MD=false
 
 # --- Parse args ---
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --global)      MODE="global"; shift ;;
         --project)     MODE="project"; PROJECT_DIR="$2"; shift 2 ;;
+        --codex-project) CODEX_PROJECT="$2"; shift 2 ;;
         --force)       FORCE=true; shift ;;
         --qoder-only)  QODER_ONLY=true; shift ;;
         -h|--help)     MODE="help"; shift ;;
@@ -245,6 +252,54 @@ case "$MODE" in
         echo "  Target (Qoder):  $QODER_DIR"
         if ! $QODER_ONLY; then echo "  Target (Cursor): $CURSOR_DIR"; fi
         install_skills "$QODER_DIR" "$CURSOR_DIR"
+
+        # --- Codex Global Install ---
+        if ! $QODER_ONLY; then
+            CODEX_GLOBAL_DIR="$HOME/.codex"
+            CODEX_GLOBAL_SKILLS_DIR="$CODEX_GLOBAL_DIR/skills"
+            CODEX_GLOBAL_AGENTS_MD="$CODEX_GLOBAL_DIR/AGENTS.md"
+
+            header "Installing Codex Global"
+            echo "  Target (Codex):  $CODEX_GLOBAL_DIR"
+
+            CODEX_GLOBAL_INSTALLED_SKILLS=0
+            CODEX_GLOBAL_INSTALLED_AGENTS_MD=false
+
+            # 1. Install AGENTS.md -> ~/.codex/AGENTS.md
+            if [[ -f "$AGENTS_MD_FILE" ]]; then
+                mkdir -p "$CODEX_GLOBAL_DIR"
+                if confirm_overwrite "$CODEX_GLOBAL_AGENTS_MD"; then
+                    cp "$AGENTS_MD_FILE" "$CODEX_GLOBAL_AGENTS_MD"
+                    ok "AGENTS.md"
+                    CODEX_GLOBAL_INSTALLED_AGENTS_MD=true
+                else
+                    skip "AGENTS.md (skipped)"
+                fi
+            else
+                skip "AGENTS.md (source not found)"
+            fi
+
+            # 2. Install Skills -> ~/.codex/skills/<name>/SKILL.md
+            header "Installing Codex Global Skills"
+            for skill_dir in "$SKILLS_DIR"/*/; do
+                [[ -d "$skill_dir" ]] || continue
+                name="$(basename "$skill_dir")"
+                src="$skill_dir/SKILL.md"
+                [[ -f "$src" ]] || continue
+
+                dest_dir="$CODEX_GLOBAL_SKILLS_DIR/$name"
+                dest="$dest_dir/SKILL.md"
+                mkdir -p "$dest_dir"
+
+                if confirm_overwrite "$dest"; then
+                    cp "$src" "$dest"
+                    ok "$name/SKILL.md"
+                    CODEX_GLOBAL_INSTALLED_SKILLS=$((CODEX_GLOBAL_INSTALLED_SKILLS + 1))
+                else
+                    skip "$name (skipped)"
+                fi
+            done
+        fi
         ;;
 
     project)
@@ -261,38 +316,107 @@ case "$MODE" in
         ;;
 
     help|"")
+        if [[ -z "$CODEX_PROJECT" ]]; then
         cat <<EOF
 
 AI Coding Toolkit - SDD+TDD Workflow Installer
 
 Usage:
-  ./install.sh --global                    Install globally (all projects)
-  ./install.sh --global --qoder-only       Install Qoder skills only
-  ./install.sh --project /path/to/project  Install to a specific project
-  ./install.sh --global --force            Skip overwrite prompts
+  ./install.sh --global                                  Install globally (Qoder + Cursor + Codex)
+  ./install.sh --global --qoder-only                     Install Qoder skills only (skip Cursor & Codex)
+  ./install.sh --project /path/to/project                Install to a specific project
+  ./install.sh --codex-project /path/to/project          Install Codex context to a project
+  ./install.sh --global --codex-project /path/to/project Install both globally and Codex project
+  ./install.sh --global --force                          Skip overwrite prompts
 
 Options:
-  --global       Install to ~/.qoder/skills/ and ~/.cursor/rules/
-  --project      Install to <project>/.qoder/skills/ and <project>/.cursor/rules/
-  --qoder-only   Skip Cursor rules (Qoder-first)
-  --force        Skip confirmation prompts
+  --global         Install to ~/.qoder/skills/, ~/.cursor/rules/, and ~/.codex/
+  --project        Install to <project>/.qoder/skills/ and <project>/.cursor/rules/
+  --codex-project  Install AGENTS.md and skills to <project>/ for Codex CLI
+  --qoder-only     Skip Cursor rules and Codex global installation (Qoder-first)
+  --force          Skip confirmation prompts
 
 Note: For Qwen Code, use the extension approach:
   qwen extensions install https://codeup.aliyun.com/6892c510e5ba87aaf500637d/basic/ai-coding.git
 
 EOF
         exit 0
+        fi
         ;;
 esac
 
+# --- Codex Project Install ---
+
+CODEX_INSTALLED_SKILLS=0
+CODEX_INSTALLED_AGENTS_MD=false
+
+if [[ -n "$CODEX_PROJECT" ]]; then
+    header "Codex Project Install: $CODEX_PROJECT"
+
+    if [[ ! -d "$CODEX_PROJECT" ]]; then
+        err "Codex project directory not found: $CODEX_PROJECT"
+        exit 1
+    fi
+
+    # --- Codex: Copy AGENTS.md -> <project>/AGENTS.md ---
+    if [[ -f "$AGENTS_MD_FILE" ]]; then
+        local_dest="$CODEX_PROJECT/AGENTS.md"
+        if confirm_overwrite "$local_dest"; then
+            cp "$AGENTS_MD_FILE" "$local_dest"
+            ok "AGENTS.md"
+            CODEX_INSTALLED_AGENTS_MD=true
+        else
+            skip "AGENTS.md (skipped)"
+        fi
+    else
+        skip "AGENTS.md (source not found)"
+    fi
+
+    # --- Codex: Copy skills/<name>/SKILL.md -> <project>/.codex/skills/<name>/SKILL.md ---
+    header "Installing Codex Skills"
+    for skill_dir in "$SKILLS_DIR"/*/; do
+        [[ -d "$skill_dir" ]] || continue
+        name="$(basename "$skill_dir")"
+        src="$skill_dir/SKILL.md"
+        [[ -f "$src" ]] || continue
+
+        dest_dir="$CODEX_PROJECT/.codex/skills/$name"
+        dest="$dest_dir/SKILL.md"
+        mkdir -p "$dest_dir"
+
+        if confirm_overwrite "$dest"; then
+            cp "$src" "$dest"
+            ok "$name/SKILL.md"
+            CODEX_INSTALLED_SKILLS=$((CODEX_INSTALLED_SKILLS + 1))
+        else
+            skip "$name (skipped)"
+        fi
+    done
+fi
+
 # --- Summary ---
 
+HAS_QODER_INSTALL=false
+if [[ "$MODE" == "global" || "$MODE" == "project" ]]; then
+    HAS_QODER_INSTALL=true
+fi
+
 header "Installation Complete"
-echo "  Qoder skills:   $INSTALLED_QODER installed"
-echo "  Qoder agents:   $INSTALLED_AGENTS installed"
-echo "  Qoder commands:  $INSTALLED_COMMANDS installed"
-if $INSTALLED_HOOKS; then echo "  Hooks:           continuous-learning (auto-observation)"; fi
-if ! $QODER_ONLY; then echo "  Cursor rules:   $INSTALLED_CURSOR installed"; fi
+if $HAS_QODER_INSTALL; then
+    echo "  Qoder skills:   $INSTALLED_QODER installed"
+    echo "  Qoder agents:   $INSTALLED_AGENTS installed"
+    echo "  Qoder commands:  $INSTALLED_COMMANDS installed"
+    if $INSTALLED_HOOKS; then echo "  Hooks:           continuous-learning (auto-observation)"; fi
+    if ! $QODER_ONLY; then echo "  Cursor rules:   $INSTALLED_CURSOR installed"; fi
+fi
+if [[ "$MODE" == "global" ]] && ! $QODER_ONLY && [[ $CODEX_GLOBAL_INSTALLED_SKILLS -gt 0 || "$CODEX_GLOBAL_INSTALLED_AGENTS_MD" == "true" ]]; then
+    echo "  Codex AGENTS.md: $( $CODEX_GLOBAL_INSTALLED_AGENTS_MD && echo 'installed' || echo 'skipped' )"
+    echo "  Codex global skills: $CODEX_GLOBAL_INSTALLED_SKILLS installed"
+fi
+if [[ -n "$CODEX_PROJECT" ]]; then
+    echo "  Codex AGENTS.md: $( $CODEX_INSTALLED_AGENTS_MD && echo 'installed' || echo 'skipped' )"
+    echo "  Codex skills:   $CODEX_INSTALLED_SKILLS installed"
+fi
 echo ""
 echo -e "  ${GREEN}Commands: /sdd-tdd /spec /task-plan /build /quality-review /debug /ctx-health${NC}"
 echo -e "  ${GREEN}         /simplify /perf /secure /api /doc /ship /ci /commit /migrate /ui /idea /learn${NC}"
