@@ -6,6 +6,7 @@
 
 - PR 和手动触发时运行 `pnpm verify`
 - 手动触发时可运行 release gate：`pnpm verify` + `pnpm changeset status`
+- 手动触发时复用 `release-check` 的 pre-version 逻辑
 
 本文件只描述已经落地的 workflow 行为，不替代原始规划文档。
 
@@ -38,11 +39,13 @@
   - `pnpm install --frozen-lockfile`
   - `pnpm verify`
   - `pnpm changeset status`
+  - `node scripts/release-check.mjs pre-version --skip-commands`
 
 ## Design Notes
 
 - `pnpm verify` 继续作为默认 PR gate，不把 `pnpm changeset status` 强制到所有 PR。
 - release gate 暂时只做手动触发，避免在 Stage 2 第一批里扩大自动触发面。
+- release gate 直接复用 `release-check` 的 pre-version 规则，避免 CI 和本地 release preflight 漂移。
 - workflow 保持最小依赖：
   - `actions/checkout`
   - `pnpm/action-setup`

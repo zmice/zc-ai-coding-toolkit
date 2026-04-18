@@ -35,3 +35,6 @@ jobs:
 
       - name: Check changeset status
         run: pnpm changeset status
+
+      - name: Run release preflight
+        run: node scripts/release-check.mjs pre-version --skip-commands
