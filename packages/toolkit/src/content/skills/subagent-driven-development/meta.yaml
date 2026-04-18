@@ -1,8 +1,15 @@
 kind: skill
 name: subagent-driven-development
 title: subagent-driven-development
-description: Use when executing implementation plans with independent tasks. Dispatches fresh subagent per task with two-stage review (spec compliance then code quality) for high-quality, fast iteration with isolated context.
+description: 在执行实现计划且任务彼此独立时使用。为每个任务派发全新子代理，并配套规范符合性与代码质量两阶段审查，以提升迭代速度和上下文隔离质量。
+tier: recommended
+audience: advanced
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库围绕串行子代理开发流程整理的原生能力。

@@ -2,6 +2,9 @@ kind: agent
 name: performance-engineer
 title: performance-engineer
 description: 性能工程师。专注于性能剖析、瓶颈定位、优化方案设计和 benchmark 验证。在涉及性能问题、负载测试、查询调优或前端性能时使用。
+tier: recommended
+audience: advanced
+stability: stable
 tools:
   - Read
   - Grep
@@ -11,3 +14,7 @@ platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的角色入口，用于按职责分工调用特定能力。

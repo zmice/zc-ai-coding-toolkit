@@ -1,8 +1,15 @@
 kind: skill
 name: deprecation-and-migration
 title: deprecation-and-migration
-description: Manages deprecation and migration. Use when removing old systems, APIs, or features. Use when migrating users from one implementation to another. Use when deciding whether to maintain or sunset existing code.
+description: 管理废弃与迁移。适用于移除旧系统、旧 API 或旧功能，也适用于在不同实现之间平滑迁移用户并决定是否继续维护旧路径。
+tier: recommended
+audience: advanced
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: agent-skills
+  strategy: adapted
+  notes: 基于上游迁移废弃实践整理。

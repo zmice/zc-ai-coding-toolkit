@@ -1,8 +1,15 @@
 kind: skill
 name: context-budget-audit
 title: context-budget-audit
-description: Audits context window consumption across agents, skills, rules, and instructions. Identifies bloat, redundant components, and produces prioritized token-savings recommendations. Use when session quality degrades, after adding components, or to check context headroom.
+description: 审计代理、skills、rules 与说明文档对上下文窗口的占用，识别膨胀和冗余项，并产出按优先级排序的 token 节省建议。适用于会话质量下降、组件持续增长或需要核查上下文余量时。
+tier: optional
+audience: advanced
+stability: evolving
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库针对长会话治理补充的内容运维能力。

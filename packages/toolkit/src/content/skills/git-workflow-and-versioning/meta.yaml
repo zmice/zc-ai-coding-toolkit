@@ -2,7 +2,14 @@ kind: skill
 name: git-workflow-and-versioning
 title: git-workflow-and-versioning
 description: Git 工作流规范。在进行任何代码变更时使用。包括提交、分支、冲突解决，以及多并行流的组织方式。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: agent-skills
+  strategy: adapted
+  notes: 结合上游 Git 工作流规范与本仓库原子提交要求整理。

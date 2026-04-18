@@ -1,8 +1,15 @@
 kind: skill
 name: parallel-agent-dispatch
 title: parallel-agent-dispatch
-description: Use when executing multiple independent tasks concurrently through parallel subagents. Implements fan-out/fan-in pattern with context isolation, result collection, and conflict detection. Supports three parallel modes - Context Fan-Out, Git Worktree isolation, and Cascade batching. Sister skill to subagent-driven-development (serial execution).
+description: 在多个独立任务可并行时使用。通过上下文隔离、结果汇总与冲突检测实现 fan-out/fan-in，并支持上下文扇出、Git worktree 隔离和级联批处理等并行模式。
+tier: recommended
+audience: advanced
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库围绕多代理并行执行抽象出的原生能力。

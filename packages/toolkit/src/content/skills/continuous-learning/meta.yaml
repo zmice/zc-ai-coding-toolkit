@@ -1,8 +1,15 @@
 kind: skill
 name: continuous-learning
 title: continuous-learning
-description: Hook-driven learning system that observes sessions, creates atomic instincts with confidence scoring, and evolves them into reusable skills/commands. Uses PostToolUse/Stop/UserPromptSubmit hooks for automatic observation and Agent Memory for cross-session persistence. Triggers on /learn for manual extraction.
+description: 基于 Hook 的持续学习系统。它会观察会话行为，提炼带置信度的原子 instincts，并逐步演化为可复用的 skills 或 commands；同时利用本地文件和 Agent Memory 实现跨会话沉淀，可通过 /learn 手动触发提炼。
+tier: experimental
+audience: advanced
+stability: evolving
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库围绕持续学习闭环构建的原生能力。

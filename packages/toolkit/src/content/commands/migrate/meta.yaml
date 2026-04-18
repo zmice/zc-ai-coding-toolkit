@@ -2,7 +2,14 @@ kind: command
 name: migrate
 title: migrate
 description: 规划和执行代码迁移或 API 废弃，确保平滑过渡，不破坏现有功能。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的命令入口，用于将底层能力稳定暴露给用户。

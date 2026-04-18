@@ -1,8 +1,15 @@
 kind: skill
 name: multi-perspective-review
 title: multi-perspective-review
-description: Evaluates plans and specs from four distinct viewpoints — product, engineering, design, and developer experience — before implementation begins. Use when reviewing specs, architecture decisions, or any change that crosses team boundaries. Catches blind spots that single-perspective reviews miss.
+description: 在实现前从产品、工程、设计和开发者体验四个视角审视 Spec 或 Plan。适用于架构决策、跨团队变更或任何单一视角容易遗漏风险的场景。
+tier: recommended
+audience: advanced
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库为提升方案审视完整性补充的多视角评审能力。

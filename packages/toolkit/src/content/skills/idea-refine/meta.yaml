@@ -1,8 +1,15 @@
 kind: skill
 name: idea-refine
 title: idea-refine
-description: Refines ideas iteratively. Refine ideas through structured divergent and convergent thinking. Use "idea-refine" or "ideate" to trigger.
+description: 迭代式细化想法。通过结构化的发散与收敛过程澄清方向，适用于点子尚模糊、方案需要比较，或希望在进入规格阶段前先把核心思路打磨清楚时。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: superpowers
+  strategy: inspired
+  notes: 吸收上游发散收敛式思考方法，并按本仓库中文命令体系暴露。

@@ -2,7 +2,14 @@ kind: command
 name: learn
 title: learn
 description: 手动触发当前会话的模式提取与学习，分析观察数据，提取可复用的 instincts 并持久化。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的命令入口，用于将底层能力稳定暴露给用户。

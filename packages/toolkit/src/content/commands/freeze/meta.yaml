@@ -2,7 +2,14 @@ kind: command
 name: freeze
 title: freeze
 description: 锁定指定目录或文件，禁止 AI 编辑，保护关键文件不被意外修改。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的命令入口，用于将底层能力稳定暴露给用户。

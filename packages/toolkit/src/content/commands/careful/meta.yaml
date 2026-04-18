@@ -2,7 +2,14 @@ kind: command
 name: careful
 title: careful
 description: 激活 Careful 模式，AI 在执行任何危险命令前显示风险警告并要求确认。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的命令入口，用于将底层能力稳定暴露给用户。

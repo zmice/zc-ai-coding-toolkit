@@ -1,8 +1,15 @@
 kind: skill
 name: code-simplification
 title: code-simplification
-description: Simplifies code for clarity. Use when refactoring code for clarity without changing behavior. Use when code works but is harder to read, maintain, or extend than it should be. Use when reviewing code that has accumulated unnecessary complexity.
+description: 以澄清代码为目标进行简化重构。适用于在不改变行为的前提下提升可读性和可维护性，也适用于处理已经积累了不必要复杂度的代码。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: agent-skills
+  strategy: adapted
+  notes: 基于上游代码简化能力中文化整理。

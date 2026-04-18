@@ -1,8 +1,15 @@
 kind: skill
 name: security-and-hardening
 title: security-and-hardening
-description: Hardens code against vulnerabilities. Use when handling user input, authentication, data storage, or external integrations. Use when building any feature that accepts untrusted data, manages user sessions, or interacts with third-party services.
+description: 加固代码免受常见漏洞影响。适用于处理用户输入、认证、数据存储或外部集成，也适用于任何接收不可信数据、管理会话或接入第三方服务的功能。
+tier: recommended
+audience: advanced
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: agent-skills
+  strategy: adapted
+  notes: 沿用上游安全加固能力，并对齐本仓库审查维度。

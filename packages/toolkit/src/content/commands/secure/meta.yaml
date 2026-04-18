@@ -2,7 +2,14 @@ kind: command
 name: secure
 title: secure
 description: 对代码进行安全审计和加固，识别漏洞并提供修复方案。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的命令入口，用于将底层能力稳定暴露给用户。

@@ -2,7 +2,14 @@ kind: command
 name: ship
 title: ship
 description: 发布上线前的系统化检查清单，确保代码已准备好部署到生产环境。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的命令入口，用于将底层能力稳定暴露给用户。

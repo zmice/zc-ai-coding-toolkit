@@ -34,7 +34,7 @@ describe("toolkit CLI", () => {
     vi.restoreAllMocks();
   });
 
-  it("toolkit lint reports governance warnings as JSON", async () => {
+  it("toolkit lint reports a clean governance summary as JSON", async () => {
     const result = await runCli(["toolkit", "lint", "--json"]);
     const payload = JSON.parse(result.stdout) as {
       summary: { assets: number; warnings: number; errors: number };
@@ -42,16 +42,17 @@ describe("toolkit CLI", () => {
 
     expect(result.stderr).toBe("");
     expect(payload.summary.assets).toBeGreaterThan(0);
-    expect(payload.summary.warnings).toBeGreaterThan(0);
+    expect(payload.summary.warnings).toBe(0);
     expect(payload.summary.errors).toBe(0);
   });
 
-  it("toolkit lint --strict turns warnings into a non-zero exit", async () => {
+  it("toolkit lint --strict stays green when governance is clean", async () => {
     const result = await runCli(["toolkit", "lint", "--strict"]);
 
     expect(result.stdout).toContain("toolkit lint");
-    expect(result.stderr).toContain("toolkit lint 在严格模式下失败");
-    expect(process.exitCode).toBe(1);
+    expect(result.stdout).toContain("- warnings: 0");
+    expect(result.stderr).toBe("");
+    expect(process.exitCode).toBeUndefined();
   });
 
   it("toolkit show prints detailed governance metadata", async () => {

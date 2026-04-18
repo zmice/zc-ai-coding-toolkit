@@ -2,7 +2,14 @@ kind: command
 name: idea
 title: idea
 description: 将模糊的想法或需求细化为具体、可执行的技术方案，通过结构化提问帮你理清思路。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的命令入口，用于将底层能力稳定暴露给用户。

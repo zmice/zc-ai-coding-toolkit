@@ -1,8 +1,15 @@
 kind: skill
 name: brainstorming-and-design
 title: brainstorming-and-design
-description: Use before any creative work — creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design through collaborative dialogue before implementation. Bridges idea-refine (divergent thinking) and spec-driven-development (formal specification).
+description: 在任何创造性工作前使用。通过协作式对话先探索用户意图、需求和设计方向，再进入实现，把 idea-refine 的发散收敛与 spec-driven-development 的规格化阶段衔接起来。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: superpowers
+  strategy: inspired
+  notes: 吸收上游的创意发散与设计前置思路，并按本仓库流程重写。

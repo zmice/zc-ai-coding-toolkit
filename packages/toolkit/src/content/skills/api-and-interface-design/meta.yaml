@@ -1,8 +1,15 @@
 kind: skill
 name: api-and-interface-design
 title: api-and-interface-design
-description: Guides stable API and interface design. Use when designing APIs, module boundaries, or any public interface. Use when creating REST or GraphQL endpoints, defining type contracts between modules, or establishing boundaries between frontend and backend.
+description: 指导稳定的 API 与接口设计。适用于设计 API、模块边界或任何公共接口，也适用于创建 REST/GraphQL 端点、定义跨模块类型契约以及划分前后端边界。
+tier: recommended
+audience: advanced
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: agent-skills
+  strategy: adapted
+  notes: 基于 agent-skills 的接口设计能力中文化整理。

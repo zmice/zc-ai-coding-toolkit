@@ -2,7 +2,14 @@ kind: command
 name: qa
 title: qa
 description: 执行真实浏览器自动化 QA 测试，覆盖用户流程、交互、可访问性。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的命令入口，用于将底层能力稳定暴露给用户。

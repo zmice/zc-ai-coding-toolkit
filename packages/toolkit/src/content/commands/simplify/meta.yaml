@@ -2,7 +2,14 @@ kind: command
 name: simplify
 title: simplify
 description: 分析代码并进行简化重构，降低复杂度，提升可读性和可维护性。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的命令入口，用于将底层能力稳定暴露给用户。

@@ -2,6 +2,9 @@ kind: agent
 name: backend-specialist
 title: backend-specialist
 description: 后端专家。专注于服务端实现模式、中间件设计、数据访问层、错误处理与韧性、日志可观测性和缓存策略。在涉及后端实现、微服务模式、API 实现或服务端架构落地时使用。
+tier: recommended
+audience: advanced
+stability: stable
 tools:
   - Read
   - Grep
@@ -11,3 +14,7 @@ platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的角色入口，用于按职责分工调用特定能力。

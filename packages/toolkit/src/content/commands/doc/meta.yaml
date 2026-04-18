@@ -2,7 +2,14 @@ kind: command
 name: doc
 title: doc
 description: 生成项目文档或架构决策记录（ADR），确保知识可传递。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的命令入口，用于将底层能力稳定暴露给用户。

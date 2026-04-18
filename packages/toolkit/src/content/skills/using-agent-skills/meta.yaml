@@ -1,8 +1,15 @@
 kind: skill
 name: using-agent-skills
 title: using-agent-skills
-description: Discovers and invokes agent skills. Use when starting a session or when you need to discover which skill applies to the current task. This is the meta-skill that governs how all other skills are discovered and invoked.
+description: 在会话开始或不确定该用哪个 skill 时使用。负责发现、选择并调用合适的 agent skills，是所有其他技能的元入口。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: agent-skills
+  strategy: adapted
+  notes: 基于上游 skills 发现能力整理为中文入口。

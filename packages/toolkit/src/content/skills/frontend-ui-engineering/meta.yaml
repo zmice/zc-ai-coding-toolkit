@@ -1,8 +1,15 @@
 kind: skill
 name: frontend-ui-engineering
 title: frontend-ui-engineering
-description: Builds production-quality UIs. Use when building or modifying user-facing interfaces. Use when creating components, implementing layouts, managing state, or when the output needs to look and feel production-quality rather than AI-generated.
+description: 构建生产级前端界面。适用于开发或修改用户可见界面、创建组件、实现布局、管理状态，或需要让输出具备真实产品质感而不是模板化 AI 味道时。
+tier: recommended
+audience: advanced
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: agent-skills
+  strategy: adapted
+  notes: 基于上游前端工程能力整理，并结合本仓库的界面设计偏好。

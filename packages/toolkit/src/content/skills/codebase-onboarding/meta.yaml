@@ -1,8 +1,15 @@
 kind: skill
 name: codebase-onboarding
 title: codebase-onboarding
-description: Use when entering an unfamiliar codebase or starting work on a new project. Systematically explores project structure, identifies entry points, maps dependencies, and produces a concise project overview that serves as context for subsequent development tasks.
+description: 进入陌生代码库或启动新项目时使用。通过目录扫描、入口定位、依赖梳理与模式识别快速建立全局认知，并输出后续开发可复用的精炼上下文。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: agent-skills
+  strategy: adapted
+  notes: 延续上游 onboarding 方法，并对齐本仓库上下文压缩习惯。

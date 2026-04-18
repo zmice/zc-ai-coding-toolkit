@@ -2,7 +2,14 @@ kind: skill
 name: team-orchestration
 title: team-orchestration
 description: 使用 zc CLI 进行多 CLI 团队编排。基于 tmux + git worktree 为每个 worker 提供隔离环境，通过 claim-safe 任务队列和 Mailbox 消息机制协调多个 AI CLI（Codex CLI、Qwen Code）并行工作。适用于需要多个 AI agent 同时处理不同任务的场景。
+tier: experimental
+audience: advanced
+stability: evolving
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 围绕 zc 多 CLI 团队编排能力整理的实验性技能。

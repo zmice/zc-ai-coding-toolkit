@@ -1,8 +1,15 @@
 kind: skill
 name: shipping-and-launch
 title: shipping-and-launch
-description: Prepares production launches. Use when preparing to deploy to production. Use when you need a pre-launch checklist, when setting up monitoring, when planning a staged rollout, or when you need a rollback strategy.
+description: 为生产上线做准备。适用于部署前的检查清单、监控配置、分阶段发布策略与回滚方案规划，确保变更具备真正可发布性。
+tier: recommended
+audience: advanced
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: agent-skills
+  strategy: adapted
+  notes: 基于上游发布准备能力整理。

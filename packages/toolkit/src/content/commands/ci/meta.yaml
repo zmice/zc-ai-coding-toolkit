@@ -2,7 +2,14 @@ kind: command
 name: ci
 title: ci
 description: 搭建或优化 CI/CD 管道，配置质量门禁、自动化测试和部署策略。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的命令入口，用于将底层能力稳定暴露给用户。

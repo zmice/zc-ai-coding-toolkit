@@ -1,8 +1,15 @@
 kind: skill
 name: debugging-and-error-recovery
 title: debugging-and-error-recovery
-description: Guides systematic root-cause debugging. Use when tests fail, builds break, behavior doesn't match expectations, or you encounter any unexpected error. Use when you need a systematic approach to finding and fixing the root cause rather than guessing.
+description: 指导系统化根因调试。适用于测试失败、构建中断、行为与预期不符或出现任何异常时，用结构化方法定位并修复根因，而不是凭直觉试错。
+tier: recommended
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: agent-skills
+  strategy: adapted
+  notes: 沿用上游调试流程，并对齐本仓库验证要求。

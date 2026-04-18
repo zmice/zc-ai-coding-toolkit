@@ -2,6 +2,9 @@ kind: agent
 name: product-owner
 title: product-owner
 description: 产品负责人。贯穿产品战略到需求落地的全流程，负责需求洞察、功能优先级、需求拆解和验收标准定义。在涉及产品方向、功能取舍、需求规格或验收条件时使用。
+tier: recommended
+audience: advanced
+stability: stable
 tools:
   - Read
   - Grep
@@ -10,3 +13,7 @@ platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的角色入口，用于按职责分工调用特定能力。

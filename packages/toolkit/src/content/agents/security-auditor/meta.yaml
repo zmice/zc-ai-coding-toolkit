@@ -2,6 +2,9 @@ kind: agent
 name: security-auditor
 title: security-auditor
 description: 安全审计专家。专注于漏洞检测、威胁建模和安全编码实践。在涉及用户输入、认证、数据存储或外部集成时主动使用。
+tier: recommended
+audience: advanced
+stability: stable
 tools:
   - Read
   - Grep
@@ -11,3 +14,7 @@ platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的角色入口，用于按职责分工调用特定能力。
