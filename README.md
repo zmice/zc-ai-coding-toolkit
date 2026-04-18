@@ -62,15 +62,23 @@ node scripts/verify-workspace.mjs
 └── pnpm-workspace.yaml
 ```
 
+## Context Entry
+
+项目级长期上下文入口：
+
+- [AGENTS.md](/mnt/e/workspace/apps/ai-coding/AGENTS.md:1)
+- [docs/architecture/project-context.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/project-context.md:1)
+
+这两份文件只负责 agent 上下文和项目地图，不是内容源码，也不是平台产物。
+
 ## Legacy Source Model
 
-以下根目录内容已经从仓库根删除，并完成 source-of-truth 迁移：
+以下旧根目录内容已经从仓库根删除，并完成 source-of-truth 迁移：
 
 - `skills/`
 - `commands/`
 - `agents/`
 - `QWEN.md`
-- `AGENTS.md`
 - `instructions.md`
 - `UPSTREAM.md`
 
@@ -78,6 +86,7 @@ node scripts/verify-workspace.mjs
 
 - skills / commands / agents：`packages/toolkit/src/content/`
 - 平台入口产物：由 `packages/platform-*` 生成
+- 项目级上下文入口：根目录 `AGENTS.md`
 - 上游治理：`references/upstreams.yaml`
 
 ## Key Commands

@@ -10,7 +10,6 @@ The following locations are no longer authoritative:
 - `commands/`
 - `agents/`
 - `QWEN.md`
-- `AGENTS.md`
 - `instructions.md`
 - `UPSTREAM.md`
 - `install.sh`
@@ -21,6 +20,11 @@ They have been removed from the repository root. Their content has either been m
 `packages/toolkit`, replaced by `packages/platform-*`, or retained only in git history and
 governance records.
 
+Exception:
+
+- root `AGENTS.md` now exists again, but only as a thin project context shell for coding agents
+- it is not a platform artifact and not a source-of-truth content file
+
 ## New Ownership
 
 | Legacy location | New owner |
@@ -29,7 +33,6 @@ governance records.
 | `commands/` | `packages/toolkit/src/content/commands/` |
 | `agents/` | `packages/toolkit/src/content/agents/` |
 | `QWEN.md` | `packages/platform-qwen` generation output |
-| `AGENTS.md` | `packages/platform-codex` generation output |
 | `instructions.md` | `packages/platform-qoder` generation output |
 | `UPSTREAM.md` | `references/` governance model |
 | `install.sh` / `install.ps1` | removed from root; installation flows move through `apps/cli` |
@@ -50,6 +53,8 @@ The retirement is now complete:
 2. runtime/platform flows use package-owned implementations
 3. legacy root files and directories have been removed
 4. remaining historical context lives in git history and `references/`
+
+The only intentional root reintroduction is the thin `AGENTS.md` context entry for agent setup.
 
 ## Governance Cleanup
 
