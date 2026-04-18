@@ -21,6 +21,10 @@ zc platform generate qwen --plan --format json
 zc platform install qwen
 ```
 
+项目安装 / 全局安装的详细步骤见：
+
+- `docs/usage-guide.md`
+
 ## 验证
 
 ```bash

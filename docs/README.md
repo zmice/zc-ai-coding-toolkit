@@ -12,6 +12,8 @@
   - 例如分层、命名、上游治理、发布策略、中文化规则
 - `docs/release-*.md`
   - 仍会在后续发布中反复使用的 checklist 和 guide
+- `docs/usage-guide.md`
+  - 面向使用者的长期操作说明，包括 CLI 安装、更新和平台内容安装
 
 ## 不保留什么
 

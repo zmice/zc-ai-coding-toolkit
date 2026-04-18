@@ -53,6 +53,10 @@ pnpm upstream -- list
 pnpm upstream -- report all --format md
 ```
 
+更完整的安装、更新和平台内容安装说明见：
+
+- [docs/usage-guide.md](/mnt/e/workspace/apps/ai-coding/docs/usage-guide.md:1)
+
 ## 仓库结构
 
 ```text
@@ -173,6 +177,7 @@ pnpm upstream -- import agent-skills --dry-run --output /tmp/import-plan.txt
 
 - [AGENTS.md](/mnt/e/workspace/apps/ai-coding/AGENTS.md:1)
 - [docs/README.md](/mnt/e/workspace/apps/ai-coding/docs/README.md:1)
+- [docs/usage-guide.md](/mnt/e/workspace/apps/ai-coding/docs/usage-guide.md:1)
 - [docs/architecture/project-context.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/project-context.md:1)
 
 按任务类型进入：

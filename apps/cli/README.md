@@ -40,6 +40,37 @@ zc platform install codex --plan --format json
 zc platform install qoder
 ```
 
+## 安装与更新
+
+在本仓库内：
+
+```bash
+pnpm install
+pnpm --dir apps/cli build
+node apps/cli/dist/cli/index.js --help
+```
+
+安装到本机全局命令：
+
+```bash
+pnpm install
+pnpm --dir apps/cli build
+pnpm --dir apps/cli link --global
+zc --help
+```
+
+更新时重复执行：
+
+```bash
+pnpm install
+pnpm --dir apps/cli build
+pnpm --dir apps/cli link --global
+```
+
+平台内容按“项目安装 / 全局安装”的详细说明见：
+
+- `docs/usage-guide.md`
+
 ## 设计边界
 
 - `zc` 发现并消费 `packages/toolkit/src/content`，但不拥有 prompt 内容

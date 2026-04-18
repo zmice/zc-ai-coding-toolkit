@@ -393,7 +393,7 @@ export function registerPlatformCommand(program: Command): void {
     .command("install")
     .description("根据工具包清单生成并安装平台产物")
     .argument("<target>", "目标平台 (qwen|codex|qoder)")
-    .option("-o, --out <dir>", "安装目标目录，默认使用当前工作目录")
+    .option("-o, --out <dir>", "安装目标目录，默认自动解析最近项目根")
     .option("--plan", "只输出安装计划，不落盘")
     .option("--format <format>", "输出格式：text | json", "text")
     .option("--dry-run", "仅预览将要安装的产物，不落盘")
