@@ -135,6 +135,21 @@ test("release-check post-version accepts versioned manifests and lockfile", () =
   assert.equal(result.status, 0);
 });
 
+test("release-check post-version skips changeset status and still succeeds after changeset consumption", () => {
+  const root = makeFixtureRepo();
+  writeFixtureFile(root, "apps/cli/package.json", `${JSON.stringify({ name: "@zmice/zc", version: "0.2.0" }, null, 2)}\n`);
+  writeFixtureFile(root, "pnpm-lock.yaml", "lockfileVersion: '9.0'\n");
+  spawnSync("git", ["add", "."], { cwd: root, stdio: "ignore" });
+
+  const result = spawnSync(
+    "node",
+    [resolve("scripts/release-check.mjs"), "post-version", "--root", root, "--skip-commands"],
+    { cwd: process.cwd(), encoding: "utf8" }
+  );
+
+  assert.equal(result.status, 0);
+});
+
 test("release-check post-version blocks non-publishable manifests", () => {
   const root = makeFixtureRepo();
   writeFixtureFile(root, "packages/platform-core/package.json", `${JSON.stringify({ name: "@zmice/platform-core", version: "0.2.0" }, null, 2)}\n`);

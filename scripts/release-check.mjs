@@ -78,8 +78,12 @@ function main() {
   printPackageMatrix(root);
 
   if (!skipCommands) {
-    console.log("\n> 运行 pnpm changeset status");
-    run("pnpm", ["changeset", "status"], { cwd: root });
+    if (mode === "pre-version") {
+      console.log("\n> 运行 pnpm changeset status");
+      run("pnpm", ["changeset", "status"], { cwd: root });
+    } else {
+      console.log("\n> 跳过 pnpm changeset status（post-version 阶段 changeset 已被消费）");
+    }
     console.log("\n> 运行 pnpm verify");
     run("pnpm", ["verify"], { cwd: root });
   } else {

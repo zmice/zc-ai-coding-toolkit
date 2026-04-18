@@ -27,6 +27,7 @@
 - 发布前必须先跑 `pnpm verify`。
 - 发布前必须先确认 `pnpm changeset status` 只包含 `@zmice/zc`。
 - `zc` 的发布必须包含最新 vendored 运行时产物。
+- `post-version` 阶段不再运行 `changeset status`，因为 changeset 已被 `changeset version` 正常消费。
 
 ## 标准命令
 
