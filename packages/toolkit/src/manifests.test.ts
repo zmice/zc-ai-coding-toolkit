@@ -54,6 +54,12 @@ describe("createToolkitManifest", () => {
       "skill:debugging-and-error-recovery",
       "skill:engineering-principles"
     ]);
+    assert.deepEqual(manifest.byRelationship.requires["command:ship"], [
+      "skill:shipping-and-launch"
+    ]);
+    assert.deepEqual(manifest.byRelationship.suggests["command:ctx-health"], [
+      "skill:context-budget-audit"
+    ]);
     assert.deepEqual(manifest.byRelationship.suggests["skill:spec-driven-development"], [
       "skill:engineering-principles"
     ]);

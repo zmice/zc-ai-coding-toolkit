@@ -5,6 +5,9 @@ description: 为生产上线做准备。适用于部署前的检查清单、监�
 tier: recommended
 audience: advanced
 stability: stable
+suggests:
+  - skill:safety-guardrails
+  - skill:documentation-and-adrs
 platforms:
   - qwen
   - codex

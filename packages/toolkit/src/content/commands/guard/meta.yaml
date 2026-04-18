@@ -5,6 +5,11 @@ description: 同时激活 Careful + Freeze 的组合防护，适用于操作生�
 tier: recommended
 audience: default
 stability: stable
+requires:
+  - skill:safety-guardrails
+supersedes:
+  - command:careful
+  - command:freeze
 platforms:
   - qwen
   - codex

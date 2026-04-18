@@ -1,23 +1,17 @@
-调用 safety-guardrails 技能。锁定指定路径，只读保护。
+调用 `safety-guardrails` 的 Freeze 模式，冻结关键路径，阻止误改。
 
-1. 解析用户指定的路径和 glob 模式（支持多个路径）
-2. 确认锁定范围和受影响文件数
-3. 对锁定文件拒绝编辑操作，只读操作不受影响
-4. 使用 `/unfreeze` 或 `/unfreeze <路径>` 解除锁定
+## 核心动作
+
+1. 解析要冻结的路径或 glob 模式
+2. 确认锁定范围和影响文件
+3. 阻止对冻结路径的写入、删除和重命名
+4. 允许只读操作继续进行
+
+## 边界说明
+
+- `freeze` 只负责路径锁定
+- 如果还需要危险命令预警，改用 `guard`
 
 ## 使用方式
 
-`/freeze <路径...>` — 指定要锁定的路径或 glob 模式。
-
-### 示例
-
-```
-# 锁定关键目录和文件
-/freeze src/core/** *.env migrations/
-
-# 锁定配置文件
-/freeze docker-compose.prod* config/production*
-
-# 解除锁定
-/unfreeze
-```
+在要保护核心目录、环境文件、迁移脚本或共享路径时使用 `/freeze <路径...>`。
