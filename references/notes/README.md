@@ -1,22 +1,17 @@
 # Notes Semantics
 
-`references/notes/` is the working log for upstream governance.
+`references/notes/` 是上游治理的工作日志层。
 
-Use notes for:
+适合记录：
 
-- sync summaries
-- review findings
-- migration decisions
-- unresolved questions
-- links between an upstream change and the downstream repo impact
+- sync 摘要
+- review 发现
+- 迁移取舍
+- 未决问题
+- 上游变化与下游影响之间的对应关系
 
-Rules:
+规则：
 
-- Notes are editable and may be revised as the review progresses.
-- Notes may summarize a snapshot, but they are not the snapshot itself.
-- Each upstream should have one clear note file or note thread that can be referenced from `references/upstreams.yaml`.
-
-Recommended file shape:
-
-- `references/notes/<upstream-id>.md`
-
+- `notes` 可编辑，可随着审阅推进持续修订
+- `notes` 可以概括某次 snapshot，但不是 snapshot 本身
+- 每个 upstream 最好只有一个清晰的主 note 文件，便于从 `references/upstreams.yaml` 追踪

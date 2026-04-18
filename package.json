@@ -10,6 +10,7 @@
     "generate": "node scripts/run-workspace-task.mjs generate",
     "verify": "node scripts/run-workspace-task.mjs verify",
     "verify:mvp": "node scripts/verify-workspace.mjs",
+    "upstream": "node scripts/upstream-governance.mjs",
     "changeset": "changeset",
     "release:check": "node scripts/release-check.mjs pre-version",
     "release:check:post-version": "node scripts/release-check.mjs post-version",

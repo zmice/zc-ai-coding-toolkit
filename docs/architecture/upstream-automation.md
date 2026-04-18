@@ -2,7 +2,7 @@
 
 ## Objective
 
-Stage 1 的目标不是“自动同步上游”，而是把 `zc upstream` 扩展成一套可审阅、可追踪、可回放的治理工作流。
+Stage 1 的目标不是“自动同步上游”，而是把仓库级 upstream 治理命令扩展成一套可审阅、可追踪、可回放的工作流。
 
 这套工作流需要支持四类能力：
 
@@ -20,7 +20,7 @@ Stage 1 的目标不是“自动同步上游”，而是把 `zc upstream` 扩展
 
 ## Current Baseline
 
-当前 `zc upstream` 只提供：
+当前仓库级 upstream 治理入口提供：
 
 - `list`
 - `show <id>`
@@ -210,20 +210,20 @@ Upstream automation 对 platform 的边界要求：
 
 ## Commands
 
-Stage 1 的命令面应保持与现有 `zc upstream` 一致，并向下扩展为下列 contract。命令名是规范的一部分，参数可在实现阶段微调，但语义不能变。
+Stage 1 的命令面应保持与当前仓库级 upstream 治理入口一致，并向下扩展为下列 contract。命令名是规范的一部分，参数可在实现阶段微调，但语义不能变。
 
 ### Existing commands
 
-- `zc upstream list`
-- `zc upstream show <id>`
-- `zc upstream review [id]`
+- `pnpm upstream -- list`
+- `pnpm upstream -- show <id>`
+- `pnpm upstream -- review [id]`
 
 ### Planned commands
 
-- `zc upstream diff <id> [--against <baseline>] [--format text|json]`
-- `zc upstream snapshot <id> [--label <label>] [--format text|json|md]`
-- `zc upstream report <id|all> [--format text|json|md] [--output <path>]`
-- `zc upstream import <id> --dry-run [--format text|json] [--output <path>]`
+- `pnpm upstream -- diff <id> [--against <baseline>] [--format text|json]`
+- `pnpm upstream -- snapshot <id> [--label <label>] [--format text|json|md]`
+- `pnpm upstream -- report <id|all> [--format text|json|md] [--output <path>]`
+- `pnpm upstream -- import <id> --dry-run [--format text|json] [--output <path>]`
 
 ## Project Structure
 
@@ -278,10 +278,10 @@ Stage 1 先验证规格和 contract，再验证实现。
 
 ### Future implementation checks
 
-- `zc upstream diff` 在不同 baseline 上输出稳定
-- `zc upstream snapshot` 只追加不改写
-- `zc upstream report` 在 text / json / md 间保持字段一致
-- `zc upstream import --dry-run` 不产生写入副作用
+- `pnpm upstream -- diff` 在不同 baseline 上输出稳定
+- `pnpm upstream -- snapshot` 只追加不改写
+- `pnpm upstream -- report` 在 text / json / md 间保持字段一致
+- `pnpm upstream -- import --dry-run` 不产生写入副作用
 - 所有写入型动作都需要人工审阅后的显式入口
 
 ## Boundaries
@@ -292,7 +292,7 @@ Stage 1 先验证规格和 contract，再验证实现。
 
 ## Success Criteria
 
-- `zc upstream` 的 Stage 1 规格明确支持 `diff / snapshot / report / import --dry-run`
+- 仓库级 upstream 治理入口的 Stage 1 规格明确支持 `diff / snapshot / report / import --dry-run`
 - 每个命令的输出都能支持人工审阅，而不是只支持机器消费
 - `report` 明确展示差异、影响和审阅入口
 - `import --dry-run` 明确不写入任何 toolkit/platform 产物

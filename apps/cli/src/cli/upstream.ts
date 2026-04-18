@@ -1,6 +1,7 @@
 import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import type { Command } from "commander";
+import { Command as CommanderCommand } from "commander";
 import { resolveWorkspacePath } from "../utils/workspace.js";
 
 interface UpstreamRecord {
@@ -720,12 +721,22 @@ function findUpstreamOrExit(upstreams: readonly UpstreamRecord[], id: string): U
 
 function printCommandError(error: unknown): void {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`[zc upstream] 错误：${message}`);
+  console.error(`[upstream governance] 错误：${message}`);
   process.exitCode = 1;
 }
 
 export function registerUpstreamCommand(program: Command): void {
-  const upstream = program.command("upstream").description("上游治理命令");
+  program.addCommand(buildUpstreamCommand());
+}
+
+export function createUpstreamProgram(): CommanderCommand {
+  const program = buildUpstreamCommand();
+  program.name("upstream-governance").description("仓库内上游治理命令");
+  return program;
+}
+
+function buildUpstreamCommand(): CommanderCommand {
+  const upstream = new CommanderCommand("upstream").description("上游治理命令");
 
   upstream
     .command("list")
@@ -910,4 +921,6 @@ export function registerUpstreamCommand(program: Command): void {
         printCommandError(error);
       }
     });
+
+  return upstream;
 }

@@ -74,7 +74,7 @@ function main() {
   );
 
   run("node", ["apps/cli/dist/cli/index.js", "toolkit", "validate"], "smoke toolkit validate");
-  run("node", ["apps/cli/dist/cli/index.js", "upstream", "list"], "smoke upstream list");
+  run("node", ["scripts/upstream-governance.mjs", "list"], "smoke upstream list");
 
   const smokeRoot = mkdtempSync(join(tmpdir(), "ai-coding-verify-"));
   const installRoot = mkdtempSync(join(tmpdir(), "ai-coding-install-"));

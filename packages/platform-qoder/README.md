@@ -1,16 +1,30 @@
 # @zmice/platform-qoder
 
-`@zmice/platform-qoder` 会从 `@zmice/toolkit` 生成并安装面向 Qoder 的工件。
+`@zmice/platform-qoder` 把 `@zmice/toolkit` 的结构化内容渲染成 Qoder 平台所需产物。
 
 当前输出包括：
 
 - `instructions.md`
 
-此包是平台适配层，提示词内容仍由 `@zmice/toolkit` 维护。
+## 边界
 
-常见用法：
+- 内容仍由 `@zmice/toolkit` 维护
+- 本包只处理 Qoder 平台模板、安装计划和落盘策略
+- 不负责 upstream 审阅、snapshot 或导入提案
 
-- `zc platform install qoder`
-- `zc platform install qoder --plan --format json`
+## 常用用法
+
+```bash
+zc platform install qoder
+zc platform install qoder --plan --format json
+```
 
 省略 `-o` 时，CLI 会优先把最近项目根解析为安装目录。
+
+## 验证
+
+```bash
+pnpm --dir packages/platform-qoder test
+pnpm --dir packages/platform-qoder build
+pnpm --dir packages/platform-qoder verify
+```

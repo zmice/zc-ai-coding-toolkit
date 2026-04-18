@@ -4,7 +4,7 @@
 
 这是一个 AI 编码工具包 monorepo。
 
-- `apps/cli`：`zc` 统一入口 CLI，负责 runtime、toolkit、platform、upstream 命令编排
+- `apps/cli`：`zc` 统一入口 CLI，负责 runtime、toolkit、platform 命令编排
 - `packages/toolkit`：skills / commands / agents 的唯一事实源
 - `packages/platform-*`：平台适配与安装/生成实现
 - `references`：上游治理、审阅记录、快照
@@ -27,8 +27,8 @@
 - `node apps/cli/dist/cli/index.js toolkit recommend <id>`
 - `node apps/cli/dist/cli/index.js platform generate <qwen|codex|qoder> --plan --format json`
 - `node apps/cli/dist/cli/index.js platform install <qwen|codex|qoder> --plan --format json`
-- `node apps/cli/dist/cli/index.js upstream list`
-- `node apps/cli/dist/cli/index.js upstream report <id|all> --format md`
+- `pnpm upstream -- list`
+- `pnpm upstream -- report <id|all> --format md`
 
 ## 代码与内容边界
 
@@ -36,6 +36,7 @@
 - 平台包消费 toolkit，不维护第二份内容
 - `references` 是治理层，不是运行时依赖
 - `docs/architecture` 和 `docs/adr` 记录长期文档，不放过程性临时计划
+- `docs/README.md` 定义 `docs/` 的职责边界
 
 ## 内容模型
 

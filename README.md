@@ -49,8 +49,8 @@ node apps/cli/dist/cli/index.js platform generate qwen --plan --format json
 node apps/cli/dist/cli/index.js platform install codex --plan --format json
 
 # 查看上游治理状态
-node apps/cli/dist/cli/index.js upstream list
-node apps/cli/dist/cli/index.js upstream report all --format md
+pnpm upstream -- list
+pnpm upstream -- report all --format md
 ```
 
 ## 仓库结构
@@ -137,12 +137,12 @@ node apps/cli/dist/cli/index.js platform install qoder --plan --format json
 常用命令：
 
 ```bash
-node apps/cli/dist/cli/index.js upstream list
-node apps/cli/dist/cli/index.js upstream show agent-skills
-node apps/cli/dist/cli/index.js upstream diff agent-skills
-node apps/cli/dist/cli/index.js upstream snapshot agent-skills --label baseline
-node apps/cli/dist/cli/index.js upstream report agent-skills --format md --output /tmp/upstream-report.md
-node apps/cli/dist/cli/index.js upstream import agent-skills --dry-run --output /tmp/import-plan.txt
+pnpm upstream -- list
+pnpm upstream -- show agent-skills
+pnpm upstream -- diff agent-skills
+pnpm upstream -- snapshot agent-skills --label baseline
+pnpm upstream -- report agent-skills --format md --output /tmp/upstream-report.md
+pnpm upstream -- import agent-skills --dry-run --output /tmp/import-plan.txt
 ```
 
 治理规则：
@@ -150,6 +150,7 @@ node apps/cli/dist/cli/index.js upstream import agent-skills --dry-run --output 
 - 先记录 `references`，再决定是否吸收到 `packages/toolkit`
 - `notes` 可变，`snapshots` 不可变
 - 影响内容真相或平台产物的同步必须走人工审阅
+- 上游治理是仓库级脚本能力，不属于 `zc` 的产品命令面
 
 ## 常用命令总览
 
@@ -162,6 +163,7 @@ node apps/cli/dist/cli/index.js upstream import agent-skills --dry-run --output 
 | `pnpm generate` | 生成各平台产物 |
 | `pnpm verify` | workspace 全量验证 |
 | `pnpm verify:mvp` | 最小闭环验证 |
+| `pnpm upstream -- <subcommand>` | 运行仓库级 upstream 治理命令 |
 | `pnpm release:check` | 发布前 preflight |
 | `pnpm release` | 通过 changeset 发布 |
 
@@ -170,6 +172,7 @@ node apps/cli/dist/cli/index.js upstream import agent-skills --dry-run --output 
 项目级长期上下文与项目地图：
 
 - [AGENTS.md](/mnt/e/workspace/apps/ai-coding/AGENTS.md:1)
+- [docs/README.md](/mnt/e/workspace/apps/ai-coding/docs/README.md:1)
 - [docs/architecture/project-context.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/project-context.md:1)
 
 按任务类型进入：

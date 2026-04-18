@@ -2,7 +2,7 @@
 
 ## Objective
 
-把 `docs/architecture/ci-cd-plan.md` 的 Stage 1 命令契约落地成最小可用 workflow：
+把当前仓库的 CI/CD 命令契约落地成最小可用 workflow：
 
 - PR 和手动触发时运行 `pnpm verify`
 - 手动触发时可运行 release gate：`pnpm verify` + `pnpm changeset status`

@@ -24,7 +24,6 @@
 - `zc runtime`
 - `zc toolkit`
 - `zc platform`
-- `zc upstream`
 
 ### Toolkit 内容与治理
 
@@ -70,6 +69,7 @@
 - baseline snapshot
 - diff / report / import --dry-run
 - provenance 和上游映射检查
+- 通过 `pnpm upstream -- <subcommand>` 运行仓库级治理命令
 
 ## 关键长期文档
 
@@ -85,6 +85,8 @@
   - 看发布和版本策略
 - `docs/architecture/upstream-automation.md`
   - 看上游治理自动化边界
+- `docs/README.md`
+  - 看 `docs/` 本身的职责边界
 
 ## 最小上下文包
 

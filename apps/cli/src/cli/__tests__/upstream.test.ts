@@ -3,8 +3,7 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createProgram } from "../index.js";
-import { createUpstreamSnapshot } from "../upstream.js";
+import { createUpstreamProgram, createUpstreamSnapshot } from "../upstream.js";
 
 const cleanupPaths = new Set<string>();
 const workspaceRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -21,7 +20,7 @@ async function runCli(args: string[]): Promise<{ stdout: string; stderr: string 
   });
 
   try {
-    await createProgram().parseAsync(args, { from: "user" });
+    await createUpstreamProgram().parseAsync(args, { from: "user" });
   } finally {
     logSpy.mockRestore();
     errorSpy.mockRestore();
@@ -49,7 +48,6 @@ describe("upstream governance commands", () => {
 
   it("以文本格式输出 diff，并区分结构、文本、元数据和影响面", async () => {
     const result = await runCli([
-      "upstream",
       "diff",
       "agent-skills",
       "--against",
@@ -70,7 +68,6 @@ describe("upstream governance commands", () => {
 
   it("支持 JSON diff 输出，供后续自动化消费但不替代人工审阅", async () => {
     const result = await runCli([
-      "upstream",
       "diff",
       "agent-skills",
       "--against",
@@ -103,7 +100,6 @@ describe("upstream governance commands", () => {
 
   it("支持 Markdown report 输出，包含审阅材料和决策占位", async () => {
     const result = await runCli([
-      "upstream",
       "report",
       "agent-skills",
       "--format",
@@ -148,7 +144,6 @@ describe("upstream governance commands", () => {
     mkdirSync(outputDir, { recursive: true });
 
     const result = await runCli([
-      "upstream",
       "report",
       "agent-skills",
       "--format",
@@ -167,7 +162,6 @@ describe("upstream governance commands", () => {
 
   it("import --dry-run 只输出提案，不执行任何写入", async () => {
     const result = await runCli([
-      "upstream",
       "import",
       "agent-skills",
       "--dry-run",
@@ -189,7 +183,6 @@ describe("upstream governance commands", () => {
     mkdirSync(outputDir, { recursive: true });
 
     const result = await runCli([
-      "upstream",
       "import",
       "agent-skills",
       "--dry-run",
@@ -206,7 +199,7 @@ describe("upstream governance commands", () => {
   });
 
   it("缺少 --dry-run 时阻止 import 执行", async () => {
-    const result = await runCli(["upstream", "import", "agent-skills"]);
+    const result = await runCli(["import", "agent-skills"]);
 
     expect(result.stdout).toBe("");
     expect(result.stderr).toContain("当前阶段只支持 `import --dry-run`");

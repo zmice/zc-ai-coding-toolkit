@@ -45,5 +45,5 @@ Current repo surface observed at registration time:
 
 ## Next Step
 
-- Run `zc upstream diff andrej-karpathy-skills` against the baseline
+- Run `pnpm upstream -- diff andrej-karpathy-skills` against the baseline
 - Continue extracting reusable principles instead of mirroring upstream structure

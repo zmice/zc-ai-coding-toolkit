@@ -1,16 +1,30 @@
 # @zmice/platform-qwen
 
-`@zmice/platform-qwen` 会从 `@zmice/toolkit` 生成并安装面向 Qwen 的工件。
+`@zmice/platform-qwen` 把 `@zmice/toolkit` 的结构化内容渲染成 Qwen 平台可安装的产物。
 
 当前输出包括：
 
 - `QWEN.md`
 - `qwen-extension.json`
 
-此包不拥有提示词内容，只负责把共享的工具包清单渲染为平台专用工件。
+## 边界
 
-常见用法：
+- 内容真相仍在 `@zmice/toolkit`
+- 本包只负责 Qwen 平台表达、模板渲染和安装计划
+- 不直接参与 upstream 治理
 
-- `zc platform generate qwen -o /tmp/qwen-out`
-- `zc platform generate qwen --plan --format json`
-- `zc platform install qwen`
+## 常用用法
+
+```bash
+zc platform generate qwen -o /tmp/qwen-out
+zc platform generate qwen --plan --format json
+zc platform install qwen
+```
+
+## 验证
+
+```bash
+pnpm --dir packages/platform-qwen test
+pnpm --dir packages/platform-qwen build
+pnpm --dir packages/platform-qwen verify
+```

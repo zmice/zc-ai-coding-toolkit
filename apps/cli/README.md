@@ -1,27 +1,61 @@
 # @zmice/zc
 
-`@zmice/zc` is the operator/runtime CLI for the AI Coding Toolkit workspace.
+`@zmice/zc` 是 AI Coding Toolkit 的统一入口 CLI，负责两类能力：
 
-This package preserves the current `zc` runtime behavior and keeps the command surface compatible while introducing the future namespace layout:
+- runtime：多 AI CLI 协作运行时
+- workspace-facing product commands：`toolkit` 与 `platform`
 
+它不负责当前仓库的治理型事务。像 upstream 审阅、snapshot、report、导入提案这类仓库自管理能力，统一通过根级脚本：
+
+```bash
+pnpm upstream -- <subcommand>
+```
+
+## 命令面
+
+当前公开命令主要包括：
+
+- `zc team ...`
+- `zc task ...`
+- `zc msg ...`
+- `zc doctor ...`
+- `zc setup ...`
+- `zc run ...`
 - `zc runtime ...`
 - `zc toolkit ...`
 - `zc platform ...`
-- `zc upstream ...`
 
-The CLI discovers prompt assets from `packages/toolkit/src/content` and does not own prompt content itself.
+## 高频命令
 
-Current high-value commands:
+```bash
+# toolkit
+zc toolkit lint --json
+zc toolkit show command:build
+zc toolkit search review
+zc toolkit recommend build
 
-- `zc toolkit validate`
-- `zc platform generate <qwen|codex|qoder> [--plan] [--format json]`
-- `zc platform install <qwen|codex|qoder> [-o <dir>] [--plan] [--format json]`
-- `zc upstream diff <id> [--against <baseline>] [--format text|json]`
-- `zc upstream snapshot <id> [--label <label>] [--format text|json|md]`
-- `zc upstream report <id|all> [--format text|json|md] [--output <path>]`
-- `zc upstream import <id> --dry-run [--format text|json] [--output <path>]`
+# platform
+zc platform generate qwen --plan --format json
+zc platform install codex --plan --format json
+zc platform install qoder
+```
 
-Notes:
+## 设计边界
 
-- `zc platform install` 未传 `-o` 时，会优先向上解析最近项目根。
-- `zc upstream snapshot` 只会向 `references/snapshots/<id>/` 追加快照，不会直接写入 `packages/toolkit` 或 `packages/platform-*`。
+- `zc` 发现并消费 `packages/toolkit/src/content`，但不拥有 prompt 内容
+- `zc` 调用 `packages/platform-*` 完成平台产物生成和安装
+- `zc` 不承载仓库内 upstream 治理命令，避免产品 CLI 和仓库管理脚本混在一起
+
+## 开发与验证
+
+```bash
+pnpm --dir apps/cli test
+pnpm --dir apps/cli build
+pnpm --dir apps/cli verify
+```
+
+修改 `apps/cli` 时，优先阅读：
+
+- `apps/cli/src/cli/`
+- `apps/cli/src/runtime/`
+- `apps/cli/src/team/`

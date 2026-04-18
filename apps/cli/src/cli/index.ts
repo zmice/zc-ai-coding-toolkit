@@ -10,7 +10,6 @@ import { registerSetupCommand } from "./setup.js";
 import { registerRunCommand } from "./run.js";
 import { registerToolkitCommand } from "./toolkit.js";
 import { registerPlatformCommand } from "./platform.js";
-import { registerUpstreamCommand } from "./upstream.js";
 
 function getCliVersion(): string {
   const packageJsonPath = new URL("../../package.json", import.meta.url);
@@ -55,7 +54,6 @@ export function createProgram(): Command {
 
   registerToolkitCommand(program);
   registerPlatformCommand(program);
-  registerUpstreamCommand(program);
 
   return program;
 }

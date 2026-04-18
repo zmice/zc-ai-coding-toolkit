@@ -63,5 +63,5 @@ The only intentional root reintroduction is the thin `AGENTS.md` context entry f
 Reason:
 
 - it was an internal migration breadcrumb, not an external source to keep syncing
-- it should not appear in normal `zc upstream list` output
+- it should not appear in normal upstream governance output
 - historical context stays here and in git history instead of the active upstream inventory

@@ -1,15 +1,29 @@
 # @zmice/platform-codex
 
-`@zmice/platform-codex` 会从 `@zmice/toolkit` 生成并安装面向 Codex 的工件。
+`@zmice/platform-codex` 把 `@zmice/toolkit` 的结构化内容渲染成 Codex 平台所需产物。
 
 当前输出包括：
 
 - `AGENTS.md`
 
-此包是平台适配层，提示词内容仍由 `@zmice/toolkit` 维护。
+## 边界
 
-常见用法：
+- 提示资产内容不在本包维护
+- 本包只关心 Codex 平台模板、安装计划和产物布局
+- 不承担仓库治理能力
 
-- `zc platform install codex -o /tmp/codex-out`
-- `zc platform install codex`
-- `zc platform install codex --plan --format json`
+## 常用用法
+
+```bash
+zc platform install codex -o /tmp/codex-out
+zc platform install codex
+zc platform install codex --plan --format json
+```
+
+## 验证
+
+```bash
+pnpm --dir packages/platform-codex test
+pnpm --dir packages/platform-codex build
+pnpm --dir packages/platform-codex verify
+```
