@@ -14,9 +14,9 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc && node ./scripts/vendor-internal-packages.mjs",
+    "build": "node ./scripts/ensure-internal-builds.mjs && tsc && node ./scripts/vendor-internal-packages.mjs",
     "dev": "tsc --watch",
-    "test": "vitest run",
+    "test": "node ./scripts/ensure-internal-builds.mjs && vitest run",
     "lint": "tsc --noEmit",
     "generate": "pnpm build",
     "verify": "pnpm test && pnpm build",

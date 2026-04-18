@@ -64,6 +64,10 @@ test("findUnexpectedDirtyPaths honors mode-specific allow lists", () => {
     findUnexpectedDirtyPaths(["packages/platform-core/package.json"], "post-version"),
     ["packages/platform-core/package.json"]
   );
+  assert.deepEqual(
+    findUnexpectedDirtyPaths([".changeset/demo.md"], "post-version"),
+    []
+  );
   assert.deepEqual(findUnexpectedDirtyPaths(["package.json"], "post-version"), ["package.json"]);
   assert.deepEqual(findUnexpectedDirtyPaths(["packages/internal-only/package.json"], "post-version"), [
     "packages/internal-only/package.json",
@@ -120,6 +124,7 @@ test("release-check post-version accepts versioned manifests and lockfile", () =
   const root = makeFixtureRepo();
   writeFixtureFile(root, "apps/cli/package.json", `${JSON.stringify({ name: "@zmice/zc", version: "0.2.0" }, null, 2)}\n`);
   writeFixtureFile(root, "pnpm-lock.yaml", "lockfileVersion: '9.0'\n");
+  writeFixtureFile(root, ".changeset/demo.md", "---\n'@zmice/zc': patch\n---\n\nconsumed metadata\n");
 
   const result = spawnSync(
     "node",

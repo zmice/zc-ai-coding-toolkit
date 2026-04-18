@@ -75,7 +75,7 @@ export function classifyDirtyPaths(paths, mode) {
   const unexpectedPaths = [];
 
   for (const path of paths) {
-    if (postVersionAllowedPaths.has(path)) {
+    if (postVersionAllowedPaths.has(path) || preVersionAllowedPatterns.some((pattern) => pattern.test(path))) {
       allowedPaths.push(path);
       continue;
     }

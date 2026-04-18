@@ -45,7 +45,7 @@
 4. 运行 `pnpm install`。
 5. 运行 `pnpm release:check:post-version`。
 6. 运行 `pnpm verify`，确认 `zc` build 后携带的 vendored 运行时正常。
-7. 审阅 `apps/cli/package.json` 和 `pnpm-lock.yaml` 的版本变化。
+7. 审阅 `apps/cli/package.json`、`pnpm-lock.yaml` 和 changeset 消耗后的 `.changeset/*.md` 变化。
 8. 运行 `pnpm release`。
 
 ## 失败处理
@@ -56,6 +56,7 @@
 - `pnpm release:check:post-version` 失败：
   - 检查是否有非 `apps/cli/package.json` 的 manifest 被误修改。
   - 检查 `pnpm-lock.yaml` 是否同步。
+  - 检查 `.changeset/*.md` 是否只包含被本次 `changeset version` 正常消费的变更。
 - `pnpm verify` 失败：
   - 先修 workspace 健康问题，不进入发布。
 

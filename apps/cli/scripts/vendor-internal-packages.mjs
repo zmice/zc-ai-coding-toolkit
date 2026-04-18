@@ -46,6 +46,8 @@ async function copyEntry(fromRelativePath, toRelativePath) {
 }
 
 async function main() {
+  await import("./ensure-internal-builds.mjs");
+
   await rm(vendorRoot, { recursive: true, force: true });
   await mkdir(vendorRoot, { recursive: true });
 

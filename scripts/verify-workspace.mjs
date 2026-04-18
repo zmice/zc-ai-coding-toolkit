@@ -69,7 +69,7 @@ function main() {
   run("node", [tscBin, "-p", "packages/platform-qwen/tsconfig.json"], "build platform-qwen");
   run("node", [tscBin, "-p", "packages/platform-codex/tsconfig.json"], "build platform-codex");
   run("node", [tscBin, "-p", "packages/platform-qoder/tsconfig.json"], "build platform-qoder");
-  run("node", [tscBin, "-p", "apps/cli/tsconfig.json"], "build apps/cli");
+  run("pnpm", ["--dir", "apps/cli", "build"], "build apps/cli");
 
   run(
     "node",

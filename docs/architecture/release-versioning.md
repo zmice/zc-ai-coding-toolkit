@@ -91,6 +91,7 @@
 
 - `apps/cli/package.json`
 - `pnpm-lock.yaml`
+- `.changeset/*.md`
 
 不允许变化：
 

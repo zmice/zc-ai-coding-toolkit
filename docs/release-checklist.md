@@ -12,7 +12,7 @@
 - `pnpm changeset version` 已执行
 - `pnpm install` 已执行
 - `pnpm release:check:post-version` 通过
-- 只有 `apps/cli/package.json` 和 `pnpm-lock.yaml` 出现预期变化
+- 只有 `apps/cli/package.json`、`pnpm-lock.yaml` 和被正常消费的 `.changeset/*.md` 出现预期变化
 - 内部 workspace 包没有被误带进发布面
 
 ## 发布前最后确认
