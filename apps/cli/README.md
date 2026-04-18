@@ -1,48 +1,28 @@
 # @zmice/zc
 
-`@zmice/zc` 是 AI Coding Toolkit 的统一入口 CLI，负责两类能力：
+`@zmice/zc` 是 AI Coding Toolkit 的统一入口 CLI。
 
-- runtime：多 AI CLI 协作运行时
-- workspace-facing product commands：`toolkit` 与 `platform`
+它负责两类稳定能力：
+- runtime：启动单工人或团队协作运行时
+- product commands：查询 `toolkit` 内容、生成/安装 `platform` 产物
 
-它不负责当前仓库的治理型事务。像 upstream 审阅、snapshot、report、导入提案这类仓库自管理能力，统一通过根级脚本：
+它**不负责**仓库治理型事务。像 upstream 审阅、snapshot、report、导入提案这类能力，统一通过根级脚本：
 
 ```bash
 pnpm upstream -- <subcommand>
 ```
 
-## 命令面
+## 适用场景
 
-当前公开命令主要包括：
+你通常会在下面几种情况下使用 `zc`：
+- 想直接启动一个 AI CLI 工人执行任务：`zc run`
+- 想启动一组 worker 并做任务编排：`zc team ...`
+- 想查询 toolkit 里的 skills / commands / agents：`zc toolkit ...`
+- 想把内容安装到 Codex / Qoder / Qwen：`zc platform ...`
 
-- `zc team ...`
-- `zc task ...`
-- `zc msg ...`
-- `zc doctor ...`
-- `zc run ...`
-- `zc toolkit ...`
-- `zc platform ...`
+## 快速开始
 
-## 高频命令
-
-```bash
-# toolkit
-zc toolkit lint --json
-zc toolkit show build
-zc toolkit search review
-zc toolkit recommend build
-
-# platform
-zc platform generate qwen --plan --json
-zc platform install codex --plan --json
-zc platform install qoder
-zc platform install codex --global
-zc platform where qoder --global --json
-```
-
-## 安装与更新
-
-在本仓库内：
+在仓库内开发：
 
 ```bash
 pnpm install
@@ -67,15 +47,84 @@ pnpm --dir apps/cli build
 pnpm --dir apps/cli link --global
 ```
 
-平台内容按“项目安装 / 全局安装”的详细说明见：
+完整安装、更新、平台内容安装说明见：
 
-- `docs/usage-guide.md`
+- [`docs/usage-guide.md`](../docs/usage-guide.md)
+
+## 命令分层
+
+### Runtime
+
+- `zc run`
+- `zc team ...`
+- `zc task ...`
+- `zc msg ...`
+- `zc doctor`
+
+### Toolkit
+
+- `zc toolkit lint`
+- `zc toolkit show <query>`
+- `zc toolkit search <keyword>`
+- `zc toolkit recommend <query>`
+
+`<query>` 同时支持：
+- 完整资产 ID，例如 `command:build`
+- 唯一名称，例如 `build`
+
+### Platform
+
+- `zc platform generate <qwen|codex|qoder>`
+- `zc platform install <qwen|codex|qoder>`
+- `zc platform where <qwen|codex|qoder>`
+
+常用安装目标参数：
+- `--project`
+- `--global`
+- `--dir <path>`
+
+常用输出参数：
+- `--plan`
+- `--json`
+- `--force`
+
+## 高频用法
+
+```bash
+# toolkit
+zc toolkit lint --json
+zc toolkit show build
+zc toolkit search review
+zc toolkit recommend build
+
+# platform
+zc platform generate qwen --plan --json
+zc platform install codex --plan --json
+zc platform install qoder
+zc platform install codex --global
+zc platform where qoder --global --json
+```
 
 ## 设计边界
 
 - `zc` 发现并消费 `packages/toolkit/src/content`，但不拥有 prompt 内容
 - `zc` 调用 `packages/platform-*` 完成平台产物生成和安装
-- `zc` 不承载仓库内 upstream 治理命令，避免产品 CLI 和仓库管理脚本混在一起
+- `zc` 不承载仓库内 upstream 治理命令
+- `zc` 的公开命令面只保留实际产品能力，不保留历史重复入口
+
+## 开发者入口
+
+如果你要修改 `zc` 本身，优先看：
+- `apps/cli/src/cli/`
+- `apps/cli/src/runtime/`
+- `apps/cli/src/team/`
+
+尤其常改的命令文件：
+- `apps/cli/src/cli/index.ts`
+- `apps/cli/src/cli/toolkit.ts`
+- `apps/cli/src/cli/platform.ts`
+- `apps/cli/src/cli/team.ts`
+- `apps/cli/src/cli/run.ts`
 
 ## 开发与验证
 
@@ -84,9 +133,3 @@ pnpm --dir apps/cli test
 pnpm --dir apps/cli build
 pnpm --dir apps/cli verify
 ```
-
-修改 `apps/cli` 时，优先阅读：
-
-- `apps/cli/src/cli/`
-- `apps/cli/src/runtime/`
-- `apps/cli/src/team/`
