@@ -1,0 +1,20 @@
+{
+  "upstream": "agent-skills",
+  "captured_at": "2026-04-14T12:00:00Z",
+  "label": "initial-governance-baseline",
+  "metadata": {
+    "title": "Agent Skills",
+    "kind": "github-public-repo",
+    "status": "evaluating",
+    "owner": "migration",
+    "source_paths": [
+      "skills",
+      "commands",
+      "README.md"
+    ]
+  },
+  "notes": {
+    "path": "references/notes/agent-skills.md",
+    "content": "# Agent Skills\n\nSource: `https://github.com/addyosmani/agent-skills`\n\n## Status\n\nImported into governance during monorepo migration. Snapshot baseline pending full review.\n\n## Historical Role\n\n- Primary upstream for the early skill and command model.\n\n## Expected Downstream Value\n\n- Skill workflow structure\n- Command naming patterns\n"
+  }
+}

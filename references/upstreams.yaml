@@ -7,20 +7,81 @@ governance:
   snapshot_policy: immutable
 
 upstreams:
-  - id: legacy-root-source-model
-    title: Legacy root source model
-    kind: repo-local
-    status: retired
-    owner: agent-4
+  - id: agent-skills
+    title: Agent Skills
+    kind: github-public-repo
+    status: active
+    owner: codex
     source_paths:
       - skills
       - commands
+    notes_path: references/notes/agent-skills.md
+    snapshots_path: references/snapshots/agent-skills/
+    sync:
+      mode: manual-review
+      review_required: true
+      compare_against: snapshots
+      publish_target: toolkit-and-platform-generation
+  - id: superpowers
+    title: Superpowers
+    kind: github-public-repo
+    status: active
+    owner: codex
+    source_paths:
+      - prompts
+      - instructions
       - agents
-      - QWEN.md
-      - AGENTS.md
-      - instructions.md
-    notes_path: references/notes/legacy-root-source-model.md
-    snapshots_path: references/snapshots/legacy-root-source-model/
+    notes_path: references/notes/superpowers.md
+    snapshots_path: references/snapshots/superpowers/
+    sync:
+      mode: manual-review
+      review_required: true
+      compare_against: snapshots
+      publish_target: toolkit-and-platform-generation
+  - id: everything-claude-code
+    title: Everything Claude Code
+    kind: github-public-repo
+    status: active
+    owner: codex
+    source_paths:
+      - CLAUDE.md
+      - docs
+      - commands
+    notes_path: references/notes/everything-claude-code.md
+    snapshots_path: references/snapshots/everything-claude-code/
+    sync:
+      mode: manual-review
+      review_required: true
+      compare_against: snapshots
+      publish_target: toolkit-and-platform-generation
+  - id: gstack
+    title: GStack
+    kind: github-public-repo
+    status: active
+    owner: codex
+    source_paths:
+      - prompts
+      - commands
+      - docs
+    notes_path: references/notes/gstack.md
+    snapshots_path: references/snapshots/gstack/
+    sync:
+      mode: manual-review
+      review_required: true
+      compare_against: snapshots
+      publish_target: toolkit-and-platform-generation
+  - id: andrej-karpathy-skills
+    title: Andrej Karpathy Skills
+    kind: github-public-repo
+    status: active
+    owner: codex
+    source_paths:
+      - CLAUDE.md
+      - README.md
+      - EXAMPLES.md
+      - skills/karpathy-guidelines
+    notes_path: references/notes/andrej-karpathy-skills.md
+    snapshots_path: references/snapshots/andrej-karpathy-skills/
     sync:
       mode: manual-review
       review_required: true

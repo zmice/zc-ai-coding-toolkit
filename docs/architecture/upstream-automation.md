@@ -101,7 +101,7 @@ report 的角色是“审阅材料”，不是“自动执行指令”。
 示例结构：
 
 ```text
-Upstream: legacy-root-source-model
+Upstream: agent-skills
 Mode: report
 Decision: pending-manual-review
 
@@ -252,14 +252,14 @@ Stage 1 的命令面应保持与现有 `zc upstream` 一致，并向下扩展为
 ```markdown
 ## Summary
 
-- upstream: `legacy-root-source-model`
+- upstream: `agent-skills`
 - decision: `pending-manual-review`
 - impact: toolkit generation may change
 
 ## Evidence
 
-- baseline snapshot: `references/snapshots/legacy-root-source-model/...`
-- current notes: `references/notes/legacy-root-source-model.md`
+- baseline snapshot: `references/snapshots/agent-skills/...`
+- current notes: `references/notes/agent-skills.md`
 
 ## Decision
 

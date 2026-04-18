@@ -50,3 +50,13 @@ The retirement is now complete:
 2. runtime/platform flows use package-owned implementations
 3. legacy root files and directories have been removed
 4. remaining historical context lives in git history and `references/`
+
+## Governance Cleanup
+
+`legacy-root-source-model` no longer remains in `references/upstreams.yaml` as a live upstream.
+
+Reason:
+
+- it was an internal migration breadcrumb, not an external source to keep syncing
+- it should not appear in normal `zc upstream list` output
+- historical context stays here and in git history instead of the active upstream inventory

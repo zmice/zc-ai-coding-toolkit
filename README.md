@@ -96,12 +96,12 @@ node apps/cli/dist/cli/index.js platform install codex --plan --format json
 
 # upstream governance
 node apps/cli/dist/cli/index.js upstream list
-node apps/cli/dist/cli/index.js upstream show legacy-root-source-model
+node apps/cli/dist/cli/index.js upstream show agent-skills
 node apps/cli/dist/cli/index.js upstream review
-node apps/cli/dist/cli/index.js upstream diff legacy-root-source-model --against 2026-04-01-baseline.json
-node apps/cli/dist/cli/index.js upstream snapshot legacy-root-source-model --label nightly-review
-node apps/cli/dist/cli/index.js upstream report legacy-root-source-model --format md --output /tmp/upstream-report.md
-node apps/cli/dist/cli/index.js upstream import legacy-root-source-model --dry-run --output /tmp/upstream-import.txt
+node apps/cli/dist/cli/index.js upstream diff agent-skills --against 2026-04-14-baseline.json
+node apps/cli/dist/cli/index.js upstream snapshot agent-skills --label nightly-review
+node apps/cli/dist/cli/index.js upstream report agent-skills --format md --output /tmp/upstream-report.md
+node apps/cli/dist/cli/index.js upstream import agent-skills --dry-run --output /tmp/upstream-import.txt
 
 # full MVP verification
 pnpm verify

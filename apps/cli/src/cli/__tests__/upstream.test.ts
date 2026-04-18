@@ -50,20 +50,20 @@ describe("upstream governance commands", () => {
     const result = await runCli([
       "upstream",
       "diff",
-      "legacy-root-source-model",
+      "agent-skills",
       "--against",
-      "2026-04-01-baseline.json",
+      "2026-04-14-baseline.json",
     ]);
 
     expect(result.stderr).toBe("");
-    expect(result.stdout).toContain("上游：legacy-root-source-model");
+    expect(result.stdout).toContain("上游：agent-skills");
     expect(result.stdout).toContain("模式：diff");
     expect(result.stdout).toContain("结构变化");
     expect(result.stdout).toContain("文本变化");
     expect(result.stdout).toContain("元数据变化");
     expect(result.stdout).toContain("下游影响");
-    expect(result.stdout).toContain("install.sh");
-    expect(result.stdout).toContain("status: active -> retired");
+    expect(result.stdout).toContain("README.md");
+    expect(result.stdout).toContain("status: evaluating -> active");
     expect(result.stdout).toContain("需要人工审阅后再决定是否导入。");
   });
 
@@ -71,9 +71,9 @@ describe("upstream governance commands", () => {
     const result = await runCli([
       "upstream",
       "diff",
-      "legacy-root-source-model",
+      "agent-skills",
       "--against",
-      "2026-04-01-baseline.json",
+      "2026-04-14-baseline.json",
       "--format",
       "json",
     ]);
@@ -89,14 +89,14 @@ describe("upstream governance commands", () => {
     };
 
     expect(result.stderr).toBe("");
-    expect(payload.upstream).toBe("legacy-root-source-model");
+    expect(payload.upstream).toBe("agent-skills");
     expect(payload.mode).toBe("diff");
     expect(payload.review_status).toBe("pending-manual-review");
     expect(payload.changes.structural).toEqual(
-      expect.arrayContaining([expect.objectContaining({ path: "install.sh", kind: "removed" })]),
+      expect.arrayContaining([expect.objectContaining({ path: "README.md", kind: "removed" })]),
     );
     expect(payload.changes.metadata).toEqual(
-      expect.arrayContaining([expect.objectContaining({ field: "status", before: "active", after: "retired" })]),
+      expect.arrayContaining([expect.objectContaining({ field: "status", before: "evaluating", after: "active" })]),
     );
   });
 
@@ -104,7 +104,7 @@ describe("upstream governance commands", () => {
     const result = await runCli([
       "upstream",
       "report",
-      "legacy-root-source-model",
+      "agent-skills",
       "--format",
       "md",
     ]);
@@ -124,7 +124,7 @@ describe("upstream governance commands", () => {
     const result = await runCli([
       "upstream",
       "snapshot",
-      "legacy-root-source-model",
+      "agent-skills",
       "--label",
       label,
     ]);
@@ -146,21 +146,21 @@ describe("upstream governance commands", () => {
       metadata: { status: string };
     };
 
-    expect(payload.upstream).toBe("legacy-root-source-model");
+    expect(payload.upstream).toBe("agent-skills");
     expect(payload.label).toBe(label);
-    expect(payload.metadata.status).toBe("retired");
+    expect(payload.metadata.status).toBe("active");
   });
 
   it("report --output 会把 Markdown 审阅材料写入文件", async () => {
     const outputDir = join(tmpdir(), "ai-coding-upstream-report");
-    const outputPath = join(outputDir, "legacy-root-source-model.md");
+    const outputPath = join(outputDir, "agent-skills.md");
     cleanupPaths.add(outputDir);
     mkdirSync(outputDir, { recursive: true });
 
     const result = await runCli([
       "upstream",
       "report",
-      "legacy-root-source-model",
+      "agent-skills",
       "--format",
       "md",
       "--output",
@@ -179,7 +179,7 @@ describe("upstream governance commands", () => {
     const result = await runCli([
       "upstream",
       "import",
-      "legacy-root-source-model",
+      "agent-skills",
       "--dry-run",
     ]);
 
@@ -194,14 +194,14 @@ describe("upstream governance commands", () => {
 
   it("import --dry-run --output 会把提案写入文件", async () => {
     const outputDir = join(tmpdir(), "ai-coding-upstream-import");
-    const outputPath = join(outputDir, "legacy-root-source-model.txt");
+    const outputPath = join(outputDir, "agent-skills.txt");
     cleanupPaths.add(outputDir);
     mkdirSync(outputDir, { recursive: true });
 
     const result = await runCli([
       "upstream",
       "import",
-      "legacy-root-source-model",
+      "agent-skills",
       "--dry-run",
       "--output",
       outputPath,
@@ -216,7 +216,7 @@ describe("upstream governance commands", () => {
   });
 
   it("缺少 --dry-run 时阻止 import 执行", async () => {
-    const result = await runCli(["upstream", "import", "legacy-root-source-model"]);
+    const result = await runCli(["upstream", "import", "agent-skills"]);
 
     expect(result.stdout).toBe("");
     expect(result.stderr).toContain("当前阶段只支持 `import --dry-run`");
