@@ -52,6 +52,9 @@ describe("createToolkitManifest", () => {
       "skill:debugging-and-error-recovery",
       "skill:engineering-principles"
     ]);
+    assert.deepEqual(manifest.byRelationship.suggests["skill:spec-driven-development"], [
+      "skill:engineering-principles"
+    ]);
     assert.deepEqual(
       getToolkitAssetById(manifest, "command:verify")?.meta.platforms,
       ["qwen", "codex", "qoder"]
