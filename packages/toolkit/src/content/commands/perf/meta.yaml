@@ -1,6 +1,6 @@
 kind: command
 name: perf
-title: perf
+title: 性能
 description: 分析代码性能瓶颈并提供优化方案，从测量开始，用数据驱动优化决策。
 tier: recommended
 audience: default

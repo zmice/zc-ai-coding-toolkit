@@ -1,6 +1,6 @@
 kind: command
 name: verify
-title: verify
+title: 验证
 description: 在声明工作完成之前运行验证命令确认实际状态，遵循“证据先于断言”铁律。
 tier: core
 audience: default

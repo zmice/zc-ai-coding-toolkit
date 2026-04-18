@@ -1,6 +1,6 @@
 kind: command
 name: careful
-title: careful
+title: 预警
 description: 激活 Careful 模式，AI 在执行任何危险命令前显示风险警告并要求确认。
 tier: recommended
 audience: default

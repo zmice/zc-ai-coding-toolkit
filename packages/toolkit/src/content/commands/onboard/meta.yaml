@@ -1,6 +1,6 @@
 kind: command
 name: onboard
-title: onboard
+title: 上手
 description: 系统化地理解陌生代码库，通过目录扫描、入口定位、依赖分析和模式识别快速建立全局认知。
 tier: recommended
 audience: default

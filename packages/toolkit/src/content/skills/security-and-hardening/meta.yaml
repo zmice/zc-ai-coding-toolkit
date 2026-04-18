@@ -1,6 +1,6 @@
 kind: skill
 name: security-and-hardening
-title: security-and-hardening
+title: 安全加固
 description: 加固代码免受常见漏洞影响。适用于处理用户输入、认证、数据存储或外部集成，也适用于任何接收不可信数据、管理会话或接入第三方服务的功能。
 tier: recommended
 audience: advanced

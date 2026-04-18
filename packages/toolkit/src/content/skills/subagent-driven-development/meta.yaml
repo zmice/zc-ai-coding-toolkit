@@ -1,6 +1,6 @@
 kind: skill
 name: subagent-driven-development
-title: subagent-driven-development
+title: 子代理驱动开发
 description: 在执行实现计划且任务彼此独立时使用。为每个任务派发全新子代理，并配套规范符合性与代码质量两阶段审查，以提升迭代速度和上下文隔离质量。
 tier: recommended
 audience: advanced

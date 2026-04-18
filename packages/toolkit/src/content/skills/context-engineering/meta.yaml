@@ -1,6 +1,6 @@
 kind: skill
 name: context-engineering
-title: context-engineering
+title: 上下文工程
 description: 优化代理的上下文配置。适用于新会话启动、输出质量下降、任务切换，或需要为项目整理规则文件与上下文装配方式时。
 tier: recommended
 audience: advanced

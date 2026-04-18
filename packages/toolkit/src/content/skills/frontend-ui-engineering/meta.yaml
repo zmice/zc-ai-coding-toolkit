@@ -1,6 +1,6 @@
 kind: skill
 name: frontend-ui-engineering
-title: frontend-ui-engineering
+title: 前端界面工程
 description: 构建生产级前端界面。适用于开发或修改用户可见界面、创建组件、实现布局、管理状态，或需要让输出具备真实产品质感而不是模板化 AI 味道时。
 tier: recommended
 audience: advanced

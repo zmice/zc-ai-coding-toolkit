@@ -1,6 +1,6 @@
 kind: command
 name: build
-title: build
+title: 构建
 description: 按 TDD 的 Red-Green-Refactor 循环进行增量构建，确保每次只完成一个任务且系统始终可编译、可测试。
 tier: core
 audience: default

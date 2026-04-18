@@ -1,6 +1,6 @@
 kind: skill
 name: parallel-agent-dispatch
-title: parallel-agent-dispatch
+title: 并行调度
 description: 在多个独立任务可并行时使用。通过上下文隔离、结果汇总与冲突检测实现 fan-out/fan-in，并支持上下文扇出、Git worktree 隔离和级联批处理等并行模式。
 tier: recommended
 audience: advanced

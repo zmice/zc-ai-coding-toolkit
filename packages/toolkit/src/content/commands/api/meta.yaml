@@ -1,6 +1,6 @@
 kind: command
 name: api
-title: api
+title: API
 description: 设计和审查 API 接口，确保一致性、易用性和向后兼容性。
 tier: recommended
 audience: default

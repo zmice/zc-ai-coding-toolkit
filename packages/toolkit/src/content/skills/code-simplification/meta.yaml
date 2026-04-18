@@ -1,6 +1,6 @@
 kind: skill
 name: code-simplification
-title: code-simplification
+title: 代码简化
 description: 以澄清代码为目标进行简化重构。适用于在不改变行为的前提下提升可读性和可维护性，也适用于处理已经积累了不必要复杂度的代码。
 tier: recommended
 audience: default

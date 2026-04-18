@@ -1,6 +1,6 @@
 kind: skill
 name: performance-optimization
-title: performance-optimization
+title: 性能优化
 description: 优化应用性能。适用于存在性能要求、怀疑出现回归，或需要改善 Core Web Vitals 与加载时间时；也适用于已经通过 profiling 找到瓶颈并需要定向修复的场景。
 tier: recommended
 audience: advanced

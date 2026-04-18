@@ -1,6 +1,6 @@
 kind: command
 name: ui
-title: ui
+title: 界面
 description: 前端 UI 开发辅助，涵盖组件设计、样式实现、响应式布局和可访问性。
 tier: recommended
 audience: default

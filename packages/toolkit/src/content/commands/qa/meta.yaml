@@ -1,6 +1,6 @@
 kind: command
 name: qa
-title: qa
+title: 浏览器质检
 description: 执行真实浏览器自动化 QA 测试，覆盖用户流程、交互、可访问性。
 tier: recommended
 audience: default

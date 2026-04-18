@@ -1,6 +1,6 @@
 kind: skill
 name: continuous-learning
-title: continuous-learning
+title: 持续学习
 description: 基于 Hook 的持续学习系统。它会观察会话行为，提炼带置信度的原子 instincts，并逐步演化为可复用的 skills 或 commands；同时利用本地文件和 Agent Memory 实现跨会话沉淀，可通过 /learn 手动触发提炼。
 tier: experimental
 audience: advanced

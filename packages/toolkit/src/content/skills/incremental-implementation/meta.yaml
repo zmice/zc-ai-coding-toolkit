@@ -1,6 +1,6 @@
 kind: skill
 name: incremental-implementation
-title: incremental-implementation
+title: 增量实现
 description: 以增量切片方式交付变更。适用于任何跨多个文件的功能或改动，通过实现、测试、验证、提交的薄切片循环保持系统始终可运行、可验证。
 tier: core
 audience: default

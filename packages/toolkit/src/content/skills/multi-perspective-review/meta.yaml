@@ -1,6 +1,6 @@
 kind: skill
 name: multi-perspective-review
-title: multi-perspective-review
+title: 多视角评审
 description: 在实现前从产品、工程、设计和开发者体验四个视角审视 Spec 或 Plan。适用于架构决策、跨团队变更或任何单一视角容易遗漏风险的场景。
 tier: recommended
 audience: advanced

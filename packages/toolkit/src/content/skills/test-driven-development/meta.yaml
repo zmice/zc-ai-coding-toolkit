@@ -1,6 +1,6 @@
 kind: skill
 name: test-driven-development
-title: test-driven-development
+title: 测试驱动开发
 description: 以测试驱动开发。适用于实现任何逻辑、修复任何 bug 或改变任何行为；当你需要证明代码确实可用、收到 bug 报告，或准备修改现有功能时使用。
 tier: core
 audience: default

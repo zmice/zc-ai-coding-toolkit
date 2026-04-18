@@ -1,6 +1,6 @@
 kind: skill
 name: sprint-retrospective
-title: sprint-retrospective
+title: 迭代回顾
 description: 在开发周期结束后执行结构化 Sprint 回顾。适用于完成一轮 SDD+TDD、结束一周工作、达到里程碑或事故恢复后，通过 git 指标、Spec 偏差和瓶颈分析产出可执行改进项。
 tier: recommended
 audience: default

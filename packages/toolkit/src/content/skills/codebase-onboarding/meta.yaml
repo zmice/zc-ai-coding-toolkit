@@ -1,6 +1,6 @@
 kind: skill
 name: codebase-onboarding
-title: codebase-onboarding
+title: 代码库导览
 description: 进入陌生代码库或启动新项目时使用。通过目录扫描、入口定位、依赖梳理与模式识别快速建立全局认知，并输出后续开发可复用的精炼上下文。
 tier: recommended
 audience: default

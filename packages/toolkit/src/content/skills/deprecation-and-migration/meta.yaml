@@ -1,6 +1,6 @@
 kind: skill
 name: deprecation-and-migration
-title: deprecation-and-migration
+title: 迁移与废弃
 description: 管理废弃与迁移。适用于移除旧系统、旧 API 或旧功能，也适用于在不同实现之间平滑迁移用户并决定是否继续维护旧路径。
 tier: recommended
 audience: advanced

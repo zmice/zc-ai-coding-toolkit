@@ -22,7 +22,7 @@ describe("createToolkitManifest", () => {
     assert.ok(manifest.counts.agents >= 1);
     assert.equal(
       getToolkitAssetById(manifest, "command:verify")?.meta.title,
-      "verify"
+      "验证"
     );
     assert.equal(
       getToolkitAssetById(manifest, "command:task-plan")?.meta.title,
