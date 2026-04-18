@@ -12,3 +12,5 @@
 
 - `zc platform install qoder`
 - `zc platform install qoder --plan --format json`
+
+省略 `-o` 时，CLI 会优先把最近项目根解析为安装目录。

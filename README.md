@@ -31,6 +31,7 @@ AI Coding Toolkit 已切换到 **monorepo source model**。
 - `zc platform generate qwen|codex|qoder` 可用
 - `zc platform install qwen|codex|qoder` 可用
 - `zc platform generate/install --plan --format json` 可用
+- `zc platform install` 可自动解析最近项目根作为安装目录
 - root `verify:mvp` 可执行最小闭环验证
 
 验证命令：
@@ -102,6 +103,8 @@ node apps/cli/dist/cli/index.js upstream review
 pnpm verify
 node scripts/verify-workspace.mjs
 ```
+
+`zc platform install <target>` 在未传 `-o` 时，会优先向上寻找最近的项目根标记（`.git`、`pnpm-workspace.yaml`、`package.json`），找不到时才回退到当前工作目录。
 
 ## Migration Notes
 

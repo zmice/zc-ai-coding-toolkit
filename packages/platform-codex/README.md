@@ -11,4 +11,5 @@
 常见用法：
 
 - `zc platform install codex -o /tmp/codex-out`
+- `zc platform install codex`
 - `zc platform install codex --plan --format json`

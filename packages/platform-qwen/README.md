@@ -13,3 +13,4 @@
 
 - `zc platform generate qwen -o /tmp/qwen-out`
 - `zc platform generate qwen --plan --format json`
+- `zc platform install qwen`
