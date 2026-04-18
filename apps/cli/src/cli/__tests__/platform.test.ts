@@ -72,36 +72,34 @@ describe("platform CLI", () => {
     });
     platformMocks.normalizeInstallSelector.mockImplementation((options: {
       dir?: string;
-      out?: string;
       global?: boolean;
-      scope?: "project" | "global";
     }) => ({
-      dir: options.dir ?? options.out,
-      mode: options.global || options.scope === "global" ? "global" : "project",
+      dir: options.dir,
+      mode: options.global ? "global" : "project",
     }));
-    platformMocks.resolveInstallTarget.mockImplementation(async (_target: string, options: { dir?: string; out?: string; cwd?: string }) => ({
-      root: options.dir ?? options.out ?? options.cwd ?? process.cwd(),
-      source: options.dir || options.out ? "explicit" : "cwd",
+    platformMocks.resolveInstallTarget.mockImplementation(async (_target: string, options: { dir?: string; cwd?: string }) => ({
+      root: options.dir ?? options.cwd ?? process.cwd(),
+      source: options.dir ? "explicit" : "cwd",
     }));
   });
 
-  it("passes dry-run options into platform generate writes", async () => {
+  it("uses safe overwrite defaults for platform generate writes", async () => {
     platformMocks.createQwenGenerationPlan.mockReturnValue({
       artifacts: [{ path: "QWEN.md", content: "# context" }],
     });
     platformMocks.writeArtifacts.mockResolvedValue({
-      created: 0,
+      created: 1,
       overwritten: 0,
       unchanged: 0,
-      skipped: 1,
-      dryRun: true,
+      skipped: 0,
+      dryRun: false,
     });
 
-    await runPlatformGenerate("qwen", { dir: "/tmp/out", dryRun: true });
+    await runPlatformGenerate("qwen", { dir: "/tmp/out" });
 
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
       [{ path: "/tmp/out/QWEN.md", content: "# context" }],
-      { dryRun: true, overwrite: "error" },
+      { dryRun: false, overwrite: "error" },
     );
   });
 
@@ -198,11 +196,9 @@ describe("platform CLI", () => {
 
     expect(platformMocks.resolveInstallTarget).toHaveBeenCalledWith("codex", {
       dir: undefined,
-      out: undefined,
       cwd: process.cwd(),
       project: undefined,
       global: undefined,
-      scope: undefined,
     });
     expect(platformMocks.createCodexInstallPlan).toHaveBeenCalledWith(
       expect.anything(),
@@ -266,11 +262,9 @@ describe("platform CLI", () => {
 
     expect(platformMocks.resolveInstallTarget).toHaveBeenCalledWith("qoder", {
       dir: undefined,
-      out: undefined,
       cwd: process.cwd(),
       project: undefined,
       global: true,
-      scope: undefined,
     });
     expect(platformMocks.createQoderInstallPlan).toHaveBeenCalledWith(
       expect.anything(),
@@ -325,11 +319,9 @@ describe("platform CLI", () => {
 
     expect(platformMocks.resolveInstallTarget).toHaveBeenCalledWith("codex", {
       dir: undefined,
-      out: undefined,
       cwd: process.cwd(),
       project: undefined,
       global: true,
-      scope: undefined,
     });
     const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
     expect(payload).toEqual(
@@ -343,5 +335,21 @@ describe("platform CLI", () => {
     );
 
     logSpy.mockRestore();
+  });
+
+  it("prints a friendly qwen global resolution error instead of throwing", async () => {
+    platformMocks.resolveInstallTarget.mockRejectedValue(
+      new Error("Qwen 官方文档未给出全局 `QWEN.md` 默认位置。请显式传入 `--dir <path>`。"),
+    );
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await runPlatformWhere("qwen", { global: true });
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      "qwen 目录解析失败：Qwen 官方文档未给出全局 `QWEN.md` 默认位置。请显式传入 `--dir <path>`。",
+    );
+    expect(process.exitCode).toBe(1);
+
+    errorSpy.mockRestore();
   });
 });

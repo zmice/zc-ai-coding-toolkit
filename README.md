@@ -45,8 +45,8 @@ node apps/cli/dist/cli/index.js toolkit show spec
 node apps/cli/dist/cli/index.js toolkit recommend build
 
 # 生成 / 安装平台产物
-node apps/cli/dist/cli/index.js platform generate qwen --plan --format json
-node apps/cli/dist/cli/index.js platform install codex --plan --format json
+node apps/cli/dist/cli/index.js platform generate qwen --plan --json
+node apps/cli/dist/cli/index.js platform install codex --plan --json
 node apps/cli/dist/cli/index.js platform install codex --global
 node apps/cli/dist/cli/index.js platform where qoder --global --json
 
@@ -113,9 +113,9 @@ pnpm upstream -- report all --format md
 ```bash
 pnpm --dir packages/toolkit test
 node apps/cli/dist/cli/index.js toolkit lint --json
-node apps/cli/dist/cli/index.js toolkit show <id>
+node apps/cli/dist/cli/index.js toolkit show <query>
 node apps/cli/dist/cli/index.js toolkit search <keyword>
-node apps/cli/dist/cli/index.js toolkit recommend <id>
+node apps/cli/dist/cli/index.js toolkit recommend <query>
 ```
 
 ### 2. 生成或安装平台产物
@@ -133,7 +133,7 @@ node apps/cli/dist/cli/index.js platform install qoder --plan --json
 说明：
 
 - `platform generate/install --plan` 只输出计划，不落盘
-- `--format json` 适合脚本消费
+- `--json` 适合脚本消费
 - `platform install` 未传 `--dir` 时，会优先向上解析最近项目根，找不到再回退到当前目录
 - `platform where` 只解析目录，不执行写入
 
@@ -216,6 +216,11 @@ pnpm upstream -- import agent-skills --dry-run --output /tmp/import-plan.txt
 - `source identity`：对齐 upstream
 - `workspace identity`：仓库内部稳定 id
 - `display title`：用户可见中文标题
+
+`toolkit show` / `toolkit recommend` 的 `<query>` 同时支持：
+
+- 完整资产 ID，例如 `command:build`
+- 唯一名称，例如 `build`
 
 ### 中文化
 

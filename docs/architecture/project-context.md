@@ -21,7 +21,8 @@
 
 适用任务：
 
-- `zc runtime`
+- `zc run`
+- `zc team`
 - `zc toolkit`
 - `zc platform`
 

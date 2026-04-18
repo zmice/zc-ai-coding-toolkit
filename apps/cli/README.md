@@ -19,9 +19,7 @@ pnpm upstream -- <subcommand>
 - `zc task ...`
 - `zc msg ...`
 - `zc doctor ...`
-- `zc setup ...`
 - `zc run ...`
-- `zc runtime ...`
 - `zc toolkit ...`
 - `zc platform ...`
 
@@ -30,13 +28,13 @@ pnpm upstream -- <subcommand>
 ```bash
 # toolkit
 zc toolkit lint --json
-zc toolkit show command:build
+zc toolkit show build
 zc toolkit search review
 zc toolkit recommend build
 
 # platform
-zc platform generate qwen --plan --format json
-zc platform install codex --plan --format json
+zc platform generate qwen --plan --json
+zc platform install codex --plan --json
 zc platform install qoder
 zc platform install codex --global
 zc platform where qoder --global --json

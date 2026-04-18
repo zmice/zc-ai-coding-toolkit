@@ -26,8 +26,8 @@ describe("resolveInstallTarget", () => {
     assert.equal(result.dir, undefined);
   });
 
-  it("normalizes --dir and legacy --out to the same explicit directory", () => {
-    const result = normalizeInstallSelector({ dir: "/tmp/custom", out: "/tmp/custom" });
+  it("normalizes --dir into an explicit directory selector", () => {
+    const result = normalizeInstallSelector({ dir: "/tmp/custom" });
 
     assert.equal(result.mode, "project");
     assert.equal(result.dir, "/tmp/custom");
@@ -78,7 +78,7 @@ describe("resolveInstallTarget", () => {
   });
 
   it("resolves Codex global scope to the user home directory", async () => {
-    const result = await resolveInstallTarget("codex", { scope: "global" });
+    const result = await resolveInstallTarget("codex", { global: true });
 
     assert.equal(result.source, "official-global");
     assert.ok(result.root.length > 0);
@@ -86,7 +86,7 @@ describe("resolveInstallTarget", () => {
   });
 
   it("resolves Qoder global scope to ~/.qoder", async () => {
-    const result = await resolveInstallTarget("qoder", { scope: "global" });
+    const result = await resolveInstallTarget("qoder", { global: true });
 
     assert.equal(result.source, "official-global");
     assert.ok(result.root.endsWith(`${join(".qoder")}`));
@@ -95,22 +95,9 @@ describe("resolveInstallTarget", () => {
 
   it("rejects Qwen global scope when no official default QWEN.md path exists", async () => {
     await assert.rejects(
-      () => resolveInstallTarget("qwen", { scope: "global" }),
+      () => resolveInstallTarget("qwen", { global: true }),
       /未给出全局 `QWEN\.md` 默认位置/,
     );
   });
 
-  it("rejects unknown install scopes", async () => {
-    await assert.rejects(
-      () => resolveInstallTarget("codex", { scope: "workspace" }),
-      /不支持的安装范围：workspace/,
-    );
-  });
-
-  it("rejects inconsistent legacy scope and new global flag", async () => {
-    await assert.rejects(
-      () => resolveInstallTarget("codex", { global: true, scope: "project" }),
-      /兼容参数 `--scope` 与新的安装目标参数不一致/,
-    );
-  });
 });

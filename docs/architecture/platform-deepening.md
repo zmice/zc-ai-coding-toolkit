@@ -233,7 +233,7 @@ template context 必须统一，平台渲染器只能在这个上下文上做特
 - 可选参数：`-d, --dir <dir>`
 - 可选模式：
   - `--plan`：只输出产物计划，不写文件
-  - `--format json`：输出 JSON，便于脚本消费
+  - `--json`：输出 JSON，便于脚本消费
 - 默认输出目录：`.generated/<target>`
 - 输出行为：
   - 成功时打印目标平台、输出目录、产物数量
@@ -256,7 +256,7 @@ template context 必须统一，平台渲染器只能在这个上下文上做特
   - `-g, --global`：显式使用官方默认全局目录
   - `--force`：覆盖冲突文件
   - `--plan`：只输出安装计划，不写盘
-  - `--format json` / `--json`：输出 JSON，便于脚本消费
+  - `--json`：输出 JSON，便于脚本消费
 - 默认解析规则：
   - 优先使用显式 `--dir`
   - 其次使用 `--global`
@@ -276,7 +276,7 @@ template context 必须统一，平台渲染器只能在这个上下文上做特
   - `-d, --dir <dir>`
   - `-p, --project`
   - `-g, --global`
-  - `--format json` / `--json`
+  - `--json`
 - 输出行为：
   - 必须告诉用户解析来源：`explicit | project-root | cwd | official-global`
   - 若命中了项目根标记，应输出对应 marker

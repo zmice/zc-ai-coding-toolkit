@@ -51,10 +51,12 @@ pnpm --dir packages/toolkit test
 pnpm --dir packages/toolkit build
 
 node ../../apps/cli/dist/cli/index.js toolkit lint --json
-node ../../apps/cli/dist/cli/index.js toolkit show <id>
+node ../../apps/cli/dist/cli/index.js toolkit show <query>
 node ../../apps/cli/dist/cli/index.js toolkit search <keyword>
-node ../../apps/cli/dist/cli/index.js toolkit recommend <id>
+node ../../apps/cli/dist/cli/index.js toolkit recommend <query>
 ```
+
+`<query>` 同时支持完整资产 ID（如 `command:build`）和唯一名称（如 `build`）。
 
 ## 与其他层的关系
 

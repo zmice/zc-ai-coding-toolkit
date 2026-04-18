@@ -21,7 +21,7 @@ pnpm build
 ```bash
 node apps/cli/dist/cli/index.js --help
 node apps/cli/dist/cli/index.js toolkit lint --json
-node apps/cli/dist/cli/index.js platform install codex --plan --format json
+node apps/cli/dist/cli/index.js platform install codex --plan --json
 ```
 
 适用场景：
@@ -223,7 +223,7 @@ zc platform where qoder --global --json
 - `qoder --global`
   - 默认安装到 `~/.qoder/AGENTS.md`
 - `qwen --global`
-  - CLI 会报错并提示显式传 `-o`
+  - CLI 会报错并提示显式传 `--dir`
   - 原因是官方文档没有给出全局 `QWEN.md` 默认位置
 
 如果你已经明确知道目标工具的自定义全局目录，也可以继续显式指定：
@@ -249,7 +249,7 @@ zc platform where codex --global
 说明：
 
 - `--plan` 只输出计划，不写文件
-- `--json` 是 `--format json` 的简写，适合脚本消费
+- `--json` 输出结构化结果，适合脚本消费
 - `platform where` 只解析目录和来源，不执行写入
 
 ## 5. 冲突与覆盖

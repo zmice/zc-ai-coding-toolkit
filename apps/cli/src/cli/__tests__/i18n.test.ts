@@ -24,9 +24,12 @@ describe("CLI 中文化", () => {
   it("在根帮助中保留中文说明", () => {
     const help = createProgram().helpInformation();
 
-    expect(help).toContain("多 AI CLI 团队编排运行时");
+    expect(help).toContain("AI Coding Toolkit 统一入口 CLI");
     expect(help).toContain("团队编排命令");
     expect(help).toContain("启动单个 CLI 工人执行任务");
+    expect(help).toContain("工具包资产管理命令");
+    expect(help).not.toContain("\n  runtime");
+    expect(help).not.toContain("\n  setup");
   });
 
   it("用中文提示未知的 run 适配器", async () => {

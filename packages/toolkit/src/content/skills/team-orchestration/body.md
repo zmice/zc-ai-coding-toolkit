@@ -271,7 +271,7 @@ zc CLI 入口 (commander)
   │
   ├── zc doctor     → 环境诊断（platform detection）
   ├── zc run        → 单 worker 执行
-  ├── zc setup      → 环境配置
+  ├── zc toolkit    → 工具包查询
   │
   ├── zc team       → 团队编排
   │     └── Orchestrator（编排控制器）

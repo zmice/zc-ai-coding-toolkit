@@ -198,7 +198,7 @@ export function registerToolkitCommand(program: Command): void {
   toolkit
     .command("show")
     .description("显示单个 toolkit 资产的详细信息")
-    .argument("<id>", "资产 ID 或唯一名称")
+    .argument("<query>", "资产 ID（如 command:build）或唯一名称（如 build）")
     .option("--json", "输出完整 JSON")
     .action(async (query: string, opts: { json?: boolean }) => {
       const toolkitModule = await loadToolkitModule();
@@ -240,7 +240,7 @@ export function registerToolkitCommand(program: Command): void {
   toolkit
     .command("recommend")
     .description("根据已建关系图推荐关联资产")
-    .argument("<id>", "资产 ID 或唯一名称")
+    .argument("<query>", "资产 ID（如 command:build）或唯一名称（如 build）")
     .option("--json", "输出完整 JSON")
     .action(async (query: string, opts: { json?: boolean }) => {
       const toolkitModule = await loadToolkitModule();

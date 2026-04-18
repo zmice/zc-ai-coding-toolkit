@@ -1,4 +1,4 @@
-import type { Command } from "commander";
+import { Command, InvalidArgumentError } from "commander";
 import { join, resolve } from "node:path";
 import type { OverwriteMode } from "@zmice/platform-core";
 import { normalizeInstallSelector, resolveInstallTarget } from "../utils/install-target.js";
@@ -14,11 +14,10 @@ type PlatformOutputFormat = "text" | "json";
 type PlatformInstallScope = "project" | "global";
 type PlatformTargetSelectorOpts = {
   dir?: string;
-  out?: string;
   project?: boolean;
   global?: boolean;
-  scope?: PlatformInstallScope;
 };
+const platformNames: readonly PlatformName[] = ["qwen", "codex", "qoder"];
 
 interface ToolkitAssetMetaLike {
   kind: "skill" | "command" | "agent";
@@ -179,15 +178,8 @@ function resolveOverwriteMode(force: boolean | undefined): OverwriteMode {
   return force ? "force" : "error";
 }
 
-function resolveOutputFormat(format: string | undefined): PlatformOutputFormat {
-  return format === "json" ? "json" : "text";
-}
-
-function resolveOutputFormatFromFlags(format: string | undefined, json?: boolean): PlatformOutputFormat {
-  if (json) {
-    return "json";
-  }
-  return resolveOutputFormat(format);
+function resolveOutputFormat(json?: boolean): PlatformOutputFormat {
+  return json ? "json" : "text";
 }
 
 function resolveScopeFromSelector(opts: PlatformTargetSelectorOpts): PlatformInstallScope {
@@ -201,6 +193,27 @@ function emitOutput(format: PlatformOutputFormat, payload: object, text: string)
   }
 
   console.log(text);
+}
+
+function emitPlatformError(
+  format: PlatformOutputFormat,
+  target: PlatformName | undefined,
+  action: "generate" | "install" | "where",
+  error: string,
+  details?: object,
+): void {
+  if (format === "json") {
+    console.error(JSON.stringify({
+      mode: "error",
+      action,
+      target: target ?? null,
+      error,
+      ...details,
+    }, null, 2));
+    return;
+  }
+
+  console.error(error);
 }
 
 function summarizeResult(action: "generate" | "install", target: PlatformName, root: string, result: {
@@ -333,98 +346,106 @@ function reportConflict(error: ArtifactConflictError, target: PlatformName, dest
 
 export async function runPlatformGenerate(
   target: PlatformName,
-  opts: { dir?: string; out?: string; dryRun?: boolean; force?: boolean; plan?: boolean; format?: string; json?: boolean }
+  opts: { dir?: string; force?: boolean; plan?: boolean; json?: boolean }
 ): Promise<void> {
-  const outputRoot = opts.dir ? resolve(opts.dir) : opts.out ? resolve(opts.out) : resolveWorkspacePath(`.generated/${target}`);
-  const format = resolveOutputFormatFromFlags(opts.format, opts.json);
-  const manifest = await loadToolkitManifest();
-  const platformModule = await loadPlatformModule(target);
-  const plan = createGenerationPlan(target, platformModule, manifest);
+  const format = resolveOutputFormat(opts.json);
+  const outputRoot = opts.dir ? resolve(opts.dir) : resolveWorkspacePath(`.generated/${target}`);
 
-  if (opts.plan) {
-    emitOutput(format, buildPlanPayload("generate", target, outputRoot, {
-      ...plan,
-      artifacts: plan.artifacts.map((artifact) => ({
-        path: join(outputRoot, artifact.path),
-        content: artifact.content
-      }))
-    }), summarizePlan("generate", target, outputRoot, {
-      ...plan,
-      artifacts: plan.artifacts.map((artifact) => ({
-        path: join(outputRoot, artifact.path),
-        content: artifact.content
-      }))
-    }));
-    return;
-  }
+  try {
+    const manifest = await loadToolkitManifest();
+    const platformModule = await loadPlatformModule(target);
+    const plan = createGenerationPlan(target, platformModule, manifest);
 
-  const result = await writeArtifacts(
-    plan.artifacts.map((artifact) => ({
-      path: join(outputRoot, artifact.path),
-      content: artifact.content
-    })),
-    {
-      dryRun: opts.dryRun ?? false,
-      overwrite: resolveOverwriteMode(opts.force)
+    if (opts.plan) {
+      emitOutput(format, buildPlanPayload("generate", target, outputRoot, {
+        ...plan,
+        artifacts: plan.artifacts.map((artifact) => ({
+          path: join(outputRoot, artifact.path),
+          content: artifact.content
+        }))
+      }), summarizePlan("generate", target, outputRoot, {
+        ...plan,
+        artifacts: plan.artifacts.map((artifact) => ({
+          path: join(outputRoot, artifact.path),
+          content: artifact.content
+        }))
+      }));
+      return;
     }
-  );
 
-  emitOutput(format, buildResultPayload("generate", target, outputRoot, result), summarizeResult("generate", target, outputRoot, result));
+    const result = await writeArtifacts(
+      plan.artifacts.map((artifact) => ({
+        path: join(outputRoot, artifact.path),
+        content: artifact.content
+      })),
+      {
+        dryRun: false,
+        overwrite: resolveOverwriteMode(opts.force)
+      }
+    );
+
+    emitOutput(format, buildResultPayload("generate", target, outputRoot, result), summarizeResult("generate", target, outputRoot, result));
+  } catch (error) {
+    emitPlatformError(
+      format,
+      target,
+      "generate",
+      error instanceof Error ? `${target} 生成失败：${error.message}` : `${target} 生成失败。`,
+    );
+    process.exitCode = 1;
+  }
 }
 
 export async function runPlatformInstall(
   target: PlatformName,
   opts: PlatformTargetSelectorOpts & {
-    dryRun?: boolean;
     force?: boolean;
     plan?: boolean;
-    format?: string;
     json?: boolean;
   }
 ): Promise<void> {
-  const scope = resolveScopeFromSelector(opts);
-  const targetResolution = await resolveInstallTarget(target, {
-    dir: opts.dir,
-    out: opts.out,
-    cwd: process.cwd(),
-    project: opts.project,
-    global: opts.global,
-    scope: opts.scope,
-  });
-  const autoResolvedRoot = targetResolution.source !== "explicit";
-  const destinationRoot = resolve(targetResolution.root);
-  const overwrite = resolveOverwriteMode(opts.force);
-  const format = resolveOutputFormatFromFlags(opts.format, opts.json);
-  const manifest = await loadToolkitManifest();
-  const platformModule = await loadPlatformModule(target);
-  const plan = createInstallPlan(target, platformModule, manifest, destinationRoot, overwrite);
-
-  if (opts.plan) {
-    emitOutput(
-      format,
-      buildPlanPayload("install", target, destinationRoot, plan, {
-        autoResolvedRoot,
-        rootSource: targetResolution.source,
-        hint: targetResolution.hint,
-        scope,
-      }),
-      summarizePlan("install", target, destinationRoot, plan, {
-        autoResolvedRoot,
-        rootSource: targetResolution.source,
-        hint: targetResolution.hint,
-      })
-    );
-    return;
-  }
-
+  const format = resolveOutputFormat(opts.json);
+  let destinationRoot = "";
   try {
+    const scope = resolveScopeFromSelector(opts);
+    const targetResolution = await resolveInstallTarget(target, {
+      dir: opts.dir,
+      cwd: process.cwd(),
+      project: opts.project,
+      global: opts.global,
+    });
+    const autoResolvedRoot = targetResolution.source !== "explicit";
+    destinationRoot = resolve(targetResolution.root);
+    const overwrite = resolveOverwriteMode(opts.force);
+    const manifest = await loadToolkitManifest();
+    const platformModule = await loadPlatformModule(target);
+    const plan = createInstallPlan(target, platformModule, manifest, destinationRoot, overwrite);
+
+    if (opts.plan) {
+      emitOutput(
+        format,
+        buildPlanPayload("install", target, destinationRoot, plan, {
+          autoResolvedRoot,
+          rootSource: targetResolution.source,
+          hint: targetResolution.hint,
+          scope,
+        }),
+        summarizePlan("install", target, destinationRoot, plan, {
+          autoResolvedRoot,
+          rootSource: targetResolution.source,
+          hint: targetResolution.hint,
+        })
+      );
+      return;
+    }
+
     const result = await writeArtifacts(
       plan.artifacts.map((artifact) => ({
         path: artifact.path,
         content: artifact.content
       })),
       {
-        dryRun: opts.dryRun ?? false,
+        dryRun: false,
         overwrite
       }
     );
@@ -449,41 +470,64 @@ export async function runPlatformInstall(
       process.exitCode = 1;
       return;
     }
-    throw error;
+
+    emitPlatformError(
+      format,
+      target,
+      "install",
+      error instanceof Error ? `${target} 安装失败：${error.message}` : `${target} 安装失败。`,
+    );
+    process.exitCode = 1;
   }
 }
 
 export async function runPlatformWhere(
   target: PlatformName,
-  opts: PlatformTargetSelectorOpts & { format?: string; json?: boolean },
+  opts: PlatformTargetSelectorOpts & { json?: boolean },
 ): Promise<void> {
-  const scope = resolveScopeFromSelector(opts);
-  const targetResolution = await resolveInstallTarget(target, {
-    dir: opts.dir,
-    out: opts.out,
-    cwd: process.cwd(),
-    project: opts.project,
-    global: opts.global,
-    scope: opts.scope,
-  });
-  const format = resolveOutputFormatFromFlags(opts.format, opts.json);
-  const root = resolve(targetResolution.root);
+  const format = resolveOutputFormat(opts.json);
+  try {
+    const scope = resolveScopeFromSelector(opts);
+    const targetResolution = await resolveInstallTarget(target, {
+      dir: opts.dir,
+      cwd: process.cwd(),
+      project: opts.project,
+      global: opts.global,
+    });
+    const root = resolve(targetResolution.root);
 
-  emitOutput(
-    format,
-    buildWherePayload(target, root, {
-      scope,
-      rootSource: targetResolution.source,
-      marker: targetResolution.marker,
-      hint: targetResolution.hint,
-    }),
-    summarizeWhere(target, root, {
-      scope,
-      rootSource: targetResolution.source,
-      marker: targetResolution.marker,
-      hint: targetResolution.hint,
-    }),
-  );
+    emitOutput(
+      format,
+      buildWherePayload(target, root, {
+        scope,
+        rootSource: targetResolution.source,
+        marker: targetResolution.marker,
+        hint: targetResolution.hint,
+      }),
+      summarizeWhere(target, root, {
+        scope,
+        rootSource: targetResolution.source,
+        marker: targetResolution.marker,
+        hint: targetResolution.hint,
+      }),
+    );
+  } catch (error) {
+    emitPlatformError(
+      format,
+      target,
+      "where",
+      error instanceof Error ? `${target} 目录解析失败：${error.message}` : `${target} 目录解析失败。`,
+    );
+    process.exitCode = 1;
+  }
+}
+
+function parsePlatformName(value: string): PlatformName {
+  if (platformNames.includes(value as PlatformName)) {
+    return value as PlatformName;
+  }
+
+  throw new InvalidArgumentError(`不支持的平台：${value}。可选值：${platformNames.join(" | ")}`);
 }
 
 export function registerPlatformCommand(program: Command): void {
@@ -493,13 +537,10 @@ export function registerPlatformCommand(program: Command): void {
     .command("generate")
     .alias("g")
     .description("根据工具包清单生成平台产物")
-    .argument("<target>", "目标平台 (qwen|codex|qoder)")
+    .argument("<target>", "目标平台 (qwen|codex|qoder)", parsePlatformName)
     .option("-d, --dir <dir>", "输出目录")
-    .option("-o, --out <dir>", "兼容旧参数：输出目录")
     .option("--plan", "只输出产物计划，不落盘")
-    .option("--format <format>", "输出格式：text | json", "text")
     .option("-j, --json", "直接输出 JSON")
-    .option("--dry-run", "仅预览将要生成的产物，不落盘")
     .option("-f, --force", "覆盖目标目录中已有但内容不同的产物")
     .action(runPlatformGenerate);
 
@@ -507,16 +548,12 @@ export function registerPlatformCommand(program: Command): void {
     .command("install")
     .alias("i")
     .description("根据工具包清单生成并安装平台产物")
-    .argument("<target>", "目标平台 (qwen|codex|qoder)")
+    .argument("<target>", "目标平台 (qwen|codex|qoder)", parsePlatformName)
     .option("-d, --dir <dir>", "显式安装目录")
     .option("-p, --project", "安装到当前目录向上解析出的最近项目根")
     .option("-g, --global", "安装到官方文档定义的默认全局位置")
-    .option("-o, --out <dir>", "兼容旧参数：显式安装目录")
-    .option("--scope <scope>", "兼容旧参数：project | global")
     .option("--plan", "只输出安装计划，不落盘")
-    .option("--format <format>", "输出格式：text | json", "text")
     .option("-j, --json", "直接输出 JSON")
-    .option("--dry-run", "仅预览将要安装的产物，不落盘")
     .option("-f, --force", "覆盖目标目录中已有但内容不同的产物")
     .action(runPlatformInstall);
 
@@ -524,13 +561,10 @@ export function registerPlatformCommand(program: Command): void {
     .command("where")
     .alias("w")
     .description("解析平台安装目录，不执行写入")
-    .argument("<target>", "目标平台 (qwen|codex|qoder)")
+    .argument("<target>", "目标平台 (qwen|codex|qoder)", parsePlatformName)
     .option("-d, --dir <dir>", "显式安装目录")
     .option("-p, --project", "解析最近项目根")
     .option("-g, --global", "解析官方文档定义的默认全局位置")
-    .option("-o, --out <dir>", "兼容旧参数：显式安装目录")
-    .option("--scope <scope>", "兼容旧参数：project | global")
-    .option("--format <format>", "输出格式：text | json", "text")
     .option("-j, --json", "直接输出 JSON")
     .action(runPlatformWhere);
 }

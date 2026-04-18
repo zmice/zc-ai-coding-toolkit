@@ -4,7 +4,6 @@ import { homedir } from "node:os";
 
 type PlatformName = "qwen" | "codex" | "qoder";
 type ProjectRootMarker = ".git" | "pnpm-workspace.yaml" | "package.json";
-type InstallScope = "project" | "global";
 type InstallSelectorMode = "project" | "global";
 
 export interface InstallTargetResolution {
@@ -16,11 +15,9 @@ export interface InstallTargetResolution {
 
 export interface InstallSelectorInput {
   dir?: string;
-  out?: string;
   cwd?: string;
   project?: boolean;
   global?: boolean;
-  scope?: InstallScope | string;
 }
 
 export interface InstallSelector {
@@ -85,10 +82,7 @@ function resolveOfficialGlobalTarget(platform: PlatformName): InstallTargetResol
 }
 
 export function normalizeInstallSelector(options: InstallSelectorInput): InstallSelector {
-  const explicitDir = options.dir ?? options.out;
-  if (options.dir && options.out && resolve(options.dir) !== resolve(options.out)) {
-    throw new Error("`--dir` 与兼容参数 `--out` 不能同时指向不同目录。");
-  }
+  const explicitDir = options.dir;
 
   if (options.project && options.global) {
     throw new Error("`--project` 与 `--global` 不能同时使用。");
@@ -98,22 +92,12 @@ export function normalizeInstallSelector(options: InstallSelectorInput): Install
     throw new Error("显式目录 `--dir` 不能与 `--project` 或 `--global` 同时使用。");
   }
 
-  if (options.scope && options.scope !== "project" && options.scope !== "global") {
-    throw new Error(`不支持的安装范围：${options.scope}。可选值：project | global`);
-  }
-
   const selectorFromFlags: InstallSelectorMode =
     options.global ? "global" : "project";
 
-  if (options.scope && options.scope !== selectorFromFlags && (options.project || options.global)) {
-    throw new Error("兼容参数 `--scope` 与新的安装目标参数不一致。");
-  }
-
   const mode: InstallSelectorMode = explicitDir
     ? "project"
-    : options.scope === "global"
-      ? "global"
-      : selectorFromFlags;
+    : selectorFromFlags;
 
   return {
     dir: explicitDir,
