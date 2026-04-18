@@ -1,5 +1,16 @@
 import { isToolkitKind } from "./kinds.js";
-import { toolkitPlatforms, type ToolkitAssetMeta, type ToolkitPlatform } from "../types.js";
+import {
+  toolkitAssetAudiences,
+  toolkitAssetStabilities,
+  toolkitAssetTiers,
+  toolkitPlatforms,
+  type ToolkitAssetAudience,
+  type ToolkitAssetMeta,
+  type ToolkitAssetSource,
+  type ToolkitAssetStability,
+  type ToolkitAssetTier,
+  type ToolkitPlatform
+} from "../types.js";
 
 type LooseRecord = Record<string, unknown>;
 
@@ -43,6 +54,50 @@ function assertPlatformArray(value: unknown): readonly ToolkitPlatform[] | undef
   return platforms as readonly ToolkitPlatform[];
 }
 
+function assertEnumValue<T extends string>(
+  value: unknown,
+  fieldName: string,
+  allowedValues: readonly T[]
+): T | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const normalized = assertNonEmptyString(value, fieldName);
+
+  if (!(allowedValues as readonly string[]).includes(normalized)) {
+    throw new Error(
+      `Invalid asset meta: ${fieldName} must be one of ${allowedValues.join(", ")}`
+    );
+  }
+
+  return normalized as T;
+}
+
+function assertSourceRecord(value: unknown): ToolkitAssetSource | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("Invalid asset meta: source must be an object");
+  }
+
+  const record = value as LooseRecord;
+  const upstream = assertNonEmptyString(record.upstream, "source.upstream");
+  const strategy = assertNonEmptyString(record.strategy, "source.strategy");
+  const notes =
+    record.notes === undefined
+      ? undefined
+      : assertNonEmptyString(record.notes, "source.notes");
+
+  return {
+    upstream,
+    strategy,
+    ...(notes ? { notes } : {})
+  };
+}
+
 export function validateToolkitAssetMeta(input: unknown): ToolkitAssetMeta {
   if (typeof input !== "object" || input === null) {
     throw new Error("Invalid asset meta: expected an object");
@@ -58,18 +113,34 @@ export function validateToolkitAssetMeta(input: unknown): ToolkitAssetMeta {
   const name = assertNonEmptyString(record.name, "name");
   const title = assertNonEmptyString(record.title, "title");
   const description = assertNonEmptyString(record.description, "description");
+  const tier = assertEnumValue<ToolkitAssetTier>(record.tier, "tier", toolkitAssetTiers);
+  const audience = assertEnumValue<ToolkitAssetAudience>(
+    record.audience,
+    "audience",
+    toolkitAssetAudiences
+  );
+  const stability = assertEnumValue<ToolkitAssetStability>(
+    record.stability,
+    "stability",
+    toolkitAssetStabilities
+  );
   const tags = assertStringArray(record.tags, "tags");
   const tools = assertStringArray(record.tools, "tools");
   const platforms = assertPlatformArray(record.platforms);
+  const source = assertSourceRecord(record.source);
 
   return {
     kind,
     name,
     title,
     description,
+    ...(tier ? { tier } : {}),
+    ...(audience ? { audience } : {}),
+    ...(stability ? { stability } : {}),
     ...(tags ? { tags } : {}),
     ...(tools ? { tools } : {}),
-    ...(platforms ? { platforms } : {})
+    ...(platforms ? { platforms } : {}),
+    ...(source ? { source } : {})
   };
 }
 

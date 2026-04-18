@@ -24,6 +24,14 @@ describe("createToolkitManifest", () => {
       getToolkitAssetById(manifest, "command:verify")?.meta.title,
       "verify"
     );
+    assert.equal(
+      getToolkitAssetById(manifest, "command:spec")?.meta.tier,
+      "core"
+    );
+    assert.equal(
+      getToolkitAssetById(manifest, "command:spec")?.meta.source?.upstream,
+      "agent-skills"
+    );
     assert.deepEqual(
       getToolkitAssetById(manifest, "command:verify")?.meta.platforms,
       ["qwen", "codex", "qoder"]
@@ -40,6 +48,8 @@ describe("loadToolkitManifest", () => {
     assert.ok(Boolean(manifest.byId["skill:sdd-tdd-workflow"]));
     assert.ok(Boolean(manifest.byId["command:spec"]));
     assert.ok(Boolean(manifest.byId["agent:architect"]));
+    assert.equal(manifest.byId["skill:sdd-tdd-workflow"]?.meta.tier, "core");
+    assert.equal(manifest.byId["agent:architect"]?.meta.audience, "advanced");
     assert.deepEqual(
       manifest.byId["agent:test-engineer"]?.meta.platforms,
       ["qwen", "codex", "qoder"]

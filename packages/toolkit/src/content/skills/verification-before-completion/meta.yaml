@@ -2,7 +2,14 @@ kind: skill
 name: verification-before-completion
 title: verification-before-completion
 description: Use when about to claim work is complete, fixed, or passing. Requires running verification commands and confirming output before making any success claims. Evidence before assertions, always.
+tier: core
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: andrej-karpathy-skills
+  strategy: inspired
+  notes: 结合 goal-driven execution 与本仓库的证据先于断言原则

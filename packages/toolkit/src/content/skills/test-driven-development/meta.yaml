@@ -2,7 +2,14 @@ kind: skill
 name: test-driven-development
 title: test-driven-development
 description: 以测试驱动开发。适用于实现任何逻辑、修复任何 bug 或改变任何行为；当你需要证明代码确实可用、收到 bug 报告，或准备修改现有功能时使用。
+tier: core
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: agent-skills
+  strategy: adapted
+  notes: 测试先行原则沿用上游，并补充中文化流程说明

@@ -2,7 +2,14 @@ kind: command
 name: quality-review
 title: quality-review
 description: 对代码变更进行五维度系统化审查（正确性/可读性/架构/安全/性能），输出结构化中文审查报告。
+tier: core
+audience: advanced
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: superpowers
+  strategy: inspired
+  notes: 吸收了方法学层面的评审分层思想，并落到本仓库五维审查模型

@@ -2,7 +2,14 @@ kind: skill
 name: spec-driven-development
 title: spec-driven-development
 description: 先写规格，再写代码。适用于启动新项目、新功能或重大变更，且尚未存在规格说明的场景；也适用于需求不清晰、存在歧义或只有模糊想法的情况。
+tier: core
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: agent-skills
+  strategy: adapted
+  notes: 规格先行的主工作流来自上游方法论，并按本仓库术语重写

@@ -2,7 +2,14 @@ kind: command
 name: build
 title: build
 description: 按 TDD 的 Red-Green-Refactor 循环进行增量构建，确保每次只完成一个任务且系统始终可编译、可测试。
+tier: core
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: agent-skills
+  strategy: adapted
+  notes: 对应 build 阶段入口，并结合本仓库增量交付约束

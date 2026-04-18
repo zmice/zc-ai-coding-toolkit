@@ -48,6 +48,25 @@ export function parseSimpleYaml(source: string): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   const lines = source.replace(/\r\n/g, "\n").split("\n");
   let currentListKey: string | null = null;
+  let currentObjectKey: string | null = null;
+
+  function findNextMeaningfulLine(startIndex: number): { indent: number; trimmed: string } | null {
+    for (let cursor = startIndex; cursor < lines.length; cursor += 1) {
+      const candidateRight = lines[cursor].replace(/\s+$/, "");
+      const candidate = candidateRight.trim();
+
+      if (candidate.length === 0 || candidate.startsWith("#")) {
+        continue;
+      }
+
+      return {
+        indent: candidateRight.length - candidateRight.trimStart().length,
+        trimmed: candidate
+      };
+    }
+
+    return null;
+  }
 
   for (const [index, rawLine] of lines.entries()) {
     const lineNumber = index + 1;
@@ -62,6 +81,7 @@ export function parseSimpleYaml(source: string): Record<string, unknown> {
 
     if (indent === 0) {
       currentListKey = null;
+      currentObjectKey = null;
       const separatorIndex = trimmed.indexOf(":");
 
       if (separatorIndex < 0) {
@@ -76,8 +96,16 @@ export function parseSimpleYaml(source: string): Record<string, unknown> {
       }
 
       if (rawValue.length === 0) {
-        result[key] = [];
-        currentListKey = key;
+        const nextLine = findNextMeaningfulLine(index + 1);
+
+        if (nextLine?.indent === 2 && nextLine.trimmed.startsWith("- ")) {
+          result[key] = [];
+          currentListKey = key;
+          continue;
+        }
+
+        result[key] = {};
+        currentObjectKey = key;
         continue;
       }
 
@@ -87,6 +115,37 @@ export function parseSimpleYaml(source: string): Record<string, unknown> {
       }
 
       result[key] = parseScalar(rawValue);
+      continue;
+    }
+
+    if (indent === 2 && currentObjectKey !== null && !trimmed.startsWith("- ")) {
+      const currentValue = result[currentObjectKey];
+
+      if (typeof currentValue !== "object" || currentValue === null || Array.isArray(currentValue)) {
+        throw new Error(`Invalid YAML on line ${lineNumber}: expected object for ${currentObjectKey}`);
+      }
+
+      const separatorIndex = trimmed.indexOf(":");
+
+      if (separatorIndex < 0) {
+        throw new Error(`Invalid YAML on line ${lineNumber}: expected nested key/value pair`);
+      }
+
+      const key = trimmed.slice(0, separatorIndex).trim();
+      const rawValue = trimmed.slice(separatorIndex + 1).trim();
+
+      if (key.length === 0) {
+        throw new Error(`Invalid YAML on line ${lineNumber}: empty nested key`);
+      }
+
+      if (rawValue.length === 0) {
+        throw new Error(`Invalid YAML on line ${lineNumber}: nested objects must use scalar values`);
+      }
+
+      (currentValue as Record<string, unknown>)[key] =
+        rawValue.startsWith("[") && rawValue.endsWith("]")
+          ? parseInlineList(rawValue)
+          : parseScalar(rawValue);
       continue;
     }
 

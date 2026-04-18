@@ -1,4 +1,5 @@
 import type { ToolkitAssetUnit } from "../types.js";
+import { validateToolkitAssetMeta } from "./asset-meta.js";
 
 export function validateToolkitAssetUnit(input: unknown): ToolkitAssetUnit {
   if (typeof input !== "object" || input === null) {
@@ -14,6 +15,8 @@ export function validateToolkitAssetUnit(input: unknown): ToolkitAssetUnit {
   if (typeof record.body !== "string") {
     throw new Error("Invalid asset unit: body must be a string");
   }
+
+  validateToolkitAssetMeta(record.meta);
 
   if (!Array.isArray(record.attachments)) {
     throw new Error("Invalid asset unit: attachments must be an array");

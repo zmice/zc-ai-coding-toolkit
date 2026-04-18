@@ -15,6 +15,9 @@ kind: skill
 name: context-budget-audit
 title: Context Budget Audit
 description: Audits context window consumption across agents, skills, instructions, and commands.
+tier: recommended
+audience: advanced
+stability: stable
 tags:
   - context
   - audit
@@ -24,6 +27,10 @@ platforms:
 tools:
   - Read
   - Bash
+source:
+  upstream: everything-claude-code
+  strategy: adapted
+  notes: governance baseline
 `);
 
     assert.deepEqual(parsed, {
@@ -31,9 +38,17 @@ tools:
       name: "context-budget-audit",
       title: "Context Budget Audit",
       description: "Audits context window consumption across agents, skills, instructions, and commands.",
+      tier: "recommended",
+      audience: "advanced",
+      stability: "stable",
       tags: ["context", "audit"],
       platforms: ["qwen", "codex"],
-      tools: ["Read", "Bash"]
+      tools: ["Read", "Bash"],
+      source: {
+        upstream: "everything-claude-code",
+        strategy: "adapted",
+        notes: "governance baseline"
+      }
     });
   });
 });
@@ -42,13 +57,18 @@ describe("loadToolkitAssetUnit", () => {
   it("loads a representative migrated asset unit", async () => {
     const contentRoot = resolveToolkitContentRoot();
     const unit = await loadToolkitAssetUnit(
-      join(contentRoot, "skills", "context-budget-audit")
+      join(contentRoot, "skills", "sdd-tdd-workflow")
     );
 
-    assert.equal(unit.id, "skill:context-budget-audit");
+    assert.equal(unit.id, "skill:sdd-tdd-workflow");
     assert.equal(unit.meta.kind, "skill");
-    assert.equal(unit.meta.name, "context-budget-audit");
-    assert.match(unit.body, /Context Budget Audit|Context Window Consumption|context/i);
+    assert.equal(unit.meta.name, "sdd-tdd-workflow");
+    assert.equal(unit.meta.tier, "core");
+    assert.equal(unit.meta.audience, "default");
+    assert.equal(unit.meta.stability, "stable");
+    assert.equal(unit.meta.source?.upstream, "agent-skills");
+    assert.equal(unit.meta.source?.strategy, "adapted");
+    assert.match(unit.body, /SDD\+TDD|spec|test|workflow/i);
     assert.ok(unit.attachments.length >= 0);
     assert.deepEqual(unit.meta.platforms, ["qwen", "codex", "qoder"]);
   });
@@ -59,7 +79,7 @@ describe("loadToolkitContentTree", () => {
     const assets = await loadToolkitContentTree();
 
     assert.ok(assets.length >= 3);
-    assert.ok(assets.some((asset) => asset.id === "skill:context-budget-audit"));
+    assert.ok(assets.some((asset) => asset.id === "skill:sdd-tdd-workflow"));
     assert.ok(assets.some((asset) => asset.id === "command:verify"));
     assert.ok(assets.some((asset) => asset.id === "agent:test-engineer"));
   });

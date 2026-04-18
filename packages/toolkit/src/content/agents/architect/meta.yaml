@@ -2,6 +2,9 @@ kind: agent
 name: architect
 title: architect
 description: 软件架构师。负责系统设计决策、技术选型评估、模块边界划分和架构权衡分析。在涉及系统设计、技术选型、大规模重构或跨模块变更时使用。
+tier: core
+audience: advanced
+stability: stable
 tools:
   - Read
   - Grep
@@ -11,3 +14,7 @@ platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: gstack
+  strategy: inspired
+  notes: 参考角色化工具入口和架构评审职责边界，但按本仓库 agent 模型重写

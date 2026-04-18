@@ -2,7 +2,14 @@ kind: command
 name: task-plan
 title: task-plan
 description: 将需求或 Spec 拆解为可执行的原子任务列表，并标注依赖、上下文和验证步骤。
+tier: core
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: agent-skills
+  strategy: adapted
+  notes: 延续上游 plan 入口语义，并按本仓库任务拆解规范重写

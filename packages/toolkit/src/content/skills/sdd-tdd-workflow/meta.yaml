@@ -2,7 +2,14 @@ kind: skill
 name: sdd-tdd-workflow
 title: sdd-tdd-workflow
 description: 编排完整的 SDD+TDD 开发生命周期。适用于启动新功能、新项目或重大变更；通过六个带门控的阶段强制执行先写规格、先写测试的纪律：Brainstorm（可选）、Specify、Plan、Build（TDD，可选子代理驱动）、Review、Commit。还提供调试、上下文管理、验证、onboard、简化、性能、安全、API 设计、文档、发布、CI/CD、git 提交、迁移、前端和想法细化等按需技能。可通过 `/spec`、`/task-plan`、`/build`、`/quality-review`、`/verify`、`/onboard`、`/debug`、`/ctx-health`、`/simplify`、`/perf`、`/secure`、`/api`、`/doc`、`/ship`、`/ci`、`/commit`、`/migrate`、`/ui`、`/idea` 或 `/sdd-tdd` 触发完整流程。
+tier: core
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: agent-skills
+  strategy: adapted
+  notes: 结合本仓库的 SDD+TDD 生命周期与中文化规则扩展而成

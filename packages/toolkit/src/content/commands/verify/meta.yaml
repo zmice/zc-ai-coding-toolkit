@@ -2,7 +2,14 @@ kind: command
 name: verify
 title: verify
 description: 在声明工作完成之前运行验证命令确认实际状态，遵循“证据先于断言”铁律。
+tier: core
+audience: default
+stability: stable
 platforms:
   - qwen
   - codex
   - qoder
+source:
+  upstream: andrej-karpathy-skills
+  strategy: inspired
+  notes: 基于 goal-driven execution，并与本仓库验证门禁整合
