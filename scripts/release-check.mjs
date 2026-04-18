@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import {
-  findUnexpectedDirtyPaths,
+  classifyDirtyPaths,
   loadPublishablePackages,
   parseCliArgs,
   parseGitStatus
@@ -21,38 +21,53 @@ function run(command, args, options = {}) {
   return result;
 }
 
+function printPathList(title, paths) {
+  console.log(title);
+  if (paths.length === 0) {
+    console.log("- 无");
+    return;
+  }
+
+  for (const path of paths) {
+    console.log(`- ${path}`);
+  }
+}
+
 function checkGitState(root, mode) {
   const result = run("git", ["status", "--short", "--untracked-files=all"], {
     cwd: root,
     captureOutput: true
   });
   const dirtyPaths = parseGitStatus(result.stdout);
-  const unexpectedPaths = findUnexpectedDirtyPaths(dirtyPaths, mode);
+  const { allowedPaths, unexpectedPaths } = classifyDirtyPaths(dirtyPaths, mode);
 
   if (unexpectedPaths.length > 0) {
     throw new Error(
       [
-        `Release preflight blocked for mode "${mode}".`,
-        "Unexpected dirty paths:",
+        `发布预检查已阻止，模式：${mode}。`,
+        `允许的脏文件 (Allowed dirty paths): ${allowedPaths.length}`,
+        ...allowedPaths.map((path) => `- ${path}`),
+        "未预期的脏文件 (Unexpected dirty paths):",
         ...unexpectedPaths.map((path) => `- ${path}`)
       ].join("\n")
     );
   }
 
   if (dirtyPaths.length === 0) {
-    console.log("\n> git status clean");
+    console.log("\n> git status 干净");
     return;
   }
 
-  console.log(`\n> git status allowed for ${mode}`);
-  for (const path of dirtyPaths) {
-    console.log(`- ${path}`);
-  }
+  console.log(`\n> git status 摘要（${mode}）`);
+  console.log(`- 允许: ${allowedPaths.length}`);
+  console.log("- 未预期: 0");
+  console.log("");
+  printPathList("> 允许的脏文件 (Allowed dirty paths)", allowedPaths);
 }
 
 function printPackageMatrix(root) {
   const packages = loadPublishablePackages(root);
-  console.log("\n> publishable packages");
+  console.log("\n> 可发布包矩阵 (Publishable packages)");
   for (const pkg of packages) {
     console.log(`- ${pkg.name}@${pkg.version} (${pkg.manifestPath})`);
   }
@@ -63,16 +78,16 @@ function main() {
   printPackageMatrix(root);
 
   if (!skipCommands) {
-    console.log("\n> pnpm changeset status");
+    console.log("\n> 运行 pnpm changeset status");
     run("pnpm", ["changeset", "status"], { cwd: root });
-    console.log("\n> pnpm verify");
+    console.log("\n> 运行 pnpm verify");
     run("pnpm", ["verify"], { cwd: root });
   } else {
-    console.log("\n> skipping command execution");
+    console.log("\n> 跳过命令执行");
   }
 
   checkGitState(root, mode);
-  console.log(`\nRelease preflight passed for ${mode}.`);
+  console.log(`\n发布预检查通过：${mode}。`);
 }
 
 main();

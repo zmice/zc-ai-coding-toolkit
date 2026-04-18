@@ -11,11 +11,7 @@ export const publishablePackagePaths = [
 ];
 
 const preVersionAllowedPatterns = [/^\.changeset\/[^/]+\.md$/];
-const postVersionAllowedPatterns = [
-  /^pnpm-lock\.yaml$/,
-  /^apps\/cli\/package\.json$/,
-  /^packages\/[^/]+\/package\.json$/
-];
+const postVersionAllowedPaths = new Set(["pnpm-lock.yaml", ...publishablePackagePaths]);
 
 export function parseCliArgs(argv) {
   const [mode, ...rest] = argv;
@@ -60,9 +56,39 @@ export function parseGitStatus(stdout) {
 }
 
 export function findUnexpectedDirtyPaths(paths, mode) {
-  const patterns = mode === "pre-version" ? preVersionAllowedPatterns : postVersionAllowedPatterns;
+  return classifyDirtyPaths(paths, mode).unexpectedPaths;
+}
 
-  return paths.filter((path) => !patterns.some((pattern) => pattern.test(path)));
+export function classifyDirtyPaths(paths, mode) {
+  if (mode === "pre-version") {
+    const allowedPaths = [];
+    const unexpectedPaths = [];
+
+    for (const path of paths) {
+      if (preVersionAllowedPatterns.some((pattern) => pattern.test(path))) {
+        allowedPaths.push(path);
+        continue;
+      }
+
+      unexpectedPaths.push(path);
+    }
+
+    return { allowedPaths, unexpectedPaths };
+  }
+
+  const allowedPaths = [];
+  const unexpectedPaths = [];
+
+  for (const path of paths) {
+    if (postVersionAllowedPaths.has(path)) {
+      allowedPaths.push(path);
+      continue;
+    }
+
+    unexpectedPaths.push(path);
+  }
+
+  return { allowedPaths, unexpectedPaths };
 }
 
 export function loadPublishablePackages(root) {

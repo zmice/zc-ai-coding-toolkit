@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import {
+  classifyDirtyPaths,
   findUnexpectedDirtyPaths,
   loadPublishablePackages,
   parseGitStatus
@@ -60,8 +61,29 @@ test("findUnexpectedDirtyPaths honors mode-specific allow lists", () => {
     []
   );
   assert.deepEqual(
+    findUnexpectedDirtyPaths(["packages/platform-core/package.json"], "post-version"),
+    []
+  );
+  assert.deepEqual(
     findUnexpectedDirtyPaths(["package.json"], "post-version"),
     ["package.json"]
+  );
+  assert.deepEqual(
+    findUnexpectedDirtyPaths(["packages/internal-only/package.json"], "post-version"),
+    ["packages/internal-only/package.json"]
+  );
+});
+
+test("classifyDirtyPaths groups allowed and unexpected entries", () => {
+  assert.deepEqual(
+    classifyDirtyPaths(
+      ["packages/platform-core/package.json", "packages/internal-only/package.json", "pnpm-lock.yaml"],
+      "post-version"
+    ),
+    {
+      allowedPaths: ["packages/platform-core/package.json", "pnpm-lock.yaml"],
+      unexpectedPaths: ["packages/internal-only/package.json"]
+    }
   );
 });
 
@@ -98,7 +120,7 @@ test("release-check pre-version blocks non-changeset dirty paths", () => {
   );
 
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /Unexpected dirty paths:/);
+  assert.match(result.stderr, /未预期的脏文件 \(Unexpected dirty paths\):/);
   assert.match(result.stderr, /docs\/release-guide\.md/);
 });
 
@@ -114,4 +136,22 @@ test("release-check post-version accepts versioned manifests and lockfile", () =
   );
 
   assert.equal(result.status, 0);
+});
+
+test("release-check post-version blocks non-publishable manifests", () => {
+  const root = makeFixtureRepo();
+  writeFixtureFile(root, "packages/platform-core/package.json", `${JSON.stringify({ name: "@zmice/platform-core", version: "0.2.0" }, null, 2)}\n`);
+  writeFixtureFile(root, "packages/internal-only/package.json", `${JSON.stringify({ name: "@zmice/internal-only", version: "0.1.0" }, null, 2)}\n`);
+
+  const result = spawnSync(
+    "node",
+    [resolve("scripts/release-check.mjs"), "post-version", "--root", root, "--skip-commands"],
+    { cwd: process.cwd(), encoding: "utf8" }
+  );
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /允许的脏文件 \(Allowed dirty paths\):/);
+  assert.match(result.stderr, /packages\/platform-core\/package\.json/);
+  assert.match(result.stderr, /未预期的脏文件 \(Unexpected dirty paths\):/);
+  assert.match(result.stderr, /packages\/internal-only\/package\.json/);
 });
