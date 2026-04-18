@@ -1,7 +1,7 @@
 {
-  "name": "@zmice/platform-qwen",
+  "name": "@zmice/platform-core",
   "version": "0.1.0",
-  "description": "Manifest-driven generation and install scaffolding for Qwen platform artifacts",
+  "description": "Shared contracts and helpers for AI Coding Toolkit platform packages",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -10,30 +10,18 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./generate": {
-      "types": "./dist/generate.d.ts",
-      "default": "./dist/generate.js"
-    },
-    "./install": {
-      "types": "./dist/install.d.ts",
-      "default": "./dist/install.js"
     }
   },
   "files": [
     "dist",
-    "templates",
     "README.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "generate": "tsc -p tsconfig.json",
+    "generate": "pnpm run build",
     "lint": "tsc -p tsconfig.json --noEmit",
     "test": "pnpm run build && node --test dist/index.test.js",
     "verify": "pnpm run lint && pnpm run test && pnpm run build && pnpm run generate"
-  },
-  "dependencies": {
-    "@zmice/platform-core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

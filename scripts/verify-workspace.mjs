@@ -50,6 +50,7 @@ function main() {
   const tscBin = resolveTscBin();
 
   run("node", [tscBin, "-p", "packages/toolkit/tsconfig.json"], "build toolkit");
+  run("node", [tscBin, "-p", "packages/platform-core/tsconfig.json"], "build platform-core");
   run("node", [tscBin, "-p", "packages/platform-qwen/tsconfig.json"], "build platform-qwen");
   run("node", [tscBin, "-p", "packages/platform-codex/tsconfig.json"], "build platform-codex");
   run("node", [tscBin, "-p", "packages/platform-qoder/tsconfig.json"], "build platform-qoder");
@@ -60,6 +61,7 @@ function main() {
     ["--test", "packages/toolkit/dist/loaders.test.js", "packages/toolkit/dist/manifests.test.js"],
     "test toolkit"
   );
+  run("node", ["--test", "packages/platform-core/dist/index.test.js"], "test platform-core");
   run(
     "node",
     [
@@ -89,7 +91,7 @@ function main() {
       ["apps/cli/dist/cli/index.js", "platform", "install", "codex", "-o", installRoot],
       "smoke platform install codex"
     );
-    assertFile(join(installRoot, "AGENTS.md"), /Codex Platform Instructions/);
+    assertFile(join(installRoot, "AGENTS.md"), /Codex 平台说明/);
   } finally {
     rmSync(smokeRoot, { recursive: true, force: true });
     rmSync(installRoot, { recursive: true, force: true });

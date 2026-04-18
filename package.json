@@ -11,6 +11,8 @@
     "verify": "node scripts/run-workspace-task.mjs verify",
     "verify:mvp": "node scripts/verify-workspace.mjs",
     "changeset": "changeset",
+    "release:check": "node scripts/release-check.mjs pre-version",
+    "release:check:post-version": "node scripts/release-check.mjs post-version",
     "release": "changeset publish"
   },
   "devDependencies": {

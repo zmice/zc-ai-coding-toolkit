@@ -1,0 +1,24 @@
+{
+  "upstream": "legacy-root-source-model",
+  "captured_at": "2026-04-01T09:00:00Z",
+  "label": "baseline-before-root-retirement-finished",
+  "metadata": {
+    "title": "Legacy root source model",
+    "kind": "repo-local",
+    "status": "active",
+    "owner": "agent-4",
+    "source_paths": [
+      "skills",
+      "commands",
+      "agents",
+      "QWEN.md",
+      "AGENTS.md",
+      "instructions.md",
+      "install.sh"
+    ]
+  },
+  "notes": {
+    "path": "references/notes/legacy-root-source-model.md",
+    "content": "# Legacy Root Source Model\n\nStatus: active in repository root.\n\n## Scope\n\nThis note tracks the legacy root-level source model before retirement.\n\n- `skills/`\n- `commands/`\n- `agents/`\n- `QWEN.md`\n- `AGENTS.md`\n- `instructions.md`\n- `install.sh`\n\n## Outcome\n\n- toolkit migration was still in progress\n- platform generation still depended on root-level bootstrap files\n\n## Follow-up\n\n- complete root retirement review\n- capture a final retired governance note\n"
+  }
+}

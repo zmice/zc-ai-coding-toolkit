@@ -1,61 +1,36 @@
-import { join } from "node:path";
-
-export type ToolkitAssetKind = "skill" | "command" | "agent";
-
-export interface ToolkitAssetLike {
-  readonly id: string;
-  readonly kind: ToolkitAssetKind;
-  readonly platforms: readonly string[];
-  readonly title?: string;
-  readonly summary?: string;
-  readonly body?: string;
-}
-
-export interface ToolkitManifestLike {
-  readonly source?: string;
-  readonly assets: readonly ToolkitAssetLike[];
-}
-
-export interface PlatformArtifact {
-  readonly path: string;
-  readonly content: string;
-}
+import {
+  createInstallPlan,
+  describeAsset,
+  selectMatchedAssets,
+  type GenerationPlan,
+  type InstallPlan,
+  type InstallPlanOptions,
+  type PlatformArtifact,
+  type ToolkitAssetLike,
+  type ToolkitManifestLike,
+} from "@zmice/platform-core";
 
 export interface GenerationOptions {
   readonly packageName?: string;
   readonly manifestSource?: string;
 }
 
-export interface InstallOptions extends GenerationOptions {
-  readonly destinationRoot: string;
-}
-
-export interface GenerationPlan {
-  readonly platform: typeof platformName;
-  readonly packageName: string;
-  readonly manifestSource: string;
-  readonly matchedAssets: readonly ToolkitAssetLike[];
-  readonly artifacts: readonly PlatformArtifact[];
-}
-
-export interface InstallPlan extends GenerationPlan {
-  readonly destinationRoot: string;
-}
+export type InstallOptions = GenerationOptions & InstallPlanOptions;
 
 export const platformName = "qoder" as const;
 export const packageName = "@zmice/platform-qoder" as const;
 
+export type {
+  GenerationPlan,
+  InstallPlan,
+  PlatformArtifact,
+  ToolkitAssetLike,
+  ToolkitManifestLike,
+};
+
 export const templateFiles = {
   instructions: "instructions.md",
 } as const;
-
-function describeAsset(asset: ToolkitAssetLike): string {
-  return asset.title ?? asset.summary ?? asset.id;
-}
-
-function selectMatchedAssets(manifest: ToolkitManifestLike): readonly ToolkitAssetLike[] {
-  return manifest.assets.filter((asset) => asset.platforms.includes(platformName));
-}
 
 function renderAssetList(assets: readonly ToolkitAssetLike[]): string {
   if (assets.length === 0) {
@@ -79,21 +54,11 @@ ${renderAssetList(assets)}
 `;
 }
 
-function prefixArtifacts(
-  destinationRoot: string,
-  artifacts: readonly PlatformArtifact[],
-): readonly PlatformArtifact[] {
-  return artifacts.map((artifact) => ({
-    path: join(destinationRoot, artifact.path),
-    content: artifact.content,
-  }));
-}
-
 export function createQoderGenerationPlan(
   manifest: ToolkitManifestLike,
   options: GenerationOptions = {},
 ): GenerationPlan {
-  const matchedAssets = selectMatchedAssets(manifest);
+  const matchedAssets = selectMatchedAssets(manifest, platformName);
   const manifestSource = options.manifestSource ?? manifest.source ?? "toolkit-manifest";
   const resolvedPackageName = options.packageName ?? packageName;
 
@@ -115,11 +80,5 @@ export function createQoderInstallPlan(
   manifest: ToolkitManifestLike,
   options: InstallOptions,
 ): InstallPlan {
-  const generationPlan = createQoderGenerationPlan(manifest, options);
-
-  return {
-    ...generationPlan,
-    destinationRoot: options.destinationRoot,
-    artifacts: prefixArtifacts(options.destinationRoot, generationPlan.artifacts),
-  };
+  return createInstallPlan(createQoderGenerationPlan(manifest, options), options);
 }

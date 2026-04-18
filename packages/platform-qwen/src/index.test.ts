@@ -48,6 +48,7 @@ describe("@zmice/platform-qwen scaffold", () => {
     const plan = createQwenInstallPlan(manifest, { destinationRoot: "/tmp/qwen" });
 
     assert.equal(plan.destinationRoot, "/tmp/qwen");
+    assert.equal(plan.overwrite, "error");
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
       "/tmp/qwen/QWEN.md",
       "/tmp/qwen/qwen-extension.json",

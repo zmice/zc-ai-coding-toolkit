@@ -20,12 +20,6 @@ const manifest: ToolkitManifestLike = {
       title: "Alpha skill",
     },
     {
-      id: "agent-gamma",
-      kind: "agent",
-      platforms: ["codex"],
-      title: "Gamma agent",
-    },
-    {
       id: "command-beta",
       kind: "command",
       platforms: ["qoder"],
@@ -41,19 +35,16 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.equal(plan.platform, platformName);
     assert.equal(plan.packageName, packageName);
     assert.equal(plan.manifestSource, "toolkit-manifest");
-    assert.deepEqual(plan.matchedAssets.map((asset) => asset.id), [
-      "skill-alpha",
-      "agent-gamma",
-    ]);
+    assert.deepEqual(plan.matchedAssets.map((asset) => asset.id), ["skill-alpha"]);
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [templateFiles.agents]);
-    assert.ok(plan.artifacts[0]?.content.includes("Gamma agent"));
+    assert.ok(plan.artifacts[0]?.content.includes("skill-alpha"));
   });
 
-  it("creates an install plan that is rooted at the caller destination", () => {
+  it("creates an install plan with safe overwrite defaults", () => {
     const plan = createCodexInstallPlan(manifest, { destinationRoot: "/tmp/codex" });
 
     assert.equal(plan.destinationRoot, "/tmp/codex");
+    assert.equal(plan.overwrite, "error");
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), ["/tmp/codex/AGENTS.md"]);
-    assert.ok(plan.artifacts[0]?.content.includes("工具包资产"));
   });
 });

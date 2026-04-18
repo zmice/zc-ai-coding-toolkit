@@ -8,6 +8,7 @@ if (!task) {
 
 const workspacePackages = [
   "packages/toolkit",
+  "packages/platform-core",
   "packages/platform-qwen",
   "packages/platform-codex",
   "packages/platform-qoder",

@@ -22,6 +22,7 @@
     "prepublishOnly": "pnpm lint && pnpm test && pnpm build"
   },
   "dependencies": {
+    "@zmice/platform-core": "workspace:*",
     "@zmice/platform-codex": "workspace:*",
     "@zmice/platform-qoder": "workspace:*",
     "@zmice/platform-qwen": "workspace:*",

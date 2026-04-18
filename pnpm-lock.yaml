@@ -17,6 +17,9 @@ importers:
       '@zmice/platform-codex':
         specifier: workspace:*
         version: link:../../packages/platform-codex
+      '@zmice/platform-core':
+        specifier: workspace:*
+        version: link:../../packages/platform-core
       '@zmice/platform-qoder':
         specifier: workspace:*
         version: link:../../packages/platform-qoder
@@ -41,6 +44,19 @@ importers:
         version: 3.2.4(@types/node@22.19.17)
 
   packages/platform-codex:
+    dependencies:
+      '@zmice/platform-core':
+        specifier: workspace:*
+        version: link:../platform-core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.17
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/platform-core:
     devDependencies:
       '@types/node':
         specifier: ^22.0.0
@@ -50,6 +66,10 @@ importers:
         version: 5.9.3
 
   packages/platform-qoder:
+    dependencies:
+      '@zmice/platform-core':
+        specifier: workspace:*
+        version: link:../platform-core
     devDependencies:
       '@types/node':
         specifier: ^22.0.0
@@ -59,6 +79,10 @@ importers:
         version: 5.9.3
 
   packages/platform-qwen:
+    dependencies:
+      '@zmice/platform-core':
+        specifier: workspace:*
+        version: link:../platform-core
     devDependencies:
       '@types/node':
         specifier: ^22.0.0

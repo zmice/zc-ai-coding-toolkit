@@ -32,6 +32,9 @@
     "test": "pnpm run build && node --test dist/index.test.js",
     "verify": "pnpm run lint && pnpm run test && pnpm run build && pnpm run generate"
   },
+  "dependencies": {
+    "@zmice/platform-core": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.7.0"
