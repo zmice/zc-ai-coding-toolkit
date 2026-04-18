@@ -89,6 +89,8 @@ npm install -g @zmice/zc@latest
 
 - `zc platform generate <qwen|codex|qoder>`
 - `zc platform install <qwen|codex|qoder>`
+- `zc platform status <qwen|codex|qoder>`
+- `zc platform update <qwen|codex|qoder>`
 - `zc platform where <qwen|codex|qoder>`
 
 常用安装目标参数：
@@ -115,6 +117,8 @@ zc platform generate qwen --plan --json
 zc platform install codex --plan --json
 zc platform install qoder
 zc platform install codex --global
+zc platform status codex --global --json
+zc platform update codex --global --plan --json
 zc platform where qoder --global --json
 ```
 

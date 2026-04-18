@@ -22,6 +22,8 @@ const copyEntries = [
   ["packages/platform-qoder/package.json", "packages/platform-qoder/package.json"],
   ["packages/platform-core/dist", "node_modules/@zmice/platform-core/dist"],
   ["packages/platform-core/package.json", "node_modules/@zmice/platform-core/package.json"],
+  ["packages/platform-core/dist", "../dist/node_modules/@zmice/platform-core/dist"],
+  ["packages/platform-core/package.json", "../dist/node_modules/@zmice/platform-core/package.json"],
   ["references/upstreams.yaml", "references/upstreams.yaml"],
 ];
 

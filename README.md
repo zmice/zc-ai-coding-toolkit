@@ -53,6 +53,8 @@ node apps/cli/dist/cli/index.js toolkit recommend build
 node apps/cli/dist/cli/index.js platform generate qwen --plan --json
 node apps/cli/dist/cli/index.js platform install codex --plan --json
 node apps/cli/dist/cli/index.js platform install codex --global
+node apps/cli/dist/cli/index.js platform status codex --global --json
+node apps/cli/dist/cli/index.js platform update codex --global --plan --json
 node apps/cli/dist/cli/index.js platform where qoder --global --json
 
 # 查看上游治理状态
@@ -132,6 +134,8 @@ node apps/cli/dist/cli/index.js toolkit recommend <query>
 node apps/cli/dist/cli/index.js platform generate qwen --dir /tmp/qwen-out
 node apps/cli/dist/cli/index.js platform install codex --dir /tmp/codex-out
 node apps/cli/dist/cli/index.js platform install codex --global
+node apps/cli/dist/cli/index.js platform status codex --global --json
+node apps/cli/dist/cli/index.js platform update codex --global --plan --json
 node apps/cli/dist/cli/index.js platform where qoder --global --json
 node apps/cli/dist/cli/index.js platform install qoder --plan --json
 ```
@@ -141,6 +145,9 @@ node apps/cli/dist/cli/index.js platform install qoder --plan --json
 - `platform generate/install --plan` 只输出计划，不落盘
 - `--json` 适合脚本消费
 - `platform install` 未传 `--dir` 时，会优先向上解析最近项目根，找不到再回退到当前目录
+- `platform install` 成功后会写入 `.zc/platform-state/<platform>.install-receipt.json`
+- `platform status` 只读检查安装状态，返回 `not-installed / up-to-date / update-available / drifted`
+- `platform update` 复用 install 逻辑；`update-available` 会安全覆盖受管产物，`drifted` 需要显式 `--force`
 - `platform where` 只解析目录，不执行写入
 
 ### 3. 审阅上游更新

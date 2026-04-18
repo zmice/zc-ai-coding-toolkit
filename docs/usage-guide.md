@@ -225,6 +225,8 @@ zc platform install codex --project
 ```bash
 zc platform install codex --global
 zc platform install qoder --global
+zc platform status codex --global --json
+zc platform update codex --global --plan --json
 zc platform where codex --global
 zc platform where qoder --global --json
 ```
@@ -263,6 +265,13 @@ zc platform where codex --global
 
 - `--plan` 只输出计划，不写文件
 - `--json` 输出结构化结果，适合脚本消费
+- install 成功后会在目标根目录写入 `.zc/platform-state/<platform>.install-receipt.json`
+- `platform status` 只读取 receipt 和当前 plan，不写盘
+- `platform update` 会基于 receipt 判断是否需要更新：
+  - `not-installed`：提示先 install
+  - `up-to-date`：直接返回无需更新
+  - `update-available`：安全覆盖受 `zc` 管理的旧产物
+  - `drifted`：要求显式追加 `--force`
 - `platform where` 只解析目录和来源，不执行写入
 
 ## 5. 冲突与覆盖

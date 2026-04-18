@@ -107,6 +107,17 @@ function main() {
       "smoke platform install codex"
     );
     assertFile(join(installRoot, "AGENTS.md"), /Codex 平台说明/);
+    assertFile(join(installRoot, ".zc", "platform-state", "codex.install-receipt.json"), /"platform": "codex"/);
+    run(
+      "node",
+      ["apps/cli/dist/cli/index.js", "platform", "status", "codex", "--dir", installRoot, "--json"],
+      "smoke platform status codex"
+    );
+    run(
+      "node",
+      ["apps/cli/dist/cli/index.js", "platform", "update", "codex", "--dir", installRoot, "--plan", "--json"],
+      "smoke platform update codex --plan"
+    );
 
     const publishedRoot = mkdtempSync(join(tmpdir(), "ai-coding-zc-published-"));
     try {

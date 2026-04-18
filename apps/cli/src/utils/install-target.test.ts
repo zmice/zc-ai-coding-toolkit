@@ -29,7 +29,7 @@ describe("resolveInstallTarget", () => {
   it("normalizes --dir into an explicit directory selector", () => {
     const result = normalizeInstallSelector({ dir: "/tmp/custom" });
 
-    assert.equal(result.mode, "project");
+    assert.equal(result.mode, "dir");
     assert.equal(result.dir, "/tmp/custom");
   });
 

@@ -4,7 +4,7 @@ import { homedir } from "node:os";
 
 type PlatformName = "qwen" | "codex" | "qoder";
 type ProjectRootMarker = ".git" | "pnpm-workspace.yaml" | "package.json";
-type InstallSelectorMode = "project" | "global";
+type InstallSelectorMode = "project" | "global" | "dir";
 
 export interface InstallTargetResolution {
   root: string;
@@ -95,9 +95,7 @@ export function normalizeInstallSelector(options: InstallSelectorInput): Install
   const selectorFromFlags: InstallSelectorMode =
     options.global ? "global" : "project";
 
-  const mode: InstallSelectorMode = explicitDir
-    ? "project"
-    : selectorFromFlags;
+  const mode: InstallSelectorMode = explicitDir ? "dir" : selectorFromFlags;
 
   return {
     dir: explicitDir,
