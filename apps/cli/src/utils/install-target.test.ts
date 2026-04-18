@@ -93,11 +93,12 @@ describe("resolveInstallTarget", () => {
     assert.ok(result.hint?.includes("~/.qoder/AGENTS.md"));
   });
 
-  it("rejects Qwen global scope when no official default QWEN.md path exists", async () => {
-    await assert.rejects(
-      () => resolveInstallTarget("qwen", { global: true }),
-      /未给出全局 `QWEN\.md` 默认位置/,
-    );
+  it("resolves Qwen global scope to ~/.qwen", async () => {
+    const result = await resolveInstallTarget("qwen", { global: true });
+
+    assert.equal(result.source, "official-global");
+    assert.ok(result.root.endsWith(`${join(".qwen")}`));
+    assert.ok(result.hint?.includes("~/.qwen/QWEN.md"));
   });
 
 });

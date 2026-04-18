@@ -642,19 +642,28 @@ describe("platform CLI", () => {
     logSpy.mockRestore();
   });
 
-  it("prints a friendly qwen global resolution error instead of throwing", async () => {
-    platformMocks.resolveInstallTarget.mockRejectedValue(
-      new Error("Qwen 官方文档未给出全局 `QWEN.md` 默认位置。请显式传入 `--dir <path>`。"),
+  it("resolves qwen global scope to the user-level ~/.qwen directory", async () => {
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: "/home/test/.qwen",
+      source: "official-global",
+      hint: "Qwen 官方文档定义用户级配置目录为 `~/.qwen`，并在官方帮助文档中给出 Qwen CLI 的用户级 `QWEN.md` 位置为 `~/.qwen/QWEN.md`。",
+    });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformWhere("qwen", { global: true, json: true });
+
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload).toEqual(
+      expect.objectContaining({
+        mode: "where",
+        target: "qwen",
+        scope: "global",
+        root: "/home/test/.qwen",
+        rootSource: "official-global",
+        hint: "Qwen 官方文档定义用户级配置目录为 `~/.qwen`，并在官方帮助文档中给出 Qwen CLI 的用户级 `QWEN.md` 位置为 `~/.qwen/QWEN.md`。",
+      }),
     );
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    await runPlatformWhere("qwen", { global: true });
-
-    expect(errorSpy).toHaveBeenCalledWith(
-      "qwen 目录解析失败：Qwen 官方文档未给出全局 `QWEN.md` 默认位置。请显式传入 `--dir <path>`。",
-    );
-    expect(process.exitCode).toBe(1);
-
-    errorSpy.mockRestore();
+    logSpy.mockRestore();
   });
 });

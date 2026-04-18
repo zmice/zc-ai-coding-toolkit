@@ -117,9 +117,11 @@ zc platform generate qwen --plan --json
 zc platform install codex --plan --json
 zc platform install qoder
 zc platform install codex --global
+zc platform install qwen --global
 zc platform status codex --global --json
 zc platform update codex --global --plan --json
 zc platform where qoder --global --json
+zc platform where qwen --global --json
 ```
 
 ## 设计边界

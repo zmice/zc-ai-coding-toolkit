@@ -190,7 +190,7 @@ npm install -g @qwen-code/qwen-code@latest
 | --- | --- | --- | --- |
 | `codex` | `<project-root>/AGENTS.md` | `~/AGENTS.md` | OpenAI 官方说明将 `~` 和 Git 仓库都列为 `AGENTS.md` 的典型位置。这里的全局路径是基于官方说明做的直接映射 |
 | `qoder` | `<project-root>/AGENTS.md` | `~/.qoder/AGENTS.md` | Qoder 官方文档明确给出 user-level 与 project-level memory 路径 |
-| `qwen` | `<project-root>/QWEN.md` | 无官方默认全局 `QWEN.md` 路径 | 官方文档明确 `/init` 会在项目目录创建 `QWEN.md`，并明确用户级配置文件为 `~/.qwen/settings.json` |
+| `qwen` | `<project-root>/QWEN.md` | `~/.qwen/QWEN.md` | 官方文档明确 `/init` 会在项目目录创建 `QWEN.md`，并明确用户级配置目录为 `~/.qwen`；阿里云官方帮助文档同时给出了 Qwen CLI 的用户级 `QWEN.md` 位置 |
 
 ### 4.1 项目安装
 
@@ -225,10 +225,12 @@ zc platform install codex --project
 ```bash
 zc platform install codex --global
 zc platform install qoder --global
+zc platform install qwen --global
 zc platform status codex --global --json
 zc platform update codex --global --plan --json
 zc platform where codex --global
 zc platform where qoder --global --json
+zc platform where qwen --global --json
 ```
 
 当前行为：
@@ -238,8 +240,8 @@ zc platform where qoder --global --json
 - `qoder --global`
   - 默认安装到 `~/.qoder/AGENTS.md`
 - `qwen --global`
-  - CLI 会报错并提示显式传 `--dir`
-  - 原因是官方文档没有给出全局 `QWEN.md` 默认位置
+  - 默认安装到 `~/.qwen/QWEN.md`
+  - 同目录还会生成 `qwen-extension.json`
 
 如果你已经明确知道目标工具的自定义全局目录，也可以继续显式指定：
 
@@ -257,7 +259,7 @@ zc platform install qwen --dir <qwen-global-root>
 zc platform install codex --plan
 zc platform install codex --global --plan
 zc platform install qoder --plan --json
-zc platform install qwen --dir /tmp/qwen-global --plan --json
+zc platform install qwen --global --plan --json
 zc platform where codex --global
 ```
 

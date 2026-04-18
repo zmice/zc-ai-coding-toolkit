@@ -75,9 +75,11 @@ function resolveOfficialGlobalTarget(platform: PlatformName): InstallTargetResol
         hint: "Qoder 官方文档定义用户级 memory 文件位于 `~/.qoder/AGENTS.md`。",
       };
     case "qwen":
-      throw new Error(
-        "Qwen 官方文档只明确了项目级 `QWEN.md` 和用户级 `~/.qwen/settings.json`，未给出全局 `QWEN.md` 默认位置。请显式传入 `--dir <path>`。",
-      );
+      return {
+        root: resolve(home, ".qwen"),
+        source: "official-global",
+        hint: "Qwen 官方文档定义用户级配置目录为 `~/.qwen`，并在官方帮助文档中给出 Qwen CLI 的用户级 `QWEN.md` 位置为 `~/.qwen/QWEN.md`。",
+      };
   }
 }
 

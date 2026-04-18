@@ -134,9 +134,11 @@ node apps/cli/dist/cli/index.js toolkit recommend <query>
 node apps/cli/dist/cli/index.js platform generate qwen --dir /tmp/qwen-out
 node apps/cli/dist/cli/index.js platform install codex --dir /tmp/codex-out
 node apps/cli/dist/cli/index.js platform install codex --global
+node apps/cli/dist/cli/index.js platform install qwen --global
 node apps/cli/dist/cli/index.js platform status codex --global --json
 node apps/cli/dist/cli/index.js platform update codex --global --plan --json
 node apps/cli/dist/cli/index.js platform where qoder --global --json
+node apps/cli/dist/cli/index.js platform where qwen --global --json
 node apps/cli/dist/cli/index.js platform install qoder --plan --json
 ```
 
