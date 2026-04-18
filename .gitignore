@@ -31,3 +31,4 @@ Thumbs.db
 
 # Local upstream/source snapshots
 .agent-skills-repo/
+references/snapshots/**/*.tmp-*
