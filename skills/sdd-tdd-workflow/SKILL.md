@@ -1,6 +1,6 @@
 ---
 name: sdd-tdd-workflow
-description: Orchestrates the full SDD+TDD development lifecycle. Use when starting any new feature, project, or significant change. Enforces spec-first, test-first discipline through five gated phases - Brainstorm (optional), Specify, Plan, Build (TDD with optional subagent-driven mode), Review. Also provides on-demand skills for debugging, context management, verification, onboarding, simplification, performance, security, API design, documentation, shipping, CI/CD, git commit, migration, frontend, and idea refinement. Triggers on /spec, /task-plan, /build, /quality-review, /verify, /onboard, /debug, /ctx-health, /simplify, /perf, /secure, /api, /doc, /ship, /ci, /commit, /migrate, /ui, /idea, or /sdd-tdd for the full workflow.
+description: Orchestrates the full SDD+TDD development lifecycle. Use when starting any new feature, project, or significant change. Enforces spec-first, test-first discipline through six gated phases - Brainstorm (optional), Specify, Plan, Build (TDD with optional subagent-driven mode), Review, Commit. Also provides on-demand skills for debugging, context management, verification, onboarding, simplification, performance, security, API design, documentation, shipping, CI/CD, git commit, migration, frontend, and idea refinement. Triggers on /spec, /task-plan, /build, /quality-review, /verify, /onboard, /debug, /ctx-health, /simplify, /perf, /secure, /api, /doc, /ship, /ci, /commit, /migrate, /ui, /idea, or /sdd-tdd for the full workflow.
 ---
 
 # SDD + TDD Development Workflow
@@ -10,12 +10,12 @@ description: Orchestrates the full SDD+TDD development lifecycle. Use when start
 This skill orchestrates the complete Spec-Driven Development + Test-Driven Development lifecycle. Every non-trivial development task flows through gated phases. No phase advances until the previous one is validated.
 
 ```
-[/idea] ──→ [brainstorm] ──→ /spec ──→ /task-plan ──→ /build ──→ /quality-review ──→ /retro
- (optional)   (optional)       │          │            │          │                    │
-                               ▼          ▼            ▼          ▼                    ▼
-                            Specify    Plan        Build+TDD   Review              Reflect
-                            (SDD)    (Tasks)      (Red→Green   (5-axis            (Retro
-                                                   →Refactor)   quality)            +Learn)
+[/idea] ──→ [brainstorm] ──→ /spec ──→ /task-plan ──→ /build ──→ /quality-review ──→ /commit ──→ /retro
+ (optional)   (optional)       │          │            │          │                    │          │
+                               ▼          ▼            ▼          ▼                    ▼          ▼
+                            Specify    Plan        Build+TDD   Review              Commit     Reflect
+                            (SDD)    (Tasks)      (Red→Green   (5-axis            (User      (Retro
+                                                   →Refactor)   quality)          confirm)    +Learn)
 
  Build modes:  Manual (default) or Subagent-Driven (for independent tasks)
  On-demand:    /debug /ctx-health /verify /onboard /simplify /perf /secure
@@ -25,12 +25,12 @@ This skill orchestrates the complete Spec-Driven Development + Test-Driven Devel
 完整 Sprint 生命周期（v2）:
 
 ```
-/spec → /plan-review → /task-plan → /build → /quality-review → /retro
-  |         |              |           |            |              |
-  v         v              v           v            v              v
-Specify  Multi-View     Plan      Build+TDD     5-Axis        Retro
-(SDD)    Review       (Tasks)   (Red→Green    Review       (Reflect
-                                 →Refactor)                  +Learn)
+/spec → /plan-review → /task-plan → /build → /quality-review → /commit → /retro
+  |         |              |           |            |              |          |
+  v         v              v           v            v              v          v
+Specify  Multi-View     Plan      Build+TDD     5-Axis        Commit      Retro
+(SDD)    Review       (Tasks)   (Red→Green    Review       (User       (Reflect
+                                 →Refactor)               confirm)     +Learn)
 ```
 
 ## Commands
@@ -51,13 +51,13 @@ Specify  Multi-View     Plan      Build+TDD     5-Axis        Retro
 | `/doc` | On-demand | Documentation & ADRs — record decisions, not just code |
 | `/ship` | On-demand | Shipping & launch — pre-launch checklist, staged rollout |
 | `/ci` | On-demand | CI/CD 管道搭建与优化，质量门禁配置 |
-| `/commit` | On-demand | 规范化 Git 提交，原子提交 + 描述性消息 |
+| `/commit` | Phase 5 | 审查通过后代理提交，需用户确认（follow `git-workflow-and-versioning`） |
 | `/migrate` | On-demand | Deprecation & migration — strangler pattern, safe removal |
 | `/ui` | On-demand | Frontend UI engineering — component patterns, accessibility |
 | `/idea` | On-demand | Idea refinement — refine vague ideas into actionable specs |
 | `/verify` | On-demand | Verification before completion — evidence before assertions |
 | `/onboard` | On-demand | Codebase onboarding — systematically understand a new project |
-| `/retro` | Phase 5 | Sprint 回顾，统计产出和改进项 |
+| `/retro` | Phase 6 | Sprint 回顾，统计产出和改进项 |
 | `/learn` | On-demand | 手动触发会话模式提取与学习 |
 | `/careful` | On-demand | 激活危险命令预警模式 |
 | `/freeze` | On-demand | 锁定指定目录/文件禁止编辑 |
@@ -164,7 +164,32 @@ Follow the `code-review-and-quality` skill. Five-axis review:
 
 **Gate:** All Critical/Important issues resolved before merge.
 
-## Phase 5: Reflect (`/retro`)
+## Phase 5: Commit (`/commit`)
+
+Follow the `git-workflow-and-versioning` skill. Review 通过后，代理协助完成规范化提交：
+
+1. **收集未提交变更** — 检查工作区中未暂存/未提交的变更
+2. **原子性评估** — 判断是否需要拆分为多个原子提交
+3. **提交前检查** — 无密钥泄露、测试通过、Lint 通过、类型检查通过
+4. **生成提交消息** — `<type>: <中文简述>` 格式，解释"为什么"
+5. **展示摘要并等待确认** — 向用户展示变更摘要和提交消息，**等待用户确认后才执行 `git commit`**
+
+```
+READY TO COMMIT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Commit message: <type>: <简述>
+
+Changes:
+- [file]: [what changed]
+
+Pre-checks: ✅ Tests | ✅ Lint | ✅ No secrets
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+→ Confirm to commit, or request changes.
+```
+
+**Gate:** User confirms the commit before proceeding.
+
+## Phase 6: Reflect (`/retro`)
 
 Follow the `sprint-retrospective` skill. Key actions:
 
@@ -260,7 +285,7 @@ QUALITY CHECKPOINT after Tasks [X-Y]:
 
 ## Full Workflow (`/sdd-tdd`)
 
-When triggered, execute all 5 phases with explicit gates:
+When triggered, execute all 6 phases with explicit gates:
 
 ```
 1. /spec        → Write and validate spec              → [Human approves]
@@ -270,7 +295,8 @@ When triggered, execute all 5 phases with explicit gates:
    ├── After every 3-5 tasks: Quality Checkpoint
    └── On any failure: /debug (Stop-the-Line)
 5. /quality-review → Five-axis review                   → [All issues resolved]
-6. /retro       → Sprint retrospective                  → [Action items assigned]
+6. /commit      → Agent-assisted commit (user confirms) → [Human confirms]
+7. /retro       → Sprint retrospective                  → [Action items assigned]
 ```
 
 At each gate, **STOP and wait for human confirmation** before proceeding.
@@ -304,7 +330,7 @@ For these cases, use individual commands (`/build` for small fixes, `/quality-re
 | `/doc` | documentation-and-adrs | Making architectural decisions, changing public APIs, or recording context for the future. |
 | `/ship` | shipping-and-launch | Preparing to deploy — pre-launch checklist, feature flags, rollback strategy. |
 | `/ci` | ci-cd-and-automation | 搭建或优化 CI/CD 管道，配置质量门禁、部署策略、CI 失败反馈循环。 |
-| `/commit` | git-workflow-and-versioning | 引导规范化 Git 提交，原子提交、描述性消息、提交前检查。 |
+| `/commit` | git-workflow-and-versioning | 审查通过后代理提交，需用户确认；原子提交、描述性消息、提交前检查。 |
 | `/migrate` | deprecation-and-migration | Replacing old systems, sunsetting features, or removing dead code. |
 | `/ui` | frontend-ui-engineering | Building UI components, handling accessibility, responsive design. |
 | `/idea` | idea-refine | Turning vague ideas into concrete, actionable specifications. |

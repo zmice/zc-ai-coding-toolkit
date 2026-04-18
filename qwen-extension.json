@@ -1,6 +1,6 @@
 {
   "name": "ai-coding-toolkit",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "SDD+TDD 全流程 AI 编码工具包 — 32 Skills, 27 Commands, 8 Agents",
   "contextFileName": "QWEN.md",
   "commands": "commands",

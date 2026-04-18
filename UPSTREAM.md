@@ -30,6 +30,18 @@
 | [garrytan/gstack](https://github.com/garrytan/gstack) | `230006726732` | 2026-04-14 | main | 战略过滤器、"角色嵌入命令"哲学 |
 | [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | `c9a44ae835fa` | 2026-04-16 | main | Karpathy LLM 行为矫正四原则、"先想后做"编码纪律 |
 
+## zc CLI 上游
+
+zc CLI 的多 CLI 团队编排架构基于此项目开发，升级时需重点关注团队编排、会话管理和 worktree 相关变更。
+
+| 项目 | Commit | 日期 | 分支 | 核心启发 |
+|------|--------|------|------|--------|
+| [Yeachan-Heo/oh-my-codex](https://github.com/Yeachan-Heo/oh-my-codex) | `435a339` | 2026-04-18 | main | 多 CLI 团队编排架构、$team 并行执行模型、持久化工作流状态管理 |
+
+**本地对应目录**：`zc/` 目录基于上述项目的架构理念开发。
+
+**升级对比**：`https://github.com/Yeachan-Heo/oh-my-codex/compare/435a339...main`
+
 ## 本工具包
 
 | 字段 | 值 |

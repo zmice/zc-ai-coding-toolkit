@@ -1,2 +1,6 @@
 # Upstream source repo (large, not needed in distribution)
 .agent-skills-repo/
+node_modules/
+zc/node_modules/
+zc/dist/
+.zc/

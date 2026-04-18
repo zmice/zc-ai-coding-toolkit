@@ -378,6 +378,71 @@ if ($CodexProject) {
     $codexResult = @{ Skills = $codexInstalledSkills; AgentsMd = $codexInstalledAgentsMd }
 }
 
+# --- zc CLI Install (optional) ---
+
+Write-Header "zc CLI Installation"
+$zcDir = Join-Path $ScriptDir "zc"
+if (-not (Test-Path $zcDir)) {
+    Write-Skip "zc/ directory not found — skipping zc CLI installation"
+} else {
+    $nodeExe = Get-Command node -ErrorAction SilentlyContinue
+    if (-not $nodeExe) {
+        Write-Skip "Node.js not found — skipping zc CLI (install Node.js >= 20 and re-run)"
+    } else {
+        $nodeVersionRaw = & node --version 2>&1
+        $nodeMajor = 0
+        if ($nodeVersionRaw -match '^v(\d+)') { $nodeMajor = [int]$Matches[1] }
+        if ($nodeMajor -lt 20) {
+            Write-Skip "Node.js $nodeVersionRaw found but >= 20 required — skipping zc CLI"
+        } else {
+            Write-Ok "Node.js $nodeVersionRaw detected"
+            try {
+                Push-Location $zcDir
+
+                Write-Host "  Installing npm dependencies..." -ForegroundColor Cyan
+                & npm install --no-fund --no-audit 2>&1 | Out-Null
+                if ($LASTEXITCODE -ne 0) { throw "npm install failed (exit code $LASTEXITCODE)" }
+                Write-Ok "npm install"
+
+                Write-Host "  Building zc CLI..." -ForegroundColor Cyan
+                & npm run build 2>&1 | Out-Null
+                if ($LASTEXITCODE -ne 0) { throw "npm run build failed (exit code $LASTEXITCODE)" }
+                Write-Ok "npm run build"
+
+                # Create shim script in a directory on PATH (or next to install.ps1)
+                $shimDir = Join-Path $ScriptDir ".bin"
+                New-Item -ItemType Directory -Path $shimDir -Force | Out-Null
+                $cliEntry = Join-Path $zcDir "dist" "cli" "index.js"
+                $shimPs1 = Join-Path $shimDir "zc.ps1"
+                $shimCmd = Join-Path $shimDir "zc.cmd"
+                # PowerShell shim
+                $shimContent = "#!/usr/bin/env pwsh" + "`n" + "node `"$cliEntry`" @args"
+                $shimContent | Set-Content $shimPs1 -Encoding UTF8
+                # CMD shim for Windows terminals
+                $cmdContent = "@echo off" + "`n" + "node `"$cliEntry`" %*"
+                $cmdContent | Set-Content $shimCmd -Encoding UTF8
+                Write-Ok "Shims created in $shimDir"
+
+                # Hint: add to PATH
+                if ($env:PATH -notlike "*$shimDir*") {
+                    Write-Host "  [INFO] Add this to your PATH to use 'zc' globally:" -ForegroundColor Yellow
+                    Write-Host "         $shimDir" -ForegroundColor Yellow
+                }
+            } catch {
+                Write-Err "zc CLI installation failed: $_"
+            } finally {
+                Pop-Location
+            }
+
+            # WSL tmux hint
+            if ($env:WSL_DISTRO_NAME -or (Test-Path "/proc/version" -ErrorAction SilentlyContinue)) {
+                Write-Host "  [INFO] WSL detected — zc team mode requires tmux." -ForegroundColor Yellow
+                Write-Host "         Install with: sudo apt install tmux" -ForegroundColor Yellow
+            }
+        }
+    }
+}
+
 # --- Summary ---
 
 Write-Header "Installation Complete"

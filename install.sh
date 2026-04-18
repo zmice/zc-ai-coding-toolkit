@@ -394,6 +394,84 @@ if [[ -n "$CODEX_PROJECT" ]]; then
     done
 fi
 
+# --- zc CLI Install (optional) ---
+
+header "zc CLI Installation"
+ZC_DIR="$SCRIPT_DIR/zc"
+if [[ ! -d "$ZC_DIR" ]]; then
+    skip "zc/ directory not found — skipping zc CLI installation"
+else
+    if ! command -v node &>/dev/null; then
+        skip "Node.js not found — skipping zc CLI (install Node.js >= 20 and re-run)"
+    else
+        NODE_VERSION_RAW="$(node --version 2>/dev/null || true)"
+        NODE_MAJOR=0
+        if [[ "$NODE_VERSION_RAW" =~ ^v([0-9]+) ]]; then
+            NODE_MAJOR="${BASH_REMATCH[1]}"
+        fi
+        if [[ "$NODE_MAJOR" -lt 20 ]]; then
+            skip "Node.js $NODE_VERSION_RAW found but >= 20 required — skipping zc CLI"
+        else
+            ok "Node.js $NODE_VERSION_RAW detected"
+
+            (
+                cd "$ZC_DIR"
+
+                echo -e "  ${CYAN}Installing npm dependencies...${NC}"
+                if ! npm install --no-fund --no-audit >/dev/null 2>&1; then
+                    err "npm install failed"; exit 1
+                fi
+                ok "npm install"
+
+                echo -e "  ${CYAN}Building zc CLI...${NC}"
+                if ! npm run build >/dev/null 2>&1; then
+                    err "npm run build failed"; exit 1
+                fi
+                ok "npm run build"
+            )
+            ZC_BUILD_STATUS=$?
+
+            if [[ $ZC_BUILD_STATUS -eq 0 ]]; then
+                # Create symlink
+                CLI_ENTRY="$ZC_DIR/dist/cli/index.js"
+                BIN_DIR="$SCRIPT_DIR/.bin"
+                mkdir -p "$BIN_DIR"
+                SYMLINK="$BIN_DIR/zc"
+
+                # Create wrapper script
+                cat > "$SYMLINK" <<EOFLNK
+#!/usr/bin/env bash
+exec node "$CLI_ENTRY" "\$@"
+EOFLNK
+                chmod +x "$SYMLINK"
+                ok "Wrapper created at $SYMLINK"
+
+                # Hint: add to PATH
+                case ":$PATH:" in
+                    *":$BIN_DIR:"*) ;;
+                    *)
+                        echo -e "  ${YELLOW}[INFO] Add this to your PATH to use 'zc' globally:${NC}"
+                        echo -e "  ${YELLOW}       export PATH=\"$BIN_DIR:\$PATH\"${NC}"
+                        ;;
+                esac
+            else
+                err "zc CLI build failed — skipping symlink creation"
+            fi
+
+            # tmux hint
+            if [[ "$(uname)" == "Darwin" ]]; then
+                if ! command -v tmux &>/dev/null; then
+                    echo -e "  ${YELLOW}[INFO] zc team mode requires tmux. Install with: brew install tmux${NC}"
+                fi
+            elif [[ "$(uname)" == "Linux" ]]; then
+                if ! command -v tmux &>/dev/null; then
+                    echo -e "  ${YELLOW}[INFO] zc team mode requires tmux. Install with: sudo apt install tmux${NC}"
+                fi
+            fi
+        fi
+    fi
+fi
+
 # --- Summary ---
 
 HAS_QODER_INSTALL=false

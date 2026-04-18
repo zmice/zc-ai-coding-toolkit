@@ -565,6 +565,68 @@ Agent [idea-refine]:
 
 ---
 
+## zc CLI — 多 AI CLI 团队编排运行时
+
+> **让多个 AI CLI 组队干活。** 将 Codex、Qwen Code 等 AI 编码工具编排为协作团队，并行处理开发任务。
+
+| 特性 | 说明 |
+|------|------|
+| 🤖 多 CLI 适配 | 统一适配 Codex CLI、Qwen Code，通过适配器层无缝切换 |
+| 🚀 任务并行编排 | 多 Worker 并行执行，自动分派、状态追踪、失败回滚 |
+| 🧠 智能技能匹配 | 关键词（中英文）/ AI 智能匹配 / 手动指定三种模式 |
+| 🌿 Worktree 隔离 | 每个 Worker 在独立 git worktree 中执行，互不干扰 |
+| 💬 团队消息通信 | 内置 Mailbox，Worker 间实时消息传递与广播 |
+
+### 安装
+
+```bash
+# npm 全局安装（推荐）
+npm install -g @zmice/zc
+
+# 验证
+zc --version
+zc doctor
+```
+
+<details>
+<summary>从源码安装</summary>
+
+```bash
+git clone <repo-url>
+cd ai-coding/zc
+npm install && npm run build
+npm link
+```
+
+</details>
+
+### 快速上手
+
+```bash
+# 单任务运行
+zc run "实现用户注册功能"
+
+# 启动团队 — 2 个 Worker 并行处理
+zc team start -w "w1:codex,w2:qwen-code" -t "实现登录API" -t "编写登录页面"
+
+# 查看状态 / 发送消息 / 关闭团队
+zc team status <name>
+zc msg send w1 "优先处理API端点"
+zc team shutdown <name>
+```
+
+### 系统要求
+
+| 依赖 | 版本 | 说明 |
+|------|------|------|
+| Node.js | >= 20 | 运行时环境 |
+| git | 任意 | Worktree 隔离执行 |
+| tmux | 任意 | 团队模式会话管理（macOS / Linux / WSL） |
+
+> 完整文档见 [`@zmice/zc` README](./zc/README.md)
+
+---
+
 ## 目录结构
 
 ```
