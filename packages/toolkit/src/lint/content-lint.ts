@@ -18,6 +18,10 @@ export interface ToolkitLintResult {
   issues: readonly ToolkitLintIssue[];
 }
 
+export interface ToolkitLintOptions {
+  knownUpstreams?: readonly string[];
+}
+
 const chineseCharacterPattern = /[\u3400-\u9fff]/u;
 const longEnglishFragmentPattern = /\b[A-Za-z]+(?:\s+[A-Za-z]+){3,}\b/u;
 
@@ -106,6 +110,29 @@ function checkLocalizedSummary(assetId: string, meta: ToolkitAssetMeta): Toolkit
   }
 
   return issues;
+}
+
+function checkUpstreamRegistryConsistency(
+  assetId: string,
+  meta: ToolkitAssetMeta,
+  knownUpstreams: readonly string[] | undefined
+): ToolkitLintIssue[] {
+  if (!meta.source || !knownUpstreams) {
+    return [];
+  }
+
+  if (knownUpstreams.includes(meta.source.upstream)) {
+    return [];
+  }
+
+  return [
+    {
+      level: "warning",
+      assetId,
+      rule: "unknown-source-upstream",
+      message: `source.upstream 未在 references/upstreams.yaml 中登记：${meta.source.upstream}`
+    }
+  ];
 }
 
 function normalizeSummary(summary: string): string {
@@ -244,11 +271,15 @@ function checkRelationshipCycles(
   return issues;
 }
 
-export function lintToolkitManifest(manifest: ToolkitManifest): ToolkitLintResult {
+export function lintToolkitManifest(
+  manifest: ToolkitManifest,
+  options: ToolkitLintOptions = {}
+): ToolkitLintResult {
   const issues = manifest.assets.flatMap((asset) => [
     ...checkMissingGovernanceFields(asset.id, asset.meta),
     ...checkGovernanceConsistency(asset.id, asset.meta),
-    ...checkLocalizedSummary(asset.id, asset.meta)
+    ...checkLocalizedSummary(asset.id, asset.meta),
+    ...checkUpstreamRegistryConsistency(asset.id, asset.meta, options.knownUpstreams)
   ]).concat(
     checkDuplicateSummaries(manifest),
     checkRelationshipTargets(manifest),

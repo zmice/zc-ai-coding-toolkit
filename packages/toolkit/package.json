@@ -19,7 +19,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "pnpm run build && node --test dist/loaders.test.js dist/manifests.test.js dist/content-lint.test.js dist/query.test.js",
+    "test": "pnpm run build && node --test dist/loaders.test.js dist/manifests.test.js dist/content-lint.test.js dist/query.test.js dist/governance/upstreams.test.js",
     "lint": "tsc -p tsconfig.json --noEmit",
     "generate": "pnpm run build",
     "verify": "pnpm run lint && pnpm run test && pnpm run build && pnpm run generate"

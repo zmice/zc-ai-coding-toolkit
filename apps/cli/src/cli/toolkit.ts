@@ -43,6 +43,7 @@ interface ToolkitManifestLike {
 
 interface ToolkitModule {
   loadToolkitManifest(): Promise<ToolkitManifestLike>;
+  loadKnownUpstreamIds(): Promise<readonly string[]>;
   resolveToolkitAssetQuery(manifest: ToolkitManifestLike, query: string): ToolkitAssetLike | undefined;
   searchToolkitAssets(manifest: ToolkitManifestLike, keyword: string): readonly ToolkitAssetLike[];
   recommendToolkitAssets(
@@ -53,7 +54,9 @@ interface ToolkitModule {
     required: readonly ToolkitAssetLike[];
     suggested: readonly ToolkitAssetLike[];
   } | undefined;
-  lintToolkitManifest(manifest: ToolkitManifestLike): {
+  lintToolkitManifest(manifest: ToolkitManifestLike, options?: {
+    knownUpstreams?: readonly string[];
+  }): {
     summary: {
       assets: number;
       warnings: number;
@@ -166,7 +169,8 @@ export function registerToolkitCommand(program: Command): void {
     .action(async (opts: { json?: boolean; strict?: boolean }) => {
       const toolkitModule = await loadToolkitModule();
       const manifest = await toolkitModule.loadToolkitManifest();
-      const result = toolkitModule.lintToolkitManifest(manifest);
+      const knownUpstreams = await toolkitModule.loadKnownUpstreamIds();
+      const result = toolkitModule.lintToolkitManifest(manifest, { knownUpstreams });
 
       if (opts.json) {
         console.log(JSON.stringify(result, null, 2));

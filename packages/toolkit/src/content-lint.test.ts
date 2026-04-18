@@ -246,4 +246,25 @@ describe("lintToolkitManifest", () => {
       ["relationship-cycle", "relationship-cycle"]
     );
   });
+
+  it("warns when source upstream is not registered", () => {
+    const result = lintToolkitManifest(
+      makeManifest({
+        tier: "recommended",
+        audience: "default",
+        stability: "stable",
+        description: "中文摘要",
+        source: {
+          upstream: "unknown-upstream",
+          strategy: "adapted"
+        }
+      }),
+      {
+        knownUpstreams: ["agent-skills", "toolkit-original"]
+      }
+    );
+
+    assert.equal(result.summary.warnings, 1);
+    assert.equal(result.issues[0]?.rule, "unknown-source-upstream");
+  });
 });

@@ -1,4 +1,5 @@
 export * from "./types.js";
+export * from "./governance/index.js";
 export * from "./schema/index.js";
 export * from "./loaders/index.js";
 export * from "./lint/index.js";
