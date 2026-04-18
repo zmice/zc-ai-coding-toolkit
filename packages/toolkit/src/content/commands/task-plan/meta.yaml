@@ -1,7 +1,7 @@
 kind: command
 name: task-plan
 title: task-plan
-description: 将需求或规格拆解为可执行的原子任务列表，每个任务明确、独立、可验证。
+description: 将需求或 Spec 拆解为可执行的原子任务列表，并标注依赖、上下文和验证步骤。
 platforms:
   - qwen
   - codex

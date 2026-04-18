@@ -54,6 +54,6 @@ describe("@zmice/platform-codex scaffold", () => {
 
     assert.equal(plan.destinationRoot, "/tmp/codex");
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), ["/tmp/codex/AGENTS.md"]);
-    assert.ok(plan.artifacts[0]?.content.includes("toolkit assets"));
+    assert.ok(plan.artifacts[0]?.content.includes("工具包资产"));
   });
 });

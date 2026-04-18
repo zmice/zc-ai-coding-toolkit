@@ -47,6 +47,6 @@ describe("@zmice/platform-qoder scaffold", () => {
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
       "/tmp/qoder/instructions.md",
     ]);
-    assert.ok(plan.artifacts[0]?.content.includes("toolkit assets"));
+    assert.ok(plan.artifacts[0]?.content.includes("工具包资产"));
   });
 });

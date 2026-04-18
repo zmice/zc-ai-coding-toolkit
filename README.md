@@ -105,6 +105,14 @@ node scripts/verify-workspace.mjs
 - 平台入口和安装链路都应通过 `apps/cli` 与 `packages/platform-*` 处理
 - 新增平台或内容类型时，优先扩展 `packages/*` 与 `references/`
 
+## 中文化规则
+
+- 默认优先中文输出：CLI 提示、平台模板说明、面向用户的 AI 引导尽量使用中文
+- 技术契约保持原样：命令名、参数名、文件名、JSON 键、平台产物名不做中文化
+- 详细规则见：
+  - [docs/architecture/chinese-localization.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/chinese-localization.md:1)
+  - [docs/architecture/chinese-localization-plan.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/chinese-localization-plan.md:1)
+
 更多背景见：
 
 - [docs/architecture/monorepo-layers.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/monorepo-layers.md:1)

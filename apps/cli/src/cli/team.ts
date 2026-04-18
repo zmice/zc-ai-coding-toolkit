@@ -15,11 +15,21 @@ function parseWorkers(raw: string): Array<{ id: string; cli: string }> {
     const [id, cli] = pair.split(":");
     if (!id || !cli) {
       throw new Error(
-        `Invalid worker format "${pair}". Expected "id:cli" (e.g. "w1:codex").`,
+        `工人规格格式无效 "${pair}"。应为 "id:cli"（例如 "w1:codex"）。`,
       );
     }
     return { id: id.trim(), cli: cli.trim() };
   });
+}
+
+function formatWorkerStatus(status: string): string {
+  const map: Record<string, string> = {
+    idle: "空闲",
+    busy: "繁忙",
+    failed: "失败",
+    exited: "已退出",
+  };
+  return map[status] ?? status;
 }
 
 function defaultTeamName(): string {
@@ -97,7 +107,7 @@ export async function runTeamRuntime(
 
   try {
     await orchestrator.startTeam(spec);
-    console.log(`Team "${spec.name}" started. Entering dispatch loop...`);
+    console.log(`团队 "${spec.name}" 已启动，正在进入调度循环...`);
     await orchestrator.runDispatchLoop();
   } catch (err) {
     await cleanup();
@@ -119,16 +129,16 @@ export function registerTeamCommand(program: Command): void {
     .description("启动团队")
     .requiredOption(
       "-w, --workers <spec>",
-      '工人规格 "id:cli,id:cli,..." (e.g. "w1:codex,w2:qwen-code")',
+      '工人规格 "id:cli,id:cli,..."（例如 "w1:codex,w2:qwen-code"）',
     )
     .option("-t, --tasks <task...>", "任务描述（可重复）", [])
     .option("-n, --name <name>", "团队名称", defaultTeamName())
     .option("-m, --model <model>", "模型名称")
     .option("-s, --skills <skill...>", "手动指定 skills（全局应用到所有任务）", [])
-    .option("--skill-match <mode>", "技能匹配模式 (keyword|ai)", "keyword")
+    .option("--skill-match <mode>", "技能匹配模式（keyword|ai）", "keyword")
     .action(async (opts: { workers: string; tasks: string[]; name: string; model?: string; skills: string[]; skillMatch: string }) => {
       if (opts.tasks.length === 0) {
-        console.error("Error: at least one --tasks is required.");
+        console.error("错误：至少需要提供一个 --tasks。");
         process.exitCode = 1;
         return;
       }
@@ -143,7 +153,7 @@ export function registerTeamCommand(program: Command): void {
         skillMatchMode: opts.skillMatch as "keyword" | "ai",
       };
 
-      console.log(`Starting team "${spec.name}" with ${workers.length} worker(s) and ${spec.tasks.length} task(s)...`);
+      console.log(`正在启动团队 "${spec.name}"，包含 ${workers.length} 个工人和 ${spec.tasks.length} 个任务...`);
 
       const session = new SessionManager();
       const worktree = new WorktreeManager(process.cwd());
@@ -152,7 +162,7 @@ export function registerTeamCommand(program: Command): void {
       try {
         await runTeamRuntime(spec, getStateDir(), session, worktree, orch, process);
       } catch (err) {
-        console.error("Failed to start team:", err instanceof Error ? err.message : err);
+        console.error("启动团队失败：", err instanceof Error ? err.message : err);
         process.exitCode = 1;
       }
     });
@@ -165,7 +175,7 @@ export function registerTeamCommand(program: Command): void {
     .action(async (name?: string) => {
       const stateDir = getStateDir();
       if (!name) {
-        console.log("Usage: zc team status <name>");
+        console.log("用法：zc team status <name>");
         return;
       }
 
@@ -173,7 +183,7 @@ export function registerTeamCommand(program: Command): void {
         const statePath = resolve(stateDir, name, "state.json");
         const status = await readJson<Record<string, unknown>>(statePath, null as unknown as Record<string, unknown>);
         if (!status) {
-          console.error(`No state found for team "${name}".`);
+          console.error(`未找到团队 "${name}" 的状态。`);
           process.exitCode = 1;
           return;
         }
@@ -185,27 +195,27 @@ export function registerTeamCommand(program: Command): void {
           messages: number;
         };
 
-        console.log(`\nTeam: ${s.name}`);
+        console.log(`\n团队：${s.name}`);
         console.log("─".repeat(40));
 
         // Workers table
-        console.log("\nWorkers:");
-        console.log("  ID            CLI          Status    Task");
+        console.log("\n工人：");
+        console.log("  ID            CLI          状态      任务");
         console.log("  " + "─".repeat(52));
         for (const w of s.workers) {
           console.log(
-            `  ${w.id.padEnd(14)}${w.cli.padEnd(13)}${w.status.padEnd(10)}${w.currentTask ?? "-"}`,
+            `  ${w.id.padEnd(14)}${w.cli.padEnd(13)}${formatWorkerStatus(w.status).padEnd(10)}${w.currentTask ?? "-"}`,
           );
         }
 
         // Task summary
-        console.log("\nTasks:");
-        console.log(`  Pending: ${s.tasks.pending}  Running: ${s.tasks.running}  Done: ${s.tasks.done}  Failed: ${s.tasks.failed}`);
+        console.log("\n任务：");
+        console.log(`  待处理: ${s.tasks.pending}  进行中: ${s.tasks.running}  已完成: ${s.tasks.done}  失败: ${s.tasks.failed}`);
 
         // Messages
-        console.log(`\nMessages: ${s.messages}`);
+        console.log(`\n消息：${s.messages}`);
       } catch (err) {
-        console.error("Failed to read team status:", err instanceof Error ? err.message : err);
+        console.error("读取团队状态失败：", err instanceof Error ? err.message : err);
         process.exitCode = 1;
       }
     });
@@ -216,16 +226,16 @@ export function registerTeamCommand(program: Command): void {
     .description("关闭团队")
     .argument("<name>", "团队名称")
     .action(async (name: string) => {
-      console.log(`Shutting down team "${name}"...`);
+      console.log(`正在关闭团队 "${name}"...`);
 
       const session = new SessionManager();
       const worktree = new WorktreeManager(process.cwd());
 
       try {
         await shutdownTeamRuntime(name, getStateDir(), session, worktree);
-        console.log(`Team "${name}" shut down.`);
+        console.log(`团队 "${name}" 已关闭。`);
       } catch (err) {
-        console.error("Failed to shutdown team:", err instanceof Error ? err.message : err);
+        console.error("关闭团队失败：", err instanceof Error ? err.message : err);
         process.exitCode = 1;
       }
     });
@@ -235,7 +245,7 @@ export function registerTeamCommand(program: Command): void {
     .command("log")
     .description("查看团队日志")
     .argument("<name>", "团队名称")
-    .option("-w, --worker <id>", "指定 worker ID")
+    .option("-w, --worker <id>", "指定工人 ID")
     .action(async (name: string, opts: { worker?: string }) => {
       const session = new SessionManager();
 
@@ -243,7 +253,7 @@ export function registerTeamCommand(program: Command): void {
         const statePath = resolve(getStateDir(), name, "state.json");
         const status = await readJson<Record<string, unknown>>(statePath, null as unknown as Record<string, unknown>);
         if (!status) {
-          console.error(`No state found for team "${name}".`);
+          console.error(`未找到团队 "${name}" 的状态。`);
           process.exitCode = 1;
           return;
         }
@@ -257,7 +267,7 @@ export function registerTeamCommand(program: Command): void {
           : s.workers;
 
         if (targetWorkers.length === 0) {
-          console.error(opts.worker ? `Worker "${opts.worker}" not found.` : "No workers found.");
+          console.error(opts.worker ? `未找到工人 "${opts.worker}"。` : "未找到任何工人。");
           process.exitCode = 1;
           return;
         }
@@ -268,7 +278,7 @@ export function registerTeamCommand(program: Command): void {
           console.log(output);
         }
       } catch (err) {
-        console.error("Failed to read team logs:", err instanceof Error ? err.message : err);
+        console.error("读取团队日志失败：", err instanceof Error ? err.message : err);
         process.exitCode = 1;
       }
     });

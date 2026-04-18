@@ -20,16 +20,16 @@ export function registerMsgCommand(program: Command): void {
     .description("消息通信命令");
 
   msg.command("send").description("发送消息")
-    .argument("<to>", "目标 worker")
+    .argument("<to>", "目标工人")
     .argument("<body>", "消息内容")
     .action(async (to: string, body: string) => {
       const mailbox = new Mailbox(getTeamDir());
       try {
         await mailbox.load();
         const sent = await mailbox.send("cli-user", to, body);
-        console.log(`消息已发送 [${sent.id}] -> ${to}`);
+        console.log(`消息已发送 [${sent.id}] → ${to}`);
       } catch (err) {
-        console.error(`发送失败: ${(err as Error).message}`);
+        console.error(`发送失败：${(err as Error).message}`);
         process.exitCode = 1;
       }
     });
@@ -43,13 +43,13 @@ export function registerMsgCommand(program: Command): void {
         const sent = await mailbox.broadcast("cli-user", body);
         console.log(`广播已发送 [${sent.id}]`);
       } catch (err) {
-        console.error(`广播失败: ${(err as Error).message}`);
+        console.error(`广播失败：${(err as Error).message}`);
         process.exitCode = 1;
       }
     });
 
   msg.command("list").description("查看消息")
-    .option("-w, --worker <worker>", "查看指定 worker 的消息")
+    .option("-w, --worker <worker>", "查看指定工人的消息")
     .option("-n, --limit <n>", "显示最近 N 条消息", "20")
     .action(async (opts: { worker?: string; limit: string }) => {
       const mailbox = new Mailbox(getTeamDir());
@@ -90,7 +90,7 @@ export function registerMsgCommand(program: Command): void {
         await mailbox.markRead(id);
         console.log(`消息 [${id}] 已标记为已读。`);
       } catch (err) {
-        console.error(`操作失败: ${(err as Error).message}`);
+        console.error(`操作失败：${(err as Error).message}`);
         process.exitCode = 1;
       }
     });

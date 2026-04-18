@@ -91,7 +91,7 @@ export function registerUpstreamCommand(program: Command): void {
       const upstreams = await loadUpstreams();
 
       if (upstreams.length === 0) {
-        console.log("No upstreams registered.");
+        console.log("未登记任何上游源。");
         return;
       }
 
@@ -113,18 +113,18 @@ export function registerUpstreamCommand(program: Command): void {
       const item = upstreams.find((entry) => entry.id === id);
 
       if (!item) {
-        console.error(`未找到上游记录: ${id}`);
+        console.error(`未找到上游记录：${id}`);
         process.exitCode = 1;
         return;
       }
 
-      console.log(`ID: ${item.id}`);
-      console.log(`Title: ${item.title ?? "-"}`);
-      console.log(`Kind: ${item.kind ?? "-"}`);
-      console.log(`Status: ${item.status ?? "-"}`);
-      console.log(`Owner: ${item.owner ?? "-"}`);
-      console.log(`Notes: ${item.notesPath ? resolve(item.notesPath) : "-"}`);
-      console.log(`Snapshots: ${item.snapshotsPath ? resolve(item.snapshotsPath) : "-"}`);
+      console.log(`ID：${item.id}`);
+      console.log(`标题：${item.title ?? "-"}`);
+      console.log(`类型：${item.kind ?? "-"}`);
+      console.log(`状态：${item.status ?? "-"}`);
+      console.log(`负责人：${item.owner ?? "-"}`);
+      console.log(`说明：${item.notesPath ? resolve(item.notesPath) : "-"}`);
+      console.log(`快照：${item.snapshotsPath ? resolve(item.snapshotsPath) : "-"}`);
     });
 
   upstream
@@ -136,17 +136,17 @@ export function registerUpstreamCommand(program: Command): void {
       const items = id ? upstreams.filter((entry) => entry.id === id) : upstreams;
 
       if (items.length === 0) {
-        console.error(id ? `未找到上游记录: ${id}` : "没有可审阅的上游记录。");
+        console.error(id ? `未找到上游记录：${id}` : "没有可审阅的上游记录。");
         process.exitCode = 1;
         return;
       }
 
       for (const item of items) {
         console.log(`\n[${item.id}] ${item.title ?? "-"}`);
-        console.log(`- status: ${item.status ?? "-"}`);
-        console.log(`- notes: ${item.notesPath ?? "-"}`);
-        console.log(`- snapshots: ${item.snapshotsPath ?? "-"}`);
-        console.log("- mode: manual-review");
+        console.log(`- 状态：${item.status ?? "-"}`);
+        console.log(`- 说明：${item.notesPath ?? "-"}`);
+        console.log(`- 快照：${item.snapshotsPath ?? "-"}`);
+        console.log("- 模式：manual-review");
       }
     });
 }

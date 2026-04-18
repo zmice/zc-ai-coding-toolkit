@@ -8,13 +8,17 @@ function getTeamDir(): string {
 
 function formatStatus(status: string): string {
   const icons: Record<string, string> = {
-    pending: "○",
-    claimed: "◐",
-    in_progress: "●",
-    completed: "✔",
-    failed: "✘",
+    pending: "○ 待处理",
+    claimed: "◐ 已认领",
+    in_progress: "● 进行中",
+    completed: "✔ 已完成",
+    failed: "✘ 已失败",
   };
-  return `${icons[status] ?? "?"} ${status}`;
+  return icons[status] ?? `? ${status}`;
+}
+
+function formatAssignee(value: string | undefined): string {
+  return value ?? "-";
 }
 
 export function registerTaskCommand(program: Command): void {
@@ -45,27 +49,27 @@ export function registerTaskCommand(program: Command): void {
       }
 
       // 表头
-      const header = `${"ID".padEnd(10)} ${"状态".padEnd(14)} ${"负责人".padEnd(12)} 标题`;
+      const header = `${"ID".padEnd(10)} ${"状态".padEnd(16)} ${"负责人".padEnd(12)} 标题`;
       console.log(header);
       console.log("-".repeat(60));
 
       for (const t of tasks) {
-        const line = `${t.id.padEnd(10)} ${formatStatus(t.status).padEnd(14)} ${(t.assignee ?? "-").padEnd(12)} ${t.title}`;
+        const line = `${t.id.padEnd(10)} ${formatStatus(t.status).padEnd(16)} ${formatAssignee(t.assignee).padEnd(12)} ${t.title}`;
         console.log(line);
       }
     });
 
   task.command("claim").description("认领任务")
     .argument("<id>", "任务 ID")
-    .option("-w, --worker <worker>", "Worker ID", "cli-user")
+    .option("-w, --worker <worker>", "工人 ID", "cli-user")
     .action(async (id: string, opts: { worker: string }) => {
       const queue = new TaskQueue(getTeamDir());
       try {
         await queue.load();
         const { task: claimed } = await queue.claim(id, opts.worker);
-        console.log(`已认领任务 [${claimed.id}] "${claimed.title}" -> ${opts.worker}`);
+        console.log(`已认领任务 [${claimed.id}] "${claimed.title}" → ${opts.worker}`);
       } catch (err) {
-        console.error(`认领失败: ${(err as Error).message}`);
+        console.error(`认领失败：${(err as Error).message}`);
         process.exitCode = 1;
       }
     });
@@ -77,12 +81,12 @@ export function registerTaskCommand(program: Command): void {
       try {
         await queue.load();
         const t = queue.getById(id);
-        if (!t) { console.error(`任务不存在: ${id}`); process.exitCode = 1; return; }
+        if (!t) { console.error(`任务不存在：${id}`); process.exitCode = 1; return; }
         if (!t.claimToken) { console.error(`任务 ${id} 尚未被认领，无法标记完成。`); process.exitCode = 1; return; }
         await queue.transition(id, t.claimToken, "completed");
         console.log(`任务 [${id}] 已标记为完成。`);
       } catch (err) {
-        console.error(`操作失败: ${(err as Error).message}`);
+        console.error(`操作失败：${(err as Error).message}`);
         process.exitCode = 1;
       }
     });
@@ -95,13 +99,13 @@ export function registerTaskCommand(program: Command): void {
       try {
         await queue.load();
         const t = queue.getById(id);
-        if (!t) { console.error(`任务不存在: ${id}`); process.exitCode = 1; return; }
+        if (!t) { console.error(`任务不存在：${id}`); process.exitCode = 1; return; }
         if (!t.claimToken) { console.error(`任务 ${id} 尚未被认领，无法标记失败。`); process.exitCode = 1; return; }
         await queue.transition(id, t.claimToken, "failed");
-        const reasonStr = opts.reason ? `（原因: ${opts.reason}）` : "";
+        const reasonStr = opts.reason ? `（原因：${opts.reason}）` : "";
         console.log(`任务 [${id}] 已标记为失败。${reasonStr}`);
       } catch (err) {
-        console.error(`操作失败: ${(err as Error).message}`);
+        console.error(`操作失败：${(err as Error).message}`);
         process.exitCode = 1;
       }
     });

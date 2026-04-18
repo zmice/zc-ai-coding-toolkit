@@ -59,7 +59,7 @@ function selectMatchedAssets(manifest: ToolkitManifestLike): readonly ToolkitAss
 
 function renderAssetList(assets: readonly ToolkitAssetLike[]): string {
   if (assets.length === 0) {
-    return "- No toolkit assets matched yet.";
+    return "- 尚未匹配到任何工具包资产。";
   }
 
   return assets
@@ -68,12 +68,12 @@ function renderAssetList(assets: readonly ToolkitAssetLike[]): string {
 }
 
 function renderInstructionsFile(manifestSource: string, assets: readonly ToolkitAssetLike[]): string {
-  return `# Qoder Platform Instructions
+  return `# Qoder 平台说明
 
-This artifact is generated from toolkit assets.
+此工件由工具包资产生成。
 
-- Manifest source: \`${manifestSource}\`
-- Matched assets: ${assets.length}
+- 清单来源：\`${manifestSource}\`
+- 匹配到的资产：${assets.length}
 
 ${renderAssetList(assets)}
 `;

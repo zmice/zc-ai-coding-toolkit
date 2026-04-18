@@ -1,7 +1,7 @@
 kind: command
 name: spec
 title: spec
-description: 为给定的需求或功能编写结构化的技术规格说明。
+description: 先澄清需求与假设，再为给定的功能或场景编写结构化技术规格说明。
 platforms:
   - qwen
   - codex

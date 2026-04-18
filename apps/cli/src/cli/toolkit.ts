@@ -37,30 +37,30 @@ async function loadManifest(): Promise<ToolkitManifestLike> {
 }
 
 function printManifestSummary(manifest: ToolkitManifestLike): void {
-  console.log(`Toolkit manifest v${manifest.version}`);
-  console.log(`Content root: ${manifest.contentRoot}`);
+  console.log(`工具包清单 v${manifest.version}`);
+  console.log(`内容根目录：${manifest.contentRoot}`);
   console.log(
-    `Counts: skills=${manifest.counts.skills} commands=${manifest.counts.commands} agents=${manifest.counts.agents} total=${manifest.counts.total}`
+    `统计：技能=${manifest.counts.skills} 命令=${manifest.counts.commands} 代理=${manifest.counts.agents} 总计=${manifest.counts.total}`
   );
 
   if (manifest.assets.length === 0) {
-    console.log("Assets: none");
+    console.log("资产：无");
     return;
   }
 
-  console.log("Assets:");
+  console.log("资产：");
   for (const asset of manifest.assets) {
-    const platforms = asset.meta.platforms?.join(", ") ?? "all";
+    const platforms = asset.meta.platforms?.join(", ") ?? "全部";
     console.log(`- ${asset.id} [${platforms}] ${asset.meta.title}`);
   }
 }
 
 export function registerToolkitCommand(program: Command): void {
-  const toolkit = program.command("toolkit").description("Toolkit 资产管理命令");
+  const toolkit = program.command("toolkit").description("工具包资产管理命令");
 
   toolkit
     .command("manifest")
-    .description("加载并显示 toolkit manifest")
+    .description("加载并显示工具包清单")
     .option("--json", "输出完整 JSON")
     .action(async (opts: { json?: boolean }) => {
       const manifest = await loadManifest();
@@ -75,11 +75,11 @@ export function registerToolkitCommand(program: Command): void {
 
   toolkit
     .command("validate")
-    .description("验证 toolkit manifest 可成功加载")
+    .description("验证工具包清单可成功加载")
     .action(async () => {
       const manifest = await loadManifest();
       console.log(
-        `Toolkit manifest loaded: ${manifest.counts.total} asset(s) from ${manifest.contentRoot}`
+        `工具包清单已加载：来自 ${manifest.contentRoot} 的 ${manifest.counts.total} 个资产`
       );
     });
 }

@@ -1,7 +1,7 @@
-# Qoder Platform Instructions
+# Qoder 平台说明
 
-This file is generated from toolkit manifest data.
-The source of truth lives in `packages/toolkit`.
+此文件由工具包清单数据生成。
+真实来源位于 `packages/toolkit`。
 
-Placeholder content only. The platform generator will replace this with
-rendered toolkit output during the install/generate flow.
+这里仅保留占位内容。平台生成器会在安装/生成流程中将其替换为
+渲染后的工具包输出。

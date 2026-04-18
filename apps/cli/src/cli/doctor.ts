@@ -2,15 +2,15 @@ import type { Command } from "commander";
 import { detectPlatform } from "../utils/platform.js";
 
 function ok(msg: string): void {
-  console.log(`  \x1b[32m[OK]\x1b[0m ${msg}`);
+  console.log(`  \x1b[32m[通过]\x1b[0m ${msg}`);
 }
 
 function warn(msg: string): void {
-  console.log(`  \x1b[33m[WARN]\x1b[0m ${msg}`);
+  console.log(`  \x1b[33m[警告]\x1b[0m ${msg}`);
 }
 
 function fail(msg: string): void {
-  console.log(`  \x1b[31m[FAIL]\x1b[0m ${msg}`);
+  console.log(`  \x1b[31m[失败]\x1b[0m ${msg}`);
 }
 
 export function registerDoctorCommand(program: Command): void {
@@ -18,7 +18,7 @@ export function registerDoctorCommand(program: Command): void {
     .command("doctor")
     .description("诊断运行环境")
     .action(async () => {
-      console.log("\n🔍 zc doctor — 环境诊断\n");
+      console.log("\n🔍 zc doctor 环境诊断\n");
 
       const info = await detectPlatform();
       let hasError = false;
@@ -26,47 +26,47 @@ export function registerDoctorCommand(program: Command): void {
       // OS
       switch (info.os) {
         case "macos":
-          ok("Platform: macOS");
+          ok("平台：macOS");
           break;
         case "linux":
-          ok("Platform: Linux");
+          ok("平台：Linux");
           break;
         case "windows-wsl":
-          ok("Platform: Windows (WSL Ubuntu)");
+          ok("平台：Windows（WSL Ubuntu）");
           break;
         case "windows-native":
-          warn("Platform: Windows (native) — 建议使用 WSL Ubuntu 以获得完整 tmux 支持");
+          warn("平台：Windows（原生）- 建议使用 WSL Ubuntu 以获得完整 tmux 支持");
           break;
         default:
-          warn(`Platform: unknown (${process.platform})`);
+          warn(`平台：未知（${process.platform}）`);
       }
 
       // Node.js
       if (info.node.meetsMinimum) {
-        ok(`Node.js: ${info.node.version}`);
+        ok(`Node.js：${info.node.version}`);
       } else {
-        fail(`Node.js: ${info.node.version} — 需要 >= 20.0.0`);
+        fail(`Node.js：${info.node.version} - 需要 >= 20.0.0`);
         hasError = true;
       }
 
       // git
       if (info.git.available) {
-        ok(`git: ${info.git.version}`);
+        ok(`git：${info.git.version}`);
       } else {
-        fail("git: not found — 请安装 git");
+        fail("git：未找到 - 请安装 git");
         hasError = true;
       }
 
       // tmux
       if (info.tmux.available) {
-        ok(`tmux: ${info.tmux.version}`);
+        ok(`tmux：${info.tmux.version}`);
       } else {
         if (info.os === "windows-wsl" || info.os === "linux") {
-          warn("tmux: not found — 安装: sudo apt install tmux");
+          warn("tmux：未找到 - 安装：sudo apt install tmux");
         } else if (info.os === "macos") {
-          warn("tmux: not found — 安装: brew install tmux");
+          warn("tmux：未找到 - 安装：brew install tmux");
         } else {
-          warn("tmux: not found");
+          warn("tmux：未找到");
         }
       }
 
@@ -80,17 +80,17 @@ export function registerDoctorCommand(program: Command): void {
       // Codex CLI check
       try {
         const { stdout } = await execAsync("codex --version");
-        ok(`Codex CLI: ${stdout.trim()}`);
+        ok(`Codex CLI：${stdout.trim()}`);
       } catch {
-        warn("Codex CLI: not found (install: npm i -g @openai/codex)");
+        warn("Codex CLI：未找到（安装：npm i -g @openai/codex）");
       }
 
       // Qwen Code check
       try {
         const { stdout } = await execAsync("qwen --version");
-        ok(`Qwen Code: ${stdout.trim()}`);
+        ok(`Qwen Code：${stdout.trim()}`);
       } catch {
-        warn("Qwen Code: not found (install: npm i -g @anthropic/qwen-code)");
+        warn("Qwen Code：未找到（安装：npm i -g @anthropic/qwen-code）");
       }
 
       console.log("");

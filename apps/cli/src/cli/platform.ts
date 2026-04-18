@@ -104,17 +104,17 @@ function createGenerationPlan(
   switch (platform) {
     case "qwen":
       if (!platformModule.createQwenGenerationPlan) {
-        throw new Error("Qwen platform package does not export createQwenGenerationPlan()");
+        throw new Error("Qwen 平台包未导出 createQwenGenerationPlan()");
       }
       return platformModule.createQwenGenerationPlan(manifest, { manifestSource: manifest.source });
     case "codex":
       if (!platformModule.createCodexGenerationPlan) {
-        throw new Error("Codex platform package does not export createCodexGenerationPlan()");
+        throw new Error("Codex 平台包未导出 createCodexGenerationPlan()");
       }
       return platformModule.createCodexGenerationPlan(manifest, { manifestSource: manifest.source });
     case "qoder":
       if (!platformModule.createQoderGenerationPlan) {
-        throw new Error("Qoder platform package does not export createQoderGenerationPlan()");
+        throw new Error("Qoder 平台包未导出 createQoderGenerationPlan()");
       }
       return platformModule.createQoderGenerationPlan(manifest, { manifestSource: manifest.source });
   }
@@ -129,7 +129,7 @@ function createInstallPlan(
   switch (platform) {
     case "qwen":
       if (!platformModule.createQwenInstallPlan) {
-        throw new Error("Qwen platform package does not export createQwenInstallPlan()");
+        throw new Error("Qwen 平台包未导出 createQwenInstallPlan()");
       }
       return platformModule.createQwenInstallPlan(manifest, {
         manifestSource: manifest.source,
@@ -137,7 +137,7 @@ function createInstallPlan(
       });
     case "codex":
       if (!platformModule.createCodexInstallPlan) {
-        throw new Error("Codex platform package does not export createCodexInstallPlan()");
+        throw new Error("Codex 平台包未导出 createCodexInstallPlan()");
       }
       return platformModule.createCodexInstallPlan(manifest, {
         manifestSource: manifest.source,
@@ -145,7 +145,7 @@ function createInstallPlan(
       });
     case "qoder":
       if (!platformModule.createQoderInstallPlan) {
-        throw new Error("Qoder platform package does not export createQoderInstallPlan()");
+        throw new Error("Qoder 平台包未导出 createQoderInstallPlan()");
       }
       return platformModule.createQoderInstallPlan(manifest, {
         manifestSource: manifest.source,
@@ -159,7 +159,7 @@ export function registerPlatformCommand(program: Command): void {
 
   platform
     .command("generate")
-    .description("根据 toolkit manifest 生成平台产物")
+    .description("根据工具包清单生成平台产物")
     .argument("<target>", "目标平台 (qwen|codex|qoder)")
     .option("-o, --out <dir>", "输出目录")
     .action(async (target: PlatformName, opts: { out?: string }) => {
@@ -174,12 +174,12 @@ export function registerPlatformCommand(program: Command): void {
         }))
       );
 
-      console.log(`Generated ${plan.artifacts.length} artifact(s) for ${target} in ${outputRoot}`);
+      console.log(`已为 ${target} 在 ${outputRoot} 生成 ${plan.artifacts.length} 个产物`);
     });
 
   platform
     .command("install")
-    .description("根据 toolkit manifest 生成并安装平台产物")
+    .description("根据工具包清单生成并安装平台产物")
     .argument("<target>", "目标平台 (qwen|codex|qoder)")
     .requiredOption("-o, --out <dir>", "安装目标目录")
     .action(async (target: PlatformName, opts: { out: string }) => {
@@ -195,6 +195,6 @@ export function registerPlatformCommand(program: Command): void {
         }))
       );
 
-      console.log(`Installed ${plan.artifacts.length} artifact(s) for ${target} into ${destinationRoot}`);
+      console.log(`已将 ${target} 的 ${plan.artifacts.length} 个产物安装到 ${destinationRoot}`);
     });
 }

@@ -1,7 +1,7 @@
 kind: skill
 name: code-review-and-quality
 title: code-review-and-quality
-description: Conducts multi-axis code review. Use before merging any change. Use when reviewing code written by yourself, another agent, or a human. Use when you need to assess code quality across multiple dimensions before it enters the main branch.
+description: 进行多维度代码审查。适用于合并任何变更之前；也适用于审查自己、其他代理或人类编写的代码，在进入主分支前从多个维度评估质量。
 platforms:
   - qwen
   - codex

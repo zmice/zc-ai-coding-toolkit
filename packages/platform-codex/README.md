@@ -1,9 +1,9 @@
 # @zmice/platform-codex
 
-`@zmice/platform-codex` generates and installs Codex-facing artifacts from `@zmice/toolkit`.
+`@zmice/platform-codex` 会从 `@zmice/toolkit` 生成并安装面向 Codex 的工件。
 
-Current outputs include:
+当前输出包括：
 
 - `AGENTS.md`
 
-This package is a platform adapter layer. Prompt content remains owned by `@zmice/toolkit`.
+此包是平台适配层，提示词内容仍由 `@zmice/toolkit` 维护。

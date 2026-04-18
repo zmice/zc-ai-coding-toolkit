@@ -52,6 +52,6 @@ describe("@zmice/platform-qwen scaffold", () => {
       "/tmp/qwen/QWEN.md",
       "/tmp/qwen/qwen-extension.json",
     ]);
-    assert.ok(plan.artifacts[0]?.content.includes("toolkit assets"));
+    assert.ok(plan.artifacts[0]?.content.includes("工具包资产"));
   });
 });
