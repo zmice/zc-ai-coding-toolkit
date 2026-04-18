@@ -34,7 +34,7 @@ describe("toolkit query helpers", () => {
     );
     assert.deepEqual(
       recommendation?.suggested.map((asset) => asset.id),
-      ["skill:debugging-and-error-recovery"]
+      ["skill:debugging-and-error-recovery", "skill:engineering-principles"]
     );
   });
 });

@@ -10,6 +10,7 @@ requires:
   - skill:test-driven-development
 suggests:
   - skill:debugging-and-error-recovery
+  - skill:engineering-principles
 platforms:
   - qwen
   - codex

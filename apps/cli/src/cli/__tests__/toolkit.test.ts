@@ -81,5 +81,6 @@ describe("toolkit CLI", () => {
     expect(result.stdout).toContain("skill:incremental-implementation");
     expect(result.stdout).toContain("skill:test-driven-development");
     expect(result.stdout).toContain("skill:debugging-and-error-recovery");
+    expect(result.stdout).toContain("skill:engineering-principles");
   });
 });

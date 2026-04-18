@@ -1,0 +1,17 @@
+kind: skill
+name: engineering-principles
+title: 工程原则
+description: 在进入规格、实现、审查和验证之前先校准工程行为原则，强调澄清假设、简单优先、外科式修改、目标导向和证据先于断言。
+tier: recommended
+audience: default
+stability: stable
+platforms:
+  - qwen
+  - codex
+  - qoder
+source:
+  upstream: andrej-karpathy-skills
+  strategy: inspired
+  origin_name: karpathy-guidelines
+  origin_path: skills/karpathy-guidelines/
+  notes: 提炼为跨技能共享的工程原则层，不直接镜像上游正文

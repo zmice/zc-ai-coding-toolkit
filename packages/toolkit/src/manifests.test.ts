@@ -40,9 +40,17 @@ describe("createToolkitManifest", () => {
       getToolkitAssetById(manifest, "skill:sdd-tdd-workflow")?.meta.source?.originPath,
       "skills/sdd-tdd-workflow/SKILL.md"
     );
+    assert.equal(
+      getToolkitAssetById(manifest, "skill:engineering-principles")?.meta.source?.upstream,
+      "andrej-karpathy-skills"
+    );
     assert.deepEqual(manifest.byRelationship.requires["command:build"], [
       "skill:incremental-implementation",
       "skill:test-driven-development"
+    ]);
+    assert.deepEqual(manifest.byRelationship.suggests["command:build"], [
+      "skill:debugging-and-error-recovery",
+      "skill:engineering-principles"
     ]);
     assert.deepEqual(
       getToolkitAssetById(manifest, "command:verify")?.meta.platforms,
@@ -58,6 +66,7 @@ describe("loadToolkitManifest", () => {
 
     assert.ok(manifest.assets.length >= 3);
     assert.ok(Boolean(manifest.byId["skill:sdd-tdd-workflow"]));
+    assert.ok(Boolean(manifest.byId["skill:engineering-principles"]));
     assert.ok(Boolean(manifest.byId["command:spec"]));
     assert.ok(Boolean(manifest.byId["agent:architect"]));
     assert.equal(manifest.byId["skill:sdd-tdd-workflow"]?.meta.tier, "core");

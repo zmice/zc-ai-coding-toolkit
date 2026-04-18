@@ -5,6 +5,8 @@ description: 以测试驱动开发。适用于实现任何逻辑、修复任何 
 tier: core
 audience: default
 stability: stable
+suggests:
+  - skill:engineering-principles
 platforms:
   - qwen
   - codex
