@@ -1,10 +1,11 @@
 # Usage Guide
 
-这份文档回答 3 类高频问题：
+这份文档回答 4 类高频问题：
 
 1. 如何在本仓库内使用 `zc`
 2. 如何把 `zc` 安装到本机并更新
-3. 如何把 toolkit 内容安装到不同 AI 平台的项目目录或全局目录
+3. 各 AI 工具官方推荐的安装 / 更新方式是什么
+4. 如何把 toolkit 内容安装到不同 AI 平台的项目目录或全局目录
 
 ## 1. 在仓库内使用 `zc`
 
@@ -72,26 +73,110 @@ zc --help
 node apps/cli/dist/cli/index.js <subcommand>
 ```
 
-## 3. 给不同 AI 平台安装内容
+## 3. AI 工具官方安装与更新
+
+这一节只记录官方文档已经明确写出的安装 / 更新方式。
+
+### Codex CLI
+
+官方来源：
+
+- OpenAI Help Center
+  https://help.openai.com/en/articles/11096431-openai-codex-ligetting-started
+- OpenAI Codex 仓库配置说明
+  https://github.com/openai/codex/blob/main/docs/config.md
+- OpenAI Introducing Codex
+  https://openai.com/index/introducing-codex/
+
+安装：
+
+```bash
+npm install -g @openai/codex
+```
+
+更新：
+
+```bash
+codex --upgrade
+```
+
+### Qoder CLI
+
+官方来源：
+
+- Qoder CLI Quick Start
+  https://docs.qoder.com/cli/quick-start
+- Qoder Using CLI
+  https://docs.qoder.com/cli/using-cli
+
+安装：
+
+```bash
+curl -fsSL https://qoder.com/install | bash
+# 或
+brew install qoderai/qoder/qodercli --cask
+# 或
+npm install -g @qoder-ai/qodercli
+```
+
+更新：
+
+```bash
+qodercli update
+# 或重新执行官方安装命令
+```
+
+### Qwen Code
+
+官方来源：
+
+- 阿里云帮助中心：安装与配置 Qwen Code
+  https://help.aliyun.com/zh/model-studio/qwen-code
+- 阿里云帮助中心：Qwen Code Coding Plan
+  https://help.aliyun.com/zh/model-studio/qwen-code-coding-plan
+
+安装：
+
+```bash
+# macOS / Linux
+bash -c "$(curl -fsSL https://qwen-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.sh)" -s --source bailian
+```
+
+更新：
+
+```bash
+npm install -g @qwen-code/qwen-code@latest
+```
+
+## 4. 给不同 AI 平台安装内容
 
 `zc platform install <target>` 支持两种模式：
 
 - 项目安装
-  - 不传 `-o`
+  - 不传 `-o`，或显式传 `--scope project`
   - 默认自动解析最近项目根
 - 全局安装
-  - 显式传 `-o <dir>`
-  - 由你指定目标 AI 工具的全局配置目录
+  - 显式传 `--scope global`
+  - 仅在官方文档明确给出默认位置时自动解析
+  - 若官方文档未明确，CLI 会拒绝猜测并要求你显式传 `-o`
 
 ### 产物矩阵
 
 | 平台 | 产物 |
 | --- | --- |
 | `codex` | `AGENTS.md` |
-| `qoder` | `instructions.md` |
+| `qoder` | `AGENTS.md` |
 | `qwen` | `QWEN.md`、`qwen-extension.json` |
 
-### 3.1 项目安装
+### 官方默认位置矩阵
+
+| 平台 | 项目级默认位置 | 全局级默认位置 | 说明 |
+| --- | --- | --- | --- |
+| `codex` | `<project-root>/AGENTS.md` | `~/AGENTS.md` | OpenAI 官方说明将 `~` 和 Git 仓库都列为 `AGENTS.md` 的典型位置。这里的全局路径是基于官方说明做的直接映射 |
+| `qoder` | `<project-root>/AGENTS.md` | `~/.qoder/AGENTS.md` | Qoder 官方文档明确给出 user-level 与 project-level memory 路径 |
+| `qwen` | `<project-root>/QWEN.md` | 无官方默认全局 `QWEN.md` 路径 | 官方文档明确 `/init` 会在项目目录创建 `QWEN.md`，并明确用户级配置文件为 `~/.qwen/settings.json` |
+
+### 4.1 项目安装
 
 进入目标项目目录后直接运行：
 
@@ -100,6 +185,8 @@ cd /path/to/project
 zc platform install codex
 zc platform install qoder
 zc platform install qwen
+# 或显式声明
+zc platform install codex --scope project
 ```
 
 说明：
@@ -115,9 +202,26 @@ zc platform install qwen
 - 给某个单独项目安装平台说明
 - 不希望影响同一台机器上的其他项目
 
-### 3.2 全局安装
+### 4.2 全局安装
 
-全局安装时，显式指定对应工具的全局配置目录：
+对于已在官方文档中明确给出默认位置的平台，可以直接这样装：
+
+```bash
+zc platform install codex --scope global
+zc platform install qoder --scope global
+```
+
+当前行为：
+
+- `codex --scope global`
+  - 默认安装到 `~/AGENTS.md`
+- `qoder --scope global`
+  - 默认安装到 `~/.qoder/AGENTS.md`
+- `qwen --scope global`
+  - CLI 会报错并提示显式传 `-o`
+  - 原因是官方文档没有给出全局 `QWEN.md` 默认位置
+
+如果你已经明确知道目标工具的自定义全局目录，也可以继续显式指定：
 
 ```bash
 zc platform install codex -o <codex-global-root>
@@ -125,23 +229,13 @@ zc platform install qoder -o <qoder-global-root>
 zc platform install qwen -o <qwen-global-root>
 ```
 
-说明：
-
-- 仓库不会替你猜测各工具的全局目录
-- 全局目录由你根据本机工具实际配置决定
-- 安装行为本质上是把平台产物写入你指定的目录
-
-适合：
-
-- 希望多个项目复用同一套平台入口文件
-- 已经明确知道目标工具的全局配置目录
-
-## 4. 安装前先预演
+### 4.3 安装前先预演
 
 推荐先看计划，再决定是否真的落盘：
 
 ```bash
 zc platform install codex --plan
+zc platform install codex --scope global --plan
 zc platform install qoder --plan --format json
 zc platform install qwen -o /tmp/qwen-global --plan --format json
 ```
@@ -200,6 +294,7 @@ pnpm verify
 
 ```bash
 zc platform install codex --plan
+zc platform install codex --scope global --plan
 zc platform install qoder --plan
 zc platform install qwen --plan
 ```

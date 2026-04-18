@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const platformMocks = vi.hoisted(() => ({
   createQwenGenerationPlan: vi.fn(),
   createCodexInstallPlan: vi.fn(),
+  createQoderInstallPlan: vi.fn(),
   loadToolkitManifest: vi.fn(),
   importWorkspaceDistModule: vi.fn(),
   resolveInstallTarget: vi.fn(),
@@ -25,6 +26,7 @@ describe("platform CLI", () => {
   beforeEach(() => {
     platformMocks.createQwenGenerationPlan.mockReset();
     platformMocks.createCodexInstallPlan.mockReset();
+    platformMocks.createQoderInstallPlan.mockReset();
     platformMocks.loadToolkitManifest.mockReset();
     platformMocks.importWorkspaceDistModule.mockReset();
     platformMocks.resolveInstallTarget.mockReset();
@@ -57,6 +59,10 @@ describe("platform CLI", () => {
 
       if (relativePath === "packages/platform-codex/dist/index.js") {
         return { createCodexInstallPlan: platformMocks.createCodexInstallPlan };
+      }
+
+      if (relativePath === "packages/platform-qoder/dist/index.js") {
+        return { createQoderInstallPlan: platformMocks.createQoderInstallPlan };
       }
 
       throw new Error(`unexpected import: ${relativePath}`);
@@ -181,6 +187,7 @@ describe("platform CLI", () => {
     expect(platformMocks.resolveInstallTarget).toHaveBeenCalledWith("codex", {
       out: undefined,
       cwd: process.cwd(),
+      scope: undefined,
     });
     expect(platformMocks.createCodexInstallPlan).toHaveBeenCalledWith(
       expect.anything(),
@@ -216,6 +223,72 @@ describe("platform CLI", () => {
         artifactCount: 1,
         overwrite: "error",
         artifacts: [{ path: "/tmp/install/AGENTS.md", content: "# agents" }],
+      }),
+    );
+
+    logSpy.mockRestore();
+  });
+
+  it("passes global scope through install target resolution and exposes official path hints", async () => {
+    platformMocks.createQoderInstallPlan.mockReturnValue({
+      artifacts: [{ path: "/home/test/.qoder/AGENTS.md", content: "# agents" }],
+    });
+    platformMocks.writeArtifacts.mockResolvedValue({
+      created: 1,
+      overwritten: 0,
+      unchanged: 0,
+      skipped: 0,
+      dryRun: false,
+    });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: "/home/test/.qoder",
+      source: "official-global",
+      hint: "Qoder 官方文档定义用户级 memory 文件位于 `~/.qoder/AGENTS.md`。",
+    });
+
+    await runPlatformInstall("qoder", { scope: "global" });
+
+    expect(platformMocks.resolveInstallTarget).toHaveBeenCalledWith("qoder", {
+      out: undefined,
+      cwd: process.cwd(),
+      scope: "global",
+    });
+    expect(platformMocks.createQoderInstallPlan).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        destinationRoot: "/home/test/.qoder",
+      }),
+    );
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("提示：Qoder 官方文档定义用户级 memory 文件位于 `~/.qoder/AGENTS.md`。"));
+
+    logSpy.mockRestore();
+  });
+
+  it("prints a JSON install plan with scope metadata", async () => {
+    platformMocks.createCodexInstallPlan.mockReturnValue({
+      artifacts: [{ path: "/home/test/AGENTS.md", content: "# agents" }],
+      overwrite: "error",
+    });
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: "/home/test",
+      source: "official-global",
+      hint: "Codex 官方文档将 `~` 视为 AGENTS.md 的典型用户级位置。",
+    });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformInstall("codex", { scope: "global", plan: true, format: "json" });
+
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload).toEqual(
+      expect.objectContaining({
+        mode: "plan",
+        action: "install",
+        target: "codex",
+        scope: "global",
+        root: "/home/test",
+        rootSource: "official-global",
+        hint: "Codex 官方文档将 `~` 视为 AGENTS.md 的典型用户级位置。",
       }),
     );
 

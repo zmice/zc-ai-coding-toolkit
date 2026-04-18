@@ -36,7 +36,7 @@ describe("@zmice/platform-qoder scaffold", () => {
     assert.equal(plan.packageName, packageName);
     assert.equal(plan.manifestSource, "toolkit-manifest");
     assert.deepEqual(plan.matchedAssets.map((asset) => asset.id), ["skill-alpha"]);
-    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [templateFiles.instructions]);
+    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [templateFiles.agents]);
     assert.ok(plan.artifacts[0]?.content.includes("skill-alpha"));
   });
 
@@ -45,6 +45,6 @@ describe("@zmice/platform-qoder scaffold", () => {
 
     assert.equal(plan.destinationRoot, "/tmp/qoder");
     assert.equal(plan.overwrite, "error");
-    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), ["/tmp/qoder/instructions.md"]);
+    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), ["/tmp/qoder/AGENTS.md"]);
   });
 });

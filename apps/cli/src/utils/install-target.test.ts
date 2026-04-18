@@ -50,4 +50,34 @@ describe("resolveInstallTarget", () => {
     assert.equal(result.root, cwd);
     assert.equal(result.source, "cwd");
   });
+
+  it("resolves Codex global scope to the user home directory", async () => {
+    const result = await resolveInstallTarget("codex", { scope: "global" });
+
+    assert.equal(result.source, "official-global");
+    assert.ok(result.root.length > 0);
+    assert.ok(result.hint?.includes("Codex"));
+  });
+
+  it("resolves Qoder global scope to ~/.qoder", async () => {
+    const result = await resolveInstallTarget("qoder", { scope: "global" });
+
+    assert.equal(result.source, "official-global");
+    assert.ok(result.root.endsWith(`${join(".qoder")}`));
+    assert.ok(result.hint?.includes("~/.qoder/AGENTS.md"));
+  });
+
+  it("rejects Qwen global scope when no official default QWEN.md path exists", async () => {
+    await assert.rejects(
+      () => resolveInstallTarget("qwen", { scope: "global" }),
+      /未给出全局 `QWEN\.md` 默认位置/,
+    );
+  });
+
+  it("rejects unknown install scopes", async () => {
+    await assert.rejects(
+      () => resolveInstallTarget("codex", { scope: "workspace" }),
+      /不支持的安装范围：workspace/,
+    );
+  });
 });

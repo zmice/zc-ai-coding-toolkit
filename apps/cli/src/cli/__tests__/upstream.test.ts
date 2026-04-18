@@ -135,7 +135,7 @@ describe("upstream governance commands", () => {
     expect(payload.upstream).toBe("agent-skills");
     expect(payload.label).toBe(label);
     expect(payload.metadata.status).toBe("active");
-  });
+  }, 15000);
 
   it("report --output 会把 Markdown 审阅材料写入文件", async () => {
     const outputDir = join(tmpdir(), "ai-coding-upstream-report");

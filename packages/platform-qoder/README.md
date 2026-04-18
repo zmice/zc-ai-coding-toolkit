@@ -4,7 +4,7 @@
 
 当前输出包括：
 
-- `instructions.md`
+- `AGENTS.md`
 
 ## 边界
 
@@ -16,6 +16,7 @@
 
 ```bash
 zc platform install qoder
+zc platform install qoder --scope global
 zc platform install qoder --plan --format json
 ```
 

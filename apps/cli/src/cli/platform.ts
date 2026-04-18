@@ -11,6 +11,7 @@ import {
 
 type PlatformName = "qwen" | "codex" | "qoder";
 type PlatformOutputFormat = "text" | "json";
+type PlatformInstallScope = "project" | "global";
 
 interface ToolkitAssetMetaLike {
   kind: "skill" | "command" | "agent";
@@ -190,7 +191,7 @@ function summarizeResult(action: "generate" | "install", target: PlatformName, r
   unchanged: number;
   skipped: number;
   dryRun: boolean;
-}, metadata?: { autoResolvedRoot?: boolean; rootSource?: string }): string {
+}, metadata?: { autoResolvedRoot?: boolean; rootSource?: string; hint?: string }): string {
   const mode = result.dryRun ? "预演完成" : "完成";
   const rootLabel =
     action === "install" && metadata?.autoResolvedRoot
@@ -199,15 +200,15 @@ function summarizeResult(action: "generate" | "install", target: PlatformName, r
   return [
     `${target} ${action === "generate" ? "生成" : "安装"}${mode}`,
     rootLabel,
-    `新增 ${result.created}，覆盖 ${result.overwritten}，未变更 ${result.unchanged}${
-      result.dryRun ? `，跳过写入 ${result.skipped}` : ""
-    }`
+    ...(metadata?.hint ? [`提示：${metadata.hint}`] : []),
+    `新增 ${result.created}，覆盖 ${result.overwritten}，未变更 ${result.unchanged}${result.dryRun ? `，跳过写入 ${result.skipped}` : ""}`,
   ].join("\n");
 }
 
 function summarizePlan(action: "generate" | "install", target: PlatformName, root: string, plan: PlatformPlanLike, metadata?: {
   autoResolvedRoot?: boolean;
   rootSource?: string;
+  hint?: string;
 }): string {
   const rootLabel =
     action === "install" && metadata?.autoResolvedRoot
@@ -217,6 +218,7 @@ function summarizePlan(action: "generate" | "install", target: PlatformName, roo
   return [
     `${target} ${action === "generate" ? "生成" : "安装"}计划`,
     rootLabel,
+    ...(metadata?.hint ? [`提示：${metadata.hint}`] : []),
     `产物数量：${plan.artifacts.length}`,
     ...plan.artifacts.map((artifact) => `- ${artifact.path}`),
   ].join("\n");
@@ -225,14 +227,18 @@ function summarizePlan(action: "generate" | "install", target: PlatformName, roo
 function buildPlanPayload(action: "generate" | "install", target: PlatformName, root: string, plan: PlatformPlanLike, metadata?: {
   autoResolvedRoot?: boolean;
   rootSource?: string;
+  hint?: string;
+  scope?: PlatformInstallScope;
 }) {
   return {
     mode: "plan",
     action,
     target,
     root,
+    scope: metadata?.scope ?? "project",
     rootSource: metadata?.rootSource ?? (metadata?.autoResolvedRoot ? "project-root" : "explicit"),
     autoResolvedRoot: metadata?.autoResolvedRoot ?? false,
+    hint: metadata?.hint ?? null,
     artifactCount: plan.artifacts.length,
     overwrite: plan.overwrite ?? "error",
     artifacts: plan.artifacts,
@@ -248,14 +254,18 @@ function buildResultPayload(action: "generate" | "install", target: PlatformName
 }, metadata?: {
   autoResolvedRoot?: boolean;
   rootSource?: string;
+  hint?: string;
+  scope?: PlatformInstallScope;
 }) {
   return {
     mode: "result",
     action,
     target,
     root,
+    scope: metadata?.scope ?? "project",
     rootSource: metadata?.rootSource ?? (metadata?.autoResolvedRoot ? "project-root" : "explicit"),
     autoResolvedRoot: metadata?.autoResolvedRoot ?? false,
+    hint: metadata?.hint ?? null,
     ...result,
   };
 }
@@ -313,11 +323,12 @@ export async function runPlatformGenerate(
 
 export async function runPlatformInstall(
   target: PlatformName,
-  opts: { out?: string; dryRun?: boolean; force?: boolean; plan?: boolean; format?: string }
+  opts: { out?: string; dryRun?: boolean; force?: boolean; plan?: boolean; format?: string; scope?: PlatformInstallScope }
 ): Promise<void> {
   const targetResolution = await resolveInstallTarget(target, {
     out: opts.out,
     cwd: process.cwd(),
+    scope: opts.scope,
   });
   const autoResolvedRoot = targetResolution.source !== "explicit";
   const destinationRoot = resolve(targetResolution.root);
@@ -333,10 +344,13 @@ export async function runPlatformInstall(
       buildPlanPayload("install", target, destinationRoot, plan, {
         autoResolvedRoot,
         rootSource: targetResolution.source,
+        hint: targetResolution.hint,
+        scope: opts.scope ?? "project",
       }),
       summarizePlan("install", target, destinationRoot, plan, {
         autoResolvedRoot,
         rootSource: targetResolution.source,
+        hint: targetResolution.hint,
       })
     );
     return;
@@ -359,10 +373,13 @@ export async function runPlatformInstall(
       buildResultPayload("install", target, destinationRoot, result, {
         autoResolvedRoot,
         rootSource: targetResolution.source,
+        hint: targetResolution.hint,
+        scope: opts.scope ?? "project",
       }),
       summarizeResult("install", target, destinationRoot, result, {
         autoResolvedRoot,
         rootSource: targetResolution.source,
+        hint: targetResolution.hint,
       })
     );
   } catch (error) {
@@ -394,6 +411,7 @@ export function registerPlatformCommand(program: Command): void {
     .description("根据工具包清单生成并安装平台产物")
     .argument("<target>", "目标平台 (qwen|codex|qoder)")
     .option("-o, --out <dir>", "安装目标目录，默认自动解析最近项目根")
+    .option("--scope <scope>", "安装范围：project | global", "project")
     .option("--plan", "只输出安装计划，不落盘")
     .option("--format <format>", "输出格式：text | json", "text")
     .option("--dry-run", "仅预览将要安装的产物，不落盘")

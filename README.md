@@ -47,6 +47,8 @@ node apps/cli/dist/cli/index.js toolkit recommend build
 # 生成 / 安装平台产物
 node apps/cli/dist/cli/index.js platform generate qwen --plan --format json
 node apps/cli/dist/cli/index.js platform install codex --plan --format json
+node apps/cli/dist/cli/index.js platform install codex --scope global
+node apps/cli/dist/cli/index.js platform install qoder --scope global
 
 # 查看上游治理状态
 pnpm upstream -- list
@@ -123,6 +125,7 @@ node apps/cli/dist/cli/index.js toolkit recommend <id>
 ```bash
 node apps/cli/dist/cli/index.js platform generate qwen -o /tmp/qwen-out
 node apps/cli/dist/cli/index.js platform install codex -o /tmp/codex-out
+node apps/cli/dist/cli/index.js platform install codex --scope global
 node apps/cli/dist/cli/index.js platform install qoder --plan --format json
 ```
 

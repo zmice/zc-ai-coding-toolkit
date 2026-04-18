@@ -29,7 +29,7 @@ export type {
 };
 
 export const templateFiles = {
-  instructions: "instructions.md",
+  agents: "AGENTS.md",
 } as const;
 
 function renderAssetList(assets: readonly ToolkitAssetLike[]): string {
@@ -42,7 +42,7 @@ function renderAssetList(assets: readonly ToolkitAssetLike[]): string {
     .join("\n");
 }
 
-function renderInstructionsFile(manifestSource: string, assets: readonly ToolkitAssetLike[]): string {
+function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetLike[]): string {
   return `# Qoder 平台说明
 
 此工件由工具包资产生成。
@@ -69,8 +69,8 @@ export function createQoderGenerationPlan(
     matchedAssets,
     artifacts: [
       {
-        path: templateFiles.instructions,
-        content: renderInstructionsFile(manifestSource, matchedAssets),
+        path: templateFiles.agents,
+        content: renderAgentsFile(manifestSource, matchedAssets),
       },
     ],
   };

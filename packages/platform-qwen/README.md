@@ -19,6 +19,7 @@
 zc platform generate qwen -o /tmp/qwen-out
 zc platform generate qwen --plan --format json
 zc platform install qwen
+zc platform install qwen -o <dir>
 ```
 
 项目安装 / 全局安装的详细步骤见：

@@ -33,7 +33,7 @@ Exception:
 | `commands/` | `packages/toolkit/src/content/commands/` |
 | `agents/` | `packages/toolkit/src/content/agents/` |
 | `QWEN.md` | `packages/platform-qwen` generation output |
-| `instructions.md` | `packages/platform-qoder` generation output |
+| `instructions.md` | retired legacy root artifact; Qoder 平台现使用 `packages/platform-qoder` 生成 `AGENTS.md` |
 | `UPSTREAM.md` | `references/` governance model |
 | `install.sh` / `install.ps1` | removed from root; installation flows move through `apps/cli` |
 | `qwen-extension.json` | removed from root; generation belongs to `packages/platform-qwen` |

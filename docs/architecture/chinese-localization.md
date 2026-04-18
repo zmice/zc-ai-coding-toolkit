@@ -74,7 +74,7 @@ throw new Error("缺少必填参数：平台名称");
   - 是否对现有 meta 字段（如 `description`）进行大规模中文重写
 - Never:
   - 修改命令名或子命令名为中文
-  - 修改平台要求的固定产物名，如 `QWEN.md`、`AGENTS.md`、`instructions.md`
+  - 修改平台要求的固定产物名，如 `QWEN.md`、`AGENTS.md`、`qwen-extension.json`
   - 修改 JSON 键、schema 字段名、代码 API 标识符为中文
 
 ## Success Criteria

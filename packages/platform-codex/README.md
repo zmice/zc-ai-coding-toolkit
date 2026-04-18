@@ -17,6 +17,7 @@
 ```bash
 zc platform install codex -o /tmp/codex-out
 zc platform install codex
+zc platform install codex --scope global
 zc platform install codex --plan --format json
 ```
 
