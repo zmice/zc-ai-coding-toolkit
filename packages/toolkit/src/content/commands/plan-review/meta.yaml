@@ -5,6 +5,11 @@ description: 从产品、工程、设计、DevEx 多个角度评审 Spec/Plan，
 tier: recommended
 audience: default
 stability: stable
+requires:
+  - skill:multi-perspective-review
+suggests:
+  - command:spec
+  - command:task-plan
 platforms:
   - qwen
   - codex

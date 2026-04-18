@@ -5,6 +5,11 @@ description: 前端 UI 开发辅助，涵盖组件设计、样式实现、响应
 tier: recommended
 audience: default
 stability: stable
+requires:
+  - skill:frontend-ui-engineering
+suggests:
+  - command:qa
+  - skill:browser-qa-testing
 platforms:
   - qwen
   - codex

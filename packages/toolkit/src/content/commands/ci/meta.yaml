@@ -5,6 +5,10 @@ description: 搭建或优化 CI/CD 管道，配置质量门禁、自动化测试
 tier: recommended
 audience: default
 stability: stable
+requires:
+  - skill:ci-cd-and-automation
+suggests:
+  - skill:verification-before-completion
 platforms:
   - qwen
   - codex

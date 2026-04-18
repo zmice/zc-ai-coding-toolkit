@@ -5,6 +5,10 @@ description: 执行真实浏览器自动化 QA 测试，覆盖用户流程、交
 tier: recommended
 audience: default
 stability: stable
+requires:
+  - skill:browser-qa-testing
+suggests:
+  - skill:verification-before-completion
 platforms:
   - qwen
   - codex
