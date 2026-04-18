@@ -179,16 +179,16 @@ export class WorkerManager {
     const escaped = prompt.replace(/'/g, "'\\''");
 
     if (cli === "codex") {
-      const parts = ["codex", "--quiet"];
+      const parts = ["codex", "exec"];
       if (model) parts.push("--model", model);
       parts.push(`'${escaped}'`);
       return parts.join(" ");
     }
 
     if (cli === "qwen-code") {
-      const parts = ["qwen", "chat", "--agent"];
+      const parts = ["qwen"];
       if (model) parts.push("--model", model);
-      parts.push("--message", `'${escaped}'`);
+      parts.push("-p", `'${escaped}'`);
       return parts.join(" ");
     }
 

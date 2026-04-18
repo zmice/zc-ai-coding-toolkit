@@ -127,11 +127,11 @@ describe("WorkerManager", () => {
 
       expect(session.sendKeys).toHaveBeenCalledWith(
         "zc-test-team:1",
-        expect.stringContaining("qwen chat --agent"),
+        expect.stringContaining("qwen"),
       );
       expect(session.sendKeys).toHaveBeenCalledWith(
         "zc-test-team:1",
-        expect.stringContaining("--message"),
+        expect.stringContaining("-p"),
       );
     });
 

@@ -26,9 +26,9 @@ export class QwenCodeAdapter implements CLIAdapter {
   }
 
   async spawn(opts: SpawnOptions): Promise<WorkerProcess> {
-    const args: string[] = ["chat", "--agent"];
+    const args: string[] = [];
     if (opts.model) args.push("--model", opts.model);
-    if (opts.prompt) args.push("--message", opts.prompt);
+    if (opts.prompt) args.push("-p", opts.prompt);
     if (opts.args) args.push(...opts.args);
 
     const proc = spawn("qwen", args, {
@@ -59,7 +59,7 @@ export class QwenCodeAdapter implements CLIAdapter {
 
   async query(prompt: string, opts?: { timeout?: number }): Promise<string> {
     const timeout = opts?.timeout ?? 15000;
-    const { stdout } = await execAsync(`qwen chat --message ${JSON.stringify(prompt)}`, { timeout });
+    const { stdout } = await execAsync(`qwen -p ${JSON.stringify(prompt)}`, { timeout });
     return stdout.trim();
   }
 }

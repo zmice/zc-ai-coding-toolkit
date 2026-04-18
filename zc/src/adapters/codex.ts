@@ -26,7 +26,7 @@ export class CodexAdapter implements CLIAdapter {
   }
 
   async spawn(opts: SpawnOptions): Promise<WorkerProcess> {
-    const args: string[] = ["--quiet"];
+    const args: string[] = ["exec"];
     if (opts.model) args.push("--model", opts.model);
     if (opts.prompt) args.push(opts.prompt);
     if (opts.args) args.push(...opts.args);
@@ -60,7 +60,7 @@ export class CodexAdapter implements CLIAdapter {
 
   async query(prompt: string, opts?: { timeout?: number }): Promise<string> {
     const timeout = opts?.timeout ?? 15000;
-    const { stdout } = await execAsync(`codex --quiet ${JSON.stringify(prompt)}`, { timeout });
+    const { stdout } = await execAsync(`codex exec ${JSON.stringify(prompt)}`, { timeout });
     return stdout.trim();
   }
 }
