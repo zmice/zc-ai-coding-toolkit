@@ -5,6 +5,8 @@ description: Git 工作流规范。在进行任何代码变更时使用。包括
 tier: recommended
 audience: default
 stability: stable
+suggests:
+  - skill:verification-before-completion
 platforms:
   - qwen
   - codex

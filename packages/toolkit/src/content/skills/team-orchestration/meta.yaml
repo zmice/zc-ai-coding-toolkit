@@ -5,6 +5,10 @@ description: 使用 zc CLI 进行多 CLI 团队编排。基于 tmux + git worktr
 tier: experimental
 audience: advanced
 stability: evolving
+suggests:
+  - skill:planning-and-task-breakdown
+  - skill:parallel-agent-dispatch
+  - skill:verification-before-completion
 platforms:
   - qwen
   - codex

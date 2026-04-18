@@ -5,6 +5,8 @@ description: 在 AI 执行潜在破坏性操作时施加安全护栏。适用于
 tier: recommended
 audience: default
 stability: stable
+suggests:
+  - skill:verification-before-completion
 platforms:
   - qwen
   - codex
