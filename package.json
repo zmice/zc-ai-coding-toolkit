@@ -1,0 +1,19 @@
+{
+  "name": "ai-coding-toolkit-workspace",
+  "private": true,
+  "packageManager": "pnpm@10.13.1",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "build": "turbo run build",
+    "generate": "turbo run generate",
+    "verify": "turbo run verify",
+    "changeset": "changeset",
+    "release": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.4",
+    "turbo": "^2.5.3"
+  }
+}

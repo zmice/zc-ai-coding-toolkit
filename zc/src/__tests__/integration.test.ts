@@ -2,27 +2,22 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-
-const execFileAsync = promisify(execFile);
 
 // ────────────────────────────────────────────────────────
 // 1. CLI 入口测试
 // ────────────────────────────────────────────────────────
 describe("CLI entry point", () => {
-  const cliPath = resolve(__dirname, "../../dist/cli/index.js");
-
   it("zc --help outputs all subcommands", async () => {
-    const { stdout } = await execFileAsync("node", [cliPath, "--help"]);
+    const { createProgram } = await import("../cli/index.js");
+    const stdout = createProgram().helpInformation();
     for (const cmd of ["run", "team", "task", "msg", "doctor", "setup"]) {
       expect(stdout).toContain(cmd);
     }
   });
 
   it("zc --version outputs version number", async () => {
-    const { stdout } = await execFileAsync("node", [cliPath, "--version"]);
-    expect(stdout.trim()).toMatch(/^\d+\.\d+\.\d+$/);
+    const { createProgram } = await import("../cli/index.js");
+    expect(createProgram().version()).toMatch(/^\d+\.\d+\.\d+$/);
   });
 });
 

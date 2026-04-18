@@ -117,7 +117,17 @@ describe("WorkerManager", () => {
 
       expect(session.sendKeys).toHaveBeenCalledWith(
         "zc-test-team:1",
-        expect.stringContaining("--model gpt-4o"),
+        expect.stringContaining("--model 'gpt-4o'"),
+      );
+    });
+
+    it("should shell-escape model values before sending the command", async () => {
+      await manager.spawnWorker("w1", "codex");
+      await manager.assignTask("w1", "t1", "do stuff", "bad'; echo hacked; '");
+
+      expect(session.sendKeys).toHaveBeenCalledWith(
+        "zc-test-team:1",
+        expect.stringContaining("--model 'bad'\\''; echo hacked; '\\'''"),
       );
     });
 
@@ -188,6 +198,33 @@ describe("WorkerManager", () => {
       const healthy = await manager.healthCheck("w1");
       expect(healthy).toBe(false);
       expect(manager.listWorkers()[0].status).toBe("dead");
+    });
+  });
+
+  describe("task completion tracking", () => {
+    it("should report a busy worker as completed when the task done marker is present", async () => {
+      await manager.spawnWorker("w1", "codex");
+      await manager.assignTask("w1", "task-1", "implement feature X");
+      vi.mocked(session.captureOutput).mockResolvedValueOnce(
+        'work in progress\n__ZC_TASK_DONE__:task-1:0\n',
+      );
+
+      const result = await manager.getTaskState("w1");
+
+      expect(result.status).toBe("completed");
+      expect(result.exitCode).toBe(0);
+    });
+
+    it("should allow a completed worker to be returned to idle", async () => {
+      await manager.spawnWorker("w1", "codex");
+      await manager.assignTask("w1", "task-1", "implement feature X");
+
+      manager.markIdle("w1", 0);
+
+      const worker = manager.listWorkers()[0];
+      expect(worker.status).toBe("idle");
+      expect(worker.currentTask).toBeUndefined();
+      expect(worker.lastExitCode).toBe(0);
     });
   });
 

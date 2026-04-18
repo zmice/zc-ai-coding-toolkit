@@ -43,7 +43,6 @@ export class Orchestrator {
   private teamName = "";
   private model?: string;
   private running = false;
-  private dispatchTimer: ReturnType<typeof setTimeout> | null = null;
 
   /** Cached skills discovered at team startup */
   private availableSkills: SkillMeta[] = [];
@@ -120,9 +119,8 @@ export class Orchestrator {
     // 7. Persist initial state
     await this.persistState();
 
-    // 8. Start dispatch loop
+    // 8. Mark team ready; the caller decides when to run the dispatch loop.
     this.running = true;
-    this.scheduleDispatch();
   }
 
   /**
@@ -204,11 +202,6 @@ export class Orchestrator {
   async shutdown(): Promise<void> {
     this.running = false;
 
-    if (this.dispatchTimer) {
-      clearTimeout(this.dispatchTimer);
-      this.dispatchTimer = null;
-    }
-
     // Release all active assignments back to pending
     for (const [, { taskId, token }] of this.activeAssignments) {
       try {
@@ -239,39 +232,47 @@ export class Orchestrator {
 
   // --- private helpers ---
 
-  private scheduleDispatch(): void {
-    if (!this.running) return;
-    this.dispatchTimer = setTimeout(async () => {
-      try {
-        await this.dispatchOnce();
-      } catch {
-        // keep loop alive
-      }
-      this.scheduleDispatch();
-    }, DISPATCH_INTERVAL_MS);
-  }
-
   private async checkWorkerHealth(): Promise<void> {
     const workers = this.workerManager.listWorkers();
 
     for (const w of workers) {
       if (w.status === "busy") {
-        const alive = await this.workerManager.healthCheck(w.id);
-        if (!alive) {
-          // Worker died while running a task → mark task as failed
-          const assignment = this.activeAssignments.get(w.id);
-          if (assignment) {
-            try {
-              await this.taskQueue.transition(
-                assignment.taskId,
-                assignment.token,
-                "failed",
-              );
-            } catch {
-              // ignore
-            }
-            this.activeAssignments.delete(w.id);
+        const taskState = await this.workerManager.getTaskState(w.id);
+        const assignment = this.activeAssignments.get(w.id);
+
+        if (!assignment) {
+          if (taskState.status === "completed" || taskState.status === "failed") {
+            this.workerManager.markIdle(w.id, taskState.exitCode);
           }
+          continue;
+        }
+
+        if (taskState.status === "completed" || taskState.status === "failed") {
+          try {
+            await this.taskQueue.transition(
+              assignment.taskId,
+              assignment.token,
+              taskState.status === "completed" ? "completed" : "failed",
+            );
+          } catch {
+            // ignore
+          }
+          this.workerManager.markIdle(w.id, taskState.exitCode);
+          this.activeAssignments.delete(w.id);
+          continue;
+        }
+
+        if (taskState.status === "dead") {
+          try {
+            await this.taskQueue.transition(
+              assignment.taskId,
+              assignment.token,
+              "failed",
+            );
+          } catch {
+            // ignore
+          }
+          this.activeAssignments.delete(w.id);
         }
       }
     }

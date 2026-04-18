@@ -131,6 +131,21 @@ describe("Orchestrator", () => {
 
       await orch.shutdown();
     });
+
+    it("should not start dispatching work until the dispatch loop is explicitly run", async () => {
+      vi.useFakeTimers();
+
+      const spec = makeSpec({ workers: [{ id: "w1", cli: "codex" }] });
+      await orch.startTeam(spec);
+      const dispatchSpy = vi.spyOn(orch, "dispatchOnce");
+
+      await vi.advanceTimersByTimeAsync(3100);
+
+      expect(dispatchSpy).not.toHaveBeenCalled();
+
+      vi.useRealTimers();
+      await orch.shutdown();
+    });
   });
 
   describe("dispatchOnce", () => {
@@ -214,6 +229,30 @@ describe("Orchestrator", () => {
       // Task should be back to pending, not stuck in_progress
       expect(status.tasks.running).toBe(0);
       expect(status.tasks.pending).toBe(3);
+
+      await orch.shutdown();
+    });
+
+    it("should complete a finished task and dispatch the next one with the same worker", async () => {
+      const spec = makeSpec({ workers: [{ id: "w1", cli: "codex" }] });
+      await orch.startTeam(spec);
+
+      await orch.dispatchOnce();
+      let status = await orch.getStatus();
+      expect(status.tasks.running).toBe(1);
+      expect(status.tasks.done).toBe(0);
+
+      const firstTask = orch.getTaskQueue().list()[0];
+      vi.mocked(session.captureOutput).mockResolvedValueOnce(
+        `output\n__ZC_TASK_DONE__:${firstTask.id}:0\n`,
+      );
+
+      await orch.dispatchOnce();
+
+      status = await orch.getStatus();
+      expect(status.tasks.done).toBe(1);
+      expect(status.tasks.running).toBe(1);
+      expect(status.tasks.pending).toBe(1);
 
       await orch.shutdown();
     });

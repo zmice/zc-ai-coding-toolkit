@@ -1,6 +1,6 @@
 {
   "name": "@zmice/zc",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Orchestrate multiple AI CLI tools (Codex, Qwen Code, etc.) as a collaborative team — parallel task dispatch, skill matching, git worktree isolation, and inter-agent messaging",
   "keywords": ["cli", "orchestration", "tmux", "team", "ai", "codex", "multi-agent"],
   "license": "MIT",

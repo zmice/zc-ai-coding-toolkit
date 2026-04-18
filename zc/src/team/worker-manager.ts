@@ -11,6 +11,12 @@ export interface WorkerInfo {
   branch: string;
   pid?: number;
   currentTask?: string;
+  lastExitCode?: number;
+}
+
+export interface WorkerTaskState {
+  status: "idle" | "running" | "completed" | "failed" | "dead";
+  exitCode?: number;
 }
 
 export class WorkerManager {
@@ -84,7 +90,7 @@ export class WorkerManager {
     }
 
     // Build CLI command string based on adapter name
-    const cmd = this.buildCliCommand(worker.cli, prompt, model);
+    const cmd = this.buildCliCommand(worker.cli, taskId, prompt, model);
 
     // Send command to tmux pane
     await this.sessionManager.sendKeys(worker.paneId, cmd);
@@ -92,6 +98,7 @@ export class WorkerManager {
     // Update worker status
     worker.status = "busy";
     worker.currentTask = taskId;
+    worker.lastExitCode = undefined;
   }
 
   /**
@@ -114,6 +121,46 @@ export class WorkerManager {
       worker.status = "dead";
       return false;
     }
+  }
+
+  async getTaskState(workerId: string): Promise<WorkerTaskState> {
+    const worker = this.getWorkerOrThrow(workerId);
+
+    if (worker.status === "dead") {
+      return { status: "dead", exitCode: worker.lastExitCode };
+    }
+
+    if (worker.status !== "busy" || !worker.currentTask) {
+      return { status: "idle", exitCode: worker.lastExitCode };
+    }
+
+    try {
+      const output = await this.sessionManager.captureOutput(worker.paneId, 50);
+      const exitCode = this.parseExitCode(output, worker.currentTask);
+
+      if (exitCode === undefined) {
+        return { status: "running" };
+      }
+
+      return {
+        status: exitCode === 0 ? "completed" : "failed",
+        exitCode,
+      };
+    } catch {
+      worker.status = "dead";
+      return { status: "dead", exitCode: worker.lastExitCode };
+    }
+  }
+
+  markIdle(workerId: string, exitCode?: number): void {
+    const worker = this.getWorkerOrThrow(workerId);
+    if (worker.status === "dead") {
+      return;
+    }
+
+    worker.status = "idle";
+    worker.currentTask = undefined;
+    worker.lastExitCode = exitCode;
   }
 
   /**
@@ -174,28 +221,63 @@ export class WorkerManager {
     return worker;
   }
 
-  private buildCliCommand(cli: string, prompt: string, model?: string): string {
-    // Escape prompt for shell
-    const escaped = prompt.replace(/'/g, "'\\''");
+  private buildCliCommand(
+    cli: string,
+    taskId: string,
+    prompt: string,
+    model?: string,
+  ): string {
+    const escapedPrompt = this.quoteShellArg(prompt);
+
+    let baseCommand: string;
 
     if (cli === "codex") {
       const parts = ["codex", "exec"];
-      if (model) parts.push("--model", model);
-      parts.push(`'${escaped}'`);
-      return parts.join(" ");
-    }
-
-    if (cli === "qwen-code") {
+      if (model) parts.push("--model", this.quoteShellArg(model));
+      parts.push(escapedPrompt);
+      baseCommand = parts.join(" ");
+    } else if (cli === "qwen-code") {
       const parts = ["qwen"];
-      if (model) parts.push("--model", model);
-      parts.push("-p", `'${escaped}'`);
-      return parts.join(" ");
+      if (model) parts.push("--model", this.quoteShellArg(model));
+      parts.push("-p", escapedPrompt);
+      baseCommand = parts.join(" ");
+    } else {
+      // Fallback: just use cli name with prompt
+      const parts = [cli];
+      if (model) parts.push("--model", this.quoteShellArg(model));
+      parts.push(escapedPrompt);
+      baseCommand = parts.join(" ");
     }
 
-    // Fallback: just use cli name with prompt
-    const parts = [cli];
-    if (model) parts.push("--model", model);
-    parts.push(`'${escaped}'`);
-    return parts.join(" ");
+    return `${baseCommand}; printf "\\n${this.getCompletionMarker(taskId)}%s\\n" "$?"`;
+  }
+
+  private getCompletionMarker(taskId: string): string {
+    return `__ZC_TASK_DONE__:${taskId}:`;
+  }
+
+  private parseExitCode(output: string, taskId: string): number | undefined {
+    const marker = this.escapeForRegex(this.getCompletionMarker(taskId));
+    const matches = output.match(new RegExp(`${marker}(-?\\d+)`, "g"));
+    if (!matches || matches.length === 0) {
+      return undefined;
+    }
+
+    const lastMatch = matches[matches.length - 1];
+    const exitCode = lastMatch.match(/(-?\d+)$/)?.[1];
+    if (!exitCode) {
+      return undefined;
+    }
+
+    const parsed = Number(exitCode);
+    return Number.isNaN(parsed) ? undefined : parsed;
+  }
+
+  private escapeForRegex(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  private quoteShellArg(value: string): string {
+    return `'${value.replace(/'/g, "'\\''")}'`;
   }
 }

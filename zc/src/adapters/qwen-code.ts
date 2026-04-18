@@ -18,8 +18,8 @@ export class QwenCodeAdapter implements CLIAdapter {
 
   async version(): Promise<string> {
     try {
-      const { stdout } = await execAsync("qwen --version");
-      return stdout.trim();
+      const { stdout, stderr } = await execAsync("qwen --version");
+      return stdout.trim() || stderr.trim() || "unknown version";
     } catch {
       return "not installed";
     }

@@ -4,6 +4,7 @@ import { SessionManager } from "../runtime/session-manager.js";
 import { WorktreeManager } from "../runtime/worktree-manager.js";
 import { readJson } from "../runtime/state.js";
 import { resolve } from "node:path";
+import { rm } from "node:fs/promises";
 
 function getStateDir(): string {
   return resolve(process.cwd(), ".zc");
@@ -25,6 +26,86 @@ function defaultTeamName(): string {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
   return `team-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+}
+
+export async function shutdownTeamRuntime(
+  name: string,
+  stateDir: string,
+  session: Pick<SessionManager, "killSession">,
+  worktree: Pick<WorktreeManager, "cleanup">,
+): Promise<void> {
+  await session.killSession(`zc-${name}`);
+  await worktree.cleanup(name);
+  await rm(resolve(stateDir, name), { recursive: true, force: true });
+}
+
+type SignalName = "SIGINT" | "SIGTERM";
+
+interface SignalProcess {
+  exitCode?: string | number | null;
+  on(event: SignalName, listener: () => void | Promise<void>): unknown;
+  removeListener(event: SignalName, listener: () => void | Promise<void>): unknown;
+}
+
+async function cleanupStartedTeamRuntime(
+  name: string,
+  stateDir: string,
+  orchestrator: Pick<Orchestrator, "shutdown">,
+  session: Pick<SessionManager, "killSession">,
+  worktree: Pick<WorktreeManager, "cleanup">,
+): Promise<void> {
+  try {
+    await orchestrator.shutdown();
+  } finally {
+    await shutdownTeamRuntime(name, stateDir, session, worktree);
+  }
+}
+
+export async function runTeamRuntime(
+  spec: TeamSpec,
+  stateDir: string,
+  session: Pick<SessionManager, "killSession">,
+  worktree: Pick<WorktreeManager, "cleanup">,
+  orchestrator: Pick<Orchestrator, "startTeam" | "runDispatchLoop" | "shutdown">,
+  signalProcess: SignalProcess,
+): Promise<void> {
+  let cleanupPromise: Promise<void> | null = null;
+
+  const cleanup = (): Promise<void> => {
+    cleanupPromise ??= cleanupStartedTeamRuntime(
+      spec.name,
+      stateDir,
+      orchestrator,
+      session,
+      worktree,
+    );
+    return cleanupPromise;
+  };
+
+  const handleSignal = (signal: SignalName) => async (): Promise<void> => {
+    if (signalProcess.exitCode === undefined) {
+      signalProcess.exitCode = signal === "SIGINT" ? 130 : 143;
+    }
+    await cleanup();
+  };
+
+  const sigintHandler = handleSignal("SIGINT");
+  const sigtermHandler = handleSignal("SIGTERM");
+
+  signalProcess.on("SIGINT", sigintHandler);
+  signalProcess.on("SIGTERM", sigtermHandler);
+
+  try {
+    await orchestrator.startTeam(spec);
+    console.log(`Team "${spec.name}" started. Entering dispatch loop...`);
+    await orchestrator.runDispatchLoop();
+  } catch (err) {
+    await cleanup();
+    throw err;
+  } finally {
+    signalProcess.removeListener("SIGINT", sigintHandler);
+    signalProcess.removeListener("SIGTERM", sigtermHandler);
+  }
 }
 
 export function registerTeamCommand(program: Command): void {
@@ -69,9 +150,7 @@ export function registerTeamCommand(program: Command): void {
       const orch = new Orchestrator(getStateDir(), session, worktree);
 
       try {
-        await orch.startTeam(spec);
-        console.log(`Team "${spec.name}" started. Entering dispatch loop...`);
-        await orch.runDispatchLoop();
+        await runTeamRuntime(spec, getStateDir(), session, worktree, orch, process);
       } catch (err) {
         console.error("Failed to start team:", err instanceof Error ? err.message : err);
         process.exitCode = 1;
@@ -141,12 +220,9 @@ export function registerTeamCommand(program: Command): void {
 
       const session = new SessionManager();
       const worktree = new WorktreeManager(process.cwd());
-      const orch = new Orchestrator(getStateDir(), session, worktree);
 
       try {
-        // Kill the tmux session directly as a fallback
-        await session.killSession(`zc-${name}`);
-        await worktree.cleanup(name);
+        await shutdownTeamRuntime(name, getStateDir(), session, worktree);
         console.log(`Team "${name}" shut down.`);
       } catch (err) {
         console.error("Failed to shutdown team:", err instanceof Error ? err.message : err);

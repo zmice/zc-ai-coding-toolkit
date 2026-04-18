@@ -4,3 +4,5 @@ node_modules/
 zc/node_modules/
 zc/dist/
 .zc/
+.codex
+review_diff.txt
