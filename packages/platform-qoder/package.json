@@ -1,0 +1,45 @@
+{
+  "name": "@zmice/platform-qoder",
+  "version": "0.1.0",
+  "description": "Manifest-driven generation and install scaffolding for Qoder platform artifacts",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./generate": {
+      "types": "./dist/generate.d.ts",
+      "default": "./dist/generate.js"
+    },
+    "./install": {
+      "types": "./dist/install.d.ts",
+      "default": "./dist/install.js"
+    }
+  },
+  "files": [
+    "dist",
+    "templates",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "generate": "tsc -p tsconfig.json",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "pnpm run build && node --test dist/index.test.js",
+    "verify": "pnpm run lint && pnpm run test && pnpm run build && pnpm run generate"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

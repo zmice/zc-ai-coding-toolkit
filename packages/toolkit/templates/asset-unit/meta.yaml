@@ -1,0 +1,6 @@
+kind: skill
+name: example-skill
+title: Example Skill
+description: Describe the behavior this asset encodes.
+tags:
+  - example

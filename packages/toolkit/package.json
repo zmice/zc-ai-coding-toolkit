@@ -1,0 +1,37 @@
+{
+  "name": "@zmice/toolkit",
+  "version": "0.1.0",
+  "description": "Source-of-truth content package for AI Coding Toolkit skills, commands, and agents",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src/content",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "pnpm run build && node --test dist/loaders.test.js dist/manifests.test.js",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "generate": "pnpm run build",
+    "verify": "pnpm run lint && pnpm run test && pnpm run build && pnpm run generate"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

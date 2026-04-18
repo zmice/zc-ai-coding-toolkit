@@ -1,0 +1,8 @@
+kind: command
+name: guard
+title: guard
+description: 同时激活 Careful + Freeze 的组合防护，适用于操作生产环境，提供最高级别的安全保护。
+platforms:
+  - qwen
+  - codex
+  - qoder

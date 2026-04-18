@@ -1,0 +1,8 @@
+kind: command
+name: idea
+title: idea
+description: 将模糊的想法或需求细化为具体、可执行的技术方案，通过结构化提问帮你理清思路。
+platforms:
+  - qwen
+  - codex
+  - qoder

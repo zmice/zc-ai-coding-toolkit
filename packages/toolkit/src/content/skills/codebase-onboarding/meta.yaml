@@ -1,0 +1,8 @@
+kind: skill
+name: codebase-onboarding
+title: codebase-onboarding
+description: Use when entering an unfamiliar codebase or starting work on a new project. Systematically explores project structure, identifies entry points, maps dependencies, and produces a concise project overview that serves as context for subsequent development tasks.
+platforms:
+  - qwen
+  - codex
+  - qoder

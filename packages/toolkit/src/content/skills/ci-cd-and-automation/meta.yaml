@@ -1,0 +1,8 @@
+kind: skill
+name: ci-cd-and-automation
+title: ci-cd-and-automation
+description: CI/CD 管道搭建与自动化。在搭建或修改构建和部署管道时使用。用于自动化质量门禁、配置 CI 测试运行器、制定部署策略。
+platforms:
+  - qwen
+  - codex
+  - qoder

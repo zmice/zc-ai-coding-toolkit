@@ -1,0 +1,8 @@
+kind: command
+name: commit
+title: commit
+description: 引导规范化 Git 提交，确保原子提交、描述性消息和提交前检查。
+platforms:
+  - qwen
+  - codex
+  - qoder

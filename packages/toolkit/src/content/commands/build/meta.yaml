@@ -1,0 +1,8 @@
+kind: command
+name: build
+title: build
+description: 按 TDD 红绿重构循环进行增量构建，每次只实现一个任务，确保系统始终可编译、测试通过。
+platforms:
+  - qwen
+  - codex
+  - qoder

@@ -1,0 +1,8 @@
+kind: command
+name: onboard
+title: onboard
+description: 系统化地理解一个陌生代码库，通过目录扫描、入口定位、依赖分析和模式识别，快速建立项目全局认知。
+platforms:
+  - qwen
+  - codex
+  - qoder

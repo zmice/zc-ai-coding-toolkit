@@ -1,0 +1,8 @@
+kind: command
+name: plan-review
+title: plan-review
+description: 从产品、工程、设计、DevEx 多个角度评审 Spec/Plan，发现单一视角容易遗漏的问题。
+platforms:
+  - qwen
+  - codex
+  - qoder

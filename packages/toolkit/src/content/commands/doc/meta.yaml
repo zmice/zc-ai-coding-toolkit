@@ -1,0 +1,8 @@
+kind: command
+name: doc
+title: doc
+description: 生成项目文档或架构决策记录（ADR），确保知识可传递。
+platforms:
+  - qwen
+  - codex
+  - qoder

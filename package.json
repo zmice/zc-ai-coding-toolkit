@@ -3,17 +3,17 @@
   "private": true,
   "packageManager": "pnpm@10.13.1",
   "scripts": {
-    "dev": "turbo run dev --parallel",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
-    "build": "turbo run build",
-    "generate": "turbo run generate",
-    "verify": "turbo run verify",
+    "dev": "pnpm --dir apps/cli dev",
+    "lint": "node scripts/run-workspace-task.mjs lint",
+    "test": "node scripts/run-workspace-task.mjs test",
+    "build": "node scripts/run-workspace-task.mjs build",
+    "generate": "node scripts/run-workspace-task.mjs generate",
+    "verify": "node scripts/run-workspace-task.mjs verify",
+    "verify:mvp": "node scripts/verify-workspace.mjs",
     "changeset": "changeset",
     "release": "changeset publish"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.29.4",
-    "turbo": "^2.5.3"
+    "@changesets/cli": "^2.29.4"
   }
 }

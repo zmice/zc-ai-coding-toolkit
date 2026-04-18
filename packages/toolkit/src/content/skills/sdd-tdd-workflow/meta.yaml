@@ -1,0 +1,8 @@
+kind: skill
+name: sdd-tdd-workflow
+title: sdd-tdd-workflow
+description: Orchestrates the full SDD+TDD development lifecycle. Use when starting any new feature, project, or significant change. Enforces spec-first, test-first discipline through six gated phases - Brainstorm (optional), Specify, Plan, Build (TDD with optional subagent-driven mode), Review, Commit. Also provides on-demand skills for debugging, context management, verification, onboarding, simplification, performance, security, API design, documentation, shipping, CI/CD, git commit, migration, frontend, and idea refinement. Triggers on /spec, /task-plan, /build, /quality-review, /verify, /onboard, /debug, /ctx-health, /simplify, /perf, /secure, /api, /doc, /ship, /ci, /commit, /migrate, /ui, /idea, or /sdd-tdd for the full workflow.
+platforms:
+  - qwen
+  - codex
+  - qoder

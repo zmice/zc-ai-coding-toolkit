@@ -1,0 +1,8 @@
+kind: command
+name: freeze
+title: freeze
+description: 锁定指定目录或文件，禁止 AI 编辑，保护关键文件不被意外修改。
+platforms:
+  - qwen
+  - codex
+  - qoder

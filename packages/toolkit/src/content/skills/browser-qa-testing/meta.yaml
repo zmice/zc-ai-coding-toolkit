@@ -1,0 +1,8 @@
+kind: skill
+name: browser-qa-testing
+title: browser-qa-testing
+description: Runs real-browser QA tests against a running application. Use after frontend changes, before releases, or when unit/API tests pass but you need to verify the actual user experience in a browser. Covers user flow testing, visual regression, accessibility audits, and console/network monitoring.
+platforms:
+  - qwen
+  - codex
+  - qoder

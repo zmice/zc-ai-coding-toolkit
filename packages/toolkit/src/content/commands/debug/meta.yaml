@@ -1,0 +1,8 @@
+kind: command
+name: debug
+title: debug
+description: 使用系统化方法诊断和修复 Bug，遵循 Prove-It 模式：先复现，再定位，最后修复。
+platforms:
+  - qwen
+  - codex
+  - qoder

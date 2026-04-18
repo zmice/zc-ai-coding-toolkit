@@ -1,0 +1,28 @@
+schema_version: 1
+
+governance:
+  manual_review_required: true
+  notes_root: references/notes
+  snapshots_root: references/snapshots
+  snapshot_policy: immutable
+
+upstreams:
+  - id: legacy-root-source-model
+    title: Legacy root source model
+    kind: repo-local
+    status: retired
+    owner: agent-4
+    source_paths:
+      - skills
+      - commands
+      - agents
+      - QWEN.md
+      - AGENTS.md
+      - instructions.md
+    notes_path: references/notes/legacy-root-source-model.md
+    snapshots_path: references/snapshots/legacy-root-source-model/
+    sync:
+      mode: manual-review
+      review_required: true
+      compare_against: snapshots
+      publish_target: toolkit-and-platform-generation

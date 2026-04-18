@@ -1,0 +1,8 @@
+kind: command
+name: qa
+title: qa
+description: 执行真实浏览器自动化 QA 测试，覆盖用户流程、交互、可访问性。
+platforms:
+  - qwen
+  - codex
+  - qoder

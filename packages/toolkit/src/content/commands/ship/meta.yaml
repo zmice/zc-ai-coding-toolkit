@@ -1,0 +1,8 @@
+kind: command
+name: ship
+title: ship
+description: 发布上线前的系统化检查清单，确保代码已准备好部署到生产环境。
+platforms:
+  - qwen
+  - codex
+  - qoder

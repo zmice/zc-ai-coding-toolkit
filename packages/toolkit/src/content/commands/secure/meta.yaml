@@ -1,0 +1,8 @@
+kind: command
+name: secure
+title: secure
+description: 对代码进行安全审计和加固，识别漏洞并提供修复方案。
+platforms:
+  - qwen
+  - codex
+  - qoder

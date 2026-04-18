@@ -1,0 +1,8 @@
+kind: skill
+name: continuous-learning
+title: continuous-learning
+description: Hook-driven learning system that observes sessions, creates atomic instincts with confidence scoring, and evolves them into reusable skills/commands. Uses PostToolUse/Stop/UserPromptSubmit hooks for automatic observation and Agent Memory for cross-session persistence. Triggers on /learn for manual extraction.
+platforms:
+  - qwen
+  - codex
+  - qoder

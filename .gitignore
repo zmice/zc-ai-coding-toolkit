@@ -1,8 +1,33 @@
-# Upstream source repo (large, not needed in distribution)
-.agent-skills-repo/
+# Dependencies
 node_modules/
-zc/node_modules/
-zc/dist/
+
+# Build output
+apps/*/dist/
+packages/*/dist/
+.generated/
+coverage/
+.turbo/
+.cache/
+*.tsbuildinfo
+
+# Local runtime state
 .zc/
 .codex
+
+# Logs and ad-hoc review artifacts
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 review_diff.txt
+
+# OS/editor temp files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Local upstream/source snapshots
+.agent-skills-repo/

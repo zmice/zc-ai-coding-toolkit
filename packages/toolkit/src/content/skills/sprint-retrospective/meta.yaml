@@ -1,0 +1,8 @@
+kind: skill
+name: sprint-retrospective
+title: sprint-retrospective
+description: Conducts structured sprint retrospectives after development cycles. Use after completing an SDD+TDD cycle, finishing a week of work, reaching a milestone, or recovering from an incident. Collects git-based metrics, identifies wins and bottlenecks, checks spec drift, and produces actionable improvement items.
+platforms:
+  - qwen
+  - codex
+  - qoder

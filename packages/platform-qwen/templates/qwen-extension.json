@@ -1,0 +1,7 @@
+{
+  "name": "@zmice/platform-qwen",
+  "platform": "qwen",
+  "source": "toolkit-manifest",
+  "contextFile": "QWEN.md",
+  "placeholder": true
+}

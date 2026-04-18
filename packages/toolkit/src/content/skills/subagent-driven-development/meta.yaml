@@ -1,0 +1,8 @@
+kind: skill
+name: subagent-driven-development
+title: subagent-driven-development
+description: Use when executing implementation plans with independent tasks. Dispatches fresh subagent per task with two-stage review (spec compliance then code quality) for high-quality, fast iteration with isolated context.
+platforms:
+  - qwen
+  - codex
+  - qoder

@@ -1,0 +1,8 @@
+kind: command
+name: ci
+title: ci
+description: 搭建或优化 CI/CD 管道，配置质量门禁、自动化测试和部署策略。
+platforms:
+  - qwen
+  - codex
+  - qoder

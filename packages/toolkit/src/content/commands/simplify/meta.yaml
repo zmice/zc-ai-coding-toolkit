@@ -1,0 +1,8 @@
+kind: command
+name: simplify
+title: simplify
+description: 分析代码并进行简化重构，降低复杂度，提升可读性和可维护性。
+platforms:
+  - qwen
+  - codex
+  - qoder

@@ -1,0 +1,8 @@
+kind: skill
+name: context-budget-audit
+title: context-budget-audit
+description: Audits context window consumption across agents, skills, rules, and instructions. Identifies bloat, redundant components, and produces prioritized token-savings recommendations. Use when session quality degrades, after adding components, or to check context headroom.
+platforms:
+  - qwen
+  - codex
+  - qoder

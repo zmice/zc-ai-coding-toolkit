@@ -1,0 +1,8 @@
+kind: skill
+name: brainstorming-and-design
+title: brainstorming-and-design
+description: Use before any creative work — creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design through collaborative dialogue before implementation. Bridges idea-refine (divergent thinking) and spec-driven-development (formal specification).
+platforms:
+  - qwen
+  - codex
+  - qoder

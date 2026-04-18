@@ -1,0 +1,8 @@
+kind: command
+name: task-plan
+title: task-plan
+description: 将需求或规格拆解为可执行的原子任务列表，每个任务明确、独立、可验证。
+platforms:
+  - qwen
+  - codex
+  - qoder

@@ -1,0 +1,8 @@
+kind: command
+name: ctx-health
+title: ctx-health
+description: 管理和刷新对话上下文，防止长会话质量下降，执行上下文健康检查并输出压缩摘要。
+platforms:
+  - qwen
+  - codex
+  - qoder

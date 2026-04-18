@@ -1,0 +1,8 @@
+kind: skill
+name: source-driven-development
+title: source-driven-development
+description: 基于官方文档的实现规范。在使用任何框架或库编写代码时使用。确保每个实现决策都有官方文档支撑，杜绝凭记忆编码导致的过时模式。
+platforms:
+  - qwen
+  - codex
+  - qoder

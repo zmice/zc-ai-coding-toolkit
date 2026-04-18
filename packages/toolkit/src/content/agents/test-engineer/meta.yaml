@@ -1,0 +1,13 @@
+kind: agent
+name: test-engineer
+title: test-engineer
+description: QA 测试工程师。专门用于测试策略设计、测试编写和覆盖率分析。在需要为已有代码写测试、评估测试质量或设计测试方案时使用。
+tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
+platforms:
+  - qwen
+  - codex
+  - qoder

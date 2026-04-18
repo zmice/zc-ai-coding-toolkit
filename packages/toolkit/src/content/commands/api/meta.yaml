@@ -1,0 +1,8 @@
+kind: command
+name: api
+title: api
+description: 设计和审查 API 接口，确保一致性、易用性和向后兼容性。
+platforms:
+  - qwen
+  - codex
+  - qoder

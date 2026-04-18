@@ -1,0 +1,8 @@
+kind: command
+name: migrate
+title: migrate
+description: 规划和执行代码迁移或 API 废弃，确保平滑过渡，不破坏现有功能。
+platforms:
+  - qwen
+  - codex
+  - qoder

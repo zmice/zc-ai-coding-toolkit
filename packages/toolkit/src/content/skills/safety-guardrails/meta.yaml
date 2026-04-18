@@ -1,0 +1,8 @@
+kind: skill
+name: safety-guardrails
+title: safety-guardrails
+description: Enforces safety guardrails when AI performs potentially destructive operations. Use when working near production systems, critical infrastructure, or sensitive files. Provides three protection modes — Careful (warn before danger), Freeze (lock files/directories), and Guard (full protection) — to prevent accidental data loss, destructive commands, and unauthorized changes.
+platforms:
+  - qwen
+  - codex
+  - qoder
