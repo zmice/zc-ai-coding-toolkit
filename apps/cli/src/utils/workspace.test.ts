@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { pathToFileURL } from "node:url";
 import { afterEach, describe, it } from "vitest";
 
-import { ArtifactConflictError, writeArtifacts } from "./workspace.js";
+import { ArtifactConflictError, resolveWorkspaceRoot, writeArtifacts } from "./workspace.js";
 
 const tempDirs: string[] = [];
 
@@ -44,5 +45,24 @@ describe("writeArtifacts", () => {
 
     assert.equal(await readFile(conflictPath, "utf8"), "old-content");
     await assert.rejects(stat(newPath));
+  });
+});
+
+describe("resolveWorkspaceRoot", () => {
+  it("falls back to vendored runtime root when monorepo markers are absent", async () => {
+    const root = await createTempDir();
+    const packageRoot = join(root, "pkg");
+    const modulePath = join(packageRoot, "dist", "utils", "workspace.js");
+    const vendorRoot = join(packageRoot, "vendor");
+
+    await mkdir(join(vendorRoot, "packages", "toolkit"), { recursive: true });
+    await mkdir(join(vendorRoot, "packages", "platform-qwen"), { recursive: true });
+    await mkdir(join(vendorRoot, "references"), { recursive: true });
+    await writeFile(join(vendorRoot, "references", "upstreams.yaml"), "upstreams:\n", "utf8");
+    await mkdir(join(packageRoot, "dist", "utils"), { recursive: true });
+    await writeFile(modulePath, "", "utf8");
+
+    const resolved = resolveWorkspaceRoot(pathToFileURL(modulePath).href);
+    assert.equal(resolved, vendorRoot);
   });
 });

@@ -2,6 +2,8 @@
 
 `@zmice/platform-core` 提供平台生成与安装的共享 contract，避免 `platform-qwen`、`platform-codex`、`platform-qoder` 各自重复实现。
 
+它是 **仓库内部包**，用于保持平台逻辑分层，不作为公开安装入口单独发布。
+
 当前主要负责：
 
 - artifact plan

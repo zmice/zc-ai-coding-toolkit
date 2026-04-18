@@ -1,20 +1,21 @@
 # Release Guide
 
-本指南是面向发布操作者的最小可用发布手册。发布策略本身仍以 [docs/architecture/release-versioning.md](architecture/release-versioning.md) 为准。
+本指南是面向发布操作者的最小发布手册。当前对外只发布一个包：
+
+- `@zmice/zc`
+
+`packages/toolkit`、`packages/platform-*` 仍然保留在 monorepo 中独立开发，但它们是内部包，不直接发布到 registry。`zc` 会在构建时把运行所需的内部产物 vendoring 到自身包里。
 
 ## 发布对象
 
-当前独立发布单元：
+公开发布对象：
 
-- `@zmice/toolkit`
-- `@zmice/platform-core`
-- `@zmice/platform-codex`
-- `@zmice/platform-qoder`
-- `@zmice/platform-qwen`
 - `@zmice/zc`
 
 非发布对象：
 
+- `packages/toolkit/**`
+- `packages/platform-*/**`
 - `docs/**`
 - `references/**`
 - `scripts/**`
@@ -24,8 +25,8 @@
 
 - 版本变更只通过 `changeset` 驱动，不手改包版本。
 - 发布前必须先跑 `pnpm verify`。
-- 发布前必须先确认 `pnpm changeset status` 的 release batch。
-- 内部依赖版本更新属于发布检查的一部分，不是发布后的补救动作。
+- 发布前必须先确认 `pnpm changeset status` 只包含 `@zmice/zc`。
+- `zc` 的发布必须包含最新 vendored 运行时产物。
 
 ## 标准命令
 
@@ -36,39 +37,30 @@
 - 同步 lockfile：`pnpm install`
 - 发布：`pnpm release`
 
-## 首次公开发布流程
+## 标准发布流程
 
-1. 确认当前 changeset 只包含本次要发布的包。
+1. 确认当前 changeset 只包含 `@zmice/zc`。
 2. 运行 `pnpm release:check`。
 3. 运行 `pnpm changeset version`。
 4. 运行 `pnpm install`。
 5. 运行 `pnpm release:check:post-version`。
-6. 确认版本号、依赖联动和工作树状态都符合预期。
-7. 运行 `pnpm release`。
-
-## 日常发布流程
-
-1. 为本次用户可见变更准备 changeset。
-2. 运行 `pnpm release:check`。
-3. 运行 `pnpm changeset version`。
-4. 运行 `pnpm install`。
-5. 运行 `pnpm release:check:post-version`。
-6. 审阅版本 diff。
-7. 运行 `pnpm release`。
+6. 运行 `pnpm verify`，确认 `zc` build 后携带的 vendored 运行时正常。
+7. 审阅 `apps/cli/package.json` 和 `pnpm-lock.yaml` 的版本变化。
+8. 运行 `pnpm release`。
 
 ## 失败处理
 
 - `pnpm release:check` 失败：
-  - 优先清理非 release metadata 的脏改动。
-  - 确认 `.changeset/*.md` 是否与本次发布意图一致。
+  - 优先清理非 `.changeset/*.md` 的脏改动。
+  - 确认 changeset 没有错误引用内部包。
 - `pnpm release:check:post-version` 失败：
-  - 检查是否有非版本化文件被意外修改。
-  - 检查 `package.json` 和 `pnpm-lock.yaml` 是否同步。
+  - 检查是否有非 `apps/cli/package.json` 的 manifest 被误修改。
+  - 检查 `pnpm-lock.yaml` 是否同步。
 - `pnpm verify` 失败：
-  - 先修工作区健康问题，不进入发布。
+  - 先修 workspace 健康问题，不进入发布。
 
 ## 发布后检查
 
-- 再次确认目标包版本已按预期推进。
-- 确认没有意外带出无关包。
-- 记录本次发布的 changeset 和发布说明。
+- 确认 `@zmice/zc` 版本按预期推进。
+- 确认没有内部包被误带入发布批次。
+- 确认 CLI 全局安装后仍能执行 `toolkit` / `platform` 相关命令。

@@ -13,11 +13,11 @@ import {
 
 const fixturePackages = [
   ["apps/cli/package.json", { name: "@zmice/zc", version: "0.1.2" }],
-  ["packages/toolkit/package.json", { name: "@zmice/toolkit", version: "0.1.0" }],
-  ["packages/platform-core/package.json", { name: "@zmice/platform-core", version: "0.1.0" }],
-  ["packages/platform-qwen/package.json", { name: "@zmice/platform-qwen", version: "0.1.0" }],
-  ["packages/platform-codex/package.json", { name: "@zmice/platform-codex", version: "0.1.0" }],
-  ["packages/platform-qoder/package.json", { name: "@zmice/platform-qoder", version: "0.1.0" }]
+  ["packages/toolkit/package.json", { name: "@zmice/toolkit", version: "0.1.0", private: true }],
+  ["packages/platform-core/package.json", { name: "@zmice/platform-core", version: "0.1.0", private: true }],
+  ["packages/platform-qwen/package.json", { name: "@zmice/platform-qwen", version: "0.1.0", private: true }],
+  ["packages/platform-codex/package.json", { name: "@zmice/platform-codex", version: "0.1.0", private: true }],
+  ["packages/platform-qoder/package.json", { name: "@zmice/platform-qoder", version: "0.1.0", private: true }]
 ];
 
 function writeFixtureFile(root, relativePath, content) {
@@ -62,26 +62,19 @@ test("findUnexpectedDirtyPaths honors mode-specific allow lists", () => {
   );
   assert.deepEqual(
     findUnexpectedDirtyPaths(["packages/platform-core/package.json"], "post-version"),
-    []
+    ["packages/platform-core/package.json"]
   );
-  assert.deepEqual(
-    findUnexpectedDirtyPaths(["package.json"], "post-version"),
-    ["package.json"]
-  );
-  assert.deepEqual(
-    findUnexpectedDirtyPaths(["packages/internal-only/package.json"], "post-version"),
-    ["packages/internal-only/package.json"]
-  );
+  assert.deepEqual(findUnexpectedDirtyPaths(["package.json"], "post-version"), ["package.json"]);
+  assert.deepEqual(findUnexpectedDirtyPaths(["packages/internal-only/package.json"], "post-version"), [
+    "packages/internal-only/package.json",
+  ]);
 });
 
 test("classifyDirtyPaths groups allowed and unexpected entries", () => {
   assert.deepEqual(
-    classifyDirtyPaths(
-      ["packages/platform-core/package.json", "packages/internal-only/package.json", "pnpm-lock.yaml"],
-      "post-version"
-    ),
+    classifyDirtyPaths(["apps/cli/package.json", "packages/internal-only/package.json", "pnpm-lock.yaml"], "post-version"),
     {
-      allowedPaths: ["packages/platform-core/package.json", "pnpm-lock.yaml"],
+      allowedPaths: ["apps/cli/package.json", "pnpm-lock.yaml"],
       unexpectedPaths: ["packages/internal-only/package.json"]
     }
   );
@@ -90,10 +83,9 @@ test("classifyDirtyPaths groups allowed and unexpected entries", () => {
 test("loadPublishablePackages reads the release matrix from manifests", () => {
   const root = makeFixtureRepo();
   const packages = loadPublishablePackages(root);
-  assert.equal(packages.length, 6);
+  assert.equal(packages.length, 1);
   assert.equal(packages[0].name, "@zmice/zc");
-  assert.equal(packages[5].manifestPath, "packages/platform-qoder/package.json");
-  assert.equal(packages[2].name, "@zmice/platform-core");
+  assert.equal(packages[0].manifestPath, "apps/cli/package.json");
 });
 
 test("release-check pre-version accepts changeset-only dirtiness", () => {
@@ -150,8 +142,8 @@ test("release-check post-version blocks non-publishable manifests", () => {
   );
 
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /允许的脏文件 \(Allowed dirty paths\):/);
-  assert.match(result.stderr, /packages\/platform-core\/package\.json/);
   assert.match(result.stderr, /未预期的脏文件 \(Unexpected dirty paths\):/);
+  assert.match(result.stderr, /允许的脏文件 \(Allowed dirty paths\): 0/);
+  assert.match(result.stderr, /packages\/platform-core\/package\.json/);
   assert.match(result.stderr, /packages\/internal-only\/package\.json/);
 });

@@ -1,5 +1,6 @@
 {
   "name": "@zmice/toolkit",
+  "private": true,
   "version": "0.1.0",
   "description": "Source-of-truth content package for AI Coding Toolkit skills, commands, and agents",
   "license": "MIT",
@@ -30,8 +31,5 @@
   },
   "engines": {
     "node": ">=20.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

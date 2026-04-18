@@ -2,35 +2,66 @@
 
 ## Objective
 
-Define the workspace release model for the monorepo and remove ambiguity around:
+定义当前 monorepo 的对外发布模型，并明确下面几件事：
 
-- which packages are published independently
-- how changesets drive version selection
-- how internal dependencies are updated when a dependency is released
-- what the first public release must do and verify
-- what a future release guide must cover
+- 哪些包会公开发布
+- 哪些包只是仓库内部实现包
+- changeset 应该只驱动哪个发布单元
+- `zc` 如何在发布后继续带上 toolkit / platform 能力
 
-This spec is the source of truth for release behavior. It does not change code or package metadata by itself.
+## Release Model
 
-## Assumptions
+当前对外只公开发布一个包：
 
-- `apps/cli` and the packages under `packages/` are the release surface.
-- `docs/`, `references/`, `scripts/`, and `tests/` are not publishable artifacts.
-- The first release means the first public registry publish from the current workspace shape, not a one-time special workflow that bypasses changesets.
-- Release policy should prefer independent package versioning over lockstep workspace versioning.
+- `@zmice/zc`
+
+仓库内部包：
+
+- `@zmice/toolkit`
+- `@zmice/platform-core`
+- `@zmice/platform-qwen`
+- `@zmice/platform-codex`
+- `@zmice/platform-qoder`
+
+这些内部包保留独立边界是为了：
+
+- 在 monorepo 内清晰开发和测试
+- 保持内容层、平台层、CLI 层的职责分离
+- 避免把内部架构直接暴露成外部产品契约
+
+## Packaging Rule
+
+`zc` 公开发布时必须自带运行所需的内部产物。当前规则是：
+
+- `apps/cli` build 时生成 `dist/`
+- 同时把内部依赖 vendoring 到 `apps/cli/vendor/`
+- vendored 内容至少包括：
+  - `packages/toolkit` 的 `dist`、`src/content`、`templates`
+  - `packages/platform-qwen` / `platform-codex` / `platform-qoder` 的 `dist`、`templates`
+  - `packages/platform-core` 的运行时代码
+  - `references/upstreams.yaml`
+
+因此，用户安装 `@zmice/zc` 后不需要再单独安装 `toolkit` 或任何 `platform-*` 包。
+
+## Changeset Policy
+
+- changeset 只为 `@zmice/zc` 建立公开发布意图。
+- 内部包不作为公开 release 单元参与 batch。
+- 内部包可以继续保留版本字段用于 workspace 管理，但这些版本不构成对外语义承诺。
+- `.changeset/config.json` 应忽略内部包，避免 changeset status 把它们带入发布批次。
 
 ## Package Matrix
 
-| Package | Release mode | Notes |
+| Package | Role | Public |
 | --- | --- | --- |
-| `@zmice/toolkit` | Independent | Canonical content package. Publishes on its own cadence. |
-| `@zmice/platform-core` | Independent | Shared platform contract package consumed by `zc` and `platform-*`. |
-| `@zmice/platform-codex` | Independent | Platform-specific packaging and generation package. |
-| `@zmice/platform-qoder` | Independent | Platform-specific packaging and generation package. |
-| `@zmice/platform-qwen` | Independent | Platform-specific packaging and generation package. |
-| `@zmice/zc` | Independent | Operator/runtime CLI. Publishes independently from platform packages. |
+| `@zmice/zc` | 对外 CLI 产品 | Yes |
+| `@zmice/toolkit` | 内容事实源 | No |
+| `@zmice/platform-core` | 平台共享 contract | No |
+| `@zmice/platform-qwen` | Qwen 平台实现 | No |
+| `@zmice/platform-codex` | Codex 平台实现 | No |
+| `@zmice/platform-qoder` | Qoder 平台实现 | No |
 
-Non-published workspace areas:
+非发布区域：
 
 - `docs/**`
 - `references/**`
@@ -39,154 +70,60 @@ Non-published workspace areas:
 
 ## Commands
 
-Use these commands as the release entry points:
+- 检查待发布批次：`pnpm changeset status`
+- 发布前校验：`pnpm release:check`
+- 应用版本变更：`pnpm changeset version`
+- 同步 lockfile：`pnpm install`
+- 全量验证：`pnpm verify`
+- 正式发布：`pnpm release`
 
-- Sync workspace metadata after versioning: `pnpm install`
-- Inspect pending release state: `pnpm changeset status`
-- Apply version updates: `pnpm changeset version`
-- Publish release artifacts: `pnpm release`
-- Workspace verification before publish: `pnpm verify`
+## Release Gates
 
-Release-time checks must also include a clean git status and confirmation that the intended packages are the only packages being released.
+### Pre-version
 
-## Changeset Rules
+- 工作树除了 `.changeset/*.md` 外没有无关脏改动
+- `pnpm changeset status` 只包含 `@zmice/zc`
+- `pnpm verify` 通过
 
-### Core rules
+### Post-version
 
-- One changeset records one release intent.
-- A changeset may cover multiple packages if they change as one user-visible unit.
-- Package version bumps must be driven by changesets, not by manual edits to `package.json`.
-- Releases should use the smallest bump that matches the change:
-  - `patch` for bug fixes, content-only corrections, and internal dependency-only updates
-  - `minor` for additive, backward-compatible behavior or new surface area
-  - `major` for breaking changes
+允许变化：
 
-### No ambiguous release bundles
+- `apps/cli/package.json`
+- `pnpm-lock.yaml`
 
-- If two packages change for unrelated reasons, they should have separate changesets.
-- If a change crosses package boundaries and the behavior is coupled, one shared changeset is preferred over two disconnected ones.
-- Documentation-only edits do not require a package version bump unless they alter published package metadata or shipped artifacts.
+不允许变化：
 
-### Changeset config expectation
+- 任何 `packages/*/package.json`
+- 无关文档或脚本
 
-The workspace should keep independent versioning and use `updateInternalDependencies: patch` as the default release policy. That means dependent packages are revised when an internal dependency changes, but the dependency-driven bump should stay as small as possible.
+## Publish Flow
 
-## Internal Dependency Strategy
-
-### Development-time dependency form
-
-Workspace source should remain linked with workspace protocol dependencies during local development. The source tree should not require manual version pinning just to keep packages usable in the monorepo.
-
-### Release-time dependency update rule
-
-When a package is versioned, every direct dependent that consumes it must be evaluated by changesets:
-
-- if the dependent exposes or relies on the dependency in a user-visible way, bump the dependent
-- if the dependent only imports it internally and the update is non-breaking, a patch bump is sufficient
-- if the dependent depends on a breaking change, the dependent must receive at least the bump level required by the breakage
-
-### Practical implication
-
-- `@zmice/zc` is a direct dependent of `@zmice/toolkit` and `@zmice/platform-core`.
-- Every `@zmice/platform-*` package is also a direct dependent of `@zmice/platform-core`.
-- A release that changes `@zmice/toolkit` should trigger a version review for `@zmice/zc`.
-- A release that changes `@zmice/platform-core` should trigger a version review for `@zmice/zc` and every `@zmice/platform-*` package.
-- Platform package releases should not force unrelated platform packages to move.
-- No package should ship with stale internal dependency references after versioning.
-
-## First Release Flow
-
-The first public release uses the same changeset-driven pipeline as later releases. The difference is that the release owner must explicitly confirm the bootstrap set of packages before publishing.
-
-### Required preflight
-
-1. Run `pnpm changeset status` and confirm the release set is intentional.
-2. Run `pnpm verify` and confirm the workspace is healthy before versioning.
-3. Confirm the git worktree is clean except for the intended release metadata.
-4. Confirm the target package versions are acceptable for a first public publish.
-
-### Bootstrap release sequence
-
-1. Create or confirm the release changeset for the packages that should ship first.
-2. Run `pnpm changeset version`.
-3. Run `pnpm install` to sync any manifest or lockfile updates.
-4. Re-run `pnpm verify` after versioning to catch manifest or dependency drift.
-5. Run `pnpm changeset status` again to confirm the planned batch is still correct.
-6. Publish with `pnpm release`.
-
-### Release checks
-
-The first release must verify:
-
-- package versions match the intended public semver line
-- only the intended packages are published
-- internal dependency updates were applied to dependents
-- the workspace still passes verification after version bumping
-
-## Release Guide Skeleton
-
-The operational release guide should eventually cover these sections:
-
-1. Purpose and release ownership
-2. Package release matrix
-3. Preflight checklist
-4. Changeset authoring rules
-5. Internal dependency update rules
-6. First release bootstrap flow
-7. Standard publish flow
-8. Post-publish verification
-9. Abort and rollback notes
-
-This spec intentionally defines the skeleton only. The guide can later be expanded into an operator-facing playbook without changing the policy here.
-
-## Stage 2 Artifacts
-
-The first implementation pass for this policy lives in:
-
-- [docs/release-guide.md](../release-guide.md)
-- [docs/release-checklist.md](../release-checklist.md)
-- [scripts/release-check.mjs](../../scripts/release-check.mjs)
-
-These artifacts are intentionally minimal. They do not replace this spec; they operationalize the current release rules without changing package code.
+1. 为 `@zmice/zc` 准备 changeset。
+2. 运行 `pnpm release:check`。
+3. 运行 `pnpm changeset version`。
+4. 运行 `pnpm install`。
+5. 运行 `pnpm release:check:post-version`。
+6. 运行 `pnpm verify`，确认 vendored runtime 正常。
+7. 运行 `pnpm release`。
 
 ## Boundaries
 
 - Always:
-  - use changesets to drive version selection
-  - run `pnpm changeset status` before publish
-  - run `pnpm verify` before and after versioning
-  - keep independent release boundaries between packages
-  - treat internal dependency updates as part of release planning
+  - 只把 `@zmice/zc` 作为公开发布单元
+  - 保留内部包的独立开发边界
+  - 用 vendoring 解决公开包的运行时依赖
 - Ask first:
-  - changing the release model from independent to fixed versioning
-  - publishing any package for the first time
-  - changing package scopes, names, or registry access policy
-  - introducing a release automation workflow that bypasses changesets
+  - 改变 `@zmice/zc` 的包名、scope 或公开发布方式
+  - 再次把内部包暴露成独立公网包
 - Never:
-  - manually edit package versions outside the release flow
-  - publish a package without confirming dependent updates
-  - hide a breaking change inside a patch release
-  - change code or package manifests in this spec file
-
-## Testing Strategy
-
-This spec is verified by release-oriented checks rather than unit tests:
-
-- `pnpm changeset status` must match the documented release model
-- `pnpm verify` must pass before and after versioning
-- `pnpm changeset version` should be the only version mutation path
-- the release batch should be reviewable from changeset metadata alone
+  - 手工修改版本替代 changeset
+  - 在发布时遗漏 vendored runtime
+  - 把内部包误写回公开 release batch
 
 ## Success Criteria
 
-- The workspace has a clear list of independently released packages.
-- Internal dependency updates follow a documented, repeatable rule.
-- The first release has a concrete command sequence and gate checks.
-- The release guide has a defined outline that future docs can expand.
-- The spec is stored only in `docs/architecture/release-versioning.md`.
-
-## Open Questions
-
-- Should the first public release publish all five packages together, or only the packages that are ready?
-- Should `@zmice/zc` remain on its current version line, or be reset to match the other packages before the first publish?
-- Do we want a future fixed-version mode, or is independent versioning the permanent policy?
+- `pnpm changeset status` 默认只聚焦 `@zmice/zc`
+- `pnpm release:check` 和 `pnpm release:check:post-version` 与单包发布模型一致
+- `apps/cli` build 后可以在脱离 monorepo 的目录中执行 `toolkit` 和 `platform` 命令
+- 仓库文档统一描述为“只发布 zc，内部包不单独公开”

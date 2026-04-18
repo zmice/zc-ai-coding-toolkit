@@ -1,5 +1,6 @@
 {
   "name": "@zmice/platform-qoder",
+  "private": true,
   "version": "0.1.0",
   "description": "Manifest-driven generation and install scaffolding for Qoder platform artifacts",
   "license": "MIT",
@@ -41,8 +42,5 @@
   },
   "engines": {
     "node": ">=20.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

@@ -1,5 +1,6 @@
+import { existsSync } from "node:fs";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 export interface GeneratedArtifact {
@@ -40,8 +41,34 @@ function resolveFromModule(moduleUrl: string, relativePath: string): string {
   return resolve(dirname(fileURLToPath(moduleUrl)), relativePath);
 }
 
+function resolveCliPackageRoot(moduleUrl: string = import.meta.url): string {
+  return resolveFromModule(moduleUrl, "../..");
+}
+
+function isWorkspaceLikeRoot(root: string): boolean {
+  return (
+    existsSync(join(root, "packages", "toolkit")) &&
+    existsSync(join(root, "packages", "platform-qwen")) &&
+    existsSync(join(root, "references", "upstreams.yaml"))
+  );
+}
+
 export function resolveWorkspaceRoot(moduleUrl: string = import.meta.url): string {
-  return resolveFromModule(moduleUrl, "../../../..");
+  const packageRoot = resolveCliPackageRoot(moduleUrl);
+  const repoRoot = resolve(packageRoot, "..", "..");
+  const vendorRoot = join(packageRoot, "vendor");
+
+  if (isWorkspaceLikeRoot(repoRoot)) {
+    return repoRoot;
+  }
+
+  if (isWorkspaceLikeRoot(vendorRoot)) {
+    return vendorRoot;
+  }
+
+  throw new Error(
+    `Unable to resolve workspace root from ${packageRoot}. Expected either a monorepo root or a vendored runtime root.`
+  );
 }
 
 export function resolveWorkspacePath(relativePath: string, moduleUrl: string = import.meta.url): string {
@@ -53,14 +80,19 @@ export async function importWorkspaceDistModule<T>(
   moduleUrl: string = import.meta.url
 ): Promise<T> {
   const absolutePath = resolveWorkspacePath(relativePath, moduleUrl);
+  const workspaceRoot = resolveWorkspaceRoot(moduleUrl);
+  const isVendoredRuntime = workspaceRoot.endsWith(`${join("vendor")}`);
 
   try {
     await access(absolutePath);
   } catch {
+    const packagePath = relativePath.replace(/\/dist\/.*/, "");
     throw new Error(
-      `Workspace module "${relativePath}" is not built yet. Build it first, e.g. "pnpm --dir ${dirname(
-        resolveWorkspacePath(relativePath.replace(/\/dist\/.*/, ""), moduleUrl)
-      )} build".`
+      isVendoredRuntime
+        ? `Vendored runtime module "${relativePath}" is missing. Rebuild @zmice/zc so vendor artifacts are regenerated.`
+        : `Workspace module "${relativePath}" is not built yet. Build it first, e.g. "pnpm --dir ${dirname(
+            resolveWorkspacePath(packagePath, moduleUrl)
+          )} build".`
     );
   }
 

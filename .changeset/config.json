@@ -7,5 +7,11 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": []
+  "ignore": [
+    "@zmice/toolkit",
+    "@zmice/platform-core",
+    "@zmice/platform-qwen",
+    "@zmice/platform-codex",
+    "@zmice/platform-qoder"
+  ]
 }

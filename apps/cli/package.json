@@ -10,10 +10,11 @@
   },
   "files": [
     "dist",
+    "vendor",
     "README.md"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node ./scripts/vendor-internal-packages.mjs",
     "dev": "tsc --watch",
     "test": "vitest run",
     "lint": "tsc --noEmit",
@@ -22,16 +23,16 @@
     "prepublishOnly": "pnpm lint && pnpm test && pnpm build"
   },
   "dependencies": {
-    "@zmice/platform-core": "workspace:*",
-    "@zmice/platform-codex": "workspace:*",
-    "@zmice/platform-qoder": "workspace:*",
-    "@zmice/platform-qwen": "workspace:*",
-    "@zmice/toolkit": "workspace:*",
     "commander": "^13.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
     "@types/node": "^22.0.0",
+    "@zmice/platform-codex": "workspace:*",
+    "@zmice/platform-core": "workspace:*",
+    "@zmice/platform-qoder": "workspace:*",
+    "@zmice/platform-qwen": "workspace:*",
+    "@zmice/toolkit": "workspace:*",
+    "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },
   "engines": {

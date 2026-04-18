@@ -2,6 +2,8 @@
 
 `@zmice/platform-codex` 把 `@zmice/toolkit` 的结构化内容渲染成 Codex 平台所需产物。
 
+它是 **仓库内部包**，公开分发入口统一由 `@zmice/zc` 提供。
+
 当前输出包括：
 
 - `AGENTS.md`

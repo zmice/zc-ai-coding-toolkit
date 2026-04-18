@@ -26,16 +26,23 @@ pnpm upstream -- <subcommand>
 
 ```bash
 pnpm install
-pnpm --dir apps/cli build
+pnpm build
 node apps/cli/dist/cli/index.js --help
 ```
 
-安装到本机全局命令：
+本地开发态安装到本机全局命令：
 
 ```bash
 pnpm install
-pnpm --dir apps/cli build
+pnpm build
 pnpm --dir apps/cli link --global
+zc --help
+```
+
+安装公开发布包：
+
+```bash
+npm install -g @zmice/zc
 zc --help
 ```
 
@@ -43,8 +50,14 @@ zc --help
 
 ```bash
 pnpm install
-pnpm --dir apps/cli build
+pnpm build
 pnpm --dir apps/cli link --global
+```
+
+如果使用 registry 安装：
+
+```bash
+npm install -g @zmice/zc@latest
 ```
 
 完整安装、更新、平台内容安装说明见：
@@ -111,6 +124,7 @@ zc platform where qoder --global --json
 - `zc` 调用 `packages/platform-*` 完成平台产物生成和安装
 - `zc` 不承载仓库内 upstream 治理命令
 - `zc` 的公开命令面只保留实际产品能力，不保留历史重复入口
+- 公开发布时只发布 `@zmice/zc`；内部 `toolkit/platform-*` 能力会随 `zc` 一起打包
 
 ## 开发者入口
 

@@ -8,6 +8,11 @@
 - `platform-*` 适配层：从 toolkit 生成 Qwen / Codex / Qoder 所需产物
 - `references` 治理层：追踪上游项目、baseline snapshot、diff、report 和导入提案
 
+发布模型：
+- 对外只发布 `@zmice/zc`
+- `packages/toolkit` 和 `packages/platform-*` 是仓库内部包
+- `zc` 构建时会把内部运行时内容 vendoring 到自身包里
+
 ## 快速开始
 
 ### 环境要求
@@ -85,6 +90,7 @@ pnpm upstream -- report all --format md
 - `packages/toolkit` 是内容真相，平台包和 CLI 都消费它
 - `packages/platform-*` 只负责平台表达和安装，不维护第二份内容
 - `references` 只做上游治理，不作为运行时依赖
+- `packages/*` 仍然保留独立边界用于开发，但不作为公网发布单元
 
 ## 常用工作流
 

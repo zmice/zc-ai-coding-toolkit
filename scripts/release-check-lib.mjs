@@ -2,12 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 export const publishablePackagePaths = [
-  "apps/cli/package.json",
-  "packages/toolkit/package.json",
-  "packages/platform-core/package.json",
-  "packages/platform-qwen/package.json",
-  "packages/platform-codex/package.json",
-  "packages/platform-qoder/package.json"
+  "apps/cli/package.json"
 ];
 
 const preVersionAllowedPatterns = [/^\.changeset\/[^/]+\.md$/];

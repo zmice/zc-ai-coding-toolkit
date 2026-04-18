@@ -32,29 +32,42 @@ node apps/cli/dist/cli/index.js platform install codex --plan --json
 
 ## 2. 把 `zc` 安装到本机
 
-当前仓库内最稳的做法是使用本地 global link，而不是依赖外部 registry。
+对外只发布 `@zmice/zc`。`toolkit` 和 `platform-*` 是仓库内部包，安装 `zc` 时不需要单独安装它们。
 
-### 安装到本机
+### 从 registry 安装
+
+```bash
+npm install -g @zmice/zc
+zc --help
+```
+
+更新：
+
+```bash
+npm install -g @zmice/zc@latest
+```
+
+### 仓库开发态安装到本机
 
 ```bash
 pnpm install
-pnpm --dir apps/cli build
+pnpm build
 pnpm --dir apps/cli link --global
 zc --help
 ```
 
 说明：
 
-- `apps/cli` 会生成 `dist/cli/index.js`
+- `apps/cli` 会生成 `dist/cli/index.js` 和 `vendor/`
 - `pnpm --dir apps/cli link --global` 会把本地构建好的 `zc` 挂到全局命令
 
-### 更新本机安装
+### 更新仓库开发态安装
 
 仓库更新后，重新执行：
 
 ```bash
 pnpm install
-pnpm --dir apps/cli build
+pnpm build
 pnpm --dir apps/cli link --global
 ```
 

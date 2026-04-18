@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
@@ -15,6 +15,20 @@ function resolveTscBin() {
   const match = candidates.find((candidate) => existsSync(candidate));
   if (!match) {
     throw new Error(`TypeScript compiler not found. Tried:\n${candidates.join("\n")}`);
+  }
+
+  return match;
+}
+
+function resolveCommanderPackageRoot() {
+  const candidates = [
+    "node_modules/commander",
+    "apps/cli/node_modules/commander"
+  ].map((relativePath) => resolve(root, relativePath));
+
+  const match = candidates.find((candidate) => existsSync(candidate));
+  if (!match) {
+    throw new Error(`Commander package not found. Tried:\n${candidates.join("\n")}`);
   }
 
   return match;
@@ -48,6 +62,7 @@ function assertFile(filePath, pattern) {
 
 function main() {
   const tscBin = resolveTscBin();
+  const commanderRoot = resolveCommanderPackageRoot();
 
   run("node", [tscBin, "-p", "packages/toolkit/tsconfig.json"], "build toolkit");
   run("node", [tscBin, "-p", "packages/platform-core/tsconfig.json"], "build platform-core");
@@ -81,17 +96,34 @@ function main() {
   try {
     run(
       "node",
-      ["apps/cli/dist/cli/index.js", "platform", "generate", "qwen", "-o", smokeRoot],
+      ["apps/cli/dist/cli/index.js", "platform", "generate", "qwen", "--dir", smokeRoot],
       "smoke platform generate qwen"
     );
     assertFile(join(smokeRoot, "QWEN.md"), /skill:api-and-interface-design|skill:sdd-tdd-workflow/);
     assertFile(join(smokeRoot, "qwen-extension.json"), /"platform": "qwen"/);
     run(
       "node",
-      ["apps/cli/dist/cli/index.js", "platform", "install", "codex", "-o", installRoot],
+      ["apps/cli/dist/cli/index.js", "platform", "install", "codex", "--dir", installRoot],
       "smoke platform install codex"
     );
     assertFile(join(installRoot, "AGENTS.md"), /Codex 平台说明/);
+
+    const publishedRoot = mkdtempSync(join(tmpdir(), "ai-coding-zc-published-"));
+    try {
+      cpSync(resolve(root, "apps/cli/dist"), join(publishedRoot, "dist"), { recursive: true });
+      cpSync(resolve(root, "apps/cli/vendor"), join(publishedRoot, "vendor"), { recursive: true });
+      cpSync(resolve(root, "apps/cli/package.json"), join(publishedRoot, "package.json"));
+      cpSync(commanderRoot, join(publishedRoot, "node_modules", "commander"), { recursive: true });
+
+      run("node", [join(publishedRoot, "dist/cli/index.js"), "toolkit", "validate"], "smoke published zc toolkit validate");
+      run(
+        "node",
+        [join(publishedRoot, "dist/cli/index.js"), "platform", "where", "codex", "--global", "--json"],
+        "smoke published zc platform where codex --global"
+      );
+    } finally {
+      rmSync(publishedRoot, { recursive: true, force: true });
+    }
   } finally {
     rmSync(smokeRoot, { recursive: true, force: true });
     rmSync(installRoot, { recursive: true, force: true });
