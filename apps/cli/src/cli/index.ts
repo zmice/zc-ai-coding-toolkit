@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
-import { pathToFileURL } from "node:url";
+import { readFileSync, realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { Command } from "commander";
 import { registerTeamCommand } from "./team.js";
 import { registerTaskCommand } from "./task.js";
@@ -38,14 +38,27 @@ export function createProgram(): Command {
   return program;
 }
 
-function isDirectExecution(): boolean {
+export function isDirectExecution(entry: string | undefined = process.argv[1], moduleUrl: string = import.meta.url): boolean {
+  if (!entry) {
+    return false;
+  }
+
+  try {
+    return realpathSync(entry) === realpathSync(fileURLToPath(moduleUrl));
+  } catch {
+    return false;
+  }
+}
+
+function shouldParseCli(): boolean {
   const entry = process.argv[1];
   if (!entry) {
     return false;
   }
-  return pathToFileURL(entry).href === import.meta.url;
+
+  return isDirectExecution(entry, import.meta.url);
 }
 
-if (isDirectExecution()) {
+if (shouldParseCli()) {
   createProgram().parse();
 }
