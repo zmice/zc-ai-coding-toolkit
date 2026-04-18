@@ -1,6 +1,6 @@
 # Release Guide
 
-本指南是面向发布操作者的最小可用发布手册。发布策略本身仍以 [docs/architecture/release-versioning.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/release-versioning.md:1) 为准。
+本指南是面向发布操作者的最小可用发布手册。发布策略本身仍以 [docs/architecture/release-versioning.md](architecture/release-versioning.md) 为准。
 
 ## 发布对象
 

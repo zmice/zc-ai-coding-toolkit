@@ -57,7 +57,7 @@ pnpm upstream -- report all --format md
 
 更完整的安装、更新和平台内容安装说明见：
 
-- [docs/usage-guide.md](/mnt/e/workspace/apps/ai-coding/docs/usage-guide.md:1)
+- [docs/usage-guide.md](docs/usage-guide.md)
 
 ## 仓库结构
 
@@ -180,10 +180,10 @@ pnpm upstream -- import agent-skills --dry-run --output /tmp/import-plan.txt
 
 项目级长期上下文与项目地图：
 
-- [AGENTS.md](/mnt/e/workspace/apps/ai-coding/AGENTS.md:1)
-- [docs/README.md](/mnt/e/workspace/apps/ai-coding/docs/README.md:1)
-- [docs/usage-guide.md](/mnt/e/workspace/apps/ai-coding/docs/usage-guide.md:1)
-- [docs/architecture/project-context.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/project-context.md:1)
+- [AGENTS.md](AGENTS.md)
+- [docs/README.md](docs/README.md)
+- [docs/usage-guide.md](docs/usage-guide.md)
+- [docs/architecture/project-context.md](docs/architecture/project-context.md)
 
 按任务类型进入：
 
@@ -194,12 +194,12 @@ pnpm upstream -- import agent-skills --dry-run --output /tmp/import-plan.txt
 
 高频长期文档：
 
-- [monorepo-layers.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/monorepo-layers.md:1)
-- [toolkit-content-optimization.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/toolkit-content-optimization.md:1)
-- [toolkit-naming-and-source-identity.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/toolkit-naming-and-source-identity.md:1)
-- [platform-deepening.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/platform-deepening.md:1)
-- [upstream-automation.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/upstream-automation.md:1)
-- [release-versioning.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/release-versioning.md:1)
+- [monorepo-layers.md](docs/architecture/monorepo-layers.md)
+- [toolkit-content-optimization.md](docs/architecture/toolkit-content-optimization.md)
+- [toolkit-naming-and-source-identity.md](docs/architecture/toolkit-naming-and-source-identity.md)
+- [platform-deepening.md](docs/architecture/platform-deepening.md)
+- [upstream-automation.md](docs/architecture/upstream-automation.md)
+- [release-versioning.md](docs/architecture/release-versioning.md)
 
 ## 内容与命名规则
 
@@ -226,7 +226,7 @@ pnpm upstream -- import agent-skills --dry-run --output /tmp/import-plan.txt
 
 - 默认优先中文输出
 - 命令名、参数名、文件名、JSON 键、平台产物名保持原样
-- 详细规则见 [docs/architecture/chinese-localization.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/chinese-localization.md:1)
+- 详细规则见 [docs/architecture/chinese-localization.md](docs/architecture/chinese-localization.md)
 
 ## 贡献与验证
 
@@ -252,4 +252,4 @@ pnpm upstream -- import agent-skills --dry-run --output /tmp/import-plan.txt
 
 历史背景见：
 
-- [legacy-root-retirement.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/legacy-root-retirement.md:1)
+- [legacy-root-retirement.md](docs/architecture/legacy-root-retirement.md)

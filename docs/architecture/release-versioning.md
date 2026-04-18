@@ -143,9 +143,9 @@ This spec intentionally defines the skeleton only. The guide can later be expand
 
 The first implementation pass for this policy lives in:
 
-- [docs/release-guide.md](/mnt/e/workspace/apps/ai-coding/docs/release-guide.md:1)
-- [docs/release-checklist.md](/mnt/e/workspace/apps/ai-coding/docs/release-checklist.md:1)
-- [scripts/release-check.mjs](/mnt/e/workspace/apps/ai-coding/scripts/release-check.mjs:1)
+- [docs/release-guide.md](../release-guide.md)
+- [docs/release-checklist.md](../release-checklist.md)
+- [scripts/release-check.mjs](../../scripts/release-check.mjs)
 
 These artifacts are intentionally minimal. They do not replace this spec; they operationalize the current release rules without changing package code.
 
