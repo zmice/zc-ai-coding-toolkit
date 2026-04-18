@@ -104,6 +104,18 @@ function assertSourceRecord(value: unknown): ToolkitAssetSource | undefined {
   const record = value as LooseRecord;
   const upstream = assertNonEmptyString(record.upstream, "source.upstream");
   const strategy = assertNonEmptyString(record.strategy, "source.strategy");
+  const originName =
+    record.origin_name === undefined
+      ? undefined
+      : assertNonEmptyString(record.origin_name, "source.origin_name");
+  const originPath =
+    record.origin_path === undefined
+      ? undefined
+      : assertNonEmptyString(record.origin_path, "source.origin_path");
+  const originId =
+    record.origin_id === undefined
+      ? undefined
+      : assertNonEmptyString(record.origin_id, "source.origin_id");
   const notes =
     record.notes === undefined
       ? undefined
@@ -112,6 +124,9 @@ function assertSourceRecord(value: unknown): ToolkitAssetSource | undefined {
   return {
     upstream,
     strategy,
+    ...(originName ? { originName } : {}),
+    ...(originPath ? { originPath } : {}),
+    ...(originId ? { originId } : {}),
     ...(notes ? { notes } : {})
   };
 }

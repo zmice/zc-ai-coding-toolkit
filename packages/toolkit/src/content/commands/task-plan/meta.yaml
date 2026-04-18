@@ -1,6 +1,6 @@
 kind: command
 name: task-plan
-title: task-plan
+title: 计划
 description: 将需求或 Spec 拆解为可执行的原子任务列表，并标注依赖、上下文和验证步骤。
 tier: core
 audience: default
@@ -16,4 +16,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: planning-and-task-breakdown
+  origin_path: skills/planning-and-task-breakdown/SKILL.md
+  origin_id: skill:planning-and-task-breakdown
   notes: 延续上游 plan 入口语义，并按本仓库任务拆解规范重写

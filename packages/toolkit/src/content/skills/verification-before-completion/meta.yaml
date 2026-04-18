@@ -1,6 +1,6 @@
 kind: skill
 name: verification-before-completion
-title: verification-before-completion
+title: 完成前验证
 description: 在声明工作完成、修复成立或结果通过之前使用。要求先运行验证命令、完整读取输出，再基于证据做结论，始终坚持“证据先于断言”。
 tier: core
 audience: default
@@ -12,4 +12,6 @@ platforms:
 source:
   upstream: andrej-karpathy-skills
   strategy: inspired
+  origin_name: karpathy-guidelines
+  origin_path: skills/karpathy-guidelines/
   notes: 结合 goal-driven execution 与本仓库的证据先于断言原则

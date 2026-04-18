@@ -13,6 +13,9 @@ export type ToolkitAssetStability = (typeof toolkitAssetStabilities)[number];
 export interface ToolkitAssetSource {
   upstream: string;
   strategy: string;
+  originName?: string;
+  originPath?: string;
+  originId?: string;
   notes?: string;
 }
 

@@ -1,6 +1,6 @@
 kind: command
 name: secure
-title: secure
+title: 安全
 description: 对代码进行安全审计和加固，识别漏洞并提供修复方案。
 tier: recommended
 audience: default

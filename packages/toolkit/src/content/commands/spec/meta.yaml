@@ -1,6 +1,6 @@
 kind: command
 name: spec
-title: spec
+title: 规格
 description: 先澄清需求与假设，再为给定的功能或场景编写结构化技术规格说明。
 tier: core
 audience: default
@@ -16,4 +16,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: spec-driven-development
+  origin_path: skills/spec-driven-development/SKILL.md
+  origin_id: skill:spec-driven-development
   notes: 对应 define/spec 阶段入口，并做中文命令说明收敛

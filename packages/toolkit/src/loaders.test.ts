@@ -30,6 +30,9 @@ tools:
 source:
   upstream: everything-claude-code
   strategy: adapted
+  origin_name: context-budget-audit
+  origin_path: prompts/context-budget-audit.md
+  origin_id: prompt:context-budget-audit
   notes: governance baseline
 `);
 
@@ -47,6 +50,9 @@ source:
       source: {
         upstream: "everything-claude-code",
         strategy: "adapted",
+        origin_name: "context-budget-audit",
+        origin_path: "prompts/context-budget-audit.md",
+        origin_id: "prompt:context-budget-audit",
         notes: "governance baseline"
       }
     });
@@ -68,6 +74,8 @@ describe("loadToolkitAssetUnit", () => {
     assert.equal(unit.meta.stability, "stable");
     assert.equal(unit.meta.source?.upstream, "agent-skills");
     assert.equal(unit.meta.source?.strategy, "adapted");
+    assert.equal(unit.meta.source?.originName, "sdd-tdd-workflow");
+    assert.equal(unit.meta.source?.originPath, "skills/sdd-tdd-workflow/SKILL.md");
     assert.match(unit.body, /SDD\+TDD|spec|test|workflow/i);
     assert.ok(unit.attachments.length >= 0);
     assert.deepEqual(unit.meta.platforms, ["qwen", "codex", "qoder"]);

@@ -1,6 +1,6 @@
 kind: skill
 name: planning-and-task-breakdown
-title: planning-and-task-breakdown
+title: 任务拆解
 description: 将工作拆解为有序任务。适用于已经有规格或清晰需求、需要拆成可实现任务的场景；也适用于任务过大难以下手、需要估算范围或可以并行推进的情况。
 tier: core
 audience: default
@@ -12,4 +12,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: planning-and-task-breakdown
+  origin_path: skills/planning-and-task-breakdown/SKILL.md
+  origin_id: skill:planning-and-task-breakdown
   notes: 基于上游 planning workflow，并增加上下文窗口与并行拆解约束

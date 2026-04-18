@@ -25,12 +25,20 @@ describe("createToolkitManifest", () => {
       "verify"
     );
     assert.equal(
+      getToolkitAssetById(manifest, "command:task-plan")?.meta.title,
+      "计划"
+    );
+    assert.equal(
       getToolkitAssetById(manifest, "command:spec")?.meta.tier,
       "core"
     );
     assert.equal(
       getToolkitAssetById(manifest, "command:spec")?.meta.source?.upstream,
       "agent-skills"
+    );
+    assert.equal(
+      getToolkitAssetById(manifest, "skill:sdd-tdd-workflow")?.meta.source?.originPath,
+      "skills/sdd-tdd-workflow/SKILL.md"
     );
     assert.deepEqual(manifest.byRelationship.requires["command:build"], [
       "skill:incremental-implementation",

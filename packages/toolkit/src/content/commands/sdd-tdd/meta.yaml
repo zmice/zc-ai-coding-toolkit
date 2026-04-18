@@ -1,6 +1,6 @@
 kind: command
 name: sdd-tdd
-title: sdd-tdd
+title: 工作流
 description: 启动完整的 SDD+TDD 开发流程，从需求分析到规格编写、任务拆解、TDD 增量构建和代码审查，全流程门控推进。
 tier: recommended
 audience: default

@@ -1,6 +1,6 @@
 kind: agent
 name: frontend-specialist
-title: frontend-specialist
+title: 前端工程师
 description: 前端专家。专注于组件设计、状态管理、响应式布局、可访问性和前端性能优化。在涉及 UI 开发、组件架构、前端性能时使用。
 tier: recommended
 audience: advanced

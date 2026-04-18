@@ -12,4 +12,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: sdd-tdd-workflow
+  origin_path: skills/sdd-tdd-workflow/SKILL.md
+  origin_id: skill:sdd-tdd-workflow
   notes: 结合本仓库的 SDD+TDD 生命周期与中文化规则扩展而成
