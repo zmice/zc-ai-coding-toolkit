@@ -5,6 +5,13 @@ description: 编排完整的 SDD+TDD 开发生命周期。适用于启动新功�
 tier: core
 audience: default
 stability: stable
+suggests:
+  - skill:spec-driven-development
+  - skill:planning-and-task-breakdown
+  - skill:incremental-implementation
+  - skill:test-driven-development
+  - skill:code-review-and-quality
+  - skill:verification-before-completion
 platforms:
   - qwen
   - codex

@@ -5,6 +5,11 @@ description: 在会话开始或不确定该用哪个 skill 时使用。负责发
 tier: recommended
 audience: default
 stability: stable
+suggests:
+  - skill:idea-refine
+  - skill:spec-driven-development
+  - skill:debugging-and-error-recovery
+  - skill:code-review-and-quality
 platforms:
   - qwen
   - codex

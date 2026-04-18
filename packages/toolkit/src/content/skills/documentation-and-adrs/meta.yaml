@@ -5,6 +5,8 @@ description: 记录关键决策与长期文档。适用于架构决策、公共 
 tier: recommended
 audience: default
 stability: stable
+suggests:
+  - skill:verification-before-completion
 platforms:
   - qwen
   - codex
