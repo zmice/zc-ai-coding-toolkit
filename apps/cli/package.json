@@ -1,6 +1,6 @@
 {
   "name": "@zmice/zc",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Operator/runtime CLI for the AI Coding Toolkit workspace",
   "keywords": [
     "cli",

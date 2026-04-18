@@ -1,10 +1,11 @@
-import { cp, mkdir, rm, stat } from "node:fs/promises";
+import { cp, mkdir, rename, rm, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const cliRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const workspaceRoot = resolve(cliRoot, "..", "..");
 const vendorRoot = join(cliRoot, "vendor");
+const tmpRoot = join(workspaceRoot, ".tmp");
 
 const copyEntries = [
   ["packages/toolkit/dist", "packages/toolkit/dist"],
@@ -41,25 +42,65 @@ async function assertExists(relativePath) {
 
 async function copyEntry(fromRelativePath, toRelativePath) {
   const source = join(workspaceRoot, fromRelativePath);
-  const destination = join(vendorRoot, toRelativePath);
+  const destination = join(activeVendorRoot, toRelativePath);
 
   await mkdir(dirname(destination), { recursive: true });
   await cp(source, destination, { recursive: true, force: true });
 }
 
+let activeVendorRoot = vendorRoot;
+
+function createTempVendorRoot() {
+  return join(tmpRoot, `zc-vendor-${process.pid}-${Date.now()}`);
+}
+
+function createBackupVendorRoot() {
+  return join(tmpRoot, `zc-vendor-backup-${process.pid}-${Date.now()}`);
+}
+
+async function cleanupQuietly(path) {
+  try {
+    await rm(path, { recursive: true, force: true });
+  } catch {
+    // Ignore cleanup failures for temporary paths. A stale temp directory is safer than failing release builds.
+  }
+}
+
 async function main() {
   await import("./ensure-internal-builds.mjs");
-
-  await rm(vendorRoot, { recursive: true, force: true });
-  await mkdir(vendorRoot, { recursive: true });
+  await mkdir(tmpRoot, { recursive: true });
 
   for (const [fromRelativePath] of copyEntries) {
     await assertExists(fromRelativePath);
   }
 
+  const tempVendorRoot = createTempVendorRoot();
+  const backupVendorRoot = createBackupVendorRoot();
+  activeVendorRoot = tempVendorRoot;
+
+  await cleanupQuietly(tempVendorRoot);
+  await cleanupQuietly(backupVendorRoot);
+  await mkdir(tempVendorRoot, { recursive: true });
+
   for (const [fromRelativePath, toRelativePath] of copyEntries) {
     await copyEntry(fromRelativePath, toRelativePath);
   }
+
+  try {
+    await rename(vendorRoot, backupVendorRoot);
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error) {
+      const code = String(error.code);
+      if (code !== "ENOENT") {
+        throw error;
+      }
+    } else {
+      throw error;
+    }
+  }
+
+  await rename(tempVendorRoot, vendorRoot);
+  await cleanupQuietly(backupVendorRoot);
 }
 
 await main();
