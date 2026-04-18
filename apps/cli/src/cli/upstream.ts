@@ -1,5 +1,5 @@
-import { readFile, readdir } from "node:fs/promises";
-import { isAbsolute, relative, resolve } from "node:path";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { dirname, isAbsolute, relative, resolve } from "node:path";
 import type { Command } from "commander";
 import { resolveWorkspacePath } from "../utils/workspace.js";
 
@@ -30,6 +30,19 @@ interface SnapshotRecord {
   notes?: {
     path?: string;
     content?: string;
+  };
+}
+
+interface SnapshotResult {
+  upstream: string;
+  mode: "snapshot";
+  snapshot_path: string;
+  captured_at: string;
+  label: string | null;
+  review_status: "pending-manual-review";
+  summary: {
+    source_paths: number;
+    notes_lines: number;
   };
 }
 
@@ -101,6 +114,11 @@ function resolveReferencePath(pathValue: string): string {
 
 function toWorkspaceRelative(pathValue: string): string {
   return relative(resolveWorkspacePath("."), pathValue) || ".";
+}
+
+function toDisplayPath(pathValue: string): string {
+  const relativePath = relative(resolveWorkspacePath("."), pathValue);
+  return relativePath.startsWith("..") ? pathValue : relativePath || ".";
 }
 
 function parseKeyValue(line: string): { key: string; value: string } | null {
@@ -292,6 +310,20 @@ function countMeaningfulLines(source: string): number {
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean).length;
+}
+
+function sanitizeSnapshotLabel(label: string): string {
+  return label
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, "")
+    .replace(/-+/g, "-");
+}
+
+function buildSnapshotFileName(capturedAt: string, label?: string): string {
+  const safeTimestamp = capturedAt.replace(/[:.]/g, "-");
+  const safeLabel = label ? sanitizeSnapshotLabel(label) : "";
+  return safeLabel ? `${safeTimestamp}-${safeLabel}.json` : `${safeTimestamp}.json`;
 }
 
 function compareNotes(baseline: SnapshotRecord, currentNotesPath: string | undefined, currentContent: string): TextChange[] {
@@ -534,13 +566,128 @@ function formatImportDryRunText(result: ImportDryRunResult): string {
   ].join("\n");
 }
 
-function writePayload(format: DiffFormat | ReportFormat | ImportFormat, payload: object, fallbackText: string): void {
+function formatSnapshotText(result: SnapshotResult): string {
+  return [
+    `上游：${result.upstream}`,
+    `模式：${result.mode}`,
+    `快照：${result.snapshot_path}`,
+    `采集时间：${result.captured_at}`,
+    `标签：${result.label ?? "-"}`,
+    `审阅状态：${result.review_status}`,
+    "",
+    "摘要：",
+    `- source paths：${result.summary.source_paths}`,
+    `- notes 有效行数：${result.summary.notes_lines}`,
+    "",
+    "说明：",
+    "- snapshot 为追加式治理记录，不会直接写入 `packages/toolkit`。",
+    "- snapshot 为追加式治理记录，不会直接写入 `packages/platform-*`。",
+  ].join("\n");
+}
+
+function formatSnapshotMarkdown(result: SnapshotResult): string {
+  return [
+    "# Upstream Snapshot",
+    "",
+    "## Summary",
+    `- upstream: \`${result.upstream}\``,
+    "- mode: `snapshot`",
+    `- captured_at: \`${result.captured_at}\``,
+    `- label: \`${result.label ?? "-"}\``,
+    `- review_status: \`${result.review_status}\``,
+    "",
+    "## Evidence",
+    `- snapshot_path: \`${result.snapshot_path}\``,
+    `- source_paths: ${result.summary.source_paths}`,
+    `- notes_lines: ${result.summary.notes_lines}`,
+    "",
+    "## Boundary",
+    "- append-only snapshot",
+    "- no direct write to `packages/toolkit`",
+    "- no direct write to `packages/platform-*`",
+  ].join("\n");
+}
+
+function formatPayload(format: DiffFormat | ReportFormat | ImportFormat, payload: object, fallbackText: string): string {
   if (format === "json") {
-    console.log(JSON.stringify(payload, null, 2));
+    return `${JSON.stringify(payload, null, 2)}\n`;
+  }
+
+  return `${fallbackText}\n`;
+}
+
+async function emitOutput(
+  content: string,
+  outputPath?: string,
+): Promise<void> {
+  if (!outputPath) {
+    console.log(content.trimEnd());
     return;
   }
 
-  console.log(fallbackText);
+  const absolutePath = isAbsolute(outputPath) ? outputPath : resolveWorkspacePath(outputPath);
+  await mkdir(dirname(absolutePath), { recursive: true });
+  await writeFile(absolutePath, content, "utf8");
+  console.log(`已写入输出：${toDisplayPath(absolutePath)}`);
+}
+
+async function emitPayload(
+  format: DiffFormat | ReportFormat | ImportFormat,
+  payload: object,
+  fallbackText: string,
+  outputPath?: string,
+): Promise<void> {
+  await emitOutput(formatPayload(format, payload, fallbackText), outputPath);
+}
+
+async function createSnapshot(item: UpstreamRecord, label?: string): Promise<SnapshotResult> {
+  if (!item.snapshotsPath) {
+    throw new Error(`上游 ${item.id} 未配置 snapshots_path。`);
+  }
+
+  const capturedAt = new Date().toISOString();
+  const currentNotesContent = await readOptionalFile(item.notesPath);
+  const snapshotPayload: SnapshotRecord = {
+    upstream: item.id,
+    captured_at: capturedAt,
+    label: label ?? undefined,
+    metadata: {
+      title: item.title,
+      kind: item.kind,
+      status: item.status,
+      owner: item.owner,
+      source_paths: item.sourcePaths,
+    },
+    notes: item.notesPath
+      ? {
+          path: item.notesPath,
+          content: currentNotesContent,
+        }
+      : undefined,
+  };
+
+  const snapshotsRoot = resolveReferencePath(item.snapshotsPath);
+  const snapshotName = buildSnapshotFileName(capturedAt, label);
+  const snapshotPath = resolve(snapshotsRoot, snapshotName);
+
+  await mkdir(snapshotsRoot, { recursive: true });
+  await writeFile(snapshotPath, `${JSON.stringify(snapshotPayload, null, 2)}\n`, {
+    encoding: "utf8",
+    flag: "wx",
+  });
+
+  return {
+    upstream: item.id,
+    mode: "snapshot",
+    snapshot_path: toWorkspaceRelative(snapshotPath),
+    captured_at: capturedAt,
+    label: label ?? null,
+    review_status: "pending-manual-review",
+    summary: {
+      source_paths: item.sourcePaths.length,
+      notes_lines: countMeaningfulLines(currentNotesContent),
+    },
+  };
 }
 
 function findUpstreamOrExit(upstreams: readonly UpstreamRecord[], id: string): UpstreamRecord | null {
@@ -644,7 +791,36 @@ export function registerUpstreamCommand(program: Command): void {
         }
 
         const result = await createDiffResult(item, options.against);
-        writePayload(options.format ?? "text", result, formatDiffText(result));
+        await emitPayload(options.format ?? "text", result, formatDiffText(result));
+      } catch (error) {
+        printCommandError(error);
+      }
+    });
+
+  upstream
+    .command("snapshot")
+    .description("冻结当前 upstream 状态，生成追加式 snapshot")
+    .argument("<id>", "上游 ID")
+    .option("--label <label>", "附加到 snapshot 文件名的标签")
+    .option("--format <format>", "输出格式：text | json | md", "text")
+    .action(async (id: string, options: { label?: string; format?: ReportFormat }) => {
+      try {
+        const upstreams = await loadUpstreams();
+        const item = findUpstreamOrExit(upstreams, id);
+
+        if (!item) {
+          return;
+        }
+
+        const result = await createSnapshot(item, options.label);
+        const format = options.format ?? "text";
+
+        if (format === "md") {
+          await emitOutput(`${formatSnapshotMarkdown(result)}\n`);
+          return;
+        }
+
+        await emitPayload(format, result, formatSnapshotText(result));
       } catch (error) {
         printCommandError(error);
       }
@@ -655,7 +831,8 @@ export function registerUpstreamCommand(program: Command): void {
     .description("生成 upstream 审阅材料")
     .argument("<target>", "上游 ID 或 all")
     .option("--format <format>", "输出格式：text | json | md", "text")
-    .action(async (target: string, options: { format?: ReportFormat }) => {
+    .option("--output <path>", "把输出写入文件，而不是打印到终端")
+    .action(async (target: string, options: { format?: ReportFormat; output?: string }) => {
       try {
         const upstreams = await loadUpstreams();
         const items =
@@ -673,11 +850,16 @@ export function registerUpstreamCommand(program: Command): void {
         const format = options.format ?? "text";
 
         if (format === "md") {
-          console.log(formatReportMarkdown(results));
+          await emitOutput(`${formatReportMarkdown(results)}\n`, options.output);
           return;
         }
 
-        writePayload(format, { mode: "report", review_status: "pending-manual-review", results }, formatReportText(results));
+        await emitPayload(
+          format,
+          { mode: "report", review_status: "pending-manual-review", results },
+          formatReportText(results),
+          options.output,
+        );
       } catch (error) {
         printCommandError(error);
       }
@@ -689,7 +871,8 @@ export function registerUpstreamCommand(program: Command): void {
     .argument("<id>", "上游 ID")
     .option("--dry-run", "只输出提案，不执行写入")
     .option("--format <format>", "输出格式：text | json", "text")
-    .action(async (id: string, options: { dryRun?: boolean; format?: ImportFormat }) => {
+    .option("--output <path>", "把输出写入文件，而不是打印到终端")
+    .action(async (id: string, options: { dryRun?: boolean; format?: ImportFormat; output?: string }) => {
       if (!options.dryRun) {
         console.error("当前阶段只支持 `import --dry-run`，不会执行任何真实写入。");
         process.exitCode = 1;
@@ -706,7 +889,7 @@ export function registerUpstreamCommand(program: Command): void {
 
         const diff = await createDiffResult(item);
         const result = createImportDryRunResult(diff);
-        writePayload(options.format ?? "text", result, formatImportDryRunText(result));
+        await emitPayload(options.format ?? "text", result, formatImportDryRunText(result), options.output);
       } catch (error) {
         printCommandError(error);
       }

@@ -27,7 +27,7 @@ AI Coding Toolkit 已切换到 **monorepo source model**。
 
 - root workspace contract 已建立
 - `zc toolkit validate` 可用
-- `zc upstream list/show/review` 可用
+- `zc upstream list/show/review/diff/snapshot/report/import --dry-run` 可用
 - `zc platform generate qwen|codex|qoder` 可用
 - `zc platform install qwen|codex|qoder` 可用
 - `zc platform generate/install --plan --format json` 可用
@@ -98,6 +98,10 @@ node apps/cli/dist/cli/index.js platform install codex --plan --format json
 node apps/cli/dist/cli/index.js upstream list
 node apps/cli/dist/cli/index.js upstream show legacy-root-source-model
 node apps/cli/dist/cli/index.js upstream review
+node apps/cli/dist/cli/index.js upstream diff legacy-root-source-model --against 2026-04-01-baseline.json
+node apps/cli/dist/cli/index.js upstream snapshot legacy-root-source-model --label nightly-review
+node apps/cli/dist/cli/index.js upstream report legacy-root-source-model --format md --output /tmp/upstream-report.md
+node apps/cli/dist/cli/index.js upstream import legacy-root-source-model --dry-run --output /tmp/upstream-import.txt
 
 # full MVP verification
 pnpm verify
@@ -105,6 +109,8 @@ node scripts/verify-workspace.mjs
 ```
 
 `zc platform install <target>` 在未传 `-o` 时，会优先向上寻找最近的项目根标记（`.git`、`pnpm-workspace.yaml`、`package.json`），找不到时才回退到当前工作目录。
+
+`zc upstream snapshot <id>` 会在 `references/snapshots/<id>/` 下追加不可变快照；`report` 和 `import --dry-run` 支持 `--output <path>`，可把审阅材料或导入提案直接写到文件。
 
 ## Migration Notes
 
