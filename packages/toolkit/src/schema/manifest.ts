@@ -32,5 +32,9 @@ export function validateToolkitManifest(input: unknown): ToolkitManifest {
     throw new Error("Invalid toolkit manifest: byId must be an object");
   }
 
+  if (typeof manifest.byRelationship !== "object" || manifest.byRelationship === null) {
+    throw new Error("Invalid toolkit manifest: byRelationship must be an object");
+  }
+
   return manifest;
 }

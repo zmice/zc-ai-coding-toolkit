@@ -32,6 +32,10 @@ describe("createToolkitManifest", () => {
       getToolkitAssetById(manifest, "command:spec")?.meta.source?.upstream,
       "agent-skills"
     );
+    assert.deepEqual(manifest.byRelationship.requires["command:build"], [
+      "skill:incremental-implementation",
+      "skill:test-driven-development"
+    ]);
     assert.deepEqual(
       getToolkitAssetById(manifest, "command:verify")?.meta.platforms,
       ["qwen", "codex", "qoder"]
@@ -50,6 +54,13 @@ describe("loadToolkitManifest", () => {
     assert.ok(Boolean(manifest.byId["agent:architect"]));
     assert.equal(manifest.byId["skill:sdd-tdd-workflow"]?.meta.tier, "core");
     assert.equal(manifest.byId["agent:architect"]?.meta.audience, "advanced");
+    assert.deepEqual(manifest.byRelationship.requires["command:quality-review"], [
+      "skill:code-review-and-quality"
+    ]);
+    assert.deepEqual(manifest.byRelationship.suggests["command:quality-review"], [
+      "skill:security-and-hardening",
+      "skill:performance-optimization"
+    ]);
     assert.deepEqual(
       manifest.byId["agent:test-engineer"]?.meta.platforms,
       ["qwen", "codex", "qoder"]

@@ -53,4 +53,32 @@ describe("toolkit CLI", () => {
     expect(result.stderr).toContain("toolkit lint 在严格模式下失败");
     expect(process.exitCode).toBe(1);
   });
+
+  it("toolkit show prints detailed governance metadata", async () => {
+    const result = await runCli(["toolkit", "show", "command:build"]);
+
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("ID：command:build");
+    expect(result.stdout).toContain("层级：core");
+    expect(result.stdout).toContain("依赖：skill:incremental-implementation, skill:test-driven-development");
+    expect(result.stdout).toContain("来源：agent-skills (adapted)");
+  });
+
+  it("toolkit search finds assets by keyword", async () => {
+    const result = await runCli(["toolkit", "search", "review"]);
+
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("command:quality-review");
+    expect(result.stdout).toContain("agent:code-reviewer");
+  });
+
+  it("toolkit recommend returns required and suggested assets", async () => {
+    const result = await runCli(["toolkit", "recommend", "build"]);
+
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("推荐目标：command:build");
+    expect(result.stdout).toContain("skill:incremental-implementation");
+    expect(result.stdout).toContain("skill:test-driven-development");
+    expect(result.stdout).toContain("skill:debugging-and-error-recovery");
+  });
 });

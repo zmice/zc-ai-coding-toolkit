@@ -3,7 +3,10 @@ import { describe, it } from "node:test";
 import { lintToolkitManifest } from "./lint/content-lint.js";
 import type { ToolkitManifest } from "./types.js";
 
-function makeManifest(overrides: Partial<ToolkitManifest["assets"][number]["meta"]>): ToolkitManifest {
+function makeManifest(
+  overrides: Partial<ToolkitManifest["assets"][number]["meta"]>,
+  relationships?: Partial<ToolkitManifest["byRelationship"]>
+): ToolkitManifest {
   return {
     version: 1,
     generatedAt: "2026-04-19T00:00:00.000Z",
@@ -34,7 +37,13 @@ function makeManifest(overrides: Partial<ToolkitManifest["assets"][number]["meta
         }
       }
     ],
-    byId: {}
+    byId: {},
+    byRelationship: {
+      requires: relationships?.requires ?? {},
+      suggests: relationships?.suggests ?? {},
+      conflictsWith: relationships?.conflictsWith ?? {},
+      supersedes: relationships?.supersedes ?? {}
+    }
   };
 }
 
@@ -65,5 +74,30 @@ describe("lintToolkitManifest", () => {
 
     assert.equal(result.summary.warnings, 0);
     assert.equal(result.summary.errors, 0);
+  });
+
+  it("warns when relationship targets do not exist", () => {
+    const manifest = makeManifest(
+      {
+        tier: "core",
+        audience: "default",
+        stability: "stable",
+        requires: ["skill:missing"],
+        source: {
+          upstream: "agent-skills",
+          strategy: "adapted"
+        }
+      },
+      {
+        requires: {
+          "skill:test": ["skill:missing"]
+        }
+      }
+    );
+
+    const result = lintToolkitManifest(manifest);
+
+    assert.equal(result.summary.warnings, 1);
+    assert.equal(result.issues[0]?.rule, "unknown-relationship-target");
   });
 });

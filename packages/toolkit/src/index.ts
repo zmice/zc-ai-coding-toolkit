@@ -3,3 +3,4 @@ export * from "./schema/index.js";
 export * from "./loaders/index.js";
 export * from "./lint/index.js";
 export * from "./manifests/index.js";
+export * from "./query/index.js";

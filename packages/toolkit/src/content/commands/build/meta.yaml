@@ -5,6 +5,11 @@ description: 按 TDD 的 Red-Green-Refactor 循环进行增量构建，确保每
 tier: core
 audience: default
 stability: stable
+requires:
+  - skill:incremental-implementation
+  - skill:test-driven-development
+suggests:
+  - skill:debugging-and-error-recovery
 platforms:
   - qwen
   - codex

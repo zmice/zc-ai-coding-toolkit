@@ -20,6 +20,12 @@ export function createToolkitManifest(
 ): ToolkitManifest {
   const sortedAssets = [...assets].sort(compareAssets);
   const byId: Record<string, ToolkitAssetUnit> = Object.create(null);
+  const byRelationship = {
+    requires: Object.create(null) as Record<string, readonly string[]>,
+    suggests: Object.create(null) as Record<string, readonly string[]>,
+    conflictsWith: Object.create(null) as Record<string, readonly string[]>,
+    supersedes: Object.create(null) as Record<string, readonly string[]>
+  };
   const counts = {
     skills: 0,
     commands: 0,
@@ -35,6 +41,10 @@ export function createToolkitManifest(
     }
 
     byId[asset.id] = asset;
+    byRelationship.requires[asset.id] = asset.meta.requires ?? [];
+    byRelationship.suggests[asset.id] = asset.meta.suggests ?? [];
+    byRelationship.conflictsWith[asset.id] = asset.meta.conflictsWith ?? [];
+    byRelationship.supersedes[asset.id] = asset.meta.supersedes ?? [];
 
     switch (asset.meta.kind) {
       case "skill":
@@ -55,7 +65,8 @@ export function createToolkitManifest(
     contentRoot,
     counts,
     assets: sortedAssets,
-    byId
+    byId,
+    byRelationship
   };
 
   return validateToolkitManifest(manifest);

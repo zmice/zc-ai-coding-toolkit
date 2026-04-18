@@ -16,6 +16,13 @@ export interface ToolkitAssetSource {
   notes?: string;
 }
 
+export interface ToolkitAssetRelationships {
+  requires?: readonly string[];
+  suggests?: readonly string[];
+  conflictsWith?: readonly string[];
+  supersedes?: readonly string[];
+}
+
 export interface ToolkitAssetMeta {
   kind: ToolkitKind;
   name: string;
@@ -27,6 +34,11 @@ export interface ToolkitAssetMeta {
   tags?: readonly string[];
   tools?: readonly string[];
   platforms?: readonly ToolkitPlatform[];
+  aliases?: readonly string[];
+  requires?: readonly string[];
+  suggests?: readonly string[];
+  conflictsWith?: readonly string[];
+  supersedes?: readonly string[];
   source?: ToolkitAssetSource;
 }
 
@@ -64,4 +76,10 @@ export interface ToolkitManifest {
   counts: ToolkitManifestCounts;
   assets: readonly ToolkitAssetUnit[];
   byId: Readonly<Record<string, ToolkitAssetUnit>>;
+  byRelationship: {
+    requires: Readonly<Record<string, readonly string[]>>;
+    suggests: Readonly<Record<string, readonly string[]>>;
+    conflictsWith: Readonly<Record<string, readonly string[]>>;
+    supersedes: Readonly<Record<string, readonly string[]>>;
+  };
 }

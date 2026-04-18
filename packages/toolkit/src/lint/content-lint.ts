@@ -75,11 +75,42 @@ function checkGovernanceConsistency(assetId: string, meta: ToolkitAssetMeta): To
   return issues;
 }
 
+function checkRelationshipTargets(manifest: ToolkitManifest): ToolkitLintIssue[] {
+  const knownIds = new Set(manifest.assets.map((asset) => asset.id));
+  const issues: ToolkitLintIssue[] = [];
+
+  for (const asset of manifest.assets) {
+    const relationships: Array<[string, readonly string[] | undefined]> = [
+      ["requires", asset.meta.requires],
+      ["suggests", asset.meta.suggests],
+      ["conflicts_with", asset.meta.conflictsWith],
+      ["supersedes", asset.meta.supersedes]
+    ];
+
+    for (const [field, targets] of relationships) {
+      for (const target of targets ?? []) {
+        if (knownIds.has(target)) {
+          continue;
+        }
+
+        issues.push({
+          level: "warning",
+          assetId: asset.id,
+          rule: "unknown-relationship-target",
+          message: `${field} 指向了不存在的资产：${target}`
+        });
+      }
+    }
+  }
+
+  return issues;
+}
+
 export function lintToolkitManifest(manifest: ToolkitManifest): ToolkitLintResult {
   const issues = manifest.assets.flatMap((asset) => [
     ...checkMissingGovernanceFields(asset.id, asset.meta),
     ...checkGovernanceConsistency(asset.id, asset.meta)
-  ]);
+  ]).concat(checkRelationshipTargets(manifest));
 
   const warnings = issues.filter((issue) => issue.level === "warning").length;
   const errors = issues.filter((issue) => issue.level === "error").length;

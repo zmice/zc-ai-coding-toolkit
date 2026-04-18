@@ -54,6 +54,24 @@ function assertPlatformArray(value: unknown): readonly ToolkitPlatform[] | undef
   return platforms as readonly ToolkitPlatform[];
 }
 
+function assertAssetReferenceArray(value: unknown, fieldName: string): readonly string[] | undefined {
+  const references = assertStringArray(value, fieldName);
+
+  if (!references) {
+    return undefined;
+  }
+
+  for (const reference of references) {
+    if (!reference.includes(":")) {
+      throw new Error(
+        `Invalid asset meta: ${fieldName} references must use full asset ids like "skill:name"`
+      );
+    }
+  }
+
+  return references;
+}
+
 function assertEnumValue<T extends string>(
   value: unknown,
   fieldName: string,
@@ -127,6 +145,11 @@ export function validateToolkitAssetMeta(input: unknown): ToolkitAssetMeta {
   const tags = assertStringArray(record.tags, "tags");
   const tools = assertStringArray(record.tools, "tools");
   const platforms = assertPlatformArray(record.platforms);
+  const aliases = assertStringArray(record.aliases, "aliases");
+  const requires = assertAssetReferenceArray(record.requires, "requires");
+  const suggests = assertAssetReferenceArray(record.suggests, "suggests");
+  const conflictsWith = assertAssetReferenceArray(record.conflicts_with, "conflicts_with");
+  const supersedes = assertAssetReferenceArray(record.supersedes, "supersedes");
   const source = assertSourceRecord(record.source);
 
   return {
@@ -140,6 +163,11 @@ export function validateToolkitAssetMeta(input: unknown): ToolkitAssetMeta {
     ...(tags ? { tags } : {}),
     ...(tools ? { tools } : {}),
     ...(platforms ? { platforms } : {}),
+    ...(aliases ? { aliases } : {}),
+    ...(requires ? { requires } : {}),
+    ...(suggests ? { suggests } : {}),
+    ...(conflictsWith ? { conflictsWith } : {}),
+    ...(supersedes ? { supersedes } : {}),
     ...(source ? { source } : {})
   };
 }

@@ -5,6 +5,11 @@ description: 对代码变更进行五维度系统化审查（正确性/可读性
 tier: core
 audience: advanced
 stability: stable
+requires:
+  - skill:code-review-and-quality
+suggests:
+  - skill:security-and-hardening
+  - skill:performance-optimization
 platforms:
   - qwen
   - codex
