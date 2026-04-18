@@ -1,8 +1,16 @@
 {
   "name": "@zmice/zc",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Operator/runtime CLI for the AI Coding Toolkit workspace",
-  "keywords": ["cli", "orchestration", "tmux", "team", "ai", "codex", "multi-agent"],
+  "keywords": [
+    "cli",
+    "orchestration",
+    "tmux",
+    "team",
+    "ai",
+    "codex",
+    "multi-agent"
+  ],
   "license": "MIT",
   "type": "module",
   "bin": {
