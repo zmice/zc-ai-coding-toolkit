@@ -6,6 +6,7 @@ tier: recommended
 audience: advanced
 stability: stable
 suggests:
+  - skill:review-response-and-resolution
   - skill:engineering-principles
 platforms:
   - qwen

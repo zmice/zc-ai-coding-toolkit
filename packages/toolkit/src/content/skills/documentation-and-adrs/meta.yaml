@@ -6,6 +6,7 @@ tier: recommended
 audience: default
 stability: stable
 suggests:
+  - skill:release-documentation-sync
   - skill:verification-before-completion
 platforms:
   - qwen
@@ -17,4 +18,4 @@ source:
   origin_name: documentation-and-adrs
   origin_path: skills/documentation-and-adrs/SKILL.md
   origin_id: skill:documentation-and-adrs
-  notes: 沿用上游文档与 ADR 思路，并对齐本仓库的长期文档结构。
+  notes: 沿用上游文档与 ADR 思路，并补充发布后文档 drift 的触发与收尾边界，对齐本仓库的长期文档结构。

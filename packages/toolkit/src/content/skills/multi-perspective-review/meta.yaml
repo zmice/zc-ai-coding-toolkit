@@ -1,12 +1,13 @@
 kind: skill
 name: multi-perspective-review
 title: 多视角评审
-description: 在实现前从产品、工程、设计和开发者体验四个视角审视 Spec 或 Plan。适用于架构决策、跨团队变更或任何单一视角容易遗漏风险的场景。
+description: 在实现前从产品、工程、设计和开发者体验四个视角审视 Spec 或 Plan。适用于架构决策、跨团队变更或任何单一视角容易遗漏风险的场景，不替代实现后的真实 DevEx 实测。
 tier: recommended
 audience: advanced
 stability: stable
 suggests:
   - skill:planning-and-task-breakdown
+  - skill:developer-experience-audit
 platforms:
   - qwen
   - codex
@@ -14,4 +15,4 @@ platforms:
 source:
   upstream: toolkit-original
   strategy: curated
-  notes: 本仓库为提升方案审视完整性补充的多视角评审能力。
+  notes: 本仓库为提升方案审视完整性补充的多视角评审能力；其中 DevEx 视角明确限定为实现前评审，真实落地后的体验审计由 developer-experience-audit 承担。

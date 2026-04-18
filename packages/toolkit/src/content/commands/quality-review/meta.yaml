@@ -9,6 +9,7 @@ requires:
   - skill:code-review-and-quality
 suggests:
   - command:verify
+  - skill:review-response-and-resolution
   - skill:security-and-hardening
   - skill:performance-optimization
 platforms:

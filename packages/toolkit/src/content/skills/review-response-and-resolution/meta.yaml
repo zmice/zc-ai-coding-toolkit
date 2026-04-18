@@ -1,0 +1,18 @@
+kind: skill
+name: review-response-and-resolution
+title: 审查响应与问题收敛
+description: 在收到代码审查反馈后使用。负责分类意见、安排修复顺序、补充回归验证，并以可核验的方式回复 reviewer，直到问题收敛。
+tier: recommended
+audience: advanced
+stability: stable
+suggests:
+  - skill:verification-before-completion
+  - skill:engineering-principles
+platforms:
+  - qwen
+  - codex
+  - qoder
+source:
+  upstream: superpowers
+  strategy: inspired
+  notes: 吸收 receiving-code-review 一类方法，整理为本仓库的 review 后处理闭环；只覆盖响应、修复、回归验证和回复，不承担审查本身或分支收尾职责。

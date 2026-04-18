@@ -6,7 +6,7 @@ tier: core
 audience: default
 stability: stable
 suggests:
-  - skill:engineering-principles
+  - skill:test-driven-development
 platforms:
   - qwen
   - codex
@@ -17,4 +17,4 @@ source:
   origin_name: karpathy-guidelines
   origin_path: skills/karpathy-guidelines/
   origin_id: skill:karpathy-guidelines
-  notes: 结合 goal-driven execution 与本仓库的证据先于断言原则
+  notes: 结合 goal-driven execution、谨慎推进与本仓库的证据先于断言原则

@@ -6,6 +6,7 @@ tier: recommended
 audience: default
 stability: stable
 suggests:
+  - skill:branch-finish-and-cleanup
   - skill:verification-before-completion
 platforms:
   - qwen
@@ -17,4 +18,4 @@ source:
   origin_name: git-workflow-and-versioning
   origin_path: skills/git-workflow-and-versioning/SKILL.md
   origin_id: skill:git-workflow-and-versioning
-  notes: 结合上游 Git 工作流规范与本仓库原子提交要求整理。
+  notes: 结合上游 Git 工作流规范、本仓库原子提交要求，以及分支收尾闭环整理。

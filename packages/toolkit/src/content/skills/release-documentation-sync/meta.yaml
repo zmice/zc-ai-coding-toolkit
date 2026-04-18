@@ -1,0 +1,15 @@
+kind: skill
+name: release-documentation-sync
+title: 发布后文档同步
+description: 在发布完成后核对 README、安装升级说明、行为变更记录等长期文档是否与真实发布状态一致，避免 release 之后继续发生文档 drift。
+tier: recommended
+audience: advanced
+stability: stable
+platforms:
+  - qwen
+  - codex
+  - qoder
+source:
+  upstream: gstack
+  strategy: inspired
+  notes: 吸收 document-release 的发布后文档同步思路，只保留轻量收尾清单与 drift closure，不复制完整文档体系或发布 gate。

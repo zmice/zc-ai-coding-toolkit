@@ -8,6 +8,7 @@ stability: stable
 suggests:
   - skill:safety-guardrails
   - skill:documentation-and-adrs
+  - skill:release-documentation-sync
 platforms:
   - qwen
   - codex
@@ -18,4 +19,4 @@ source:
   origin_name: shipping-and-launch
   origin_path: skills/shipping-and-launch/SKILL.md
   origin_id: skill:shipping-and-launch
-  notes: 基于上游发布准备能力整理。
+  notes: 基于上游发布准备能力整理，并补充发布说明与文档同步收尾 gate。

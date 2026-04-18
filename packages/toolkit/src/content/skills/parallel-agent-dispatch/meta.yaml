@@ -6,6 +6,7 @@ tier: recommended
 audience: advanced
 stability: stable
 suggests:
+  - skill:branch-finish-and-cleanup
   - skill:planning-and-task-breakdown
   - skill:verification-before-completion
 platforms:
@@ -15,4 +16,4 @@ platforms:
 source:
   upstream: toolkit-original
   strategy: curated
-  notes: 本仓库围绕多代理并行执行抽象出的原生能力。
+  notes: 本仓库围绕多代理并行执行抽象出的原生能力，并显式补齐 fan-in 后的分支收尾闭环。

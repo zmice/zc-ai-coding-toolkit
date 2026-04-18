@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import type { Command } from "commander";
 import { resolveWorkspacePath } from "../utils/workspace.js";
@@ -669,12 +669,19 @@ async function createSnapshot(item: UpstreamRecord, label?: string): Promise<Sna
   const snapshotsRoot = resolveReferencePath(item.snapshotsPath);
   const snapshotName = buildSnapshotFileName(capturedAt, label);
   const snapshotPath = resolve(snapshotsRoot, snapshotName);
+  const tempSnapshotPath = `${snapshotPath}.tmp-${process.pid}`;
 
   await mkdir(snapshotsRoot, { recursive: true });
-  await writeFile(snapshotPath, `${JSON.stringify(snapshotPayload, null, 2)}\n`, {
-    encoding: "utf8",
-    flag: "wx",
-  });
+  try {
+    await writeFile(tempSnapshotPath, `${JSON.stringify(snapshotPayload, null, 2)}\n`, {
+      encoding: "utf8",
+      flag: "wx",
+    });
+    await rename(tempSnapshotPath, snapshotPath);
+  } catch (error) {
+    await rm(tempSnapshotPath, { force: true });
+    throw error;
+  }
 
   return {
     upstream: item.id,
@@ -688,6 +695,15 @@ async function createSnapshot(item: UpstreamRecord, label?: string): Promise<Sna
       notes_lines: countMeaningfulLines(currentNotesContent),
     },
   };
+}
+
+export async function createUpstreamSnapshot(id: string, label?: string): Promise<SnapshotResult> {
+  const upstreams = await loadUpstreams();
+  const item = upstreams.find((entry) => entry.id === id);
+  if (!item) {
+    throw new Error(`未找到上游记录：${id}`);
+  }
+  return createSnapshot(item, label);
 }
 
 function findUpstreamOrExit(upstreams: readonly UpstreamRecord[], id: string): UpstreamRecord | null {

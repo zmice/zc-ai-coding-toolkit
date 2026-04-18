@@ -239,6 +239,14 @@ zc team shutdown <team-name>
 
 终止 tmux session，清理 git worktree。
 
+在执行 `shutdown` 前，先完成收尾判定：
+
+- 哪些 worker 分支已经可以合入或开 PR
+- 哪些任务失败，需要保留证据后再清理
+- 哪些 worktree 仍要继续使用，不应被误删
+
+`shutdown` 是进程和环境层面的终止动作，不应代替 branch / worktree 去向决策。具体判定规则见 `branch-finish-and-cleanup`。
+
 ### `zc task` — 任务操作
 
 ```bash
@@ -323,6 +331,18 @@ zc CLI 入口 (commander)
 | 团队关闭时有运行中任务 | `shutdown()` 会将活跃任务释放回 `pending` 状态 |
 | Worktree 残留 | `zc team shutdown` 自动清理；手动清理用 `git worktree remove` |
 
+### 团队收尾协议
+
+团队停机前，Orchestrator 之外还要完成一轮 branch closure：
+
+1. 汇总每个 worker 的最终状态：`completed`、`failed`、`paused`
+2. 对 `completed` 的 worker，明确是直接合入、开 PR，还是暂时保留分支
+3. 对 `failed` 的 worker，先转移日志、结论和必要证据，再清理 worktree
+4. 对 `paused` 的 worker，登记负责人和恢复条件，避免 worktree 变成无主状态
+5. 最后再执行 `zc team shutdown`
+
+这样做的目的，是把“任务队列完成”与“分支真正结束”区分开。团队模式很容易把 worktree 当作任务缓存；这会导致团队已经关闭，但遗留分支无人接手。
+
 ### 环境注意事项
 
 - **Windows 用户：** 建议在 WSL Ubuntu 中运行，以获得完整的 tmux 支持
@@ -333,6 +353,7 @@ zc CLI 入口 (commander)
 
 - **planning-and-task-breakdown** — 上游：将规格拆解为可分派给 worker 的任务列表
 - **parallel-agent-dispatch** — 姊妹技能：上下文级并行（无文件系统隔离），team-orchestration 提供进程级 + 文件系统级隔离
+- **branch-finish-and-cleanup** — worker 停机前后的 branch / worktree 去向判定与清理由该技能提供通用规则
 - **subagent-driven-development** — 姊妹技能：串行版本，适合有依赖的任务链
 - **verification-before-completion** — 所有 worker 完成后，需验证集成结果
 - **git-workflow-and-versioning** — 团队模式深度依赖 git worktree，参见该技能的 worktree 章节
@@ -348,3 +369,4 @@ zc CLI 入口 (commander)
 - 团队关闭后不清理 worktree（浪费磁盘空间）
 - 不利用 Mailbox 通信，让 worker 之间完全孤立地工作
 - 跳过集成验证就声明多 worker 任务全部完成
+- 把 `zc team shutdown` 当成收尾本身，而不先明确各 worker 分支的最终去向

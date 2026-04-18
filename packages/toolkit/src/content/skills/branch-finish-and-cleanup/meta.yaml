@@ -1,0 +1,17 @@
+kind: skill
+name: branch-finish-and-cleanup
+title: 分支收尾与清理
+description: 在任务实现、审查和验证完成后，对 branch 或 worktree 执行统一收尾。覆盖 merge、PR、保留、丢弃和清理判定，避免遗留脏分支、悬空 worktree 和未决实验。
+tier: recommended
+audience: advanced
+stability: stable
+suggests:
+  - skill:verification-before-completion
+platforms:
+  - qwen
+  - codex
+  - qoder
+source:
+  upstream: superpowers
+  strategy: inspired
+  notes: 吸收上游分支收尾与工作树清理方法，转译为与具体 CLI、tmux 或单一并行模型无关的通用闭环技能。

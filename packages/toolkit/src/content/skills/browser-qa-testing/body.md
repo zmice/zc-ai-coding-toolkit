@@ -16,6 +16,23 @@ Unit tests verify functions. API tests verify endpoints. Neither tells you wheth
 - After backend API changes that affect frontend behavior
 - When a bug report describes browser-specific behavior you can't reproduce with unit tests
 
+## 方法原则
+
+- 先验证最小关键路径，再扩展到次要路径；不要一上来铺满低价值场景
+- 浏览器 QA 的输出必须可作为证据使用，失败时要留下截图、trace、控制台或网络记录
+- 对复杂改动谨慎推进，先锁定一条可复现路径，再扩大覆盖面
+- 视觉、交互、网络、可访问性检查都应服务当前目标，而不是机械堆清单
+
+## 最小关键路径
+
+每轮浏览器 QA 至少先选 1-3 条“失败就不能放行”的路径，通常包括：
+
+1. 进入应用或核心页面
+2. 完成一次主要业务动作
+3. 看到可验证的成功结果或明确错误反馈
+
+如果这是一个 bug 修复，最小关键路径必须先覆盖“原始失败如何复现”和“修复后如何证明不再复发”。
+
 ## Tool Selection
 
 ### Playwright (Recommended)
@@ -152,6 +169,8 @@ Priority 3 (Nice to have):
   - Admin-only flows
 ```
 
+先把 Priority 1 做成稳定、可重复、可留证据的路径；在它们还不稳定时，不要把精力优先花在长尾流程上。
+
 ```typescript
 // Example: Complete login → dashboard → action flow
 test('user can log in and create a task', async ({ page }) => {
@@ -234,6 +253,16 @@ test('task card renders correctly', async ({ page }) => {
 ```
 
 **Update baselines** when intentional visual changes are made: `npx playwright test --update-snapshots`
+
+### Step 4.5: Failure Regression Evidence
+
+当测试失败时，至少保留一类可以复盘的证据：
+
+- 截图，证明页面状态与预期不符
+- trace 或录像，证明交互链路在哪里中断
+- console error / network failure，证明是前端异常、接口失败还是环境问题
+
+没有证据的“浏览器测过了”不构成可审查的结论。
 
 ### Step 5: Accessibility Audit
 

@@ -1,0 +1,17 @@
+kind: skill
+name: developer-experience-audit
+title: 开发者体验审计
+description: 在实现完成后，从 onboarding、安装链、首次成功路径和失败回流出发，对真实开发者体验做实测审计。适用于发布前、合并前，或怀疑 getting started 与文档不足以支撑最小成功路径时。
+tier: recommended
+audience: advanced
+stability: stable
+suggests:
+  - skill:verification-before-completion
+platforms:
+  - qwen
+  - codex
+  - qoder
+source:
+  upstream: gstack
+  strategy: inspired
+  notes: 吸收 gstack 中 plan-devex-review 与 devex-review 的实现后实测思路，转译为本仓库的轻量 DevEx 审计技能；不镜像其角色、目录或提示词结构。

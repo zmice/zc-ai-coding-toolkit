@@ -7,6 +7,7 @@ audience: advanced
 stability: evolving
 suggests:
   - skill:planning-and-task-breakdown
+  - skill:branch-finish-and-cleanup
   - skill:parallel-agent-dispatch
   - skill:verification-before-completion
 platforms:
@@ -16,4 +17,4 @@ platforms:
 source:
   upstream: toolkit-original
   strategy: curated
-  notes: 围绕 zc 多 CLI 团队编排能力整理的实验性技能。
+  notes: 围绕 zc 多 CLI 团队编排能力整理的实验性技能，并补充团队停机前后的分支收尾协议。

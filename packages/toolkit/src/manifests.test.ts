@@ -44,6 +44,10 @@ describe("createToolkitManifest", () => {
       getToolkitAssetById(manifest, "skill:engineering-principles")?.meta.source?.upstream,
       "andrej-karpathy-skills"
     );
+    assert.ok(Boolean(getToolkitAssetById(manifest, "skill:review-response-and-resolution")));
+    assert.ok(Boolean(getToolkitAssetById(manifest, "skill:branch-finish-and-cleanup")));
+    assert.ok(Boolean(getToolkitAssetById(manifest, "skill:release-documentation-sync")));
+    assert.ok(Boolean(getToolkitAssetById(manifest, "skill:developer-experience-audit")));
     assert.deepEqual(manifest.byRelationship.requires["command:build"], [
       "skill:incremental-implementation",
       "skill:test-driven-development"
@@ -78,6 +82,10 @@ describe("loadToolkitManifest", () => {
     assert.ok(manifest.assets.length >= 3);
     assert.ok(Boolean(manifest.byId["skill:sdd-tdd-workflow"]));
     assert.ok(Boolean(manifest.byId["skill:engineering-principles"]));
+    assert.ok(Boolean(manifest.byId["skill:review-response-and-resolution"]));
+    assert.ok(Boolean(manifest.byId["skill:branch-finish-and-cleanup"]));
+    assert.ok(Boolean(manifest.byId["skill:release-documentation-sync"]));
+    assert.ok(Boolean(manifest.byId["skill:developer-experience-audit"]));
     assert.ok(Boolean(manifest.byId["command:spec"]));
     assert.ok(Boolean(manifest.byId["agent:architect"]));
     assert.equal(manifest.byId["skill:sdd-tdd-workflow"]?.meta.tier, "core");
@@ -87,6 +95,7 @@ describe("loadToolkitManifest", () => {
     ]);
     assert.deepEqual(manifest.byRelationship.suggests["command:quality-review"], [
       "command:verify",
+      "skill:review-response-and-resolution",
       "skill:security-and-hardening",
       "skill:performance-optimization"
     ]);

@@ -117,6 +117,17 @@ Context Fan-Out（默认模式）
 - [ ] 检查跨模块的接口一致性
 - [ ] 合并所有变更
 
+### 扇入后的分支收尾
+
+fan-in 结束不代表并行任务真正闭环。无论采用上下文并行还是 worktree 并行，都要继续处理每个任务分支的结束状态：
+
+- 成功且已合入的分支：验证目标分支状态后删除
+- 成功但等待 PR 的分支：保留到审查完成，并明确负责人
+- 失败或被放弃的分支：记录结论后清理现场，不继续占用 worktree
+- 暂时保留的分支：写明为什么保留、保留多久、由谁接手
+
+并行批次里最常见的脏状态不是“代码冲突”，而是 fan-in 后残留一堆无人负责的 branch / worktree。具体判定与清理策略见 `branch-finish-and-cleanup`。
+
 ## 冲突检测
 
 即使预先分配了文件集，仍需检测以下冲突：
@@ -202,6 +213,11 @@ git branch -d feature/task-a feature/task-b feature/task-c
 **4. 冲突解决：**
 - 合并时发现冲突 → 手动解决或分派子代理处理
 - 实验失败 → 直接删除 worktree，无需复杂回滚
+
+**5. 收尾清理：**
+- 分支合入后删除功能分支
+- 不再需要的 worktree 立即移除
+- 保留中的实验分支要登记负责人与后续动作
 
 ### 何时选择 Worktree 模式
 
@@ -298,11 +314,24 @@ Cascade 是批次策略的精确版——基于依赖图自动计算批次，而
 - 每批次后运行集成测试
 - 批次大小根据可用资源调整
 
+## 批次结束协议
+
+每个批次完成后按同一顺序收口：
+
+1. 汇总成功结果并运行批次级验证
+2. 标记失败任务是重试、拆分还是放弃
+3. 为成功任务明确 branch 去向：合入、开 PR 或暂时保留
+4. 清理本批次已经无用的 worktree 和临时分支
+5. 再进入下一批次
+
+不要把 branch cleanup 推迟到所有批次都结束后再统一处理。批次越大，残留越难追。
+
 ## 与其他技能的衔接
 
 - **subagent-driven-development** — 姊妹技能：串行版本，适合有依赖的任务链
 - **planning-and-task-breakdown** — 上游：生成带依赖关系标注的任务计划，Cascade 模式依赖其输出的依赖图
 - **git-workflow-and-versioning** — Worktree 模式依赖 git worktree 管理，参见该技能的 worktree 章节
+- **branch-finish-and-cleanup** — fan-in 后的 branch / worktree 去向判定与清理由该技能负责
 - **verification-before-completion** — 扇入阶段和 Cascade 层间门控的集成测试遵循验证铁律
 - **code-review-and-quality** — 所有并行结果合并后进行统一审查
 - **continuous-learning** — 并行执行中的模式（常见冲突、有效批次大小）自动记录为 instinct
@@ -319,3 +348,4 @@ Cascade 是批次策略的精确版——基于依赖图自动计算批次，而
 - Cascade 模式中跳过层间门控直接进入下一层
 - Worktree 完成后不清理（浪费磁盘空间）
 - 不根据任务特征选择并行模式，一律使用默认 Fan-Out
+- fan-in 后不明确各分支的最终去向，留下悬空 branch / worktree

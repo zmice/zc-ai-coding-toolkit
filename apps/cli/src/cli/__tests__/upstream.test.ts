@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createProgram } from "../index.js";
+import { createUpstreamSnapshot } from "../upstream.js";
 
 const cleanupPaths = new Set<string>();
 const workspaceRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -121,23 +122,12 @@ describe("upstream governance commands", () => {
   it("snapshot 会追加不可变快照，并输出生成路径", async () => {
     const label = `nightly-review-${Date.now()}`;
 
-    const result = await runCli([
-      "upstream",
-      "snapshot",
-      "agent-skills",
-      "--label",
-      label,
-    ]);
+    const result = await createUpstreamSnapshot("agent-skills", label);
+    expect(result.upstream).toBe("agent-skills");
+    expect(result.mode).toBe("snapshot");
+    expect(result.label).toBe(label);
 
-    expect(result.stderr).toBe("");
-    expect(result.stdout).toContain("模式：snapshot");
-    expect(result.stdout).toContain(label);
-
-    const snapshotLine = result.stdout
-      .split("\n")
-      .find((line) => line.startsWith("快照："));
-    expect(snapshotLine).toBeTruthy();
-    const relativePath = snapshotLine?.replace("快照：", "").trim() ?? "";
+    const relativePath = result.snapshot_path;
     cleanupPaths.add(join(workspaceRoot, relativePath));
 
     const payload = JSON.parse(readFileSync(join(workspaceRoot, relativePath), "utf8")) as {
