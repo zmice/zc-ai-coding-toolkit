@@ -80,6 +80,8 @@ describe("toolkit CLI", () => {
     expect(result.stdout).toContain("推荐目标：command:build");
     expect(result.stdout).toContain("skill:incremental-implementation");
     expect(result.stdout).toContain("skill:test-driven-development");
+    expect(result.stdout).toContain("command:quality-review");
+    expect(result.stdout).toContain("command:verify");
     expect(result.stdout).toContain("skill:debugging-and-error-recovery");
     expect(result.stdout).toContain("skill:engineering-principles");
   });

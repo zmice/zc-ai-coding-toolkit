@@ -49,6 +49,8 @@ describe("createToolkitManifest", () => {
       "skill:test-driven-development"
     ]);
     assert.deepEqual(manifest.byRelationship.suggests["command:build"], [
+      "command:quality-review",
+      "command:verify",
       "skill:debugging-and-error-recovery",
       "skill:engineering-principles"
     ]);
@@ -78,6 +80,7 @@ describe("loadToolkitManifest", () => {
       "skill:code-review-and-quality"
     ]);
     assert.deepEqual(manifest.byRelationship.suggests["command:quality-review"], [
+      "command:verify",
       "skill:security-and-hardening",
       "skill:performance-optimization"
     ]);

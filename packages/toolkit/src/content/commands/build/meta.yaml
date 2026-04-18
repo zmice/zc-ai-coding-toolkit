@@ -9,6 +9,8 @@ requires:
   - skill:incremental-implementation
   - skill:test-driven-development
 suggests:
+  - command:quality-review
+  - command:verify
   - skill:debugging-and-error-recovery
   - skill:engineering-principles
 platforms:

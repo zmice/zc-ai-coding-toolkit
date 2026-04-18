@@ -8,6 +8,7 @@ stability: stable
 requires:
   - skill:code-review-and-quality
 suggests:
+  - command:verify
   - skill:security-and-hardening
   - skill:performance-optimization
 platforms:

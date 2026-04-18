@@ -9,6 +9,7 @@ requires:
   - skill:spec-driven-development
 suggests:
   - skill:brainstorming-and-design
+  - command:task-plan
 platforms:
   - qwen
   - codex

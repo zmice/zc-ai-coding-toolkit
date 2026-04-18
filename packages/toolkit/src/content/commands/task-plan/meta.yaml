@@ -9,6 +9,7 @@ requires:
   - skill:planning-and-task-breakdown
 suggests:
   - skill:multi-perspective-review
+  - command:build
 platforms:
   - qwen
   - codex
