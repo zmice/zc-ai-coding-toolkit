@@ -7,3 +7,8 @@
 - `instructions.md`
 
 此包是平台适配层，提示词内容仍由 `@zmice/toolkit` 维护。
+
+常见用法：
+
+- `zc platform install qoder`
+- `zc platform install qoder --plan --format json`

@@ -30,6 +30,7 @@ AI Coding Toolkit 已切换到 **monorepo source model**。
 - `zc upstream list/show/review` 可用
 - `zc platform generate qwen|codex|qoder` 可用
 - `zc platform install qwen|codex|qoder` 可用
+- `zc platform generate/install --plan --format json` 可用
 - root `verify:mvp` 可执行最小闭环验证
 
 验证命令：
@@ -88,6 +89,9 @@ node apps/cli/dist/cli/index.js toolkit manifest
 # platform
 node apps/cli/dist/cli/index.js platform generate qwen -o /tmp/qwen-out
 node apps/cli/dist/cli/index.js platform install codex -o /tmp/codex-out
+node apps/cli/dist/cli/index.js platform install codex
+node apps/cli/dist/cli/index.js platform generate qwen --plan --format json
+node apps/cli/dist/cli/index.js platform install codex --plan --format json
 
 # upstream governance
 node apps/cli/dist/cli/index.js upstream list

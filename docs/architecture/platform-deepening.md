@@ -231,9 +231,13 @@ template context 必须统一，平台渲染器只能在这个上下文上做特
 - 语义：根据 toolkit manifest 生成平台产物到输出目录
 - 必需参数：`<target>`，取值只能是 `qwen | codex | qoder`
 - 可选参数：`-o, --out <dir>`
+- 可选模式：
+  - `--plan`：只输出产物计划，不写文件
+  - `--format json`：输出 JSON，便于脚本消费
 - 默认输出目录：`.generated/<target>`
 - 输出行为：
   - 成功时打印目标平台、输出目录、产物数量
+  - `--plan` 时必须显式输出 artifact 列表，且不允许写盘
   - 不要求安装到用户目录
   - 不应产生与平台无关的额外文件
 - 错误行为：
@@ -244,15 +248,19 @@ template context 必须统一，平台渲染器只能在这个上下文上做特
 ### `zc platform install`
 
 - 语义：将平台产物安装到指定目标目录
-- 必需参数：`<target>` 和 `-o, --out <dir>`
+- 必需参数：`<target>`
 - 默认 overwrite policy：`error`
 - 可选参数：
+  - `-o, --out <dir>`：显式安装目录；省略时默认取当前工作目录
   - `--force`：覆盖冲突文件
   - `--dry-run`：只显示计划，不写盘
+  - `--plan`：只输出安装计划，不写盘
+  - `--format json`：输出 JSON，便于脚本消费
 - 输出行为：
   - 成功时打印目标平台、安装根目录、写入/跳过/覆盖数量
+  - 自动推导安装目录时，必须明确标记为“自动解析”
   - 冲突时必须列出冲突路径
-  - dry-run 必须显式标记为预览，不可让用户误以为已安装
+  - dry-run 和 plan 都必须显式标记为预览，不可让用户误以为已安装
 
 ### CLI Output Contract
 
@@ -265,6 +273,7 @@ template context 必须统一，平台渲染器只能在这个上下文上做特
   - 输出/安装目录是什么
   - 影响了多少个 artifact
   - 是否发生覆盖或跳过
+  - 是否是 plan 模式或自动解析目录
 
 ## Testing Strategy
 

@@ -8,3 +8,8 @@
 - `qwen-extension.json`
 
 此包不拥有提示词内容，只负责把共享的工具包清单渲染为平台专用工件。
+
+常见用法：
+
+- `zc platform generate qwen -o /tmp/qwen-out`
+- `zc platform generate qwen --plan --format json`
