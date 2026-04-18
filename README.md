@@ -1,141 +1,237 @@
-# AI Coding Toolkit Monorepo
+# AI Coding Toolkit
 
-AI Coding Toolkit 已切换到 **monorepo source model**。
+一个面向 AI 编码工作流的 monorepo。这个仓库把 **内容事实源**、**统一操作 CLI**、**平台适配层** 和 **上游治理层** 分开维护，用来持续沉淀并分发一套可治理的 AI 编码工具包。
 
-当前仓库的源码真相分层如下：
+当前主线能力包括：
+- `zc` 统一入口 CLI：运行 runtime、查询 toolkit、生成/安装平台产物、审阅 upstream
+- `toolkit` 内容层：以 `meta.yaml + body.md + assets/` 维护 skills、commands、agents
+- `platform-*` 适配层：从 toolkit 生成 Qwen / Codex / Qoder 所需产物
+- `references` 治理层：追踪上游项目、baseline snapshot、diff、report 和导入提案
 
-- `apps/cli`
-  - `zc` 统一入口 CLI
-  - 负责 runtime、toolkit、platform、upstream 命令编排
-- `packages/toolkit`
-  - skills / commands / agents 的唯一事实源
-  - 使用 `meta.yaml + body.md + assets/` 结构
-- `packages/platform-qwen`
-  - Qwen 平台生成与安装骨架
-- `packages/platform-codex`
-  - Codex 平台生成与安装骨架
-- `packages/platform-qoder`
-  - Qoder 平台生成与安装骨架
-- `references`
-  - 上游治理、审阅记录、快照
-- `docs/adr` / `docs/architecture`
-  - 架构决策和迁移说明
+## 快速开始
 
-## Current Status
+### 环境要求
 
-当前仓库已经具备 monorepo MVP：
+- Node.js `>= 20`
+- `pnpm@10.13.1`
 
-- root workspace contract 已建立
-- `zc toolkit validate` 可用
-- `zc upstream list/show/review/diff/snapshot/report/import --dry-run` 可用
-- `zc platform generate qwen|codex|qoder` 可用
-- `zc platform install qwen|codex|qoder` 可用
-- `zc platform generate/install --plan --format json` 可用
-- `zc platform install` 可自动解析最近项目根作为安装目录
-- root `verify:mvp` 可执行最小闭环验证
+### 安装依赖
 
-验证命令：
+```bash
+pnpm install
+```
+
+### 首次构建
+
+```bash
+pnpm build
+```
+
+### 最小验证
 
 ```bash
 pnpm verify
-node scripts/verify-workspace.mjs
 ```
 
-## Workspace Layout
+### 常用入口
+
+```bash
+# 查看 toolkit 治理状态
+node apps/cli/dist/cli/index.js toolkit lint --json
+
+# 搜索或查看内容
+node apps/cli/dist/cli/index.js toolkit search review
+node apps/cli/dist/cli/index.js toolkit show spec
+node apps/cli/dist/cli/index.js toolkit recommend build
+
+# 生成 / 安装平台产物
+node apps/cli/dist/cli/index.js platform generate qwen --plan --format json
+node apps/cli/dist/cli/index.js platform install codex --plan --format json
+
+# 查看上游治理状态
+node apps/cli/dist/cli/index.js upstream list
+node apps/cli/dist/cli/index.js upstream report all --format md
+```
+
+## 仓库结构
 
 ```text
 .
 ├── apps/
-│   └── cli/
+│   └── cli/                    # @zmice/zc，统一 operator/runtime CLI
 ├── packages/
-│   ├── toolkit/
+│   ├── toolkit/                # skills / commands / agents 的唯一事实源
+│   ├── platform-core/          # 平台安装/生成共享 contract
 │   ├── platform-qwen/
 │   ├── platform-codex/
 │   └── platform-qoder/
-├── references/
+├── references/                 # 上游治理：upstreams、notes、snapshots
 ├── docs/
-│   ├── adr/
-│   └── architecture/
-├── scripts/
-├── tests/
-├── package.json
-└── pnpm-workspace.yaml
+│   ├── adr/                    # 架构决策记录
+│   └── architecture/           # 长期架构与治理文档
+├── scripts/                    # workspace 验证、release preflight 等脚本
+└── tests/                      # 跨包级验证
 ```
 
-## Context Entry
+### 分层原则
 
-项目级长期上下文入口：
+- `apps/cli` 负责命令编排和用户入口，不维护 prompt 内容
+- `packages/toolkit` 是内容真相，平台包和 CLI 都消费它
+- `packages/platform-*` 只负责平台表达和安装，不维护第二份内容
+- `references` 只做上游治理，不作为运行时依赖
+
+## 常用工作流
+
+### 1. 调整 toolkit 内容
+
+内容修改默认发生在：
+
+- `packages/toolkit/src/content/`
+
+每个资产目录使用：
+
+- `meta.yaml`
+- `body.md`
+- 可选 `assets/`
+
+关键治理字段包括：
+
+- `tier`
+- `audience`
+- `stability`
+- `source`
+- `requires / suggests / conflicts_with / supersedes`
+
+常用命令：
+
+```bash
+pnpm --dir packages/toolkit test
+node apps/cli/dist/cli/index.js toolkit lint --json
+node apps/cli/dist/cli/index.js toolkit show <id>
+node apps/cli/dist/cli/index.js toolkit search <keyword>
+node apps/cli/dist/cli/index.js toolkit recommend <id>
+```
+
+### 2. 生成或安装平台产物
+
+平台包消费 toolkit，而不是自己维护源码内容。
+
+```bash
+node apps/cli/dist/cli/index.js platform generate qwen -o /tmp/qwen-out
+node apps/cli/dist/cli/index.js platform install codex -o /tmp/codex-out
+node apps/cli/dist/cli/index.js platform install qoder --plan --format json
+```
+
+说明：
+
+- `platform generate/install --plan` 只输出计划，不落盘
+- `--format json` 适合脚本消费
+- `platform install` 未传 `-o` 时，会优先向上解析最近项目根，找不到再回退到当前目录
+
+### 3. 审阅上游更新
+
+活跃上游清单在：
+
+- `references/upstreams.yaml`
+
+常用命令：
+
+```bash
+node apps/cli/dist/cli/index.js upstream list
+node apps/cli/dist/cli/index.js upstream show agent-skills
+node apps/cli/dist/cli/index.js upstream diff agent-skills
+node apps/cli/dist/cli/index.js upstream snapshot agent-skills --label baseline
+node apps/cli/dist/cli/index.js upstream report agent-skills --format md --output /tmp/upstream-report.md
+node apps/cli/dist/cli/index.js upstream import agent-skills --dry-run --output /tmp/import-plan.txt
+```
+
+治理规则：
+
+- 先记录 `references`，再决定是否吸收到 `packages/toolkit`
+- `notes` 可变，`snapshots` 不可变
+- 影响内容真相或平台产物的同步必须走人工审阅
+
+## 常用命令总览
+
+| 命令 | 用途 |
+| --- | --- |
+| `pnpm install` | 安装 workspace 依赖 |
+| `pnpm lint` | 跑各包静态检查 |
+| `pnpm test` | 跑各包测试 |
+| `pnpm build` | 编译各包 |
+| `pnpm generate` | 生成各平台产物 |
+| `pnpm verify` | workspace 全量验证 |
+| `pnpm verify:mvp` | 最小闭环验证 |
+| `pnpm release:check` | 发布前 preflight |
+| `pnpm release` | 通过 changeset 发布 |
+
+## 文档入口
+
+项目级长期上下文与项目地图：
 
 - [AGENTS.md](/mnt/e/workspace/apps/ai-coding/AGENTS.md:1)
 - [docs/architecture/project-context.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/project-context.md:1)
 
-这两份文件只负责 agent 上下文和项目地图，不是内容源码，也不是平台产物。
+按任务类型进入：
 
-## Legacy Source Model
+- 改 CLI：`apps/cli/README.md`
+- 改内容：`packages/toolkit/README.md`
+- 改平台：`packages/platform-*/README.md`
+- 看上游治理：`references/README.md`
 
-以下旧根目录内容已经从仓库根删除，并完成 source-of-truth 迁移：
+高频长期文档：
 
-- `skills/`
-- `commands/`
-- `agents/`
-- `QWEN.md`
-- `instructions.md`
-- `UPSTREAM.md`
+- [monorepo-layers.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/monorepo-layers.md:1)
+- [toolkit-content-optimization.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/toolkit-content-optimization.md:1)
+- [toolkit-naming-and-source-identity.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/toolkit-naming-and-source-identity.md:1)
+- [platform-deepening.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/platform-deepening.md:1)
+- [upstream-automation.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/upstream-automation.md:1)
+- [release-versioning.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/release-versioning.md:1)
 
-新的 authoritative source：
+## 内容与命名规则
 
-- skills / commands / agents：`packages/toolkit/src/content/`
-- 平台入口产物：由 `packages/platform-*` 生成
-- 项目级上下文入口：根目录 `AGENTS.md`
-- 上游治理：`references/upstreams.yaml`
+### 内容真相
 
-## Key Commands
+- 不要把 prompt 内容源码放回仓库根目录
+- 内容修改默认发生在 `packages/toolkit/src/content/`
+- 不要手工编辑 generated/dist 产物作为真相
 
-```bash
-# toolkit
-node apps/cli/dist/cli/index.js toolkit validate
-node apps/cli/dist/cli/index.js toolkit manifest
+### 命名模型
 
-# platform
-node apps/cli/dist/cli/index.js platform generate qwen -o /tmp/qwen-out
-node apps/cli/dist/cli/index.js platform install codex -o /tmp/codex-out
-node apps/cli/dist/cli/index.js platform install codex
-node apps/cli/dist/cli/index.js platform generate qwen --plan --format json
-node apps/cli/dist/cli/index.js platform install codex --plan --format json
+仓库采用三层命名：
 
-# upstream governance
-node apps/cli/dist/cli/index.js upstream list
-node apps/cli/dist/cli/index.js upstream show agent-skills
-node apps/cli/dist/cli/index.js upstream review
-node apps/cli/dist/cli/index.js upstream diff agent-skills --against 2026-04-14-baseline.json
-node apps/cli/dist/cli/index.js upstream snapshot agent-skills --label nightly-review
-node apps/cli/dist/cli/index.js upstream report agent-skills --format md --output /tmp/upstream-report.md
-node apps/cli/dist/cli/index.js upstream import agent-skills --dry-run --output /tmp/upstream-import.txt
+- `source identity`：对齐 upstream
+- `workspace identity`：仓库内部稳定 id
+- `display title`：用户可见中文标题
 
-# full MVP verification
-pnpm verify
-node scripts/verify-workspace.mjs
-```
+### 中文化
 
-`zc platform install <target>` 在未传 `-o` 时，会优先向上寻找最近的项目根标记（`.git`、`pnpm-workspace.yaml`、`package.json`），找不到时才回退到当前工作目录。
+- 默认优先中文输出
+- 命令名、参数名、文件名、JSON 键、平台产物名保持原样
+- 详细规则见 [docs/architecture/chinese-localization.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/chinese-localization.md:1)
 
-`zc upstream snapshot <id>` 会在 `references/snapshots/<id>/` 下追加不可变快照；`report` 和 `import --dry-run` 支持 `--output <path>`，可把审阅材料或导入提案直接写到文件。
+## 贡献与验证
 
-## Migration Notes
+提交前至少满足对应层级的最小验证：
 
-- 旧根目录 source model 已删除，不再存在回写入口
-- 平台入口和安装链路都应通过 `apps/cli` 与 `packages/platform-*` 处理
-- 新增平台或内容类型时，优先扩展 `packages/*` 与 `references/`
+- 文档改动：`git diff --check`
+- toolkit 内容改动：`toolkit lint` + 相关测试
+- CLI / 平台逻辑改动：对应包测试 + `pnpm verify`
 
-## 中文化规则
+仓库当前遵循：
 
-- 默认优先中文输出：CLI 提示、平台模板说明、面向用户的 AI 引导尽量使用中文
-- 技术契约保持原样：命令名、参数名、文件名、JSON 键、平台产物名不做中文化
-- 详细规则见：
-  - [docs/architecture/chinese-localization.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/chinese-localization.md:1)
-  - [docs/architecture/chinese-localization-plan.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/chinese-localization-plan.md:1)
+- 手工编辑用 `apply_patch`
+- 搜索优先用 `rg`
+- 不破坏 `source.origin_*` 与 `references/upstreams.yaml` 的一致性
 
-更多背景见：
+## 历史说明
 
-- [docs/architecture/monorepo-layers.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/monorepo-layers.md:1)
-- [docs/architecture/legacy-root-retirement.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/legacy-root-retirement.md:1)
+仓库已经完成从旧根目录 source model 到 monorepo source model 的迁移：
+
+- 旧根目录 `skills/`、`commands/`、`agents/` 已移除
+- 平台入口文件不再作为手工源码维护
+- 根目录 `AGENTS.md` 现在是项目级上下文入口，不是平台产物
+
+历史背景见：
+
+- [legacy-root-retirement.md](/mnt/e/workspace/apps/ai-coding/docs/architecture/legacy-root-retirement.md:1)
