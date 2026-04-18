@@ -20,4 +20,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: sdd-tdd-workflow
+  origin_path: skills/sdd-tdd-workflow/SKILL.md
+  origin_id: skill:sdd-tdd-workflow
   notes: 对应 build 阶段入口，并结合本仓库增量交付约束

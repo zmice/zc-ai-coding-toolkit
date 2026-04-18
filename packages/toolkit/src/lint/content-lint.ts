@@ -135,6 +135,49 @@ function checkUpstreamRegistryConsistency(
   ];
 }
 
+function checkSourceTraceability(assetId: string, meta: ToolkitAssetMeta): ToolkitLintIssue[] {
+  if (!meta.source || meta.source.upstream === "toolkit-original") {
+    return [];
+  }
+
+  const issues: ToolkitLintIssue[] = [];
+  const hasAnyOriginField = Boolean(
+    meta.source.originName || meta.source.originPath || meta.source.originId
+  );
+  const hasFullOriginMapping = Boolean(
+    meta.source.originName && meta.source.originPath && meta.source.originId
+  );
+
+  if (hasAnyOriginField && !hasFullOriginMapping) {
+    issues.push({
+      level: "warning",
+      assetId,
+      rule: "partial-origin-mapping",
+      message: "source.origin_* 映射已开始填写时，应同时提供 origin_name / origin_path / origin_id。"
+    });
+  }
+
+  if (meta.source.strategy === "adapted" && !hasFullOriginMapping) {
+    issues.push({
+      level: "warning",
+      assetId,
+      rule: "missing-origin-mapping",
+      message: "外部 upstream 的 adapted 资产应提供完整 source.origin_*，以便后续 diff 和人工同步。"
+    });
+  }
+
+  if (meta.source.strategy === "inspired" && !meta.source.notes) {
+    issues.push({
+      level: "warning",
+      assetId,
+      rule: "missing-source-notes",
+      message: "外部 upstream 的 inspired 资产应保留 source.notes，说明吸收边界和改写方式。"
+    });
+  }
+
+  return issues;
+}
+
 function normalizeSummary(summary: string): string {
   return summary
     .normalize("NFKC")
@@ -279,7 +322,8 @@ export function lintToolkitManifest(
     ...checkMissingGovernanceFields(asset.id, asset.meta),
     ...checkGovernanceConsistency(asset.id, asset.meta),
     ...checkLocalizedSummary(asset.id, asset.meta),
-    ...checkUpstreamRegistryConsistency(asset.id, asset.meta, options.knownUpstreams)
+    ...checkUpstreamRegistryConsistency(asset.id, asset.meta, options.knownUpstreams),
+    ...checkSourceTraceability(asset.id, asset.meta)
   ]).concat(
     checkDuplicateSummaries(manifest),
     checkRelationshipTargets(manifest),

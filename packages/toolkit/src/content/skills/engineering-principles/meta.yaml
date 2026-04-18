@@ -14,4 +14,5 @@ source:
   strategy: inspired
   origin_name: karpathy-guidelines
   origin_path: skills/karpathy-guidelines/
+  origin_id: skill:karpathy-guidelines
   notes: 提炼为跨技能共享的工程原则层，不直接镜像上游正文

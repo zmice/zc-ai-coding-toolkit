@@ -156,6 +156,18 @@ source:
 - `source`
   - 解决 upstream 可追溯性
 
+来源追溯规则：
+
+- `toolkit-original`
+  - 允许没有 `origin_*`
+  - 但要用 `strategy: curated` 说明它是仓库内部沉淀资产
+- 外部 upstream + `strategy: adapted`
+  - 必须补齐 `origin_name / origin_path / origin_id`
+  - 因为后续 diff、snapshot 和人工同步需要精确落点
+- 外部 upstream + `strategy: inspired`
+  - 允许不做 1:1 对象映射
+  - 但必须保留 `source.notes`，解释吸收边界和改写方式
+
 ### 2. Content Lint
 
 新增内容治理校验，至少覆盖：

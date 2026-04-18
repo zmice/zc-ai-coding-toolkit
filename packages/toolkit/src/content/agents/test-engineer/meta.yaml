@@ -17,4 +17,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: test-driven-development
+  origin_path: skills/test-driven-development/SKILL.md
+  origin_id: skill:test-driven-development
   notes: 以测试驱动和验证门禁为中心，映射为独立专家角色

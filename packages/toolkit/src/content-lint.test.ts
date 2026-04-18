@@ -9,6 +9,18 @@ interface ManifestAssetInput {
   body?: string;
 }
 
+const adaptedAgentSkillsSource = {
+  upstream: "agent-skills",
+  strategy: "adapted"
+} as const;
+
+const adaptedAgentSkillsSourceWithOrigin = {
+  ...adaptedAgentSkillsSource,
+  originName: "spec-driven-development",
+  originPath: "skills/spec-driven-development/SKILL.md",
+  originId: "skill:spec-driven-development"
+} as const;
+
 function makeManifest(
   overrides: Partial<ToolkitManifest["assets"][number]["meta"]>,
   relationships?: Partial<ToolkitManifest["byRelationship"]>
@@ -83,10 +95,7 @@ describe("lintToolkitManifest", () => {
         audience: "default",
         stability: "stable",
         description: "中文摘要",
-        source: {
-          upstream: "agent-skills",
-          strategy: "adapted"
-        }
+        source: adaptedAgentSkillsSourceWithOrigin
       })
     );
 
@@ -102,10 +111,7 @@ describe("lintToolkitManifest", () => {
         stability: "stable",
         description: "中文摘要",
         requires: ["skill:missing"],
-        source: {
-          upstream: "agent-skills",
-          strategy: "adapted"
-        }
+        source: adaptedAgentSkillsSourceWithOrigin
       },
       {
         requires: {
@@ -127,10 +133,7 @@ describe("lintToolkitManifest", () => {
         audience: "default",
         stability: "stable",
         description: "Write tests before coding and verify behavior with evidence.",
-        source: {
-          upstream: "agent-skills",
-          strategy: "adapted"
-        }
+        source: adaptedAgentSkillsSourceWithOrigin
       })
     );
 
@@ -145,10 +148,7 @@ describe("lintToolkitManifest", () => {
         audience: "default",
         stability: "stable",
         description: "先写测试，再按 Red Green Refactor loop 持续推进并验证结果。",
-        source: {
-          upstream: "agent-skills",
-          strategy: "adapted"
-        }
+        source: adaptedAgentSkillsSourceWithOrigin
       })
     );
 
@@ -166,10 +166,7 @@ describe("lintToolkitManifest", () => {
             audience: "default",
             stability: "stable",
             description: "先写测试，再验证结果。",
-            source: {
-              upstream: "agent-skills",
-              strategy: "adapted"
-            }
+            source: adaptedAgentSkillsSourceWithOrigin
           }
         },
         {
@@ -182,10 +179,7 @@ describe("lintToolkitManifest", () => {
             audience: "default",
             stability: "stable",
             description: " 先写测试，再验证结果。 ",
-            source: {
-              upstream: "agent-skills",
-              strategy: "adapted"
-            }
+            source: adaptedAgentSkillsSourceWithOrigin
           }
         }
       ])
@@ -210,10 +204,7 @@ describe("lintToolkitManifest", () => {
               stability: "stable",
               description: "中文摘要 A",
               requires: ["skill:b"],
-              source: {
-                upstream: "agent-skills",
-                strategy: "adapted"
-              }
+              source: adaptedAgentSkillsSourceWithOrigin
             }
           },
           {
@@ -224,10 +215,7 @@ describe("lintToolkitManifest", () => {
               stability: "stable",
               description: "中文摘要 B",
               requires: ["skill:a"],
-              source: {
-                upstream: "agent-skills",
-                strategy: "adapted"
-              }
+              source: adaptedAgentSkillsSourceWithOrigin
             }
           }
         ],
@@ -255,8 +243,8 @@ describe("lintToolkitManifest", () => {
         stability: "stable",
         description: "中文摘要",
         source: {
-          upstream: "unknown-upstream",
-          strategy: "adapted"
+          ...adaptedAgentSkillsSourceWithOrigin,
+          upstream: "unknown-upstream"
         }
       }),
       {
@@ -266,5 +254,81 @@ describe("lintToolkitManifest", () => {
 
     assert.equal(result.summary.warnings, 1);
     assert.equal(result.issues[0]?.rule, "unknown-source-upstream");
+  });
+
+  it("warns when adapted external assets do not keep full origin mapping", () => {
+    const result = lintToolkitManifest(
+      makeManifest({
+        tier: "core",
+        audience: "default",
+        stability: "stable",
+        description: "中文摘要",
+        source: {
+          ...adaptedAgentSkillsSource
+        }
+      })
+    );
+
+    assert.equal(result.summary.warnings, 1);
+    assert.equal(result.issues[0]?.rule, "missing-origin-mapping");
+  });
+
+  it("warns when origin mapping is only partially filled", () => {
+    const result = lintToolkitManifest(
+      makeManifest({
+        tier: "recommended",
+        audience: "default",
+        stability: "stable",
+        description: "中文摘要",
+        source: {
+          upstream: "agent-skills",
+          strategy: "adapted",
+          originName: "test-driven-development"
+        }
+      })
+    );
+
+    assert.equal(result.summary.warnings, 2);
+    assert.deepEqual(
+      result.issues.map((issue) => issue.rule),
+      ["partial-origin-mapping", "missing-origin-mapping"]
+    );
+  });
+
+  it("accepts inspired external assets when notes explain the absorption boundary", () => {
+    const result = lintToolkitManifest(
+      makeManifest({
+        tier: "recommended",
+        audience: "advanced",
+        stability: "stable",
+        description: "中文摘要",
+        source: {
+          upstream: "superpowers",
+          strategy: "inspired",
+          notes: "吸收方法学思路，不做一比一对象映射。"
+        }
+      })
+    );
+
+    assert.equal(result.summary.warnings, 0);
+    assert.equal(result.summary.errors, 0);
+  });
+
+  it("warns when inspired external assets omit source notes", () => {
+    const result = lintToolkitManifest(
+      makeManifest({
+        tier: "recommended",
+        audience: "advanced",
+        stability: "stable",
+        description: "中文摘要",
+        source: {
+          upstream: "superpowers",
+          strategy: "inspired"
+        }
+      })
+    );
+
+    assert.equal(result.summary.warnings, 1);
+    assert.equal(result.issues[0]?.rule, "missing-source-notes");
   });
 });
