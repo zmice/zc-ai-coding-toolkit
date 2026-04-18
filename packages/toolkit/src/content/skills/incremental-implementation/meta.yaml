@@ -14,4 +14,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: incremental-implementation
+  origin_path: skills/incremental-implementation/SKILL.md
+  origin_id: skill:incremental-implementation
   notes: 延续上游的单切片交付思想，并与本仓库 TDD 习惯对齐

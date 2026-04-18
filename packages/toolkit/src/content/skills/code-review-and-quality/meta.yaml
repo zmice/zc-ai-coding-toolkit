@@ -14,4 +14,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: code-review-and-quality
+  origin_path: skills/code-review-and-quality/SKILL.md
+  origin_id: skill:code-review-and-quality
   notes: 结合上游审查方法与本仓库五维度质量门禁整理。

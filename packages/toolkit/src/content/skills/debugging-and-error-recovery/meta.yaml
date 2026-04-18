@@ -12,4 +12,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: debugging-and-error-recovery
+  origin_path: skills/debugging-and-error-recovery/SKILL.md
+  origin_id: skill:debugging-and-error-recovery
   notes: 沿用上游调试流程，并对齐本仓库验证要求。

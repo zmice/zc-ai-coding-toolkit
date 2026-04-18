@@ -14,4 +14,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: spec-driven-development
+  origin_path: skills/spec-driven-development/SKILL.md
+  origin_id: skill:spec-driven-development
   notes: 规格先行的主工作流来自上游方法论，并按本仓库术语重写

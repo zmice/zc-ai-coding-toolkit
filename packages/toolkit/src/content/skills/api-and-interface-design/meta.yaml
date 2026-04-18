@@ -12,4 +12,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: api-and-interface-design
+  origin_path: skills/api-and-interface-design/SKILL.md
+  origin_id: skill:api-and-interface-design
   notes: 基于 agent-skills 的接口设计能力中文化整理。

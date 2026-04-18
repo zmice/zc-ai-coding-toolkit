@@ -12,4 +12,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: documentation-and-adrs
+  origin_path: skills/documentation-and-adrs/SKILL.md
+  origin_id: skill:documentation-and-adrs
   notes: 沿用上游文档与 ADR 思路，并对齐本仓库的长期文档结构。

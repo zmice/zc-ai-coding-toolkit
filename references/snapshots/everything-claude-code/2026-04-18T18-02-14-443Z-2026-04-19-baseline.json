@@ -1,0 +1,20 @@
+{
+  "upstream": "everything-claude-code",
+  "captured_at": "2026-04-18T18:02:14.443Z",
+  "label": "2026-04-19-baseline",
+  "metadata": {
+    "title": "Everything Claude Code",
+    "kind": "github-public-repo",
+    "status": "active",
+    "owner": "codex",
+    "source_paths": [
+      "CLAUDE.md",
+      "docs",
+      "commands"
+    ]
+  },
+  "notes": {
+    "path": "references/notes/everything-claude-code.md",
+    "content": "# Everything Claude Code\n\nSource: `https://github.com/affaan-m/everything-claude-code`\n\n## Status\n\nRegistered from historical upstream tracking. No immutable snapshot captured in the new governance layer yet.\n\n## Historical Role\n\n- Commit history previously tracked it as an architecture and cautionary reference.\n- It informed instinct architecture ideas and also highlighted agent sprawl risks.\n\n## Expected Downstream Value\n\n- Context / instinct design references\n- Governance lessons about prompt and agent bloat\n- Command and instruction organization ideas\n\n## Boundaries\n\n- Prefer extracting principles and anti-patterns rather than importing structure wholesale.\n\n"
+  }
+}

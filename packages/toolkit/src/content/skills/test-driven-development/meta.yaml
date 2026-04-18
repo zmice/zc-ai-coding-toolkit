@@ -14,4 +14,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: test-driven-development
+  origin_path: skills/test-driven-development/SKILL.md
+  origin_id: skill:test-driven-development
   notes: 测试先行原则沿用上游，并补充中文化流程说明

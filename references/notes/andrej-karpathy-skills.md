@@ -4,7 +4,7 @@ Source: `https://github.com/multica-ai/andrej-karpathy-skills`
 
 ## Status
 
-Registered for manual review. No local snapshot captured yet.
+Registered for manual review. Initial baseline snapshot captured in the governance layer.
 
 ## Why Track It
 
@@ -38,7 +38,12 @@ Current repo surface observed at registration time:
 - Prefer extracting reusable principles instead of mirroring repository structure.
 - Use snapshots and diff reports before any adoption decision.
 
+## Snapshot Baseline
+
+- baseline: `references/snapshots/andrej-karpathy-skills/2026-04-18T18-02-14-443Z-2026-04-19-baseline.json`
+- current governance status: `active`
+
 ## Next Step
 
-- Capture the first immutable snapshot under `references/snapshots/andrej-karpathy-skills/`
-- Run `zc upstream diff andrej-karpathy-skills` after the first baseline is available
+- Run `zc upstream diff andrej-karpathy-skills` against the baseline
+- Continue extracting reusable principles instead of mirroring upstream structure

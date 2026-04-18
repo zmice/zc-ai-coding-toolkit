@@ -12,4 +12,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: performance-optimization
+  origin_path: skills/performance-optimization/SKILL.md
+  origin_id: skill:performance-optimization
   notes: 基于上游性能优化能力中文化整理。

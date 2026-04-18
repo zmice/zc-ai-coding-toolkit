@@ -4,7 +4,7 @@ Source: `https://github.com/obra/superpowers`
 
 ## Status
 
-Registered from historical upstream tracking. No immutable snapshot captured in the new governance layer yet.
+Registered from historical upstream tracking. Initial baseline snapshot captured in the new governance layer.
 
 ## Historical Role
 
@@ -21,3 +21,7 @@ Registered from historical upstream tracking. No immutable snapshot captured in 
 
 - Treat it as an architecture reference, not as a direct content source to mirror.
 
+## Snapshot Baseline
+
+- baseline: `references/snapshots/superpowers/2026-04-18T18-02-14-443Z-2026-04-19-baseline.json`
+- current governance status: `active`

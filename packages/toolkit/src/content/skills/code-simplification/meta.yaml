@@ -12,4 +12,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: code-simplification
+  origin_path: skills/code-simplification/SKILL.md
+  origin_id: skill:code-simplification
   notes: 基于上游代码简化能力中文化整理。

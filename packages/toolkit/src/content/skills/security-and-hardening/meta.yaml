@@ -12,4 +12,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: security-and-hardening
+  origin_path: skills/security-and-hardening/SKILL.md
+  origin_id: skill:security-and-hardening
   notes: 沿用上游安全加固能力，并对齐本仓库审查维度。

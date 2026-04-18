@@ -12,4 +12,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: frontend-ui-engineering
+  origin_path: skills/frontend-ui-engineering/SKILL.md
+  origin_id: skill:frontend-ui-engineering
   notes: 基于上游前端工程能力整理，并结合本仓库的界面设计偏好。

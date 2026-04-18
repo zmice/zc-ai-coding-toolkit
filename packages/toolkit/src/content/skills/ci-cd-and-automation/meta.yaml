@@ -12,4 +12,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: ci-cd-and-automation
+  origin_path: skills/ci-cd-and-automation/SKILL.md
+  origin_id: skill:ci-cd-and-automation
   notes: 基于上游自动化与发布能力整理为中文工作流。

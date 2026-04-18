@@ -1,0 +1,21 @@
+{
+  "upstream": "andrej-karpathy-skills",
+  "captured_at": "2026-04-18T18:02:14.443Z",
+  "label": "2026-04-19-baseline",
+  "metadata": {
+    "title": "Andrej Karpathy Skills",
+    "kind": "github-public-repo",
+    "status": "active",
+    "owner": "codex",
+    "source_paths": [
+      "CLAUDE.md",
+      "README.md",
+      "EXAMPLES.md",
+      "skills/karpathy-guidelines"
+    ]
+  },
+  "notes": {
+    "path": "references/notes/andrej-karpathy-skills.md",
+    "content": "# Andrej Karpathy Skills\n\nSource: `https://github.com/multica-ai/andrej-karpathy-skills`\n\n## Status\n\nRegistered for manual review. No local snapshot captured yet.\n\n## Why Track It\n\n- It packages a compact set of agent-behavior guidelines derived from Andrej Karpathy's public observations on LLM coding failure modes.\n- It is relevant to `toolkit` governance because it overlaps with our existing interests in:\n  - explicit assumptions\n  - simplicity-first implementation\n  - surgical changes\n  - goal-driven execution\n\n## Observed Surface\n\nCurrent repo surface observed at registration time:\n\n- `CLAUDE.md`\n- `README.md`\n- `EXAMPLES.md`\n- `skills/karpathy-guidelines`\n\n## Expected Downstream Value\n\n- Compare its \"single-file guidance\" style with our structured `toolkit` content model.\n- Evaluate whether any principles should be absorbed as:\n  - `toolkit` metadata conventions\n  - command/skill wording improvements\n  - platform-specific guidance excerpts\n\n## Boundaries\n\n- Do not copy content directly into `packages/toolkit` without manual review.\n- Prefer extracting reusable principles instead of mirroring repository structure.\n- Use snapshots and diff reports before any adoption decision.\n\n## Next Step\n\n- Capture the first immutable snapshot under `references/snapshots/andrej-karpathy-skills/`\n- Run `zc upstream diff andrej-karpathy-skills` after the first baseline is available\n"
+  }
+}

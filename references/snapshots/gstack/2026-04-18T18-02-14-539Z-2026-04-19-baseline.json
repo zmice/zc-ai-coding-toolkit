@@ -1,0 +1,20 @@
+{
+  "upstream": "gstack",
+  "captured_at": "2026-04-18T18:02:14.539Z",
+  "label": "2026-04-19-baseline",
+  "metadata": {
+    "title": "GStack",
+    "kind": "github-public-repo",
+    "status": "active",
+    "owner": "codex",
+    "source_paths": [
+      "prompts",
+      "commands",
+      "docs"
+    ]
+  },
+  "notes": {
+    "path": "references/notes/gstack.md",
+    "content": "# GStack\n\nSource: `https://github.com/garrytan/gstack`\n\n## Status\n\nRegistered from historical upstream tracking. No immutable snapshot captured in the new governance layer yet.\n\n## Historical Role\n\n- Commit history previously tracked it as an architecture reference.\n- It influenced strategic filtering, UX review, and \"role embedded in command\" style decisions.\n\n## Expected Downstream Value\n\n- UX and workflow review heuristics\n- Command-layer product framing\n- Prompt architecture references for design-heavy tasks\n\n## Boundaries\n\n- Treat it as a reference for behavior and architecture, not as a direct source tree to replicate.\n\n"
+  }
+}

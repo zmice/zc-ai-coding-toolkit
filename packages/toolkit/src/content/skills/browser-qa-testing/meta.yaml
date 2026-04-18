@@ -12,4 +12,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: browser-qa-testing
+  origin_path: skills/browser-qa-testing/SKILL.md
+  origin_id: skill:browser-qa-testing
   notes: 沿用上游浏览器 QA 能力，并结合本仓库验证门禁输出。

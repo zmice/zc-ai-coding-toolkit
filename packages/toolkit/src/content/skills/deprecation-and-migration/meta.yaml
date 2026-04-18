@@ -12,4 +12,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: deprecation-and-migration
+  origin_path: skills/deprecation-and-migration/SKILL.md
+  origin_id: skill:deprecation-and-migration
   notes: 基于上游迁移废弃实践整理。

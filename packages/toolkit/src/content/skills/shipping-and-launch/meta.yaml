@@ -15,4 +15,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: shipping-and-launch
+  origin_path: skills/shipping-and-launch/SKILL.md
+  origin_id: skill:shipping-and-launch
   notes: 基于上游发布准备能力整理。

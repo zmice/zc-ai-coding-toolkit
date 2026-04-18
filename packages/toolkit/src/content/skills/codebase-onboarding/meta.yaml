@@ -12,4 +12,7 @@ platforms:
 source:
   upstream: agent-skills
   strategy: adapted
+  origin_name: codebase-onboarding
+  origin_path: skills/codebase-onboarding/SKILL.md
+  origin_id: skill:codebase-onboarding
   notes: 延续上游 onboarding 方法，并对齐本仓库上下文压缩习惯。
