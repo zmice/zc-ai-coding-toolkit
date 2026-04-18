@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, it } from "vitest";
 
-import { resolveInstallTarget } from "./install-target.js";
+import { normalizeInstallSelector, resolveInstallTarget } from "./install-target.js";
 
 const tempDirs: string[] = [];
 
@@ -19,9 +19,35 @@ afterEach(async () => {
 });
 
 describe("resolveInstallTarget", () => {
+  it("normalizes new target flags into a global selector", () => {
+    const result = normalizeInstallSelector({ global: true });
+
+    assert.equal(result.mode, "global");
+    assert.equal(result.dir, undefined);
+  });
+
+  it("normalizes --dir and legacy --out to the same explicit directory", () => {
+    const result = normalizeInstallSelector({ dir: "/tmp/custom", out: "/tmp/custom" });
+
+    assert.equal(result.mode, "project");
+    assert.equal(result.dir, "/tmp/custom");
+  });
+
+  it("rejects conflicting target flags", async () => {
+    assert.throws(
+      () => normalizeInstallSelector({ project: true, global: true }),
+      /`--project` 与 `--global` 不能同时使用/,
+    );
+
+    assert.throws(
+      () => normalizeInstallSelector({ dir: "/tmp/custom", global: true }),
+      /显式目录 `--dir` 不能与 `--project` 或 `--global` 同时使用/,
+    );
+  });
+
   it("prefers the explicit output directory when provided", async () => {
     const result = await resolveInstallTarget("codex", {
-      out: "/tmp/codex-out",
+      dir: "/tmp/codex-out",
       cwd: "/tmp/ignored",
     });
 
@@ -78,6 +104,13 @@ describe("resolveInstallTarget", () => {
     await assert.rejects(
       () => resolveInstallTarget("codex", { scope: "workspace" }),
       /不支持的安装范围：workspace/,
+    );
+  });
+
+  it("rejects inconsistent legacy scope and new global flag", async () => {
+    await assert.rejects(
+      () => resolveInstallTarget("codex", { global: true, scope: "project" }),
+      /兼容参数 `--scope` 与新的安装目标参数不一致/,
     );
   });
 });

@@ -3,7 +3,7 @@
 一个面向 AI 编码工作流的 monorepo。这个仓库把 **内容事实源**、**统一操作 CLI**、**平台适配层** 和 **上游治理层** 分开维护，用来持续沉淀并分发一套可治理的 AI 编码工具包。
 
 当前主线能力包括：
-- `zc` 统一入口 CLI：运行 runtime、查询 toolkit、生成/安装平台产物、审阅 upstream
+- `zc` 统一入口 CLI：运行 runtime、查询 toolkit、生成/安装平台产物
 - `toolkit` 内容层：以 `meta.yaml + body.md + assets/` 维护 skills、commands、agents
 - `platform-*` 适配层：从 toolkit 生成 Qwen / Codex / Qoder 所需产物
 - `references` 治理层：追踪上游项目、baseline snapshot、diff、report 和导入提案
@@ -47,8 +47,8 @@ node apps/cli/dist/cli/index.js toolkit recommend build
 # 生成 / 安装平台产物
 node apps/cli/dist/cli/index.js platform generate qwen --plan --format json
 node apps/cli/dist/cli/index.js platform install codex --plan --format json
-node apps/cli/dist/cli/index.js platform install codex --scope global
-node apps/cli/dist/cli/index.js platform install qoder --scope global
+node apps/cli/dist/cli/index.js platform install codex --global
+node apps/cli/dist/cli/index.js platform where qoder --global --json
 
 # 查看上游治理状态
 pnpm upstream -- list
@@ -123,17 +123,19 @@ node apps/cli/dist/cli/index.js toolkit recommend <id>
 平台包消费 toolkit，而不是自己维护源码内容。
 
 ```bash
-node apps/cli/dist/cli/index.js platform generate qwen -o /tmp/qwen-out
-node apps/cli/dist/cli/index.js platform install codex -o /tmp/codex-out
-node apps/cli/dist/cli/index.js platform install codex --scope global
-node apps/cli/dist/cli/index.js platform install qoder --plan --format json
+node apps/cli/dist/cli/index.js platform generate qwen --dir /tmp/qwen-out
+node apps/cli/dist/cli/index.js platform install codex --dir /tmp/codex-out
+node apps/cli/dist/cli/index.js platform install codex --global
+node apps/cli/dist/cli/index.js platform where qoder --global --json
+node apps/cli/dist/cli/index.js platform install qoder --plan --json
 ```
 
 说明：
 
 - `platform generate/install --plan` 只输出计划，不落盘
 - `--format json` 适合脚本消费
-- `platform install` 未传 `-o` 时，会优先向上解析最近项目根，找不到再回退到当前目录
+- `platform install` 未传 `--dir` 时，会优先向上解析最近项目根，找不到再回退到当前目录
+- `platform where` 只解析目录，不执行写入
 
 ### 3. 审阅上游更新
 

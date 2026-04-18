@@ -6,6 +6,7 @@ const platformMocks = vi.hoisted(() => ({
   createQoderInstallPlan: vi.fn(),
   loadToolkitManifest: vi.fn(),
   importWorkspaceDistModule: vi.fn(),
+  normalizeInstallSelector: vi.fn(),
   resolveInstallTarget: vi.fn(),
   writeArtifacts: vi.fn(),
 }));
@@ -17,10 +18,11 @@ vi.mock("../../utils/workspace.js", () => ({
 }));
 
 vi.mock("../../utils/install-target.js", () => ({
+  normalizeInstallSelector: platformMocks.normalizeInstallSelector,
   resolveInstallTarget: platformMocks.resolveInstallTarget,
 }));
 
-import { runPlatformGenerate, runPlatformInstall } from "../platform.js";
+import { runPlatformGenerate, runPlatformInstall, runPlatformWhere } from "../platform.js";
 
 describe("platform CLI", () => {
   beforeEach(() => {
@@ -29,6 +31,7 @@ describe("platform CLI", () => {
     platformMocks.createQoderInstallPlan.mockReset();
     platformMocks.loadToolkitManifest.mockReset();
     platformMocks.importWorkspaceDistModule.mockReset();
+    platformMocks.normalizeInstallSelector.mockReset();
     platformMocks.resolveInstallTarget.mockReset();
     platformMocks.writeArtifacts.mockReset();
 
@@ -67,9 +70,18 @@ describe("platform CLI", () => {
 
       throw new Error(`unexpected import: ${relativePath}`);
     });
-    platformMocks.resolveInstallTarget.mockImplementation(async (_target: string, options: { out?: string; cwd?: string }) => ({
-      root: options.out ?? options.cwd ?? process.cwd(),
-      source: options.out ? "explicit" : "cwd",
+    platformMocks.normalizeInstallSelector.mockImplementation((options: {
+      dir?: string;
+      out?: string;
+      global?: boolean;
+      scope?: "project" | "global";
+    }) => ({
+      dir: options.dir ?? options.out,
+      mode: options.global || options.scope === "global" ? "global" : "project",
+    }));
+    platformMocks.resolveInstallTarget.mockImplementation(async (_target: string, options: { dir?: string; out?: string; cwd?: string }) => ({
+      root: options.dir ?? options.out ?? options.cwd ?? process.cwd(),
+      source: options.dir || options.out ? "explicit" : "cwd",
     }));
   });
 
@@ -85,7 +97,7 @@ describe("platform CLI", () => {
       dryRun: true,
     });
 
-    await runPlatformGenerate("qwen", { out: "/tmp/out", dryRun: true });
+    await runPlatformGenerate("qwen", { dir: "/tmp/out", dryRun: true });
 
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
       [{ path: "/tmp/out/QWEN.md", content: "# context" }],
@@ -99,7 +111,7 @@ describe("platform CLI", () => {
     });
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
-    await runPlatformGenerate("qwen", { out: "/tmp/out", plan: true, format: "json" });
+    await runPlatformGenerate("qwen", { dir: "/tmp/out", plan: true, json: true });
 
     expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
     const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
@@ -129,7 +141,7 @@ describe("platform CLI", () => {
       dryRun: false,
     });
 
-    await runPlatformInstall("codex", { out: "/tmp/install" });
+    await runPlatformInstall("codex", { dir: "/tmp/install" });
 
     expect(platformMocks.createCodexInstallPlan).toHaveBeenCalledWith(
       expect.anything(),
@@ -156,7 +168,7 @@ describe("platform CLI", () => {
       dryRun: false,
     });
 
-    await runPlatformInstall("codex", { out: "/tmp/install", force: true });
+    await runPlatformInstall("codex", { dir: "/tmp/install", force: true });
 
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
       [{ path: "/tmp/install/AGENTS.md", content: "# agents" }],
@@ -185,8 +197,11 @@ describe("platform CLI", () => {
     await runPlatformInstall("codex", {});
 
     expect(platformMocks.resolveInstallTarget).toHaveBeenCalledWith("codex", {
+      dir: undefined,
       out: undefined,
       cwd: process.cwd(),
+      project: undefined,
+      global: undefined,
       scope: undefined,
     });
     expect(platformMocks.createCodexInstallPlan).toHaveBeenCalledWith(
@@ -209,7 +224,7 @@ describe("platform CLI", () => {
     });
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
-    await runPlatformInstall("codex", { out: "/tmp/install", plan: true, format: "json" });
+    await runPlatformInstall("codex", { dir: "/tmp/install", plan: true, json: true });
 
     expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
     const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
@@ -247,12 +262,15 @@ describe("platform CLI", () => {
       hint: "Qoder 官方文档定义用户级 memory 文件位于 `~/.qoder/AGENTS.md`。",
     });
 
-    await runPlatformInstall("qoder", { scope: "global" });
+    await runPlatformInstall("qoder", { global: true });
 
     expect(platformMocks.resolveInstallTarget).toHaveBeenCalledWith("qoder", {
+      dir: undefined,
       out: undefined,
       cwd: process.cwd(),
-      scope: "global",
+      project: undefined,
+      global: true,
+      scope: undefined,
     });
     expect(platformMocks.createQoderInstallPlan).toHaveBeenCalledWith(
       expect.anything(),
@@ -277,7 +295,7 @@ describe("platform CLI", () => {
     });
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
-    await runPlatformInstall("codex", { scope: "global", plan: true, format: "json" });
+    await runPlatformInstall("codex", { global: true, plan: true, json: true });
 
     const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
     expect(payload).toEqual(
@@ -289,6 +307,38 @@ describe("platform CLI", () => {
         root: "/home/test",
         rootSource: "official-global",
         hint: "Codex 官方文档将 `~` 视为 AGENTS.md 的典型用户级位置。",
+      }),
+    );
+
+    logSpy.mockRestore();
+  });
+
+  it("prints resolved install targets via platform where", async () => {
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: "/home/test",
+      source: "official-global",
+      hint: "Codex 官方文档将 `~` 视为 AGENTS.md 的典型用户级位置。",
+    });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformWhere("codex", { global: true, json: true });
+
+    expect(platformMocks.resolveInstallTarget).toHaveBeenCalledWith("codex", {
+      dir: undefined,
+      out: undefined,
+      cwd: process.cwd(),
+      project: undefined,
+      global: true,
+      scope: undefined,
+    });
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload).toEqual(
+      expect.objectContaining({
+        mode: "where",
+        target: "codex",
+        scope: "global",
+        root: "/home/test",
+        rootSource: "official-global",
       }),
     );
 

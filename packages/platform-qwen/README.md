@@ -16,10 +16,11 @@
 ## 常用用法
 
 ```bash
-zc platform generate qwen -o /tmp/qwen-out
+zc platform generate qwen --dir /tmp/qwen-out
 zc platform generate qwen --plan --format json
 zc platform install qwen
-zc platform install qwen -o <dir>
+zc platform install qwen --dir <dir>
+zc platform where qwen --project
 ```
 
 项目安装 / 全局安装的详细步骤见：

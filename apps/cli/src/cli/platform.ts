@@ -1,7 +1,7 @@
 import type { Command } from "commander";
 import { join, resolve } from "node:path";
 import type { OverwriteMode } from "@zmice/platform-core";
-import { resolveInstallTarget } from "../utils/install-target.js";
+import { normalizeInstallSelector, resolveInstallTarget } from "../utils/install-target.js";
 import {
   ArtifactConflictError,
   importWorkspaceDistModule,
@@ -12,6 +12,13 @@ import {
 type PlatformName = "qwen" | "codex" | "qoder";
 type PlatformOutputFormat = "text" | "json";
 type PlatformInstallScope = "project" | "global";
+type PlatformTargetSelectorOpts = {
+  dir?: string;
+  out?: string;
+  project?: boolean;
+  global?: boolean;
+  scope?: PlatformInstallScope;
+};
 
 interface ToolkitAssetMetaLike {
   kind: "skill" | "command" | "agent";
@@ -176,6 +183,17 @@ function resolveOutputFormat(format: string | undefined): PlatformOutputFormat {
   return format === "json" ? "json" : "text";
 }
 
+function resolveOutputFormatFromFlags(format: string | undefined, json?: boolean): PlatformOutputFormat {
+  if (json) {
+    return "json";
+  }
+  return resolveOutputFormat(format);
+}
+
+function resolveScopeFromSelector(opts: PlatformTargetSelectorOpts): PlatformInstallScope {
+  return normalizeInstallSelector(opts).mode;
+}
+
 function emitOutput(format: PlatformOutputFormat, payload: object, text: string): void {
   if (format === "json") {
     console.log(JSON.stringify(payload, null, 2));
@@ -270,6 +288,39 @@ function buildResultPayload(action: "generate" | "install", target: PlatformName
   };
 }
 
+function summarizeWhere(target: PlatformName, root: string, metadata: {
+  rootSource: string;
+  hint?: string;
+  scope: PlatformInstallScope;
+  marker?: string;
+}): string {
+  return [
+    `${target} 安装目标`,
+    `范围：${metadata.scope === "global" ? "global" : "project"}`,
+    `解析来源：${metadata.rootSource}`,
+    ...(metadata.marker ? [`命中标记：${metadata.marker}`] : []),
+    `目录：${root}`,
+    ...(metadata.hint ? [`提示：${metadata.hint}`] : []),
+  ].join("\n");
+}
+
+function buildWherePayload(target: PlatformName, root: string, metadata: {
+  rootSource: string;
+  hint?: string;
+  scope: PlatformInstallScope;
+  marker?: string;
+}): object {
+  return {
+    mode: "where",
+    target,
+    scope: metadata.scope,
+    root,
+    rootSource: metadata.rootSource,
+    marker: metadata.marker ?? null,
+    hint: metadata.hint ?? null,
+  };
+}
+
 function reportConflict(error: ArtifactConflictError, target: PlatformName, destinationRoot: string): void {
   console.error(`${target} 安装失败：目标目录存在冲突文件。`);
   console.error(`目标目录：${destinationRoot}`);
@@ -282,10 +333,10 @@ function reportConflict(error: ArtifactConflictError, target: PlatformName, dest
 
 export async function runPlatformGenerate(
   target: PlatformName,
-  opts: { out?: string; dryRun?: boolean; force?: boolean; plan?: boolean; format?: string }
+  opts: { dir?: string; out?: string; dryRun?: boolean; force?: boolean; plan?: boolean; format?: string; json?: boolean }
 ): Promise<void> {
-  const outputRoot = opts.out ? resolve(opts.out) : resolveWorkspacePath(`.generated/${target}`);
-  const format = resolveOutputFormat(opts.format);
+  const outputRoot = opts.dir ? resolve(opts.dir) : opts.out ? resolve(opts.out) : resolveWorkspacePath(`.generated/${target}`);
+  const format = resolveOutputFormatFromFlags(opts.format, opts.json);
   const manifest = await loadToolkitManifest();
   const platformModule = await loadPlatformModule(target);
   const plan = createGenerationPlan(target, platformModule, manifest);
@@ -323,17 +374,27 @@ export async function runPlatformGenerate(
 
 export async function runPlatformInstall(
   target: PlatformName,
-  opts: { out?: string; dryRun?: boolean; force?: boolean; plan?: boolean; format?: string; scope?: PlatformInstallScope }
+  opts: PlatformTargetSelectorOpts & {
+    dryRun?: boolean;
+    force?: boolean;
+    plan?: boolean;
+    format?: string;
+    json?: boolean;
+  }
 ): Promise<void> {
+  const scope = resolveScopeFromSelector(opts);
   const targetResolution = await resolveInstallTarget(target, {
+    dir: opts.dir,
     out: opts.out,
     cwd: process.cwd(),
+    project: opts.project,
+    global: opts.global,
     scope: opts.scope,
   });
   const autoResolvedRoot = targetResolution.source !== "explicit";
   const destinationRoot = resolve(targetResolution.root);
   const overwrite = resolveOverwriteMode(opts.force);
-  const format = resolveOutputFormat(opts.format);
+  const format = resolveOutputFormatFromFlags(opts.format, opts.json);
   const manifest = await loadToolkitManifest();
   const platformModule = await loadPlatformModule(target);
   const plan = createInstallPlan(target, platformModule, manifest, destinationRoot, overwrite);
@@ -345,7 +406,7 @@ export async function runPlatformInstall(
         autoResolvedRoot,
         rootSource: targetResolution.source,
         hint: targetResolution.hint,
-        scope: opts.scope ?? "project",
+        scope,
       }),
       summarizePlan("install", target, destinationRoot, plan, {
         autoResolvedRoot,
@@ -374,7 +435,7 @@ export async function runPlatformInstall(
         autoResolvedRoot,
         rootSource: targetResolution.source,
         hint: targetResolution.hint,
-        scope: opts.scope ?? "project",
+        scope,
       }),
       summarizeResult("install", target, destinationRoot, result, {
         autoResolvedRoot,
@@ -392,29 +453,84 @@ export async function runPlatformInstall(
   }
 }
 
+export async function runPlatformWhere(
+  target: PlatformName,
+  opts: PlatformTargetSelectorOpts & { format?: string; json?: boolean },
+): Promise<void> {
+  const scope = resolveScopeFromSelector(opts);
+  const targetResolution = await resolveInstallTarget(target, {
+    dir: opts.dir,
+    out: opts.out,
+    cwd: process.cwd(),
+    project: opts.project,
+    global: opts.global,
+    scope: opts.scope,
+  });
+  const format = resolveOutputFormatFromFlags(opts.format, opts.json);
+  const root = resolve(targetResolution.root);
+
+  emitOutput(
+    format,
+    buildWherePayload(target, root, {
+      scope,
+      rootSource: targetResolution.source,
+      marker: targetResolution.marker,
+      hint: targetResolution.hint,
+    }),
+    summarizeWhere(target, root, {
+      scope,
+      rootSource: targetResolution.source,
+      marker: targetResolution.marker,
+      hint: targetResolution.hint,
+    }),
+  );
+}
+
 export function registerPlatformCommand(program: Command): void {
   const platform = program.command("platform").description("平台生成和安装命令");
 
   platform
     .command("generate")
+    .alias("g")
     .description("根据工具包清单生成平台产物")
     .argument("<target>", "目标平台 (qwen|codex|qoder)")
-    .option("-o, --out <dir>", "输出目录")
+    .option("-d, --dir <dir>", "输出目录")
+    .option("-o, --out <dir>", "兼容旧参数：输出目录")
     .option("--plan", "只输出产物计划，不落盘")
     .option("--format <format>", "输出格式：text | json", "text")
+    .option("-j, --json", "直接输出 JSON")
     .option("--dry-run", "仅预览将要生成的产物，不落盘")
     .option("-f, --force", "覆盖目标目录中已有但内容不同的产物")
     .action(runPlatformGenerate);
 
   platform
     .command("install")
+    .alias("i")
     .description("根据工具包清单生成并安装平台产物")
     .argument("<target>", "目标平台 (qwen|codex|qoder)")
-    .option("-o, --out <dir>", "安装目标目录，默认自动解析最近项目根")
-    .option("--scope <scope>", "安装范围：project | global", "project")
+    .option("-d, --dir <dir>", "显式安装目录")
+    .option("-p, --project", "安装到当前目录向上解析出的最近项目根")
+    .option("-g, --global", "安装到官方文档定义的默认全局位置")
+    .option("-o, --out <dir>", "兼容旧参数：显式安装目录")
+    .option("--scope <scope>", "兼容旧参数：project | global")
     .option("--plan", "只输出安装计划，不落盘")
     .option("--format <format>", "输出格式：text | json", "text")
+    .option("-j, --json", "直接输出 JSON")
     .option("--dry-run", "仅预览将要安装的产物，不落盘")
     .option("-f, --force", "覆盖目标目录中已有但内容不同的产物")
     .action(runPlatformInstall);
+
+  platform
+    .command("where")
+    .alias("w")
+    .description("解析平台安装目录，不执行写入")
+    .argument("<target>", "目标平台 (qwen|codex|qoder)")
+    .option("-d, --dir <dir>", "显式安装目录")
+    .option("-p, --project", "解析最近项目根")
+    .option("-g, --global", "解析官方文档定义的默认全局位置")
+    .option("-o, --out <dir>", "兼容旧参数：显式安装目录")
+    .option("--scope <scope>", "兼容旧参数：project | global")
+    .option("--format <format>", "输出格式：text | json", "text")
+    .option("-j, --json", "直接输出 JSON")
+    .action(runPlatformWhere);
 }

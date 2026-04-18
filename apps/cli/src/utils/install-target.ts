@@ -5,12 +5,27 @@ import { homedir } from "node:os";
 type PlatformName = "qwen" | "codex" | "qoder";
 type ProjectRootMarker = ".git" | "pnpm-workspace.yaml" | "package.json";
 type InstallScope = "project" | "global";
+type InstallSelectorMode = "project" | "global";
 
 export interface InstallTargetResolution {
   root: string;
   source: "explicit" | "project-root" | "cwd" | "official-global";
   marker?: ProjectRootMarker;
   hint?: string;
+}
+
+export interface InstallSelectorInput {
+  dir?: string;
+  out?: string;
+  cwd?: string;
+  project?: boolean;
+  global?: boolean;
+  scope?: InstallScope | string;
+}
+
+export interface InstallSelector {
+  dir?: string;
+  mode: InstallSelectorMode;
 }
 
 const projectRootMarkers: readonly ProjectRootMarker[] = [".git", "pnpm-workspace.yaml", "package.json"];
@@ -64,30 +79,63 @@ function resolveOfficialGlobalTarget(platform: PlatformName): InstallTargetResol
       };
     case "qwen":
       throw new Error(
-        "Qwen 官方文档只明确了项目级 `QWEN.md` 和用户级 `~/.qwen/settings.json`，未给出全局 `QWEN.md` 默认位置。请显式传入 `-o <dir>`。",
+        "Qwen 官方文档只明确了项目级 `QWEN.md` 和用户级 `~/.qwen/settings.json`，未给出全局 `QWEN.md` 默认位置。请显式传入 `--dir <path>`。",
       );
   }
 }
 
+export function normalizeInstallSelector(options: InstallSelectorInput): InstallSelector {
+  const explicitDir = options.dir ?? options.out;
+  if (options.dir && options.out && resolve(options.dir) !== resolve(options.out)) {
+    throw new Error("`--dir` 与兼容参数 `--out` 不能同时指向不同目录。");
+  }
+
+  if (options.project && options.global) {
+    throw new Error("`--project` 与 `--global` 不能同时使用。");
+  }
+
+  if (explicitDir && (options.project || options.global)) {
+    throw new Error("显式目录 `--dir` 不能与 `--project` 或 `--global` 同时使用。");
+  }
+
+  if (options.scope && options.scope !== "project" && options.scope !== "global") {
+    throw new Error(`不支持的安装范围：${options.scope}。可选值：project | global`);
+  }
+
+  const selectorFromFlags: InstallSelectorMode =
+    options.global ? "global" : "project";
+
+  if (options.scope && options.scope !== selectorFromFlags && (options.project || options.global)) {
+    throw new Error("兼容参数 `--scope` 与新的安装目标参数不一致。");
+  }
+
+  const mode: InstallSelectorMode = explicitDir
+    ? "project"
+    : options.scope === "global"
+      ? "global"
+      : selectorFromFlags;
+
+  return {
+    dir: explicitDir,
+    mode,
+  };
+}
+
 export async function resolveInstallTarget(
   _platform: PlatformName,
-  options: { out?: string; cwd?: string; scope?: InstallScope | string },
+  options: InstallSelectorInput,
 ): Promise<InstallTargetResolution> {
   const platform = _platform;
+  const selector = normalizeInstallSelector(options);
 
-  if (options.out) {
+  if (selector.dir) {
     return {
-      root: resolve(options.out),
+      root: resolve(selector.dir),
       source: "explicit",
     };
   }
 
-  const scope = options.scope ?? "project";
-  if (scope !== "project" && scope !== "global") {
-    throw new Error(`不支持的安装范围：${scope}。可选值：project | global`);
-  }
-
-  if (scope === "global") {
+  if (selector.mode === "global") {
     return resolveOfficialGlobalTarget(platform);
   }
 

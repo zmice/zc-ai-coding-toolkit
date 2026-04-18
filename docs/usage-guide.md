@@ -150,15 +150,18 @@ npm install -g @qwen-code/qwen-code@latest
 
 ## 4. 给不同 AI 平台安装内容
 
-`zc platform install <target>` 支持两种模式：
+`zc platform install <target>` 支持三种安装目标声明方式：
 
 - 项目安装
-  - 不传 `-o`，或显式传 `--scope project`
+  - 不传参数，或显式传 `--project`
   - 默认自动解析最近项目根
 - 全局安装
-  - 显式传 `--scope global`
+  - 显式传 `--global`
   - 仅在官方文档明确给出默认位置时自动解析
-  - 若官方文档未明确，CLI 会拒绝猜测并要求你显式传 `-o`
+  - 若官方文档未明确，CLI 会拒绝猜测并要求你显式传 `--dir`
+- 自定义目录安装
+  - 显式传 `--dir <path>`
+  - 直接安装到指定目录，不再做路径猜测
 
 ### 产物矩阵
 
@@ -186,12 +189,12 @@ zc platform install codex
 zc platform install qoder
 zc platform install qwen
 # 或显式声明
-zc platform install codex --scope project
+zc platform install codex --project
 ```
 
 说明：
 
-- 不传 `-o` 时，CLI 会优先向上寻找最近项目根标记：
+- 不传 `--dir` 时，CLI 会优先向上寻找最近项目根标记：
   - `.git`
   - `pnpm-workspace.yaml`
   - `package.json`
@@ -207,26 +210,28 @@ zc platform install codex --scope project
 对于已在官方文档中明确给出默认位置的平台，可以直接这样装：
 
 ```bash
-zc platform install codex --scope global
-zc platform install qoder --scope global
+zc platform install codex --global
+zc platform install qoder --global
+zc platform where codex --global
+zc platform where qoder --global --json
 ```
 
 当前行为：
 
-- `codex --scope global`
+- `codex --global`
   - 默认安装到 `~/AGENTS.md`
-- `qoder --scope global`
+- `qoder --global`
   - 默认安装到 `~/.qoder/AGENTS.md`
-- `qwen --scope global`
+- `qwen --global`
   - CLI 会报错并提示显式传 `-o`
   - 原因是官方文档没有给出全局 `QWEN.md` 默认位置
 
 如果你已经明确知道目标工具的自定义全局目录，也可以继续显式指定：
 
 ```bash
-zc platform install codex -o <codex-global-root>
-zc platform install qoder -o <qoder-global-root>
-zc platform install qwen -o <qwen-global-root>
+zc platform install codex --dir <codex-global-root>
+zc platform install qoder --dir <qoder-global-root>
+zc platform install qwen --dir <qwen-global-root>
 ```
 
 ### 4.3 安装前先预演
@@ -235,15 +240,17 @@ zc platform install qwen -o <qwen-global-root>
 
 ```bash
 zc platform install codex --plan
-zc platform install codex --scope global --plan
-zc platform install qoder --plan --format json
-zc platform install qwen -o /tmp/qwen-global --plan --format json
+zc platform install codex --global --plan
+zc platform install qoder --plan --json
+zc platform install qwen --dir /tmp/qwen-global --plan --json
+zc platform where codex --global
 ```
 
 说明：
 
 - `--plan` 只输出计划，不写文件
-- `--format json` 适合脚本消费
+- `--json` 是 `--format json` 的简写，适合脚本消费
+- `platform where` 只解析目录和来源，不执行写入
 
 ## 5. 冲突与覆盖
 
@@ -256,7 +263,7 @@ zc platform install qwen -o /tmp/qwen-global --plan --format json
 如果确认需要覆盖，显式追加：
 
 ```bash
-zc platform install codex -o <target-dir> --force
+zc platform install codex --dir <target-dir> --force
 ```
 
 ## 6. 上游治理入口
@@ -294,7 +301,7 @@ pnpm verify
 
 ```bash
 zc platform install codex --plan
-zc platform install codex --scope global --plan
+zc platform install codex --global --plan
 zc platform install qoder --plan
 zc platform install qwen --plan
 ```

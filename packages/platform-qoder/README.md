@@ -16,11 +16,12 @@
 
 ```bash
 zc platform install qoder
-zc platform install qoder --scope global
-zc platform install qoder --plan --format json
+zc platform install qoder --global
+zc platform where qoder --global --json
+zc platform install qoder --plan --json
 ```
 
-省略 `-o` 时，CLI 会优先把最近项目根解析为安装目录。
+省略 `--dir` 时，CLI 会优先把最近项目根解析为安装目录。
 
 项目安装 / 全局安装的详细步骤见：
 

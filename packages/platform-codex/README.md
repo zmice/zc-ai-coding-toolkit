@@ -15,10 +15,11 @@
 ## 常用用法
 
 ```bash
-zc platform install codex -o /tmp/codex-out
+zc platform install codex --dir /tmp/codex-out
 zc platform install codex
-zc platform install codex --scope global
-zc platform install codex --plan --format json
+zc platform install codex --global
+zc platform where codex --global --json
+zc platform install codex --plan --json
 ```
 
 项目安装 / 全局安装的详细步骤见：

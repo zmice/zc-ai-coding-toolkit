@@ -42,7 +42,7 @@
 CLI contract 命令：
 
 - `node apps/cli/dist/cli/index.js platform generate <target> [-o <dir>]`
-- `node apps/cli/dist/cli/index.js platform install <target> -o <dir> [--force] [--dry-run]`
+- `node apps/cli/dist/cli/index.js platform install <target> --dir <path> [--force] [--plan]`
 
 ## Project Structure
 
@@ -230,7 +230,7 @@ template context 必须统一，平台渲染器只能在这个上下文上做特
 
 - 语义：根据 toolkit manifest 生成平台产物到输出目录
 - 必需参数：`<target>`，取值只能是 `qwen | codex | qoder`
-- 可选参数：`-o, --out <dir>`
+- 可选参数：`-d, --dir <dir>`
 - 可选模式：
   - `--plan`：只输出产物计划，不写文件
   - `--format json`：输出 JSON，便于脚本消费
@@ -251,20 +251,36 @@ template context 必须统一，平台渲染器只能在这个上下文上做特
 - 必需参数：`<target>`
 - 默认 overwrite policy：`error`
 - 可选参数：
-  - `-o, --out <dir>`：显式安装目录
+  - `-d, --dir <dir>`：显式安装目录
+  - `-p, --project`：显式使用项目级自动解析
+  - `-g, --global`：显式使用官方默认全局目录
   - `--force`：覆盖冲突文件
-  - `--dry-run`：只显示计划，不写盘
   - `--plan`：只输出安装计划，不写盘
-  - `--format json`：输出 JSON，便于脚本消费
+  - `--format json` / `--json`：输出 JSON，便于脚本消费
 - 默认解析规则：
-  - 优先使用显式 `-o`
+  - 优先使用显式 `--dir`
+  - 其次使用 `--global`
   - 否则向上寻找最近的项目根标记：`.git`、`pnpm-workspace.yaml`、`package.json`
   - 若未找到项目根，再回退到当前工作目录
 - 输出行为：
   - 成功时打印目标平台、安装根目录、写入/跳过/覆盖数量
   - 自动推导安装目录时，必须明确标记来源，如 `project-root` 或 `cwd`
   - 冲突时必须列出冲突路径
-  - dry-run 和 plan 都必须显式标记为预览，不可让用户误以为已安装
+  - plan 必须显式标记为预览，不可让用户误以为已安装
+
+### `zc platform where`
+
+- 语义：解析平台安装目录，不执行写入
+- 必需参数：`<target>`
+- 可选参数：
+  - `-d, --dir <dir>`
+  - `-p, --project`
+  - `-g, --global`
+  - `--format json` / `--json`
+- 输出行为：
+  - 必须告诉用户解析来源：`explicit | project-root | cwd | official-global`
+  - 若命中了项目根标记，应输出对应 marker
+  - 若使用了官方默认全局路径，应输出官方提示说明
 
 ### CLI Output Contract
 

@@ -38,8 +38,8 @@ zc toolkit recommend build
 zc platform generate qwen --plan --format json
 zc platform install codex --plan --format json
 zc platform install qoder
-zc platform install codex --scope global
-zc platform install qoder --scope global
+zc platform install codex --global
+zc platform where qoder --global --json
 ```
 
 ## 安装与更新
