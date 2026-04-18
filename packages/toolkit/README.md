@@ -60,6 +60,16 @@ node ../../apps/cli/dist/cli/index.js toolkit recommend <query>
 
 `<query>` 同时支持完整资产 ID（如 `command:build`）和唯一名称（如 `build`）。
 
+当前 `toolkit recommend` 会额外给出：
+
+- workflow 家族
+- workflow 角色
+- 推荐起始入口
+
+统一任务开始入口资产为：
+
+- `command:start`
+
 ## 与其他层的关系
 
 - `apps/cli` 读取 toolkit，但不拥有内容

@@ -41,5 +41,27 @@ describe("toolkit query helpers", () => {
         "skill:engineering-principles"
       ]
     );
+    assert.deepEqual(recommendation?.route, {
+      family: "lifecycle",
+      role: "stage-entry",
+      taskTypes: ["feature", "bugfix"],
+      next: ["command:quality-review", "command:verify"],
+      requiresFullLifecycle: true
+    });
+    assert.deepEqual(recommendation?.entry, {
+      commandId: "command:start",
+      reason: "这是阶段入口；若还未完成任务判型，建议先从统一入口开始。"
+    });
+  });
+
+  it("treats the unified start asset as the routing entry", async () => {
+    const manifest = await loadToolkitManifest();
+    const recommendation = recommendToolkitAssets(manifest, "start");
+
+    assert.equal(recommendation?.target.id, "command:start");
+    assert.deepEqual(recommendation?.entry, {
+      commandId: "command:start",
+      reason: "该资产本身就是统一任务开始入口。"
+    });
   });
 });

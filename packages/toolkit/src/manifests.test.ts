@@ -33,6 +33,18 @@ describe("createToolkitManifest", () => {
       "core"
     );
     assert.equal(
+      getToolkitAssetById(manifest, "command:start")?.meta.workflowFamily,
+      "intake"
+    );
+    assert.equal(
+      getToolkitAssetById(manifest, "command:sdd-tdd")?.meta.workflowRole,
+      "workflow-entry"
+    );
+    assert.deepEqual(
+      getToolkitAssetById(manifest, "command:start")?.meta.taskTypes,
+      ["feature", "bugfix", "review", "docs", "release", "investigation"]
+    );
+    assert.equal(
       getToolkitAssetById(manifest, "command:spec")?.meta.source?.upstream,
       "agent-skills"
     );
@@ -86,6 +98,7 @@ describe("loadToolkitManifest", () => {
     assert.ok(Boolean(manifest.byId["skill:branch-finish-and-cleanup"]));
     assert.ok(Boolean(manifest.byId["skill:release-documentation-sync"]));
     assert.ok(Boolean(manifest.byId["skill:developer-experience-audit"]));
+    assert.ok(Boolean(manifest.byId["command:start"]));
     assert.ok(Boolean(manifest.byId["command:spec"]));
     assert.ok(Boolean(manifest.byId["agent:architect"]));
     assert.equal(manifest.byId["skill:sdd-tdd-workflow"]?.meta.tier, "core");

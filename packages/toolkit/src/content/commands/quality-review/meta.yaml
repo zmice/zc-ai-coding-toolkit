@@ -16,6 +16,16 @@ platforms:
   - qwen
   - codex
   - qoder
+workflow_family: lifecycle
+workflow_role: stage-entry
+task_types:
+  - feature
+  - bugfix
+  - review
+platform_exposure:
+  codex: prompt-entry
+  qwen: command-style
+  qoder: command-style
 source:
   upstream: superpowers
   strategy: inspired

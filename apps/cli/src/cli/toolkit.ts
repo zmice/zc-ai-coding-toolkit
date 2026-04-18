@@ -15,6 +15,10 @@ interface ToolkitAssetMetaLike {
   suggests?: readonly string[];
   conflictsWith?: readonly string[];
   supersedes?: readonly string[];
+  workflowFamily?: string;
+  workflowRole?: string;
+  taskTypes?: readonly string[];
+  platformExposure?: Partial<Record<"qwen" | "codex" | "qoder", string>>;
   source?: {
     upstream: string;
     strategy: string;
@@ -53,6 +57,17 @@ interface ToolkitModule {
     target: ToolkitAssetLike;
     required: readonly ToolkitAssetLike[];
     suggested: readonly ToolkitAssetLike[];
+    route?: {
+      family: string;
+      role: string;
+      taskTypes: readonly string[];
+      next: readonly string[];
+      requiresFullLifecycle: boolean;
+    };
+    entry?: {
+      commandId: string;
+      reason: string;
+    };
   } | undefined;
   lintToolkitManifest(manifest: ToolkitManifestLike, options?: {
     knownUpstreams?: readonly string[];
@@ -116,6 +131,12 @@ function printAssetDetails(asset: ToolkitAssetLike): void {
   console.log(`建议：${asset.meta.suggests?.join(", ") ?? "-"}`);
   console.log(`冲突：${asset.meta.conflictsWith?.join(", ") ?? "-"}`);
   console.log(`替代：${asset.meta.supersedes?.join(", ") ?? "-"}`);
+  console.log(`工作流家族：${asset.meta.workflowFamily ?? "-"}`);
+  console.log(`工作流角色：${asset.meta.workflowRole ?? "-"}`);
+  console.log(`任务类型：${asset.meta.taskTypes?.join(", ") ?? "-"}`);
+  console.log(
+    `平台暴露：${asset.meta.platformExposure ? Object.entries(asset.meta.platformExposure).map(([platform, mode]) => `${platform}=${mode}`).join(", ") : "-"}`
+  );
   console.log(
     `来源：${asset.meta.source ? `${asset.meta.source.upstream} (${asset.meta.source.strategy})` : "-"}`
   );
@@ -129,7 +150,10 @@ function printAssetList(title: string, assets: readonly ToolkitAssetLike[]): voi
   }
 
   for (const asset of assets) {
-    console.log(`- ${asset.id} [${asset.meta.kind}] ${asset.meta.title}`);
+    const routeSummary = asset.meta.workflowFamily
+      ? ` | workflow=${asset.meta.workflowFamily}/${asset.meta.workflowRole ?? "-"} | task=${asset.meta.taskTypes?.join(", ") ?? "-"}`
+      : "";
+    console.log(`- ${asset.id} [${asset.meta.kind}] ${asset.meta.title}${routeSummary}`);
   }
 }
 
@@ -260,6 +284,17 @@ export function registerToolkitCommand(program: Command): void {
 
       console.log(`推荐目标：${recommendation.target.id}`);
       console.log(`- 标题：${recommendation.target.meta.title}`);
+      if (recommendation.route) {
+        console.log(`- 工作流家族：${recommendation.route.family}`);
+        console.log(`- 工作流角色：${recommendation.route.role}`);
+        console.log(`- 任务类型：${recommendation.route.taskTypes.join(", ") || "-"}`);
+        console.log(`- 下一跳：${recommendation.route.next.join(", ") || "-"}`);
+        console.log(`- 需要完整生命周期：${recommendation.route.requiresFullLifecycle ? "是" : "否"}`);
+      }
+      if (recommendation.entry) {
+        console.log(`- 推荐起始入口：${recommendation.entry.commandId}`);
+        console.log(`- 原因：${recommendation.entry.reason}`);
+      }
       printAssetList("必需资产：", recommendation.required);
       printAssetList("建议资产：", recommendation.suggested);
     });

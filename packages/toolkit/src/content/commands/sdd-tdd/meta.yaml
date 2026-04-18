@@ -17,6 +17,14 @@ platforms:
   - qwen
   - codex
   - qoder
+workflow_family: lifecycle
+workflow_role: workflow-entry
+task_types:
+  - feature
+platform_exposure:
+  codex: prompt-entry
+  qwen: command-style
+  qoder: command-style
 source:
   upstream: toolkit-original
   strategy: curated

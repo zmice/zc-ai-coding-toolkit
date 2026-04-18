@@ -3,12 +3,33 @@ export const toolkitPlatforms = ["qwen", "codex", "qoder"] as const;
 export const toolkitAssetTiers = ["core", "recommended", "optional", "experimental"] as const;
 export const toolkitAssetAudiences = ["default", "advanced", "maintainer"] as const;
 export const toolkitAssetStabilities = ["stable", "evolving", "experimental", "deprecated"] as const;
+export const toolkitWorkflowFamilies = ["intake", "lifecycle", "specialized", "support"] as const;
+export const toolkitWorkflowRoles = [
+  "intake-router",
+  "workflow-entry",
+  "stage-entry",
+  "specialized-entry",
+  "guardrail",
+  "support"
+] as const;
+export const toolkitTaskTypes = ["feature", "bugfix", "review", "docs", "release", "investigation"] as const;
+export const toolkitPlatformExposureModes = [
+  "hidden",
+  "listed",
+  "primary",
+  "prompt-entry",
+  "command-style"
+] as const;
 
 export type ToolkitKind = (typeof toolkitKinds)[number];
 export type ToolkitPlatform = (typeof toolkitPlatforms)[number];
 export type ToolkitAssetTier = (typeof toolkitAssetTiers)[number];
 export type ToolkitAssetAudience = (typeof toolkitAssetAudiences)[number];
 export type ToolkitAssetStability = (typeof toolkitAssetStabilities)[number];
+export type ToolkitWorkflowFamily = (typeof toolkitWorkflowFamilies)[number];
+export type ToolkitWorkflowRole = (typeof toolkitWorkflowRoles)[number];
+export type ToolkitTaskType = (typeof toolkitTaskTypes)[number];
+export type ToolkitPlatformExposureMode = (typeof toolkitPlatformExposureModes)[number];
 
 export interface ToolkitAssetSource {
   upstream: string;
@@ -24,6 +45,12 @@ export interface ToolkitAssetRelationships {
   suggests?: readonly string[];
   conflictsWith?: readonly string[];
   supersedes?: readonly string[];
+}
+
+export interface ToolkitPlatformExposure {
+  codex?: ToolkitPlatformExposureMode;
+  qwen?: ToolkitPlatformExposureMode;
+  qoder?: ToolkitPlatformExposureMode;
 }
 
 export interface ToolkitAssetMeta {
@@ -42,6 +69,10 @@ export interface ToolkitAssetMeta {
   suggests?: readonly string[];
   conflictsWith?: readonly string[];
   supersedes?: readonly string[];
+  workflowFamily?: ToolkitWorkflowFamily;
+  workflowRole?: ToolkitWorkflowRole;
+  taskTypes?: readonly ToolkitTaskType[];
+  platformExposure?: ToolkitPlatformExposure;
   source?: ToolkitAssetSource;
 }
 
@@ -84,5 +115,24 @@ export interface ToolkitManifest {
     suggests: Readonly<Record<string, readonly string[]>>;
     conflictsWith: Readonly<Record<string, readonly string[]>>;
     supersedes: Readonly<Record<string, readonly string[]>>;
+  };
+}
+
+export interface ToolkitRouteHint {
+  family: ToolkitWorkflowFamily;
+  role: ToolkitWorkflowRole;
+  taskTypes: readonly ToolkitTaskType[];
+  next: readonly string[];
+  requiresFullLifecycle: boolean;
+}
+
+export interface ToolkitRecommendation {
+  target: ToolkitAssetUnit;
+  required: readonly ToolkitAssetUnit[];
+  suggested: readonly ToolkitAssetUnit[];
+  route?: ToolkitRouteHint;
+  entry?: {
+    commandId: string;
+    reason: string;
   };
 }

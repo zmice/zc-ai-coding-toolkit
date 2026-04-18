@@ -61,6 +61,8 @@ describe("toolkit CLI", () => {
     expect(result.stderr).toBe("");
     expect(result.stdout).toContain("ID：command:build");
     expect(result.stdout).toContain("层级：core");
+    expect(result.stdout).toContain("工作流家族：lifecycle");
+    expect(result.stdout).toContain("工作流角色：stage-entry");
     expect(result.stdout).toContain("依赖：skill:incremental-implementation, skill:test-driven-development");
     expect(result.stdout).toContain("来源：agent-skills (adapted)");
   });
@@ -71,6 +73,7 @@ describe("toolkit CLI", () => {
     expect(result.stderr).toBe("");
     expect(result.stdout).toContain("command:quality-review");
     expect(result.stdout).toContain("agent:code-reviewer");
+    expect(result.stdout).toContain("workflow=lifecycle/stage-entry");
   });
 
   it("toolkit recommend returns required and suggested assets", async () => {
@@ -78,6 +81,9 @@ describe("toolkit CLI", () => {
 
     expect(result.stderr).toBe("");
     expect(result.stdout).toContain("推荐目标：command:build");
+    expect(result.stdout).toContain("工作流家族：lifecycle");
+    expect(result.stdout).toContain("工作流角色：stage-entry");
+    expect(result.stdout).toContain("推荐起始入口：command:start");
     expect(result.stdout).toContain("skill:incremental-implementation");
     expect(result.stdout).toContain("skill:test-driven-development");
     expect(result.stdout).toContain("command:quality-review");

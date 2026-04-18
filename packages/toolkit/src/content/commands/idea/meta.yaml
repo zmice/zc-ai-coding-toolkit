@@ -13,6 +13,15 @@ platforms:
   - qwen
   - codex
   - qoder
+workflow_family: specialized
+workflow_role: specialized-entry
+task_types:
+  - feature
+  - investigation
+platform_exposure:
+  codex: prompt-entry
+  qwen: command-style
+  qoder: command-style
 source:
   upstream: toolkit-original
   strategy: curated

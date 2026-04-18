@@ -85,6 +85,11 @@ npm install -g @zmice/zc@latest
 - 完整资产 ID，例如 `command:build`
 - 唯一名称，例如 `build`
 
+`toolkit recommend` 现在会返回 route-aware 信息：
+- workflow 家族
+- workflow 角色
+- 推荐起始入口
+
 ### Platform
 
 - `zc platform generate <qwen|codex|qoder>`
@@ -111,6 +116,7 @@ zc toolkit lint --json
 zc toolkit show build
 zc toolkit search review
 zc toolkit recommend build
+zc toolkit recommend start
 
 # platform
 zc platform generate qwen --plan --json

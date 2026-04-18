@@ -78,6 +78,8 @@
   - 看分层和 ownership
 - `docs/architecture/toolkit-content-optimization.md`
   - 看内容优化主线
+- `docs/architecture/workflow-entry-routing.md`
+  - 看统一任务入口与 workflow 路由设计
 - `docs/architecture/toolkit-naming-and-source-identity.md`
   - 看命名与上游身份映射规则
 - `docs/architecture/platform-deepening.md`

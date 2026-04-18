@@ -3,13 +3,21 @@ import {
   toolkitAssetAudiences,
   toolkitAssetStabilities,
   toolkitAssetTiers,
+  toolkitPlatformExposureModes,
   toolkitPlatforms,
+  toolkitTaskTypes,
+  toolkitWorkflowFamilies,
+  toolkitWorkflowRoles,
   type ToolkitAssetAudience,
   type ToolkitAssetMeta,
+  type ToolkitPlatformExposure,
   type ToolkitAssetSource,
   type ToolkitAssetStability,
+  type ToolkitTaskType,
   type ToolkitAssetTier,
-  type ToolkitPlatform
+  type ToolkitPlatform,
+  type ToolkitWorkflowFamily,
+  type ToolkitWorkflowRole
 } from "../types.js";
 
 type LooseRecord = Record<string, unknown>;
@@ -72,6 +80,24 @@ function assertAssetReferenceArray(value: unknown, fieldName: string): readonly 
   return references;
 }
 
+function assertTaskTypeArray(value: unknown): readonly ToolkitTaskType[] | undefined {
+  const taskTypes = assertStringArray(value, "task_types");
+
+  if (!taskTypes) {
+    return undefined;
+  }
+
+  for (const taskType of taskTypes) {
+    if (!(toolkitTaskTypes as readonly string[]).includes(taskType)) {
+      throw new Error(
+        `Invalid asset meta: task_types must only contain ${toolkitTaskTypes.join(", ")}`
+      );
+    }
+  }
+
+  return taskTypes as readonly ToolkitTaskType[];
+}
+
 function assertEnumValue<T extends string>(
   value: unknown,
   fieldName: string,
@@ -131,6 +157,40 @@ function assertSourceRecord(value: unknown): ToolkitAssetSource | undefined {
   };
 }
 
+function assertPlatformExposureRecord(value: unknown): ToolkitPlatformExposure | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("Invalid asset meta: platform_exposure must be an object");
+  }
+
+  const record = value as LooseRecord;
+  const entries = Object.entries(record);
+  const normalized: Partial<Record<ToolkitPlatform, typeof toolkitPlatformExposureModes[number]>> = {};
+
+  for (const [platform, mode] of entries) {
+    if (!(toolkitPlatforms as readonly string[]).includes(platform)) {
+      throw new Error(
+        `Invalid asset meta: platform_exposure keys must only contain ${toolkitPlatforms.join(", ")}`
+      );
+    }
+
+    const normalizedMode = assertNonEmptyString(mode, `platform_exposure.${platform}`);
+
+    if (!(toolkitPlatformExposureModes as readonly string[]).includes(normalizedMode)) {
+      throw new Error(
+        `Invalid asset meta: platform_exposure values must only contain ${toolkitPlatformExposureModes.join(", ")}`
+      );
+    }
+
+    normalized[platform as ToolkitPlatform] = normalizedMode as typeof toolkitPlatformExposureModes[number];
+  }
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
+}
+
 export function validateToolkitAssetMeta(input: unknown): ToolkitAssetMeta {
   if (typeof input !== "object" || input === null) {
     throw new Error("Invalid asset meta: expected an object");
@@ -165,6 +225,18 @@ export function validateToolkitAssetMeta(input: unknown): ToolkitAssetMeta {
   const suggests = assertAssetReferenceArray(record.suggests, "suggests");
   const conflictsWith = assertAssetReferenceArray(record.conflicts_with, "conflicts_with");
   const supersedes = assertAssetReferenceArray(record.supersedes, "supersedes");
+  const workflowFamily = assertEnumValue<ToolkitWorkflowFamily>(
+    record.workflow_family,
+    "workflow_family",
+    toolkitWorkflowFamilies
+  );
+  const workflowRole = assertEnumValue<ToolkitWorkflowRole>(
+    record.workflow_role,
+    "workflow_role",
+    toolkitWorkflowRoles
+  );
+  const taskTypes = assertTaskTypeArray(record.task_types);
+  const platformExposure = assertPlatformExposureRecord(record.platform_exposure);
   const source = assertSourceRecord(record.source);
 
   return {
@@ -183,6 +255,10 @@ export function validateToolkitAssetMeta(input: unknown): ToolkitAssetMeta {
     ...(suggests ? { suggests } : {}),
     ...(conflictsWith ? { conflictsWith } : {}),
     ...(supersedes ? { supersedes } : {}),
+    ...(workflowFamily ? { workflowFamily } : {}),
+    ...(workflowRole ? { workflowRole } : {}),
+    ...(taskTypes ? { taskTypes } : {}),
+    ...(platformExposure ? { platformExposure } : {}),
     ...(source ? { source } : {})
   };
 }

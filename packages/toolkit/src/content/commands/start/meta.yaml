@@ -1,0 +1,42 @@
+kind: command
+name: start
+title: 开始
+description: 统一任务开始入口，先判断任务类型、阶段和风险，再路由到合适的 workflow 或下一条命令。
+tier: core
+audience: default
+stability: stable
+suggests:
+  - command:sdd-tdd
+  - command:spec
+  - command:task-plan
+  - command:build
+  - command:quality-review
+  - command:verify
+  - command:debug
+  - command:doc
+  - command:ship
+  - command:onboard
+  - command:ctx-health
+  - command:idea
+  - command:guard
+platforms:
+  - qwen
+  - codex
+  - qoder
+workflow_family: intake
+workflow_role: intake-router
+task_types:
+  - feature
+  - bugfix
+  - review
+  - docs
+  - release
+  - investigation
+platform_exposure:
+  codex: prompt-entry
+  qwen: command-style
+  qoder: command-style
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库新增的统一任务入口，用于 intake、任务判型和 workflow 路由。

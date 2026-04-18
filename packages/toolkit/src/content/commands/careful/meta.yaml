@@ -11,6 +11,19 @@ platforms:
   - qwen
   - codex
   - qoder
+workflow_family: support
+workflow_role: guardrail
+task_types:
+  - feature
+  - bugfix
+  - review
+  - docs
+  - release
+  - investigation
+platform_exposure:
+  codex: prompt-entry
+  qwen: command-style
+  qoder: command-style
 source:
   upstream: toolkit-original
   strategy: curated
