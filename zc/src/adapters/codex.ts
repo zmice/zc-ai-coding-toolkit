@@ -37,6 +37,9 @@ export class CodexAdapter implements CLIAdapter {
       env: { ...process.env, ...opts.env },
     });
 
+    // Close stdin immediately so codex exec doesn't wait for additional input
+    proc.stdin?.end();
+
     return {
       pid: proc.pid ?? -1,
       process: proc,
