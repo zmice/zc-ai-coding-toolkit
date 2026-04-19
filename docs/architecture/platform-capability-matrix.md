@@ -77,7 +77,7 @@
 | --- | --- | --- |
 | Codex | 项目级安装 `AGENTS.md`；用户级 / 自定义目录安装 `AGENTS.md` + `skills/zc-<command>/SKILL.md` + `skills/zc-<skill>/SKILL.md` | 保守适配，覆盖官方明确能力 |
 | Qoder | 安装 `AGENTS.md` + `commands` + `skills` + `agents` | 已覆盖官方目录模型 |
-| Qwen | 安装 `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md` + `qwen-extension.json` + `commands` + `skills` + `agents` | 已升级为完整 extension 安装 |
+| Qwen | 优先通过官方 `qwen extensions install/update` 管理 `zc-toolkit` 扩展；扩展内容为 `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md` + `qwen-extension.json` + `commands` + `skills` + `agents` | 已升级为完整 extension 安装 |
 
 换句话说，当前 `zc platform install` 已经不再只是“写一个入口文件”，而是按平台能力矩阵选择：
 

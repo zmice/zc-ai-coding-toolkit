@@ -42,13 +42,13 @@ zc platform where qwen --global --json
   - 安装 `<project>/.qwen/extensions/zc-toolkit/skills/zc-<skill>/SKILL.md`
   - 安装 `<project>/.qwen/extensions/zc-toolkit/agents/zc-<agent>.md`
 - `--global`
-  - 安装 `~/.qwen/extensions/zc-toolkit/QWEN.md`
-  - 安装 `~/.qwen/extensions/zc-toolkit/qwen-extension.json`
-  - 安装 `~/.qwen/extensions/zc-toolkit/commands/zc/<command>.md`
-  - 安装 `~/.qwen/extensions/zc-toolkit/skills/zc-<skill>/SKILL.md`
-  - 安装 `~/.qwen/extensions/zc-toolkit/agents/zc-<agent>.md`
+  - 优先通过官方 `qwen extensions install` / `qwen extensions update` 管理 `zc-toolkit`
+  - 实际扩展目录仍位于 `~/.qwen/extensions/zc-toolkit/`
+  - 其中包含 `QWEN.md`、`qwen-extension.json`、`commands/zc/<command>.md`、`skills/zc-<skill>/SKILL.md`、`agents/zc-<agent>.md`
 - `--dir <path>`
   - 安装 `<path>/extensions/zc-toolkit/...`
+
+如果本机没有 `qwen` 命令，CLI 会明确提示并回退为直接写入官方扩展目录。
 
 ## 验证
 

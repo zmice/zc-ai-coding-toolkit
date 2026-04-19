@@ -21,6 +21,12 @@ import {
   resolveWorkspacePath,
   writeArtifacts,
 } from "../utils/workspace.js";
+import {
+  QwenOfficialCliUnavailableError,
+  installQwenExtensionWithOfficialCli,
+  syncQwenOfficialCliSourceBundle,
+  updateQwenExtensionWithOfficialCli,
+} from "../utils/qwen-extension-cli.js";
 
 type PlatformName = "qwen" | "codex" | "qoder";
 type PlatformOutputFormat = "text" | "json";
@@ -87,6 +93,8 @@ interface PlatformResultExtra {
   contentFingerprint?: string | null;
   status?: string | null;
   noop?: boolean;
+  installMethod?: "filesystem" | "qwen-cli";
+  sourceBundlePath?: string | null;
 }
 
 interface ToolkitModule {
@@ -286,6 +294,11 @@ function resolveOutputFormat(json?: boolean): PlatformOutputFormat {
   return json ? "json" : "text";
 }
 
+function mergeHints(...hints: Array<string | undefined>): string | undefined {
+  const merged = hints.filter(Boolean);
+  return merged.length > 0 ? merged.join("；") : undefined;
+}
+
 function resolveScopeFromSelector(opts: PlatformTargetSelectorOpts): PlatformInstallScope {
   return normalizeInstallSelector(opts).mode;
 }
@@ -365,6 +378,8 @@ function summarizeResult(action: PlatformAction, target: PlatformName, root: str
     `${target} ${formatActionLabel(action)}${mode}`,
     formatRootLabel(action, root, metadata),
     ...(metadata?.status ? [`状态：${metadata.status}`] : []),
+    ...(metadata?.installMethod ? [`安装方式：${metadata.installMethod === "qwen-cli" ? "官方 qwen extensions CLI" : "直接写入"}`] : []),
+    ...(metadata?.sourceBundlePath ? [`源扩展目录：${metadata.sourceBundlePath}`] : []),
     ...(metadata?.receiptPath ? [`回执：${metadata.receiptPath}`] : []),
     ...(metadata?.zcVersion ? [`zc 版本：${metadata.zcVersion}`] : []),
     ...(metadata?.contentFingerprint ? [`内容指纹：${metadata.contentFingerprint}`] : []),
@@ -426,12 +441,69 @@ function buildResultPayload(action: PlatformAction, target: PlatformName, root: 
     rootSource: metadata?.rootSource ?? (metadata?.autoResolvedRoot ? "project-root" : "explicit"),
     autoResolvedRoot: metadata?.autoResolvedRoot ?? false,
     hint: metadata?.hint ?? null,
+    installMethod: metadata?.installMethod ?? "filesystem",
+    sourceBundlePath: metadata?.sourceBundlePath ?? null,
     receiptPath: metadata?.receiptPath ?? null,
     zcVersion: metadata?.zcVersion ?? null,
     status: metadata?.status ?? null,
     noop: metadata?.noop ?? false,
     contentFingerprint: metadata?.contentFingerprint ?? null,
     ...result,
+  };
+}
+
+function shouldPreferQwenOfficialCli(target: PlatformName, scope: PlatformInstallScope): boolean {
+  return target === "qwen" && scope === "global";
+}
+
+function estimateManagedInstallResult(
+  plan: InstallPlan,
+  status: PlatformInstallStatusResult,
+): {
+  created: number;
+  overwritten: number;
+  unchanged: number;
+  skipped: number;
+  dryRun: boolean;
+} {
+  if (status.kind === "not-installed") {
+    return {
+      created: plan.artifacts.length,
+      overwritten: 0,
+      unchanged: 0,
+      skipped: 0,
+      dryRun: false,
+    };
+  }
+
+  let created = 0;
+  let overwritten = 0;
+  let unchanged = 0;
+
+  for (const artifact of status.artifacts) {
+    if (artifact.plannedSha256 === null) {
+      continue;
+    }
+
+    if (artifact.actualSha256 === artifact.plannedSha256) {
+      unchanged += 1;
+      continue;
+    }
+
+    if (artifact.actualSha256 === null) {
+      created += 1;
+      continue;
+    }
+
+    overwritten += 1;
+  }
+
+  return {
+    created,
+    overwritten,
+    unchanged,
+    skipped: 0,
+    dryRun: false,
   };
 }
 
@@ -609,6 +681,7 @@ export async function runPlatformInstall(
 ): Promise<void> {
   const format = resolveOutputFormat(opts.json);
   let destinationRoot = "";
+  let fallbackHint: string | undefined;
   try {
     const scope = resolveScopeFromSelector(opts);
     const targetResolution = await resolveInstallTarget(target, {
@@ -642,6 +715,87 @@ export async function runPlatformInstall(
       return;
     }
 
+    if (shouldPreferQwenOfficialCli(target, scope)) {
+      const status = await resolvePlatformInstallStatus(plan);
+
+      if (status.kind === "drifted" && !opts.force) {
+        emitPlatformError(
+          format,
+          target,
+          "install",
+          `${target} 安装目录已漂移。请先运行 \`zc platform status ${target}\` 检查差异，确认后追加 \`--force\` 再安装。`,
+          {
+            root: destinationRoot,
+            receiptPath: status.receiptPath,
+            status: status.kind,
+          },
+        );
+        process.exitCode = 1;
+        return;
+      }
+
+      try {
+        const sourceBundle = await syncQwenOfficialCliSourceBundle(plan);
+
+        if (status.kind === "not-installed") {
+          await installQwenExtensionWithOfficialCli(sourceBundle.sourceDir);
+        } else if (status.kind !== "up-to-date") {
+          await updateQwenExtensionWithOfficialCli(sourceBundle.extensionName);
+        }
+
+        await writePlatformInstallReceiptForPlan(plan, {
+          installedAt: new Date().toISOString(),
+          zcVersion: getCliVersion(),
+        });
+
+        const result = status.kind === "up-to-date"
+          ? {
+              created: 0,
+              overwritten: 0,
+              unchanged: plan.artifacts.length,
+              skipped: 0,
+              dryRun: false,
+            }
+          : estimateManagedInstallResult(plan, status);
+
+        emitOutput(
+          format,
+          buildResultPayload("install", target, destinationRoot, result, {
+            autoResolvedRoot,
+            rootSource: targetResolution.source,
+            hint: targetResolution.hint,
+            scope,
+            receiptPath: resolvePlatformInstallReceiptPath(plan),
+            zcVersion: getCliVersion(),
+            contentFingerprint: plan.metadata?.fingerprint.value ?? null,
+            status: status.kind === "up-to-date" ? status.kind : "installed",
+            noop: status.kind === "up-to-date",
+            installMethod: "qwen-cli",
+            sourceBundlePath: sourceBundle.sourceDir,
+          }),
+          summarizeResult("install", target, destinationRoot, result, {
+            autoResolvedRoot,
+            rootSource: targetResolution.source,
+            hint: targetResolution.hint,
+            receiptPath: resolvePlatformInstallReceiptPath(plan),
+            zcVersion: getCliVersion(),
+            contentFingerprint: plan.metadata?.fingerprint.value ?? null,
+            status: status.kind === "up-to-date" ? `${status.kind}（${formatStatusLabel(status.kind)}）` : "installed",
+            noop: status.kind === "up-to-date",
+            installMethod: "qwen-cli",
+            sourceBundlePath: sourceBundle.sourceDir,
+          }),
+        );
+        return;
+      } catch (error) {
+        if (!(error instanceof QwenOfficialCliUnavailableError)) {
+          throw error;
+        }
+
+        fallbackHint = "未检测到 qwen CLI，已回退为直接写入官方扩展目录。";
+      }
+    }
+
     const result = await writeArtifacts(
       plan.artifacts.map((artifact) => ({
         path: artifact.path,
@@ -662,21 +816,23 @@ export async function runPlatformInstall(
       buildResultPayload("install", target, destinationRoot, result, {
         autoResolvedRoot,
         rootSource: targetResolution.source,
-        hint: targetResolution.hint,
+        hint: mergeHints(targetResolution.hint, fallbackHint),
         scope,
         receiptPath: resolvePlatformInstallReceiptPath(plan),
         zcVersion: getCliVersion(),
         contentFingerprint: plan.metadata?.fingerprint.value ?? null,
         status: "installed",
+        installMethod: "filesystem",
       }),
       summarizeResult("install", target, destinationRoot, result, {
         autoResolvedRoot,
         rootSource: targetResolution.source,
-        hint: targetResolution.hint,
+        hint: mergeHints(targetResolution.hint, fallbackHint),
         receiptPath: resolvePlatformInstallReceiptPath(plan),
         zcVersion: getCliVersion(),
         contentFingerprint: plan.metadata?.fingerprint.value ?? null,
         status: "installed",
+        installMethod: "filesystem",
       })
     );
   } catch (error) {
@@ -755,6 +911,7 @@ export async function runPlatformUpdate(
 ): Promise<void> {
   const format = resolveOutputFormat(opts.json);
   let destinationRoot = "";
+  let fallbackHint: string | undefined;
 
   try {
     const scope = resolveScopeFromSelector(opts);
@@ -862,6 +1019,53 @@ export async function runPlatformUpdate(
       return;
     }
 
+    if (shouldPreferQwenOfficialCli(target, scope)) {
+      try {
+        const sourceBundle = await syncQwenOfficialCliSourceBundle(plan);
+        await updateQwenExtensionWithOfficialCli(sourceBundle.extensionName);
+        await writePlatformInstallReceiptForPlan(plan, {
+          installedAt: new Date().toISOString(),
+          zcVersion,
+        });
+
+        const result = estimateManagedInstallResult(plan, status);
+
+        emitOutput(
+          format,
+          buildResultPayload("update", target, destinationRoot, result, {
+            autoResolvedRoot,
+            rootSource: targetResolution.source,
+            hint: targetResolution.hint,
+            scope,
+            receiptPath: resolvePlatformInstallReceiptPath(plan),
+            zcVersion,
+            contentFingerprint: plan.metadata?.fingerprint.value ?? null,
+            status: status.kind,
+            installMethod: "qwen-cli",
+            sourceBundlePath: sourceBundle.sourceDir,
+          }),
+          summarizeResult("update", target, destinationRoot, result, {
+            autoResolvedRoot,
+            rootSource: targetResolution.source,
+            hint: targetResolution.hint,
+            receiptPath: resolvePlatformInstallReceiptPath(plan),
+            zcVersion,
+            contentFingerprint: plan.metadata?.fingerprint.value ?? null,
+            status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
+            installMethod: "qwen-cli",
+            sourceBundlePath: sourceBundle.sourceDir,
+          }),
+        );
+        return;
+      } catch (error) {
+        if (!(error instanceof QwenOfficialCliUnavailableError)) {
+          throw error;
+        }
+
+        fallbackHint = "未检测到 qwen CLI，已回退为直接写入官方扩展目录。";
+      }
+    }
+
     const result = await writeArtifacts(
       plan.artifacts.map((artifact) => ({
         path: artifact.path,
@@ -882,21 +1086,23 @@ export async function runPlatformUpdate(
       buildResultPayload("update", target, destinationRoot, result, {
         autoResolvedRoot,
         rootSource: targetResolution.source,
-        hint: targetResolution.hint,
+        hint: mergeHints(targetResolution.hint, fallbackHint),
         scope,
         receiptPath: resolvePlatformInstallReceiptPath(plan),
         zcVersion,
         contentFingerprint: plan.metadata?.fingerprint.value ?? null,
         status: status.kind,
+        installMethod: "filesystem",
       }),
       summarizeResult("update", target, destinationRoot, result, {
         autoResolvedRoot,
         rootSource: targetResolution.source,
-        hint: targetResolution.hint,
+        hint: mergeHints(targetResolution.hint, fallbackHint),
         receiptPath: resolvePlatformInstallReceiptPath(plan),
         zcVersion,
         contentFingerprint: plan.metadata?.fingerprint.value ?? null,
         status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
+        installMethod: "filesystem",
       }),
     );
   } catch (error) {

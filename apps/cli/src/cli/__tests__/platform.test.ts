@@ -21,6 +21,9 @@ const platformMocks = vi.hoisted(() => ({
   resolvePlatformInstallStatus: vi.fn(),
   writeArtifacts: vi.fn(),
   writePlatformInstallReceiptForPlan: vi.fn(),
+  syncQwenOfficialCliSourceBundle: vi.fn(),
+  installQwenExtensionWithOfficialCli: vi.fn(),
+  updateQwenExtensionWithOfficialCli: vi.fn(),
 }));
 
 vi.mock("../../utils/workspace.js", () => ({
@@ -42,6 +45,13 @@ vi.mock("../../platform-state/status.js", () => ({
 vi.mock("../../utils/platform-install-receipt.js", () => ({
   resolvePlatformInstallReceiptPath: platformMocks.resolvePlatformInstallReceiptPath,
   writePlatformInstallReceiptForPlan: platformMocks.writePlatformInstallReceiptForPlan,
+}));
+
+vi.mock("../../utils/qwen-extension-cli.js", () => ({
+  QwenOfficialCliUnavailableError: class QwenOfficialCliUnavailableError extends Error {},
+  syncQwenOfficialCliSourceBundle: platformMocks.syncQwenOfficialCliSourceBundle,
+  installQwenExtensionWithOfficialCli: platformMocks.installQwenExtensionWithOfficialCli,
+  updateQwenExtensionWithOfficialCli: platformMocks.updateQwenExtensionWithOfficialCli,
 }));
 
 import {
@@ -102,6 +112,39 @@ function createInstallPlan(
   };
 }
 
+function createQwenInstallPlan(
+  destinationRoot: string,
+  artifacts: Array<{ path: string; content: string }>,
+  scope: "project" | "global" | "dir" = "dir",
+  overwrite: "error" | "force" = "error",
+) {
+  return {
+    platform: "qwen" as const,
+    packageName: "@zmice/platform-qwen",
+    manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
+    matchedAssets: [],
+    destinationRoot,
+    scope,
+    overwrite,
+    capability: {
+      namespace: "zc",
+      surfaces: ["entry-file", "commands-dir", "skills-dir", "agents-dir", "extension-dir"],
+      entryFile: "QWEN.md",
+      commandsDir: "commands/zc",
+      skillsDir: "skills",
+      agentsDir: "agents",
+      extensionDir: "extensions/zc-toolkit",
+      extension: {
+        relativeDir: "extensions",
+        name: "zc-toolkit",
+        manifestFile: "qwen-extension.json",
+        contextFileName: "QWEN.md",
+      },
+    },
+    artifacts,
+  };
+}
+
 describe("platform CLI", () => {
   beforeEach(() => {
     process.exitCode = undefined;
@@ -117,6 +160,9 @@ describe("platform CLI", () => {
     platformMocks.resolvePlatformInstallStatus.mockReset();
     platformMocks.writeArtifacts.mockReset();
     platformMocks.writePlatformInstallReceiptForPlan.mockReset();
+    platformMocks.syncQwenOfficialCliSourceBundle.mockReset();
+    platformMocks.installQwenExtensionWithOfficialCli.mockReset();
+    platformMocks.updateQwenExtensionWithOfficialCli.mockReset();
 
     platformMocks.loadToolkitManifest.mockResolvedValue({
       generatedAt: "2026-04-19T12:00:00.000Z",
@@ -204,6 +250,13 @@ describe("platform CLI", () => {
     });
 
     platformMocks.writePlatformInstallReceiptForPlan.mockResolvedValue({});
+    platformMocks.syncQwenOfficialCliSourceBundle.mockResolvedValue({
+      sourceDir: "/tmp/qwen-source",
+      extensionName: "zc-toolkit",
+      artifactCount: 1,
+    });
+    platformMocks.installQwenExtensionWithOfficialCli.mockResolvedValue(undefined);
+    platformMocks.updateQwenExtensionWithOfficialCli.mockResolvedValue(undefined);
   });
 
   it("uses safe overwrite defaults for platform generate writes", async () => {
@@ -615,6 +668,46 @@ describe("platform CLI", () => {
     logSpy.mockRestore();
   });
 
+  it("prefers the official qwen extensions CLI for global installs", async () => {
+    platformMocks.createQwenInstallPlan.mockReturnValue(
+      createQwenInstallPlan(
+        "/home/test/.qwen",
+        [{ path: "/home/test/.qwen/extensions/zc-toolkit/QWEN.md", content: "# context" }],
+        "global",
+      ),
+    );
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: "/home/test/.qwen",
+      source: "official-global",
+      hint: "Qwen 官方文档定义用户级配置目录为 `~/.qwen`。",
+    });
+    platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
+      kind: "not-installed",
+      platform: "qwen",
+      receiptPath: "/home/test/.qwen/.zc/platform-state/qwen.install-receipt.json",
+      receipt: null,
+      contentFingerprint: "current-fingerprint",
+      installedContentFingerprint: undefined,
+      summary: {
+        trackedArtifacts: 0,
+        driftedArtifacts: 0,
+        missingArtifacts: 0,
+        plannedChanges: 0,
+      },
+      artifacts: [],
+    });
+
+    await runPlatformInstall("qwen", { global: true });
+
+    expect(platformMocks.syncQwenOfficialCliSourceBundle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        destinationRoot: "/home/test/.qwen",
+      }),
+    );
+    expect(platformMocks.installQwenExtensionWithOfficialCli).toHaveBeenCalledWith("/tmp/qwen-source");
+    expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
+  });
+
   it("prints a JSON install plan with scope metadata", async () => {
     platformMocks.createCodexInstallPlan.mockReturnValue(
       createInstallPlan("codex", "/home/test/.codex", [{ path: "/home/test/.codex/AGENTS.md", content: "# agents" }], "global", "error"),
@@ -642,6 +735,55 @@ describe("platform CLI", () => {
     );
 
     logSpy.mockRestore();
+  });
+
+  it("prefers the official qwen extensions CLI for global updates", async () => {
+    platformMocks.createQwenInstallPlan.mockReturnValue(
+      createQwenInstallPlan(
+        "/home/test/.qwen",
+        [{ path: "/home/test/.qwen/extensions/zc-toolkit/QWEN.md", content: "# context v2" }],
+        "global",
+      ),
+    );
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: "/home/test/.qwen",
+      source: "official-global",
+      hint: "Qwen 官方文档定义用户级配置目录为 `~/.qwen`。",
+    });
+    platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
+      kind: "update-available",
+      platform: "qwen",
+      receiptPath: "/home/test/.qwen/.zc/platform-state/qwen.install-receipt.json",
+      receipt: null,
+      contentFingerprint: "current-fingerprint",
+      installedContentFingerprint: "installed-fingerprint",
+      summary: {
+        trackedArtifacts: 1,
+        driftedArtifacts: 0,
+        missingArtifacts: 0,
+        plannedChanges: 1,
+      },
+      artifacts: [
+        {
+          path: "/home/test/.qwen/extensions/zc-toolkit/QWEN.md",
+          receiptSha256: "old",
+          actualSha256: "old",
+          plannedSha256: "new",
+          matchesReceiptOnDisk: true,
+          differsFromPlan: true,
+        },
+      ],
+    });
+
+    await runPlatformUpdate("qwen", { global: true });
+
+    expect(platformMocks.syncQwenOfficialCliSourceBundle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        destinationRoot: "/home/test/.qwen",
+      }),
+    );
+    expect(platformMocks.updateQwenExtensionWithOfficialCli).toHaveBeenCalledWith("zc-toolkit");
+    expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
   });
 
   it("prints resolved install targets via platform where", async () => {
