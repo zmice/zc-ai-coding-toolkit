@@ -62,13 +62,22 @@ jobs:
       - name: Export qwen release bundle
         run: node scripts/export-qwen-extension-bundle.mjs --out "$RUNNER_TEMP/qwen-extension"
 
-      - name: Checkout target extension repository
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.EXTENSION_REPO }}
-          ref: ${{ env.EXTENSION_BRANCH }}
-          token: ${{ secrets.QWEN_EXTENSION_REPO_TOKEN }}
-          path: .qwen-extension-repo
+      - name: Prepare target extension repository
+        run: |
+          mkdir -p .qwen-extension-repo
+          cd .qwen-extension-repo
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${EXTENSION_REPO_TOKEN}@github.com/${EXTENSION_REPO}.git"
+
+          if git ls-remote --exit-code --heads origin "$EXTENSION_BRANCH" >/dev/null 2>&1; then
+            git fetch --depth=1 origin "$EXTENSION_BRANCH"
+            git checkout -B "$EXTENSION_BRANCH" "origin/$EXTENSION_BRANCH"
+          else
+            git checkout --orphan "$EXTENSION_BRANCH"
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
 
       - name: Sync bundle to target repository
         run: |
@@ -77,13 +86,11 @@ jobs:
       - name: Commit and push if changed
         working-directory: .qwen-extension-repo
         run: |
-          if git diff --quiet -- .; then
+          if git diff --quiet -- . && [ -z "$(git ls-files --others --exclude-standard)" ]; then
             echo "No changes to publish."
             exit 0
           fi
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -m "$EXTENSION_COMMIT_MESSAGE"
           git push origin "HEAD:$EXTENSION_BRANCH"
