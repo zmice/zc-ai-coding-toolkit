@@ -46,6 +46,7 @@
 文件：`.github/workflows/publish-qwen-extension-repo.yml`
 
 - Triggers:
+  - `push` tags: `@zmice/zc@*`
   - `workflow_dispatch`
 - Purpose:
   - 导出 Qwen 发布态 extension bundle
@@ -57,11 +58,29 @@
   - `rsync` 同步到目标扩展仓库
   - `git commit && git push`
 
+### Publish GitHub Release
+
+文件：`.github/workflows/publish-github-release.yml`
+
+- Triggers:
+  - `push` tags: `@zmice/zc@*`
+  - `workflow_dispatch`
+- Purpose:
+  - 为 `@zmice/zc` 版本 tag 创建或更新 GitHub Release
+  - 上传 Qwen extension release bundle 压缩包
+- Commands:
+  - `pnpm install --frozen-lockfile`
+  - `pnpm --dir apps/cli build`
+  - `node scripts/export-qwen-extension-bundle.mjs --out <runner-temp>`
+  - `zip -r` 打包 Qwen bundle
+  - `gh release create` / `gh release upload`
+
 ## Design Notes
 
 - `pnpm verify` 继续作为默认 PR gate，不把 `pnpm changeset status` 强制到所有 PR。
 - release gate 暂时只做手动触发，避免在 Stage 2 第一批里扩大自动触发面。
 - release gate 直接复用 `release-check` 的 pre-version 规则，避免 CI 和本地 release preflight 漂移。
+- npm 继续作为唯一 npm 分发源；GitHub Release 只承载版本展示和 release asset，不额外引入 GitHub Packages npm registry。
 - workflow 保持最小依赖：
   - `actions/checkout`
   - `pnpm/action-setup`
@@ -74,8 +93,7 @@
 
 - 不修改现有发布脚本，`pnpm release` 仍然是 publish 唯一入口。
 - 不新增 root 级命令，只复用现有 `pnpm verify` 和 `pnpm changeset status`。
-- 不在本阶段引入 matrix、artifact upload、cache 微调、自动发布等复杂逻辑。
-- Qwen 扩展仓库同步保持手动触发，不默认自动推送到外部仓库。
+- 不在本阶段引入 matrix、cache 微调、GitHub Packages npm 分发等额外复杂度。
 
 ## Next Steps
 

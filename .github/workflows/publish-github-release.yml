@@ -1,0 +1,68 @@
+name: Publish GitHub Release
+
+on:
+  push:
+    tags:
+      - "@zmice/zc@*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "要发布的 tag，例如 @zmice/zc@0.2.2"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish-github-release:
+    name: create release and upload qwen bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      RELEASE_TAG: "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}"
+
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build CLI
+        run: pnpm --dir apps/cli build
+
+      - name: Export qwen release bundle
+        run: node scripts/export-qwen-extension-bundle.mjs --out "$RUNNER_TEMP/qwen-extension"
+
+      - name: Pack qwen release bundle
+        run: |
+          VERSION="${RELEASE_TAG#@zmice/zc@}"
+          ASSET_NAME="zc-qwen-extension-${VERSION}.zip"
+          cd "$RUNNER_TEMP/qwen-extension"
+          zip -r "$RUNNER_TEMP/$ASSET_NAME" .
+          echo "ASSET_NAME=$ASSET_NAME" >> "$GITHUB_ENV"
+          echo "ASSET_PATH=$RUNNER_TEMP/$ASSET_NAME" >> "$GITHUB_ENV"
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$ASSET_PATH#$ASSET_NAME" --clobber
+          else
+            gh release create "$RELEASE_TAG" "$ASSET_PATH#$ASSET_NAME" \
+              --title "$RELEASE_TAG" \
+              --generate-notes
+          fi

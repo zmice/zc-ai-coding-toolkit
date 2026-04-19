@@ -38,6 +38,15 @@
 - 同步 lockfile：`pnpm install`
 - 发布：`pnpm release`
 
+补充说明：
+
+- npm 仍然是 `@zmice/zc` 的唯一 npm 分发源。
+- GitHub 不作为第二套 npm registry 使用。
+- 发版 tag 推送后，GitHub Actions 会自动：
+  - 创建或更新 GitHub Release
+  - 上传 Qwen extension release bundle 压缩包
+  - 同步 `zc-qwen-extension` 仓库
+
 ## 标准发布流程
 
 1. 确认当前 changeset 只包含 `@zmice/zc`。
@@ -48,6 +57,7 @@
 6. 运行 `pnpm verify`，确认 `zc` build 后携带的 vendored 运行时正常。
 7. 审阅 `apps/cli/package.json`、`pnpm-lock.yaml` 和 changeset 消耗后的 `.changeset/*.md` 变化。
 8. 运行 `pnpm release`。
+9. 推送 tag 后，检查 GitHub Release 是否已生成，并确认 Qwen bundle 附件上传成功。
 
 ## 失败处理
 
@@ -66,3 +76,4 @@
 - 确认 `@zmice/zc` 版本按预期推进。
 - 确认没有内部包被误带入发布批次。
 - 确认 CLI 全局安装后仍能执行 `toolkit` / `platform` 相关命令。
+- 确认 GitHub Release 已生成，并包含 Qwen extension release bundle 附件。
