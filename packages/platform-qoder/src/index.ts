@@ -109,12 +109,73 @@ function renderAssetList(assets: readonly ToolkitAssetLike[]): string {
 }
 
 function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetLike[]): string {
-  return `# Qoder 平台说明
+  const commandCount = assets.filter((asset) => asset.kind === "command").length;
+  const skillCount = assets.filter((asset) => asset.kind === "skill").length;
+  const agentCount = assets.filter((asset) => asset.kind === "agent").length;
 
-此工件由工具包资产生成。
+  return `# Qoder 工作流入口
+
+这是安装到 Qoder 的薄入口文件。
+
+它负责三件事：
+
+1. 给出统一任务开始方式
+2. 说明固定 workflow 的选路规则
+3. 指向 \`.qoder/commands\`、\`.qoder/skills\`、\`.qoder/agents\` 里的详细内容
+
+## 核心规则
+
+- 默认先评估任务类型，再选对应 workflow
+- 中文优先，技术契约保持原样
+- 证据先于断言，完成前必须验证
+- 支撑型命令只做辅助，不替代主 workflow
+
+## 固定 workflow
+
+### 1. product-analysis
+- 入口：\`zc-product-analysis\`
+- 适用：需求模糊、范围未收敛、需要形成可落地方案
+
+### 2. full-delivery
+- 入口：\`zc-sdd-tdd\`
+- 适用：新功能、较大改动、完整交付
+
+### 3. bugfix
+- 入口：\`zc-debug\`
+- 适用：Bug、失败测试、异常行为
+
+### 4. review-closure
+- 入口：\`zc-quality-review\`
+- 适用：已有改动，需要做审查与反馈收敛
+
+### 5. docs-release
+- 入口：\`zc-doc\` 或 \`zc-ship\`
+- 适用：文档、ADR、发布说明、上线准备
+
+### 6. investigation
+- 入口：\`zc-onboard\` 或 \`zc-ctx-health\`
+- 适用：陌生代码库、上下文失焦、技术摸底
+
+## 推荐开始方式
+
+- 不确定走哪条线：先用 \`zc-start\`
+- 需求模糊：进 \`zc-product-analysis\`
+- 已确认要完整交付：进 \`zc-sdd-tdd\`
+- 明确是 bug：进 \`zc-debug\`
+
+## 详细内容在哪里
+
+- commands：查看 \`.qoder/commands/zc-*.md\`
+- skills：查看 \`.qoder/skills/zc-*/SKILL.md\`
+- agents：查看 \`.qoder/agents/zc-*.md\`
+
+## 已安装能力
 
 - 清单来源：\`${manifestSource}\`
 - 匹配到的资产：${assets.length}
+- commands：${commandCount} 个
+- skills：${skillCount} 个
+- agents：${agentCount} 个
 
 ${renderAssetList(assets)}
 `;

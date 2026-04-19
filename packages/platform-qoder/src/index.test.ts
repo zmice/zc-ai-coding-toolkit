@@ -65,7 +65,9 @@ describe("@zmice/platform-qoder scaffold", () => {
       ".qoder/skills/zc-alpha/SKILL.md",
       ".qoder/agents/zc-gamma.md",
     ]);
-    assert.ok(plan.artifacts[0]?.content.includes("skill-alpha"));
+    assert.ok(plan.artifacts[0]?.content.includes("Qoder 工作流入口"));
+    assert.ok(plan.artifacts[0]?.content.includes("zc-start"));
+    assert.ok(plan.artifacts[0]?.content.includes("固定 workflow"));
     assert.ok(plan.artifacts[1]?.content.includes('name: "zc-beta"'));
     assert.ok(plan.artifacts[2]?.content.includes('name: "zc-alpha"'));
     assert.ok(plan.artifacts[3]?.content.includes('tools:'));

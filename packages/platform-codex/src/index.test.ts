@@ -42,7 +42,10 @@ describe("@zmice/platform-codex scaffold", () => {
       templateFiles.agents,
       "skills/zc-skill-alpha/SKILL.md",
     ]);
-    assert.ok(plan.artifacts[0]?.content.includes("skill-alpha"));
+    assert.ok(plan.artifacts[0]?.content.includes("Codex 工作流入口"));
+    assert.ok(plan.artifacts[0]?.content.includes("$zc-sdd-tdd-workflow"));
+    assert.ok(plan.artifacts[0]?.content.includes("统一命令语义到 Codex skill 的映射"));
+    assert.ok(plan.artifacts[0]?.content.includes("固定 workflow"));
     assert.ok(plan.artifacts[1]?.content.includes("Alpha skill"));
   });
 

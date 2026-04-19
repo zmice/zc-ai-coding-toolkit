@@ -63,7 +63,9 @@ describe("@zmice/platform-qwen scaffold", () => {
       ".qwen/extensions/zc-toolkit/skills/zc-alpha/SKILL.md",
       ".qwen/extensions/zc-toolkit/agents/zc-reviewer.md",
     ]);
-    assert.ok(plan.artifacts[0]?.content.includes("命令入口：1 个"));
+    assert.ok(plan.artifacts[0]?.content.includes("Qwen 工作流入口"));
+    assert.ok(plan.artifacts[0]?.content.includes("zc:start"));
+    assert.ok(plan.artifacts[0]?.content.includes("固定 workflow"));
     assert.ok(plan.artifacts[1]?.content.includes(`"name": "${templateFiles.extensionName}"`));
     assert.ok(plan.artifacts[2]?.content.includes('name: "zc:start"'));
     assert.ok(plan.artifacts[3]?.content.includes('name: "zc-alpha"'));
@@ -87,7 +89,7 @@ describe("@zmice/platform-qwen scaffold", () => {
       "/tmp/qwen/extensions/zc-toolkit/skills/zc-alpha/SKILL.md",
       "/tmp/qwen/extensions/zc-toolkit/agents/zc-reviewer.md",
     ]);
-    assert.ok(plan.artifacts[0]?.content.includes("Qwen 平台上下文扩展"));
+    assert.ok(plan.artifacts[0]?.content.includes("Qwen 工作流入口"));
     assert.ok(plan.artifacts[2]?.content.includes("Start command body"));
   });
 });

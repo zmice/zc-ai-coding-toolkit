@@ -221,15 +221,69 @@ function renderContextFile(
   skills: readonly ToolkitAssetLike[],
   agents: readonly ToolkitAssetLike[],
 ): string {
-  return `# Qwen 平台上下文扩展
+  return `# Qwen 工作流入口
 
-此工件由工具包资产生成。
+这是安装到 Qwen extension 里的薄入口文件。
+
+它负责三件事：
+
+1. 给出统一任务开始方式
+2. 说明固定 workflow 的选路规则
+3. 指向 extension 内的 \`commands/\`、\`skills/\`、\`agents/\` 详细内容
+
+## 核心规则
+
+- 默认先评估任务类型，再选对应 workflow
+- 中文优先，技术契约保持原样
+- 证据先于断言，完成前必须验证
+- 命令统一使用 \`zc:\` 命名空间，避免和平台内置能力冲突
+
+## 固定 workflow
+
+### 1. product-analysis
+- 入口：\`zc:product-analysis\`
+- 适用：需求模糊、价值与范围未收敛
+
+### 2. full-delivery
+- 入口：\`zc:sdd-tdd\`
+- 适用：新功能、较大改动、完整交付
+
+### 3. bugfix
+- 入口：\`zc:debug\`
+- 适用：Bug、失败测试、异常行为
+
+### 4. review-closure
+- 入口：\`zc:quality-review\`
+- 适用：已有改动，需要审查与反馈收敛
+
+### 5. docs-release
+- 入口：\`zc:doc\` 或 \`zc:ship\`
+- 适用：文档、ADR、发布说明、上线准备
+
+### 6. investigation
+- 入口：\`zc:onboard\` 或 \`zc:ctx-health\`
+- 适用：陌生代码库、上下文失焦、技术摸底
+
+## 推荐开始方式
+
+- 不确定走哪条线：先用 \`zc:start\`
+- 需求模糊：进 \`zc:product-analysis\`
+- 已确认是完整交付：进 \`zc:sdd-tdd\`
+- 明确是 bug：进 \`zc:debug\`
+
+## 详细内容在哪里
+
+- commands：\`commands/zc/*.md\`
+- skills：\`skills/zc-*/SKILL.md\`
+- agents：\`agents/zc-*.md\`
+
+## 已安装能力
 
 - 清单来源：\`${manifestSource}\`
 - 匹配到的资产：${assets.length}
 - 命令入口：${commands.length} 个，统一暴露为 \`zc:<command>\`
-- Skills：${skills.length} 个
-- Agents：${agents.length} 个
+- skills：${skills.length} 个
+- agents：${agents.length} 个
 
 ${renderAssetList(assets)}
 `;
