@@ -1,5 +1,7 @@
 # 上下文工程
 
+这是 `command:start` 判型后进入的专项 skill：当任务核心不是“做什么”，而是“如何把正确上下文装载给接下来的阶段”，进入这里。
+
 ## 何时使用
 
 - 开始新的编码会话或新子任务时
@@ -47,9 +49,9 @@
 - 规格和规则优先于猜测
 - 压缩上下文是持续动作，不是最后补救
 
-## 与其他技能的衔接
+## 回到主流程
 
-- 与 `engineering-principles` 配合，在进入实现前先校准工作方式
-- 与 `codebase-onboarding` 配合，先建立地图再装载局部上下文
-- 与 `context-budget-audit` 配合，检查上下文是否膨胀
-- 为几乎所有实现和审查技能提供前置支持
+- 上下文已校准完成：回到后续真正要执行的阶段或专项入口
+- 需求仍模糊：回到 `spec-driven-development`
+- 任务已经明确、准备实现：回到 `incremental-implementation`
+- 会话健康恶化明显：结合 `context-budget-audit`

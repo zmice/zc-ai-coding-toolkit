@@ -1,5 +1,7 @@
 # 安全护栏
 
+这是 `command:start` 判型后进入的支撑型 skill：当任务本身仍然是实现、验证、发布或迁移，但风险已经高到需要先加操作防护时，进入这里。
+
 ## 何时使用
 
 - 即将执行可能破坏文件、数据库、Git 历史或配置的操作时
@@ -37,7 +39,9 @@
 - 不确定时宁可先警告、先冻结
 - 可逆操作和不可逆操作应区别对待
 
-## 与其他技能的衔接
+## 回到主流程
 
+- 防护模式确定后，回到原任务主线继续执行
+- 实现类任务回到 `incremental-implementation`
+- 验证或发布类任务回到 `verification-before-completion` 或 `shipping-and-launch`
 - 与 `security-and-hardening` 互补：一个防漏洞，一个防误操作
-- 在 `shipping-and-launch`、迁移、数据库操作和批量改动前特别重要

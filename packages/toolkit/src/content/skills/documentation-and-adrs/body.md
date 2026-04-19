@@ -1,5 +1,7 @@
 # 文档与 ADR
 
+这是 `command:start` 判型后进入的专项 skill：当任务核心是沉淀决策、修正文档 drift、补齐长期说明时，进入这里，而不是继续把工作只理解成“写代码”。
+
 ## 何时使用
 
 - 做了重要架构或公共接口决策时
@@ -47,15 +49,9 @@
 - 最有价值的文档是帮助后人少走弯路
 - “代码完成”不等于“知识完成”，发布后 drift 也算未收尾
 
-## 与发布后文档同步的边界
+## 回到主流程
 
-- 本 skill 负责判断要记录什么、为什么要更新，以及哪些长期文档已经失真
-- `release-documentation-sync` 负责发布后的同步清单、最小验收和收尾核对
-- `shipping-and-launch` 负责发布 gate，不替代长期文档沉淀和 ADR 记录
-
-## 与其他技能的衔接
-
-- 架构决策后常接 `architect`
-- 发布前常接 `shipping-and-launch`
-- 发布完成后如需做同步收尾，接 `release-documentation-sync`
-- 规格、计划和实现完成后可补最终沉淀
+- 如果发现文档问题其实来自需求或方案不清：回到 `spec-driven-development`
+- 如果文档 drift 暴露实现缺口：回到 `incremental-implementation`
+- 发布前后的同步收尾：继续接 `shipping-and-launch` 或 `release-documentation-sync`
+- 规格、计划和实现完成后，可回到这里做最终沉淀

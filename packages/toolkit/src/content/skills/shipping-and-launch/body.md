@@ -1,5 +1,7 @@
 # 发布上线
 
+这是 `command:start` 判型后进入的专项 skill：当任务核心是发布准备、上线决策和回滚预案时，进入这里，而不是继续停留在实现或审查阶段。
+
 ## 何时使用
 
 - 要把功能首次发布到生产环境时
@@ -41,15 +43,9 @@
 - 监控和观察窗口是发布的一部分
 - 未同步的发布说明、安装升级指引和回滚说明，本质上也是发布风险
 
-## 与文档同步的边界
+## 回到主流程
 
-- 本 skill 负责把文档同步纳入发布 gate，确保上线前后有明确责任和验收
-- `documentation-and-adrs` 负责长期记录、ADR 和 drift 触发判断
-- `release-documentation-sync` 负责发布后逐项核对 README、安装说明、行为变更记录等同步对象
-
-## 与其他技能的衔接
-
-- 通常接在 `verification-before-completion` 和 `code-review-and-quality` 之后
-- 与 `documentation-and-adrs` 配合，补发布说明和决策记录
-- 发布完成后如需做文档收尾，接 `release-documentation-sync`
-- 高风险上线时可结合 `safety-guardrails`
+- 如果发布检查暴露实现缺口：回到 `incremental-implementation`
+- 如果发布检查暴露规格或范围问题：回到 `spec-driven-development` 或 `planning-and-task-breakdown`
+- 发布前需要最后证据确认：交给 `verification-before-completion`
+- 高风险上线需要额外防护时，结合 `safety-guardrails`

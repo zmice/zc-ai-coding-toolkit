@@ -1,5 +1,7 @@
 # 代码库导览
 
+这是 `command:start` 判型后进入的专项 skill：当任务核心是理解陌生项目、建立上下文地图、决定下一步从哪里切入时，进入这里。
+
 ## 何时使用
 
 - 第一次接触一个代码库
@@ -34,7 +36,8 @@
 - 聚焦当前任务相关区域，不求一次理解全仓库
 - 概览是压缩上下文，不是转述源码
 
-## 与其他技能的衔接
+## 回到主流程
 
-- 产出的概览可直接供 `context-engineering` 使用
-- 在陌生项目上做需求或实现前，可先接 `brainstorming-and-design` / `spec-driven-development`
+- 项目地图已经足够，可交给 `context-engineering` 做最小上下文装载
+- 如果接下来要定义需求或方案：回到 `spec-driven-development`
+- 如果已经确认目标，只是缺实现上下文：回到 `incremental-implementation`
