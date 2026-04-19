@@ -191,7 +191,7 @@ npm install -g @qwen-code/qwen-code@latest
 
 | 平台 | 产物 |
 | --- | --- |
-| `codex` | `AGENTS.md`、`skills/zc-<skill>/SKILL.md` |
+| `codex` | `AGENTS.md`、`skills/zc-<command>/SKILL.md`、`skills/zc-<skill>/SKILL.md` |
 | `qoder` | `AGENTS.md`、`.qoder/commands`、`.qoder/skills`、`.qoder/agents` |
 | `qwen` | `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md`、`qwen-extension.json`、`commands/`、`skills/`、`agents/` |
 
@@ -264,6 +264,7 @@ zc platform where qwen --global --json
 
 - `codex --global`
   - 默认安装到 `~/.codex/AGENTS.md`
+  - 同时安装 `~/.codex/skills/zc-<command>/SKILL.md`
   - 同时安装 `~/.codex/skills/zc-<skill>/SKILL.md`
 - `qoder --global`
   - 默认安装到 `~/.qoder/AGENTS.md`

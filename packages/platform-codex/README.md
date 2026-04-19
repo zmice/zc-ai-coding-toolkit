@@ -7,6 +7,7 @@
 当前输出包括：
 
 - `AGENTS.md`
+- `skills/zc-<command>/SKILL.md`
 - `skills/zc-<skill>/SKILL.md`
 
 ## 边界
@@ -34,10 +35,21 @@ zc platform install codex --plan --json
   - 保守处理，不额外生成项目级 skills 目录
 - `--global`
   - 安装 `~/.codex/AGENTS.md`
+  - 同时安装 `~/.codex/skills/zc-<command>/SKILL.md`
   - 同时安装 `~/.codex/skills/zc-<skill>/SKILL.md`
 - `--dir <path>`
   - 安装 `<path>/AGENTS.md`
+  - 同时安装 `<path>/skills/zc-<command>/SKILL.md`
   - 同时安装 `<path>/skills/zc-<skill>/SKILL.md`
+
+在 Codex 中：
+
+- 统一命令语义通过 command-alias skill 承接，例如：
+  - `$zc-start`
+  - `$zc-spec`
+  - `$zc-task-plan`
+  - `$zc-build`
+- 更完整的方法和专题能力继续通过 `$zc-<skill>` 使用
 
 项目安装 / 全局安装的详细步骤见：
 

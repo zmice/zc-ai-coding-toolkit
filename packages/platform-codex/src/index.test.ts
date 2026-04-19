@@ -21,10 +21,13 @@ const manifest: ToolkitManifestLike = {
       title: "Alpha skill",
     },
     {
-      id: "command-beta",
+      id: "command:start",
       kind: "command",
-      platforms: ["qoder"],
-      title: "Beta command",
+      platforms: ["codex"],
+      title: "Start command",
+      name: "start",
+      summary: "统一任务开始入口",
+      body: "# 开始\n\n先判断工作流类型，再选择入口。\n",
     },
   ],
 };
@@ -36,17 +39,20 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.equal(plan.platform, platformName);
     assert.equal(plan.packageName, packageName);
     assert.equal(plan.manifestSource, "toolkit-manifest");
-    assert.deepEqual(plan.matchedAssets.map((asset) => asset.id), ["skill-alpha"]);
+    assert.deepEqual(plan.matchedAssets.map((asset) => asset.id), ["skill-alpha", "command:start"]);
     assert.deepEqual(plan.capability, capability);
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
       templateFiles.agents,
+      "skills/zc-start/SKILL.md",
       "skills/zc-skill-alpha/SKILL.md",
     ]);
     assert.ok(plan.artifacts[0]?.content.includes("Codex 工作流入口"));
-    assert.ok(plan.artifacts[0]?.content.includes("$zc-sdd-tdd-workflow"));
+    assert.ok(plan.artifacts[0]?.content.includes("$zc-sdd-tdd"));
     assert.ok(plan.artifacts[0]?.content.includes("统一命令语义到 Codex skill 的映射"));
     assert.ok(plan.artifacts[0]?.content.includes("固定 workflow"));
-    assert.ok(plan.artifacts[1]?.content.includes("Alpha skill"));
+    assert.ok(plan.artifacts[1]?.content.includes("command-alias skill"));
+    assert.ok(plan.artifacts[1]?.content.includes("$zc-start"));
+    assert.ok(plan.artifacts[2]?.content.includes("Alpha skill"));
   });
 
   it("creates a global install plan with AGENTS and skills", () => {
@@ -60,6 +66,7 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.equal(plan.overwrite, "error");
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
       "/tmp/codex/AGENTS.md",
+      "/tmp/codex/skills/zc-start/SKILL.md",
       "/tmp/codex/skills/zc-skill-alpha/SKILL.md",
     ]);
   });

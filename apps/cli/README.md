@@ -127,7 +127,7 @@ npm install -g @zmice/zc@latest
 当前平台安装面：
 - `codex`
   - 项目级：`AGENTS.md`
-  - 用户级 / 自定义目录：`AGENTS.md` + `skills/zc-<skill>/SKILL.md`
+  - 用户级 / 自定义目录：`AGENTS.md` + `skills/zc-<command>/SKILL.md` + `skills/zc-<skill>/SKILL.md`
 - `qoder`
   - 项目级：`AGENTS.md` + `.qoder/commands|skills|agents`
   - 用户级 / 自定义目录：`AGENTS.md` + `commands|skills|agents`

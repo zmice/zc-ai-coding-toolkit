@@ -75,7 +75,7 @@
 
 | 平台 | 当前实现 | 覆盖评价 |
 | --- | --- | --- |
-| Codex | 项目级安装 `AGENTS.md`；用户级 / 自定义目录安装 `AGENTS.md` + `skills/zc-<skill>/SKILL.md` | 保守适配，覆盖官方明确能力 |
+| Codex | 项目级安装 `AGENTS.md`；用户级 / 自定义目录安装 `AGENTS.md` + `skills/zc-<command>/SKILL.md` + `skills/zc-<skill>/SKILL.md` | 保守适配，覆盖官方明确能力 |
 | Qoder | 安装 `AGENTS.md` + `commands` + `skills` + `agents` | 已覆盖官方目录模型 |
 | Qwen | 安装 `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md` + `qwen-extension.json` + `commands` + `skills` + `agents` | 已升级为完整 extension 安装 |
 

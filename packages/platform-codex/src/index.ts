@@ -100,6 +100,7 @@ function renderAssetList(assets: readonly ToolkitAssetLike[]): string {
 }
 
 function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetLike[]): string {
+  const commandCount = assets.filter((asset) => asset.kind === "command").length;
   const skillCount = assets.filter((asset) => asset.kind === "skill").length;
 
   return `# Codex 工作流入口
@@ -113,6 +114,10 @@ function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetL
 3. 把 \`zc:*\` 命令语义映射成 Codex 实际可调用的 \`$zc-*\` skill
 
 详细方法不写在这里，完整内容都在 \`skills/zc-*/SKILL.md\`。
+其中：
+
+- \`$zc-start\`、\`$zc-spec\`、\`$zc-build\` 这类是 command-alias skill
+- \`$zc-sdd-tdd-workflow\`、\`$zc-debugging-and-error-recovery\` 这类是专题/流程 skill
 
 ## 核心规则
 
@@ -125,19 +130,19 @@ function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetL
 
 ## 统一命令语义到 Codex skill 的映射
 
-- \`zc:start\` -> 先判型，再选下面某个 workflow 对应的默认 skill
-- \`zc:product-analysis\` -> \`$zc-brainstorming-and-design\`，必要时接 \`$zc-spec-driven-development\`
-- \`zc:sdd-tdd\` -> \`$zc-sdd-tdd-workflow\`
-- \`zc:spec\` -> \`$zc-spec-driven-development\`
-- \`zc:task-plan\` -> \`$zc-planning-and-task-breakdown\`
-- \`zc:build\` -> \`$zc-incremental-implementation\`，必要时接 \`$zc-test-driven-development\`
-- \`zc:quality-review\` -> \`$zc-code-review-and-quality\`
-- \`zc:verify\` -> \`$zc-verification-before-completion\`
-- \`zc:debug\` -> \`$zc-debugging-and-error-recovery\`
-- \`zc:doc\` -> \`$zc-documentation-and-adrs\`
-- \`zc:ship\` -> \`$zc-shipping-and-launch\`
-- \`zc:onboard\` -> \`$zc-codebase-onboarding\`
-- \`zc:ctx-health\` -> \`$zc-context-engineering\`
+- \`zc:start\` -> \`$zc-start\`
+- \`zc:product-analysis\` -> \`$zc-product-analysis\`
+- \`zc:sdd-tdd\` -> \`$zc-sdd-tdd\`
+- \`zc:spec\` -> \`$zc-spec\`
+- \`zc:task-plan\` -> \`$zc-task-plan\`
+- \`zc:build\` -> \`$zc-build\`
+- \`zc:quality-review\` -> \`$zc-quality-review\`
+- \`zc:verify\` -> \`$zc-verify\`
+- \`zc:debug\` -> \`$zc-debug\`
+- \`zc:doc\` -> \`$zc-doc\`
+- \`zc:ship\` -> \`$zc-ship\`
+- \`zc:onboard\` -> \`$zc-onboard\`
+- \`zc:ctx-health\` -> \`$zc-ctx-health\`
 
 ## 固定 workflow
 
@@ -148,8 +153,8 @@ function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetL
 - 需要先把目标、范围和验收标准收敛清楚
 
 默认 skill：
-- \`$zc-brainstorming-and-design\`
-- 必要时接 \`$zc-spec-driven-development\`
+- \`$zc-product-analysis\`
+- 需要更深的设计或规格时，再接 \`$zc-brainstorming-and-design\` / \`$zc-spec-driven-development\`
 
 ### 2. full-delivery
 
@@ -157,7 +162,8 @@ function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetL
 - 新功能、较大改动、完整交付
 
 默认 skill：
-- \`$zc-sdd-tdd-workflow\`
+- \`$zc-sdd-tdd\`
+- 需要完整主流程时，再接 \`$zc-sdd-tdd-workflow\`
 
 ### 3. bugfix
 
@@ -165,7 +171,8 @@ function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetL
 - Bug、失败测试、异常行为
 
 默认 skill：
-- \`$zc-debugging-and-error-recovery\`
+- \`$zc-debug\`
+- 需要深入根因分析时，再接 \`$zc-debugging-and-error-recovery\`
 
 ### 4. review-closure
 
@@ -173,8 +180,8 @@ function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetL
 - 已有改动，当前重点是审查、反馈处理、收尾
 
 默认 skill：
-- \`$zc-code-review-and-quality\`
-- 必要时接 \`$zc-review-response-and-resolution\`
+- \`$zc-quality-review\`
+- 必要时接 \`$zc-code-review-and-quality\` / \`$zc-review-response-and-resolution\`
 
 ### 5. docs-release
 
@@ -182,8 +189,9 @@ function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetL
 - 文档、ADR、发布说明、发布后同步
 
 默认 skill：
-- \`$zc-documentation-and-adrs\`
-- 必要时接 \`$zc-release-documentation-sync\`
+- \`$zc-doc\`
+- 发布收尾时可接 \`$zc-ship\`
+- 必要时接 \`$zc-documentation-and-adrs\` / \`$zc-release-documentation-sync\`
 
 ### 6. investigation
 
@@ -193,15 +201,16 @@ function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetL
 - 需要先摸清项目或限制
 
 默认 skill：
-- \`$zc-codebase-onboarding\`
-- 必要时接 \`$zc-context-engineering\`
+- \`$zc-onboard\` / \`$zc-ctx-health\`
+- 必要时接 \`$zc-codebase-onboarding\` / \`$zc-context-engineering\`
 
 ## 推荐开始方式
 
-- 需求还模糊：先说“先帮我做产品分析”，再调用 \`$zc-brainstorming-and-design\`
-- 已确认是完整交付：直接用 \`$zc-sdd-tdd-workflow\`
-- 明确是 bug：直接用 \`$zc-debugging-and-error-recovery\`
-- 明确是审查：直接用 \`$zc-code-review-and-quality\`
+- 不确定从哪开始：直接用 \`$zc-start\`
+- 需求还模糊：先用 \`$zc-product-analysis\`
+- 已确认是完整交付：直接用 \`$zc-sdd-tdd\`
+- 明确是 bug：直接用 \`$zc-debug\`
+- 明确是审查：直接用 \`$zc-quality-review\`
 
 ## 已安装能力
 
@@ -209,15 +218,19 @@ function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetL
 
 - 清单来源：\`${manifestSource}\`
 - 匹配到的资产：${assets.length}
+- command-alias skills：${commandCount} 个
 - skills：${skillCount} 个
 
 ${renderAssetList(assets)}
 `;
 }
 
+function toCodexSkillSlug(asset: ToolkitAssetLike): string {
+  return asset.id.replace(/^(skill|command):/, "");
+}
+
 function toCodexSkillDirectory(asset: ToolkitAssetLike): string {
-  const skillName = asset.id.replace(/^skill:/, "");
-  return `skills/zc-${skillName}`;
+  return `skills/zc-${toCodexSkillSlug(asset)}`;
 }
 
 function renderYamlFrontmatter(fields: Record<string, string | undefined>): string {
@@ -247,13 +260,41 @@ function renderSkillFile(options: {
   })}\n${options.body.trim()}\n`;
 }
 
+function renderCodexCommandAliasBody(asset: ToolkitAssetLike): string {
+  const commandName = toCodexSkillSlug(asset);
+
+  return `# zc:${commandName}
+
+这是 Codex 的 command-alias skill。
+
+使用方式：
+
+- 在 Codex 中直接调用 \`$zc-${commandName}\`
+- 它对应统一命令语义 \`zc:${commandName}\`
+- 如果需要更深的方法细节，再继续调用相关专题 skill
+
+${(asset.body ?? `# ${describeAsset(asset)}\n`).trim()}
+`;
+}
+
 function renderCodexSkillArtifacts(assets: readonly ToolkitAssetLike[]): readonly PlatformArtifact[] {
   return assets.map((asset) => ({
     path: `${toCodexSkillDirectory(asset)}/SKILL.md`,
     content: renderSkillFile({
-      name: `zc-${asset.name ?? asset.id.replace(/^skill:/, "")}`,
+      name: `zc-${asset.name ?? toCodexSkillSlug(asset)}`,
       description: asset.summary ?? describeAsset(asset),
       body: asset.body ?? `# ${describeAsset(asset)}\n`,
+    }),
+  }));
+}
+
+function renderCodexCommandAliasArtifacts(assets: readonly ToolkitAssetLike[]): readonly PlatformArtifact[] {
+  return assets.map((asset) => ({
+    path: `${toCodexSkillDirectory(asset)}/SKILL.md`,
+    content: renderSkillFile({
+      name: `zc-${asset.name ?? toCodexSkillSlug(asset)}`,
+      description: asset.summary ?? describeAsset(asset),
+      body: renderCodexCommandAliasBody(asset),
     }),
   }));
 }
@@ -263,6 +304,7 @@ export function createCodexGenerationPlan(
   options: GenerationOptions = {},
 ): GenerationPlan {
   const matchedAssets = selectMatchedAssets(manifest, platformName);
+  const commandAssets = selectMatchedAssetsByKind(manifest, "command");
   const skillAssets = selectMatchedAssetsByKind(manifest, "skill");
   const manifestSource = options.manifestSource ?? manifest.source ?? "toolkit-manifest";
   const resolvedPackageName = options.packageName ?? packageName;
@@ -278,6 +320,7 @@ export function createCodexGenerationPlan(
         path: templateFiles.agents,
         content: renderAgentsFile(manifestSource, matchedAssets),
       },
+      ...renderCodexCommandAliasArtifacts(commandAssets),
       ...renderCodexSkillArtifacts(skillAssets),
     ],
   }) as GenerationPlan;
