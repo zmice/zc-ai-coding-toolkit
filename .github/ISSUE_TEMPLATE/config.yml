@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Usage guide
+    url: https://github.com/zmice/zc-ai-coding-toolkit/blob/main/docs/usage-guide.md
+    about: Read installation, update, and platform usage guidance first.
+  - name: Contributing guide
+    url: https://github.com/zmice/zc-ai-coding-toolkit/blob/main/CONTRIBUTING.md
+    about: Read contribution and validation rules before opening changes.
