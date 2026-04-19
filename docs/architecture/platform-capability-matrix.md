@@ -135,7 +135,7 @@
 | --- | --- | --- |
 | Codex | 项目级安装 `AGENTS.md`；用户级 / 自定义目录安装 `AGENTS.md` + `skills/zc-<command>/SKILL.md` + `skills/zc-<skill>/SKILL.md` | 保守适配，覆盖官方明确能力 |
 | Claude Code | `CLAUDE.md` + `commands/zc-*.md` + `agents/zc-*.md` | 目录化原生安装 |
-| Qwen | 优先通过官方 `qwen extensions` CLI 管理 `zc-toolkit` 扩展；扩展内容为 `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md` + `qwen-extension.json` + `commands` + `skills` + `agents` | extension 原生安装 |
+| Qwen | 优先通过官方 `qwen extensions` CLI 管理 `zc-toolkit` 的发布态 extension bundle；扩展内容为 `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md` + `qwen-extension.json` + `commands` + `skills` + `agents` | extension 原生安装 |
 | OpenCode | `AGENTS.md` + `.opencode/commands/zc-*.md` + `.opencode/skills/zc-*/SKILL.md` + 全局对应目录 | 目录化原生安装（第一版保守不上 agents） |
 
 ## 结论

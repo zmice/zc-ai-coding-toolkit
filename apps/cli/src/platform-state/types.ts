@@ -29,6 +29,9 @@ export interface PlatformInstallReceipt {
   readonly installedAt: string;
   readonly zcVersion?: string;
   readonly contentFingerprint?: string;
+  readonly installMethod?: "filesystem" | "qwen-cli";
+  readonly bundleType?: "source-bundle" | "release-bundle";
+  readonly bundlePath?: string;
   readonly artifacts: readonly PlatformInstallReceiptArtifact[];
 }
 

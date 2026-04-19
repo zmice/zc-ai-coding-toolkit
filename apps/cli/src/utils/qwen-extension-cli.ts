@@ -59,6 +59,12 @@ export interface QwenOfficialCliSourceBundle {
   readonly artifactCount: number;
 }
 
+export interface QwenOfficialCliReleaseBundle {
+  readonly bundleDir: string;
+  readonly extensionName: string;
+  readonly artifactCount: number;
+}
+
 function getExtensionCapability(plan: QwenInstallPlanLike): QwenExtensionCapabilityLike {
   const extension = plan.capability?.extension;
 
@@ -77,6 +83,11 @@ function resolveInstalledExtensionRoot(plan: QwenInstallPlanLike): string {
 export function resolveQwenOfficialCliSourceDir(plan: QwenInstallPlanLike): string {
   const extension = getExtensionCapability(plan);
   return resolve(plan.destinationRoot, ".zc", "platform-sources", "qwen", extension.name);
+}
+
+export function resolveQwenOfficialCliReleaseBundleDir(plan: QwenInstallPlanLike): string {
+  const extension = getExtensionCapability(plan);
+  return resolve(plan.destinationRoot, ".zc", "platform-bundles", "qwen", extension.name);
 }
 
 export function toQwenOfficialCliSourceArtifacts(plan: QwenInstallPlanLike): readonly GeneratedArtifact[] {
@@ -115,6 +126,33 @@ export async function syncQwenOfficialCliSourceBundle(
 
   return {
     sourceDir,
+    extensionName: extension.name,
+    artifactCount: sourceArtifacts.length,
+  };
+}
+
+export async function syncQwenOfficialCliReleaseBundle(
+  plan: QwenInstallPlanLike,
+): Promise<QwenOfficialCliReleaseBundle> {
+  const extension = getExtensionCapability(plan);
+  const bundleDir = resolveQwenOfficialCliReleaseBundleDir(plan);
+  const sourceArtifacts = toQwenOfficialCliSourceArtifacts(plan);
+  const sourceDir = resolveQwenOfficialCliSourceDir(plan);
+
+  await rm(bundleDir, { recursive: true, force: true });
+  await writeArtifacts(
+    sourceArtifacts.map((artifact) => ({
+      path: artifact.path.replace(sourceDir, bundleDir),
+      content: artifact.content,
+    })),
+    {
+      overwrite: "force",
+      dryRun: false,
+    },
+  );
+
+  return {
+    bundleDir,
     extensionName: extension.name,
     artifactCount: sourceArtifacts.length,
   };

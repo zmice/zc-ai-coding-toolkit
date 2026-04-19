@@ -54,6 +54,9 @@ describe("platform install receipt store", () => {
     const receiptPath = resolvePlatformInstallReceiptPath(plan);
     const written = await writePlatformInstallReceiptForPlan(plan, {
       installedAt: "2026-04-19T10:11:12.000Z",
+      installMethod: "qwen-cli",
+      bundleType: "release-bundle",
+      bundlePath: join(root, ".zc", "platform-bundles", "qwen", "zc-toolkit"),
     });
 
     const raw = JSON.parse(await readFile(receiptPath, "utf8")) as Record<string, unknown>;
@@ -68,6 +71,9 @@ describe("platform install receipt store", () => {
       manifestSource: "packages/toolkit/src/content",
       overwrite: "error",
       installedAt: "2026-04-19T10:11:12.000Z",
+      installMethod: "qwen-cli",
+      bundleType: "release-bundle",
+      bundlePath: join(root, ".zc", "platform-bundles", "qwen", "zc-toolkit"),
       artifacts: [
         {
           path: join(root, "AGENTS.md"),

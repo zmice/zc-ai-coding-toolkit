@@ -8,6 +8,9 @@ export const platformInstallReceiptSchemaVersion = 1 as const;
 export interface CreatePlatformInstallReceiptOptions {
   readonly installedAt?: string | Date;
   readonly zcVersion?: string;
+  readonly installMethod?: "filesystem" | "qwen-cli";
+  readonly bundleType?: "source-bundle" | "release-bundle";
+  readonly bundlePath?: string;
 }
 
 export function hashPlatformArtifactContent(content: string): string {
@@ -39,6 +42,9 @@ export function createPlatformInstallReceipt(
     installedAt: typeof installedAt === "string" ? installedAt : installedAt.toISOString(),
     ...(options.zcVersion ? { zcVersion: options.zcVersion } : {}),
     ...(plan.metadata?.fingerprint.value ? { contentFingerprint: plan.metadata.fingerprint.value } : {}),
+    ...(options.installMethod ? { installMethod: options.installMethod } : {}),
+    ...(options.bundleType ? { bundleType: options.bundleType } : {}),
+    ...(options.bundlePath ? { bundlePath: options.bundlePath } : {}),
     artifacts: plan.artifacts.map((artifact) => createPlatformInstallReceiptArtifact(artifact)),
   };
 }

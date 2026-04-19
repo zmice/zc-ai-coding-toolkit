@@ -207,6 +207,12 @@ zc platform status codex --global --json
 zc platform status qwen --global --json
 ```
 
+其中 Qwen 用户级安装会额外暴露：
+
+- 安装方式：`qwen extensions` 官方 CLI
+- Bundle 类型：发布态扩展包
+- Bundle 目录：`~/.qwen/.zc/platform-bundles/qwen/zc-toolkit/`
+
 ### 4. 预演更新或重装
 
 ```bash
