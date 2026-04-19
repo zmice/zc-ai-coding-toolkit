@@ -133,29 +133,37 @@ export async function syncQwenOfficialCliSourceBundle(
 
 export async function syncQwenOfficialCliReleaseBundle(
   plan: QwenInstallPlanLike,
+  bundleDirOverride?: string,
 ): Promise<QwenOfficialCliReleaseBundle> {
   const extension = getExtensionCapability(plan);
-  const bundleDir = resolveQwenOfficialCliReleaseBundleDir(plan);
-  const sourceArtifacts = toQwenOfficialCliSourceArtifacts(plan);
-  const sourceDir = resolveQwenOfficialCliSourceDir(plan);
+  const bundleDir = bundleDirOverride ? resolve(bundleDirOverride) : resolveQwenOfficialCliReleaseBundleDir(plan);
+  const releaseArtifacts = toQwenOfficialCliReleaseArtifacts(plan, bundleDir);
 
   await rm(bundleDir, { recursive: true, force: true });
-  await writeArtifacts(
-    sourceArtifacts.map((artifact) => ({
-      path: artifact.path.replace(sourceDir, bundleDir),
-      content: artifact.content,
-    })),
-    {
-      overwrite: "force",
-      dryRun: false,
-    },
-  );
+  await writeArtifacts(releaseArtifacts, {
+    overwrite: "force",
+    dryRun: false,
+  });
 
   return {
     bundleDir,
     extensionName: extension.name,
-    artifactCount: sourceArtifacts.length,
+    artifactCount: releaseArtifacts.length,
   };
+}
+
+export function toQwenOfficialCliReleaseArtifacts(
+  plan: QwenInstallPlanLike,
+  bundleDirOverride?: string,
+): readonly GeneratedArtifact[] {
+  const bundleDir = bundleDirOverride ? resolve(bundleDirOverride) : resolveQwenOfficialCliReleaseBundleDir(plan);
+  const sourceArtifacts = toQwenOfficialCliSourceArtifacts(plan);
+  const sourceDir = resolveQwenOfficialCliSourceDir(plan);
+
+  return sourceArtifacts.map((artifact) => ({
+    path: artifact.path.replace(sourceDir, bundleDir),
+    content: artifact.content,
+  }));
 }
 
 async function runQwenExtensionsCommand(args: readonly string[]): Promise<void> {

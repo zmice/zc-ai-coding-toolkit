@@ -33,6 +33,7 @@ import {
   relinkQwenExtensionWithOfficialCli,
   resolveQwenOfficialCliReleaseBundleDir,
   syncQwenOfficialCliReleaseBundle,
+  toQwenOfficialCliReleaseArtifacts,
   uninstallQwenExtensionWithOfficialCli,
   updateQwenExtensionWithOfficialCli,
 } from "../utils/qwen-extension-cli.js";
@@ -40,6 +41,7 @@ import {
 type PlatformName = "qwen" | "codex" | "claude" | "opencode";
 type PlatformOutputFormat = "text" | "json";
 type PlatformInstallScope = "project" | "global" | "dir";
+type PlatformGenerateBundleType = "release-bundle";
 type PlatformAction = "generate" | "install" | "update" | "repair" | "uninstall";
 type PlatformTargetSelectorOpts = {
   dir?: string;
@@ -483,11 +485,13 @@ function summarizeResult(action: PlatformAction, target: PlatformName, root: str
 
 function summarizePlan(action: PlatformAction, target: PlatformName, root: string, plan: PlatformPlanLike, metadata?: PlatformResolutionMetadata & {
   status?: string;
-}): string {
+} & Pick<PlatformResultExtra, "bundleType" | "bundlePath">): string {
   return [
     `${target} ${formatActionLabel(action)}计划`,
     formatRootLabel(action, root, metadata),
     ...(metadata?.status ? [`状态：${metadata.status}`] : []),
+    ...(metadata?.bundleType ? [`Bundle 类型：${metadata.bundleType === "release-bundle" ? "发布态扩展包" : "开发态源包"}`] : []),
+    ...(metadata?.bundlePath ? [`Bundle 目录：${metadata.bundlePath}`] : []),
     ...(metadata?.hint ? [`提示：${metadata.hint}`] : []),
     ...summarizeCapability(plan),
     `产物数量：${plan.artifacts.length}`,
@@ -497,7 +501,7 @@ function summarizePlan(action: PlatformAction, target: PlatformName, root: strin
 
 function buildPlanPayload(action: PlatformAction, target: PlatformName, root: string, plan: PlatformPlanLike, metadata?: PlatformResolutionMetadata & {
   status?: string | null;
-}) {
+} & Pick<PlatformResultExtra, "bundleType" | "bundlePath">) {
   return {
     mode: "plan",
     action,
@@ -508,12 +512,22 @@ function buildPlanPayload(action: PlatformAction, target: PlatformName, root: st
     autoResolvedRoot: metadata?.autoResolvedRoot ?? false,
     hint: metadata?.hint ?? null,
     status: metadata?.status ?? null,
+    bundleType: metadata?.bundleType ?? null,
+    bundlePath: metadata?.bundlePath ?? null,
     capability: getPlanCapabilitySummary(plan),
     artifactCount: plan.artifacts.length,
     contentFingerprint: plan.metadata?.fingerprint.value ?? null,
     overwrite: "overwrite" in plan ? plan.overwrite : null,
     artifacts: plan.artifacts,
   };
+}
+
+function parseGenerateBundleType(value: string): PlatformGenerateBundleType {
+  if (value === "release-bundle" || value === "release") {
+    return "release-bundle";
+  }
+
+  throw new InvalidArgumentError(`不支持的 bundle 类型：${value}。当前仅支持：release-bundle`);
 }
 
 function buildResultPayload(action: PlatformAction, target: PlatformName, root: string, result: {
@@ -836,7 +850,7 @@ function buildUninstallPayload(
 
 export async function runPlatformGenerate(
   target: PlatformName,
-  opts: { dir?: string; force?: boolean; plan?: boolean; json?: boolean }
+  opts: { dir?: string; force?: boolean; plan?: boolean; json?: boolean; bundle?: PlatformGenerateBundleType }
 ): Promise<void> {
   const format = resolveOutputFormat(opts.json);
   const outputRoot = opts.dir ? resolve(opts.dir) : resolveWorkspacePath(`.generated/${target}`);
@@ -844,37 +858,72 @@ export async function runPlatformGenerate(
   try {
     const manifest = await loadToolkitManifest();
     const platformModule = await loadPlatformModule(target);
-    const plan = createGenerationPlan(target, platformModule, manifest);
+    let plan: PlatformPlanLike = createGenerationPlan(target, platformModule, manifest);
+    let bundleType: PlatformGenerateBundleType | undefined;
+    let bundlePath: string | undefined;
+
+    if (opts.bundle) {
+      if (target !== "qwen") {
+        throw new Error(`${target} 暂不支持 bundle 导出。当前仅 qwen 支持 --bundle release-bundle。`);
+      }
+
+      const installPlan = createInstallPlan(target, platformModule, manifest, outputRoot, "dir", resolveOverwriteMode(opts.force));
+      bundleType = opts.bundle;
+      bundlePath = outputRoot;
+      plan = {
+        ...installPlan,
+        artifacts: toQwenOfficialCliReleaseArtifacts(installPlan, outputRoot),
+      };
+    }
 
     if (opts.plan) {
-      emitOutput(format, buildPlanPayload("generate", target, outputRoot, {
-        ...plan,
-        artifacts: plan.artifacts.map((artifact) => ({
-          path: join(outputRoot, artifact.path),
-          content: artifact.content
-        }))
-      }), summarizePlan("generate", target, outputRoot, {
-        ...plan,
-        artifacts: plan.artifacts.map((artifact) => ({
-          path: join(outputRoot, artifact.path),
-          content: artifact.content
-        }))
-      }));
+      const outputPlan = bundleType
+        ? plan
+        : {
+            ...plan,
+            artifacts: plan.artifacts.map((artifact) => ({
+              path: join(outputRoot, artifact.path),
+              content: artifact.content,
+            })),
+          };
+      emitOutput(
+        format,
+        buildPlanPayload("generate", target, outputRoot, outputPlan, {
+          bundleType,
+          bundlePath,
+        }),
+        summarizePlan("generate", target, outputRoot, outputPlan, {
+          bundleType,
+          bundlePath,
+        }),
+      );
       return;
     }
 
     const result = await writeArtifacts(
-      plan.artifacts.map((artifact) => ({
-        path: join(outputRoot, artifact.path),
-        content: artifact.content
-      })),
+      (bundleType
+        ? plan.artifacts
+        : plan.artifacts.map((artifact) => ({
+            path: join(outputRoot, artifact.path),
+            content: artifact.content,
+          }))),
       {
         dryRun: false,
         overwrite: resolveOverwriteMode(opts.force)
       }
     );
 
-    emitOutput(format, buildResultPayload("generate", target, outputRoot, result), summarizeResult("generate", target, outputRoot, result));
+    emitOutput(
+      format,
+      buildResultPayload("generate", target, outputRoot, result, {
+        bundleType,
+        bundlePath,
+      }),
+      summarizeResult("generate", target, outputRoot, result, {
+        bundleType,
+        bundlePath,
+      }),
+    );
   } catch (error) {
     emitPlatformError(
       format,
@@ -1926,6 +1975,7 @@ export function registerPlatformCommand(program: Command): void {
     .description("根据工具包清单生成平台原生内容产物")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
     .option("-d, --dir <dir>", "输出目录")
+    .option("-b, --bundle <type>", "导出指定 bundle 布局（当前仅 qwen: release-bundle）", parseGenerateBundleType)
     .option("--plan", "只输出产物计划，不落盘")
     .option("-j, --json", "直接输出 JSON")
     .option("-f, --force", "覆盖目标目录中已有但内容不同的产物")

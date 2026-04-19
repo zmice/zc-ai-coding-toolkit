@@ -28,6 +28,7 @@ const platformMocks = vi.hoisted(() => ({
   writePlatformInstallReceiptForPlan: vi.fn(),
   syncQwenOfficialCliSourceBundle: vi.fn(),
   syncQwenOfficialCliReleaseBundle: vi.fn(),
+  toQwenOfficialCliReleaseArtifacts: vi.fn(),
   installQwenExtensionWithOfficialCli: vi.fn(),
   uninstallQwenExtensionWithOfficialCli: vi.fn(),
   updateQwenExtensionWithOfficialCli: vi.fn(),
@@ -69,6 +70,7 @@ vi.mock("../../utils/qwen-extension-cli.js", () => ({
   QwenOfficialCliUnavailableError: class QwenOfficialCliUnavailableError extends Error {},
   syncQwenOfficialCliSourceBundle: platformMocks.syncQwenOfficialCliSourceBundle,
   syncQwenOfficialCliReleaseBundle: platformMocks.syncQwenOfficialCliReleaseBundle,
+  toQwenOfficialCliReleaseArtifacts: platformMocks.toQwenOfficialCliReleaseArtifacts,
   resolveQwenOfficialCliReleaseBundleDir: vi.fn((plan: { destinationRoot: string }) => (
     `${plan.destinationRoot}/.zc/platform-bundles/qwen/zc-toolkit`
   )),
@@ -194,6 +196,7 @@ describe("platform CLI", () => {
     platformMocks.writePlatformInstallReceiptForPlan.mockReset();
     platformMocks.syncQwenOfficialCliSourceBundle.mockReset();
     platformMocks.syncQwenOfficialCliReleaseBundle.mockReset();
+    platformMocks.toQwenOfficialCliReleaseArtifacts.mockReset();
     platformMocks.installQwenExtensionWithOfficialCli.mockReset();
     platformMocks.uninstallQwenExtensionWithOfficialCli.mockReset();
     platformMocks.updateQwenExtensionWithOfficialCli.mockReset();
@@ -310,6 +313,12 @@ describe("platform CLI", () => {
       extensionName: "zc-toolkit",
       artifactCount: 1,
     });
+    platformMocks.toQwenOfficialCliReleaseArtifacts.mockImplementation(
+      (_plan: unknown, bundleDir: string) => [
+        { path: `${bundleDir}/QWEN.md`, content: "# context" },
+        { path: `${bundleDir}/commands/zc/start.md`, content: "# start" },
+      ],
+    );
     platformMocks.installQwenExtensionWithOfficialCli.mockResolvedValue(undefined);
     platformMocks.uninstallQwenExtensionWithOfficialCli.mockResolvedValue(undefined);
     platformMocks.updateQwenExtensionWithOfficialCli.mockResolvedValue(undefined);
@@ -356,6 +365,77 @@ describe("platform CLI", () => {
         artifacts: [{ path: "/tmp/out/QWEN.md", content: "# context" }],
       }),
     );
+
+    logSpy.mockRestore();
+  });
+
+  it("exports a standalone qwen release bundle during generate", async () => {
+    platformMocks.createQwenGenerationPlan.mockReturnValue(
+      createGenerationPlan([{ path: "QWEN.md", content: "# context" }]),
+    );
+    platformMocks.createQwenInstallPlan.mockReturnValue(
+      createQwenInstallPlan(
+        "/tmp/zc-toolkit",
+        [
+          { path: "/tmp/zc-toolkit/extensions/zc-toolkit/QWEN.md", content: "# context" },
+          { path: "/tmp/zc-toolkit/extensions/zc-toolkit/commands/zc/start.md", content: "# start" },
+        ],
+      ),
+    );
+    platformMocks.writeArtifacts.mockResolvedValue({
+      created: 2,
+      overwritten: 0,
+      unchanged: 0,
+      skipped: 0,
+      dryRun: false,
+    });
+
+    await runPlatformGenerate("qwen", { dir: "/tmp/zc-toolkit", bundle: "release-bundle" });
+
+    expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
+      [
+        { path: "/tmp/zc-toolkit/QWEN.md", content: "# context" },
+        { path: "/tmp/zc-toolkit/commands/zc/start.md", content: "# start" },
+      ],
+      { dryRun: false, overwrite: "error" },
+    );
+  });
+
+  it("prints qwen release bundle plan paths without native extension nesting", async () => {
+    platformMocks.createQwenGenerationPlan.mockReturnValue(
+      createGenerationPlan([{ path: "QWEN.md", content: "# context" }]),
+    );
+    platformMocks.createQwenInstallPlan.mockReturnValue(
+      createQwenInstallPlan(
+        "/tmp/zc-toolkit",
+        [
+          { path: "/tmp/zc-toolkit/extensions/zc-toolkit/QWEN.md", content: "# context" },
+          { path: "/tmp/zc-toolkit/extensions/zc-toolkit/commands/zc/start.md", content: "# start" },
+        ],
+      ),
+    );
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformGenerate("qwen", {
+      dir: "/tmp/zc-toolkit",
+      bundle: "release-bundle",
+      plan: true,
+      json: true,
+    });
+
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload).toEqual(expect.objectContaining({
+      mode: "plan",
+      action: "generate",
+      target: "qwen",
+      root: "/tmp/zc-toolkit",
+      bundleType: "release-bundle",
+      bundlePath: "/tmp/zc-toolkit",
+      artifacts: [
+        { path: "/tmp/zc-toolkit/QWEN.md", content: "# context" },
+        { path: "/tmp/zc-toolkit/commands/zc/start.md", content: "# start" },
+      ],
+    }));
 
     logSpy.mockRestore();
   });

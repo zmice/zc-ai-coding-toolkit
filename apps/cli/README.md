@@ -205,6 +205,7 @@ zc platform install claude --global
 zc platform install opencode --global
 zc platform install qwen --global
 zc platform status qwen --global --json
+zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit
 zc platform doctor codex --global --json
 zc platform repair qwen --global --json
 zc platform uninstall opencode --global --plan --json
@@ -227,6 +228,12 @@ zc platform status codex --global --json
 zc platform doctor codex --global --json
 zc platform repair codex --global --plan --json
 zc platform uninstall codex --global --plan --json
+```
+
+如果你要把 Qwen 扩展作为独立目录导出，而不是直接安装到本机，可以使用：
+
+```bash
+zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit
 ```
 
 ## 设计边界

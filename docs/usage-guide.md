@@ -331,6 +331,8 @@ zc platform where qwen --global --json
   - 再通过官方命令把这个 bundle 接入 Qwen
   - 其中包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/`、`skills/`、`agents/`
   - 如果本机没有 `qwen` 命令，会明确提示并回退为直接写入扩展目录
+  - 如需独立导出发布态 bundle：
+    - `zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit`
 
 如果你已经明确知道目标工具的自定义全局目录，也可以继续显式指定：
 

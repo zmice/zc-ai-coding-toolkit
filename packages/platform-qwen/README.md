@@ -48,6 +48,8 @@ zc platform where qwen --global --json
   - 再通过官方命令接入该 bundle
   - 实际扩展目录仍位于 `~/.qwen/extensions/zc-toolkit/`
   - 其中包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/zc/<command>.md`、`skills/zc-<skill>/SKILL.md`、`agents/zc-<agent>.md`
+  - 如需导出独立发布态 bundle：
+    - `zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit`
 - `--dir <path>`
   - 安装 `<path>/extensions/zc-toolkit/...`
 

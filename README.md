@@ -134,6 +134,7 @@ zc platform install codex --global
 zc platform install claude --global
 zc platform install opencode --global
 zc platform install qwen --global
+zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit
 
 # 查看已安装状态
 zc platform status codex --global --json
@@ -217,6 +218,7 @@ zc platform status qwen --global --json
 - 安装方式：`qwen extensions` 官方 CLI
 - Bundle 类型：发布态扩展包
 - Bundle 目录：`~/.qwen/.zc/platform-bundles/qwen/zc-toolkit/`
+- 如需导出独立扩展包：`zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit`
 
 ### 4. 预演更新或重装
 

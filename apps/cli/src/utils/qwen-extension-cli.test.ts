@@ -57,6 +57,43 @@ afterEach(() => {
 const modPromise = import("./qwen-extension-cli.js");
 
 describe("qwen official CLI wrapper", () => {
+  it("maps install plan artifacts into a standalone release bundle", async () => {
+    const mod = await modPromise;
+
+    const artifacts = mod.toQwenOfficialCliReleaseArtifacts(
+      {
+        destinationRoot: "/home/test/.qwen",
+        capability: {
+          extension: {
+            relativeDir: "extensions",
+            name: "zc-toolkit",
+          },
+        },
+        artifacts: [
+          {
+            path: "/home/test/.qwen/extensions/zc-toolkit/QWEN.md",
+            content: "# context\n",
+          },
+          {
+            path: "/home/test/.qwen/extensions/zc-toolkit/commands/zc/start.md",
+            content: "# start\n",
+          },
+        ],
+      },
+      "/tmp/zc-toolkit",
+    );
+
+    assert.deepEqual(artifacts, [
+      {
+        path: "/tmp/zc-toolkit/QWEN.md",
+        content: "# context\n",
+      },
+      {
+        path: "/tmp/zc-toolkit/commands/zc/start.md",
+        content: "# start\n",
+      },
+    ]);
+  });
 
   it("treats uninstalling a missing extension as a no-op", async () => {
     const mod = await modPromise;
