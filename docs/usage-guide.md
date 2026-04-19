@@ -333,6 +333,32 @@ zc platform where qwen --global --json
   - 如果本机没有 `qwen` 命令，会明确提示并回退为直接写入扩展目录
   - 如需独立导出发布态 bundle：
     - `zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit`
+    - 或 `node scripts/export-qwen-extension-bundle.mjs --out /tmp/zc-toolkit`
+
+### 4.4 用 GitHub Actions 同步 Qwen 独立发布仓库
+
+当前仓库已经内置：
+
+- `.github/workflows/publish-qwen-extension-repo.yml`
+
+用途：
+
+- 从主仓库导出 Qwen 发布态 bundle
+- 同步到一个单独的 GitHub 扩展仓库根目录
+
+需要的 GitHub secret：
+
+- `QWEN_EXTENSION_REPO_TOKEN`
+  - 需要对目标扩展仓库具备 `contents: write`
+
+手动触发时需要提供：
+
+- `target_repository`
+  - 例如 `zmice/zc-qwen-extension`
+- `target_branch`
+  - 默认 `main`
+- `commit_message`
+  - 默认 `chore: sync qwen extension bundle`
 
 如果你已经明确知道目标工具的自定义全局目录，也可以继续显式指定：
 

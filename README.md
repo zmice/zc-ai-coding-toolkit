@@ -219,6 +219,7 @@ zc platform status qwen --global --json
 - Bundle 类型：发布态扩展包
 - Bundle 目录：`~/.qwen/.zc/platform-bundles/qwen/zc-toolkit/`
 - 如需导出独立扩展包：`zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit`
+- 如需同步到独立 GitHub 扩展仓库：可手动触发 `.github/workflows/publish-qwen-extension-repo.yml`
 
 ### 4. 预演更新或重装
 

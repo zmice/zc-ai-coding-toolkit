@@ -137,6 +137,25 @@ Claude 现在已经覆盖了官方明确的：
 
 这些能力可以在发布态 bundle 稳定后再接。
 
+当前新增的直接落地点：
+
+- 仓库内可以直接导出独立 bundle：
+  - `zc platform generate qwen --bundle release-bundle --dir <path>`
+  - 或 `node scripts/export-qwen-extension-bundle.mjs --out <path>`
+- GitHub Actions 已支持把该 bundle 同步到独立扩展仓库：
+  - `.github/workflows/publish-qwen-extension-repo.yml`
+  - 通过 `workflow_dispatch` 手动触发
+  - 使用 `QWEN_EXTENSION_REPO_TOKEN` 把导出的 bundle 覆盖同步到目标仓库根目录
+
+这意味着：
+
+- 当前已经具备“主仓库生成 + 独立扩展仓库发布”的基础能力
+- 但还没有直接实现：
+  - `qwen extensions install <git-url>`
+  - 针对扩展仓库的 tag/release/version 自动管理
+
+后续如果要走仓库地址安装，建议直接把独立扩展仓库根目录保持为 release bundle 结构。
+
 ### Phase 2: OpenCode agents
 
 最小目标：

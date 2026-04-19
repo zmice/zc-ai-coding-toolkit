@@ -1,0 +1,90 @@
+name: Publish Qwen Extension Repo
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_repository:
+        description: "目标扩展仓库（owner/repo）"
+        required: true
+        type: string
+      target_branch:
+        description: "目标分支"
+        required: false
+        default: "main"
+        type: string
+      commit_message:
+        description: "同步提交信息"
+        required: false
+        default: "chore: sync qwen extension bundle"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish-qwen-extension-repo:
+    name: export and sync qwen extension repo
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXTENSION_REPO_TOKEN: ${{ secrets.QWEN_EXTENSION_REPO_TOKEN }}
+      EXTENSION_REPO: ${{ inputs.target_repository }}
+      EXTENSION_BRANCH: ${{ inputs.target_branch }}
+      EXTENSION_COMMIT_MESSAGE: ${{ inputs.commit_message }}
+
+    steps:
+      - name: Validate token
+        run: |
+          if [ -z "$EXTENSION_REPO_TOKEN" ]; then
+            echo "缺少 secret：QWEN_EXTENSION_REPO_TOKEN" >&2
+            exit 1
+          fi
+
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build CLI
+        run: pnpm --dir apps/cli build
+
+      - name: Export qwen release bundle
+        run: node scripts/export-qwen-extension-bundle.mjs --out "$RUNNER_TEMP/qwen-extension"
+
+      - name: Checkout target extension repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.target_repository }}
+          ref: ${{ inputs.target_branch }}
+          token: ${{ secrets.QWEN_EXTENSION_REPO_TOKEN }}
+          path: .qwen-extension-repo
+
+      - name: Sync bundle to target repository
+        run: |
+          rsync -a --delete --exclude '.git/' "$RUNNER_TEMP/qwen-extension/" ".qwen-extension-repo/"
+
+      - name: Commit and push if changed
+        working-directory: .qwen-extension-repo
+        run: |
+          if git diff --quiet -- .; then
+            echo "No changes to publish."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "$EXTENSION_COMMIT_MESSAGE"
+          git push origin "HEAD:$EXTENSION_BRANCH"

@@ -50,10 +50,26 @@ zc platform where qwen --global --json
   - 其中包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/zc/<command>.md`、`skills/zc-<skill>/SKILL.md`、`agents/zc-<agent>.md`
   - 如需导出独立发布态 bundle：
     - `zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit`
+    - 或 `node scripts/export-qwen-extension-bundle.mjs --out /tmp/zc-toolkit`
 - `--dir <path>`
   - 安装 `<path>/extensions/zc-toolkit/...`
 
 如果本机没有 `qwen` 命令，CLI 会明确提示并回退为直接写入官方扩展目录。
+
+## 独立发布仓库
+
+当前仓库已经提供一条保守的 GitHub Actions 发布路径：
+
+- 工作流：`.github/workflows/publish-qwen-extension-repo.yml`
+- 触发方式：`workflow_dispatch`
+- 作用：
+  - 先导出 Qwen 发布态 bundle
+  - 再把 bundle 同步到独立扩展仓库根目录
+
+需要的 GitHub secret：
+
+- `QWEN_EXTENSION_REPO_TOKEN`
+  - 需要对目标扩展仓库拥有 `contents: write`
 
 命名空间规则：
 

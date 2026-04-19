@@ -41,6 +41,22 @@
   - `pnpm changeset status`
   - `node scripts/release-check.mjs pre-version --skip-commands`
 
+### Publish Qwen Extension Repo
+
+文件：`.github/workflows/publish-qwen-extension-repo.yml`
+
+- Triggers:
+  - `workflow_dispatch`
+- Purpose:
+  - 导出 Qwen 发布态 extension bundle
+  - 把 bundle 同步到独立 GitHub 扩展仓库
+- Commands:
+  - `pnpm install --frozen-lockfile`
+  - `pnpm --dir apps/cli build`
+  - `node scripts/export-qwen-extension-bundle.mjs --out <runner-temp>`
+  - `rsync` 同步到目标扩展仓库
+  - `git commit && git push`
+
 ## Design Notes
 
 - `pnpm verify` 继续作为默认 PR gate，不把 `pnpm changeset status` 强制到所有 PR。
@@ -59,6 +75,7 @@
 - 不修改现有发布脚本，`pnpm release` 仍然是 publish 唯一入口。
 - 不新增 root 级命令，只复用现有 `pnpm verify` 和 `pnpm changeset status`。
 - 不在本阶段引入 matrix、artifact upload、cache 微调、自动发布等复杂逻辑。
+- Qwen 扩展仓库同步保持手动触发，不默认自动推送到外部仓库。
 
 ## Next Steps
 
