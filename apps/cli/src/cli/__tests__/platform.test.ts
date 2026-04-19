@@ -605,6 +605,79 @@ describe("platform CLI", () => {
     logSpy.mockRestore();
   });
 
+  it("prints qwen platform status json with installed metadata from receipt", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: "/home/test/.qwen",
+      source: "official-global",
+      hint: "Qwen 官方文档定义用户级配置目录为 `~/.qwen`。",
+    });
+    platformMocks.createQwenInstallPlan.mockReturnValue(
+      createQwenInstallPlan(
+        "/home/test/.qwen",
+        [{ path: "/home/test/.qwen/extensions/zc-toolkit/QWEN.md", content: "# context" }],
+        "global",
+      ),
+    );
+    platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
+      kind: "up-to-date",
+      platform: "qwen",
+      receiptPath: "/home/test/.qwen/.zc/platform-state/qwen.install-receipt.json",
+      receipt: {
+        schemaVersion: 1,
+        platform: "qwen",
+        destinationRoot: "/home/test/.qwen",
+        manifestSource: "/repo/packages/toolkit/src/content",
+        overwrite: "error",
+        installedAt: "2026-04-19T12:00:00.000Z",
+        installMethod: "filesystem",
+        installSource: "local-bundle",
+        sourceRef: "/tmp/qwen-release/zc-toolkit",
+        bundleType: "release-bundle",
+        bundlePath: "/tmp/qwen-release/zc-toolkit",
+        artifacts: [
+          {
+            path: "/home/test/.qwen/extensions/zc-toolkit/QWEN.md",
+            sha256: "sha",
+            bytes: 9,
+          },
+        ],
+      },
+      contentFingerprint: "current-fingerprint",
+      installedContentFingerprint: "current-fingerprint",
+      summary: {
+        trackedArtifacts: 1,
+        driftedArtifacts: 0,
+        missingArtifacts: 0,
+        plannedChanges: 0,
+      },
+      artifacts: [],
+    });
+
+    await runPlatformStatus("qwen", { global: true, json: true });
+
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload).toEqual(
+      expect.objectContaining({
+        mode: "status",
+        target: "qwen",
+        root: "/home/test/.qwen",
+        installMethod: "filesystem",
+        installSource: "local-bundle",
+        sourceRef: "/tmp/qwen-release/zc-toolkit",
+        bundleType: "release-bundle",
+        bundlePath: "/tmp/qwen-release/zc-toolkit",
+        recommendedInstallMethod: "qwen-cli",
+        recommendedInstallSource: "github-repo",
+        recommendedSourceRef: "https://github.com/zmice/zc-qwen-extension.git",
+        recommendedBundleType: "release-bundle",
+        recommendedBundlePath: "/home/test/.qwen/.zc/platform-bundles/qwen/zc-toolkit",
+      }),
+    );
+
+    logSpy.mockRestore();
+  });
+
   it("prints update plan when status shows update-available", async () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     platformMocks.resolvePlatformInstallStatus.mockResolvedValue({

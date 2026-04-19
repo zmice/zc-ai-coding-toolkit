@@ -500,7 +500,7 @@ function buildNextStep(
 
   switch (action) {
     case "generate":
-      return `下一步：如需写入平台目录，运行 \`zc platform install ${target}${scopeFlag}\`。`;
+      return `下一步：如需写入平台目录，运行 \`zc platform install ${target} --project\`、\`--global\` 或 \`--dir <path>\`。`;
     case "install":
       return options?.noop
         ? `下一步：当前已是目标状态；如需确认细节，运行 \`zc platform status ${target}${scopeFlag} --json\`。`
@@ -798,6 +798,11 @@ function summarizeStatus(target: PlatformName, root: string, status: PlatformIns
   sourceRef?: string;
   bundleType?: "source-bundle" | "release-bundle";
   bundlePath?: string;
+  recommendedInstallMethod?: "filesystem" | "qwen-cli";
+  recommendedInstallSource?: "github-repo" | "local-bundle";
+  recommendedSourceRef?: string;
+  recommendedBundleType?: "source-bundle" | "release-bundle";
+  recommendedBundlePath?: string;
 }): string {
   const lines = [
     `${target} 安装状态`,
@@ -805,11 +810,16 @@ function summarizeStatus(target: PlatformName, root: string, status: PlatformIns
     `目录：${root}`,
     `状态：${status.kind}（${formatStatusLabel(status.kind)}）`,
     `回执：${status.receiptPath}`,
-    ...(metadata.installMethod ? [`推荐安装方式：${formatInstallMethodLabel(metadata.installMethod)}`] : []),
-    ...(metadata.installSource ? [`推荐来源：${formatInstallSourceLabel(metadata.installSource)}`] : []),
+    ...(metadata.installMethod ? [`安装方式：${formatInstallMethodLabel(metadata.installMethod)}`] : []),
+    ...(metadata.installSource ? [`安装来源：${formatInstallSourceLabel(metadata.installSource)}`] : []),
     ...(metadata.sourceRef ? [`来源：${metadata.sourceRef}`] : []),
-    ...(metadata.bundleType ? [`推荐 Bundle：${formatBundleTypeLabel(metadata.bundleType)}`] : []),
+    ...(metadata.bundleType ? [`Bundle 类型：${formatBundleTypeLabel(metadata.bundleType)}`] : []),
     ...(metadata.bundlePath ? [`Bundle 目录：${metadata.bundlePath}`] : []),
+    ...(metadata.recommendedInstallMethod ? [`推荐安装方式：${formatInstallMethodLabel(metadata.recommendedInstallMethod)}`] : []),
+    ...(metadata.recommendedInstallSource ? [`推荐来源：${formatInstallSourceLabel(metadata.recommendedInstallSource)}`] : []),
+    ...(metadata.recommendedSourceRef ? [`推荐来源地址：${metadata.recommendedSourceRef}`] : []),
+    ...(metadata.recommendedBundleType ? [`推荐 Bundle：${formatBundleTypeLabel(metadata.recommendedBundleType)}`] : []),
+    ...(metadata.recommendedBundlePath ? [`推荐 Bundle 目录：${metadata.recommendedBundlePath}`] : []),
     `跟踪产物：${status.summary.trackedArtifacts}，漂移：${status.summary.driftedArtifacts}，缺失：${status.summary.missingArtifacts}，待更新：${status.summary.plannedChanges}`,
     ...(metadata.hint ? [`提示：${metadata.hint}`] : []),
   ];
@@ -834,6 +844,11 @@ function buildStatusPayload(target: PlatformName, root: string, status: Platform
   sourceRef?: string;
   bundleType?: "source-bundle" | "release-bundle";
   bundlePath?: string;
+  recommendedInstallMethod?: "filesystem" | "qwen-cli";
+  recommendedInstallSource?: "github-repo" | "local-bundle";
+  recommendedSourceRef?: string;
+  recommendedBundleType?: "source-bundle" | "release-bundle";
+  recommendedBundlePath?: string;
 }) {
   return {
     mode: "status",
@@ -848,6 +863,11 @@ function buildStatusPayload(target: PlatformName, root: string, status: Platform
     sourceRef: metadata.sourceRef ?? null,
     bundleType: metadata.bundleType ?? null,
     bundlePath: metadata.bundlePath ?? null,
+    recommendedInstallMethod: metadata.recommendedInstallMethod ?? null,
+    recommendedInstallSource: metadata.recommendedInstallSource ?? null,
+    recommendedSourceRef: metadata.recommendedSourceRef ?? null,
+    recommendedBundleType: metadata.recommendedBundleType ?? null,
+    recommendedBundlePath: metadata.recommendedBundlePath ?? null,
     status: status.kind,
     receiptPath: status.receiptPath,
     zcVersion: metadata.zcVersion ?? null,
@@ -1378,11 +1398,18 @@ export async function runPlatformStatus(
     const plan = createInstallPlan(target, platformModule, manifest, destinationRoot, scope, "error");
     const status = await resolvePlatformInstallStatus(plan);
     const zcVersion = getCliVersion();
-    const qwenBundlePath = target === "qwen" && scope === "global" ? undefined : undefined;
-    const installMethod = target === "qwen" && scope === "global" ? "qwen-cli" : undefined;
-    const installSource = target === "qwen" && scope === "global" ? "github-repo" : undefined;
-    const sourceRef = target === "qwen" && scope === "global" ? qwenOfficialExtensionRepoUrl : undefined;
-    const bundleType = undefined;
+    const installMethod = status.receipt ? (status.receipt.installMethod ?? "filesystem") : undefined;
+    const installSource = status.receipt?.installSource ?? undefined;
+    const sourceRef = status.receipt?.sourceRef ?? undefined;
+    const bundleType = status.receipt?.bundleType ?? undefined;
+    const bundlePath = status.receipt?.bundlePath ?? undefined;
+    const recommendedInstallMethod = shouldPreferQwenOfficialCli(target, scope) ? "qwen-cli" : undefined;
+    const recommendedInstallSource = shouldPreferQwenOfficialRepoInstall(target, scope) ? "github-repo" : undefined;
+    const recommendedSourceRef = recommendedInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : undefined;
+    const recommendedBundleType = shouldPreferQwenOfficialCli(target, scope) ? "release-bundle" : undefined;
+    const recommendedBundlePath = shouldPreferQwenOfficialCli(target, scope)
+      ? resolveQwenOfficialCliReleaseBundleDir(plan)
+      : undefined;
 
     emitOutput(
       format,
@@ -1396,7 +1423,12 @@ export async function runPlatformStatus(
         installSource,
         sourceRef,
         bundleType,
-        bundlePath: qwenBundlePath,
+        bundlePath,
+        recommendedInstallMethod,
+        recommendedInstallSource,
+        recommendedSourceRef,
+        recommendedBundleType,
+        recommendedBundlePath,
       }),
       summarizeStatus(target, destinationRoot, status, {
         scope,
@@ -1408,7 +1440,12 @@ export async function runPlatformStatus(
         installSource,
         sourceRef,
         bundleType,
-        bundlePath: qwenBundlePath,
+        bundlePath,
+        recommendedInstallMethod,
+        recommendedInstallSource,
+        recommendedSourceRef,
+        recommendedBundleType,
+        recommendedBundlePath,
       }),
     );
   } catch (error) {
