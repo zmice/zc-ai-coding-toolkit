@@ -67,13 +67,15 @@
   - `workflow_dispatch`
 - Purpose:
   - 为 `@zmice/zc` 版本 tag 创建或更新 GitHub Release
+  - 使用仓库内模板生成 release 文案
   - 上传 Qwen extension release bundle 压缩包
 - Commands:
   - `pnpm install --frozen-lockfile`
   - `pnpm --dir apps/cli build`
   - `node scripts/export-qwen-extension-bundle.mjs --out <runner-temp>`
+  - `node scripts/render-github-release-notes.mjs --tag <tag> --version <version> --out <runner-temp>`
   - `zip -r` 打包 Qwen bundle
-  - `gh release create` / `gh release upload`
+  - `gh release create` / `gh release edit` / `gh release upload`
 
 ## Design Notes
 

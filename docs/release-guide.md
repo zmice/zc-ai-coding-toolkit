@@ -44,6 +44,7 @@
 - GitHub 不作为第二套 npm registry 使用。
 - 发版 tag 推送后，GitHub Actions 会自动：
   - 创建或更新 GitHub Release
+  - 使用仓库内的 release notes 模板生成版本说明
   - 上传 Qwen extension release bundle 压缩包
   - 同步 `zc-qwen-extension` 仓库
 

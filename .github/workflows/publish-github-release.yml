@@ -52,17 +52,25 @@ jobs:
           ASSET_NAME="zc-qwen-extension-${VERSION}.zip"
           cd "$RUNNER_TEMP/qwen-extension"
           zip -r "$RUNNER_TEMP/$ASSET_NAME" .
+          node "$GITHUB_WORKSPACE/scripts/render-github-release-notes.mjs" \
+            --tag "$RELEASE_TAG" \
+            --version "$VERSION" \
+            --out "$RUNNER_TEMP/release-notes.md"
           echo "ASSET_NAME=$ASSET_NAME" >> "$GITHUB_ENV"
           echo "ASSET_PATH=$RUNNER_TEMP/$ASSET_NAME" >> "$GITHUB_ENV"
+          echo "RELEASE_NOTES_PATH=$RUNNER_TEMP/release-notes.md" >> "$GITHUB_ENV"
 
       - name: Create or update GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" \
+              --title "$RELEASE_TAG" \
+              --notes-file "$RELEASE_NOTES_PATH"
             gh release upload "$RELEASE_TAG" "$ASSET_PATH#$ASSET_NAME" --clobber
           else
             gh release create "$RELEASE_TAG" "$ASSET_PATH#$ASSET_NAME" \
               --title "$RELEASE_TAG" \
-              --generate-notes
+              --notes-file "$RELEASE_NOTES_PATH"
           fi
