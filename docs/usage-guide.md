@@ -347,6 +347,14 @@ zc platform where qwen --global --json
 
 - 从主仓库导出 Qwen 发布态 bundle
 - 同步到一个单独的 GitHub 扩展仓库根目录
+- 同步结果会包含：
+  - `README.md`
+  - `LICENSE`
+  - `QWEN.md`
+  - `qwen-extension.json`
+  - `commands/`
+  - `skills/`
+  - `agents/`
 
 需要的 GitHub secret：
 

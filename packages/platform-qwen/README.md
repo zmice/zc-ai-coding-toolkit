@@ -69,7 +69,7 @@ zc platform where qwen --global --json
   - `@zmice/zc@*` tag push 后自动同步
 - 作用：
   - 先导出 Qwen 发布态 bundle
-  - 再把 bundle 同步到独立扩展仓库根目录
+  - 再把 bundle、README 和 LICENSE 一起同步到独立扩展仓库根目录
 
 需要的 GitHub secret：
 
