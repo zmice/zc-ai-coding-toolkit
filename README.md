@@ -187,6 +187,17 @@ zc platform install opencode --global
 zc platform install qwen --global
 ```
 
+安装后需要注意：
+
+- `toolkit` 里的 canonical command / skill 名称不会原样暴露给平台
+- 平台侧都会做命名空间适配，避免和平台内置命令或未来插件冲突
+- 例如：
+  - Codex：`zc:start` 会映射成 `$zc-start`
+  - Claude Code：`zc:start` 会映射成 `/zc-start`
+  - OpenCode：`zc:start` 会映射成 `/zc-start`
+  - Qwen：`zc:start` 会映射成 `zc:start`
+- 详细规则见 [docs/usage-guide.md](docs/usage-guide.md)
+
 ### 3. 查看安装位置和状态
 
 ```bash

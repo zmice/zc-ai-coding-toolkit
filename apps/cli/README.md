@@ -114,6 +114,34 @@ zc --help
 - `--json`
 - `--force`
 
+## 命名空间适配
+
+`toolkit` 里的内容使用统一语义名，例如：
+
+- `zc:start`
+- `zc:product-analysis`
+- `zc:sdd-tdd`
+- `zc:quality-review`
+
+安装到不同平台后，不会强行保留同一种触发形式，而是按平台能力做适配：
+
+- Codex
+  - 统一语义通过 `$zc-*` skill 承接
+  - 例如：`zc:start -> $zc-start`
+- Claude Code
+  - 统一语义通过 `/zc-*` command 承接
+  - 例如：`zc:start -> /zc-start`
+- OpenCode
+  - 统一语义通过 `/zc-*` command 承接
+  - 例如：`zc:start -> /zc-start`
+- Qwen
+  - 统一语义通过 `zc:*` namespaced command 承接
+  - 例如：`zc:start -> zc:start`
+
+这样做的目的只有一个：
+
+- 避免和平台内置命令、社区插件或未来扩展发生冲突
+
 ## 平台安装模型
 
 ### Codex

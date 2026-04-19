@@ -198,6 +198,32 @@ npm install -g @qwen-code/qwen-code@latest
   - 显式传 `--dir <path>`
   - 直接安装到指定目录，不再做路径猜测
 
+### 4.0 命名空间适配规则
+
+`toolkit` 内部维护的是统一语义，例如：
+
+- `zc:start`
+- `zc:product-analysis`
+- `zc:sdd-tdd`
+- `zc:spec`
+- `zc:task-plan`
+- `zc:build`
+
+安装到不同平台后，会按平台能力做适配，而不是原样暴露：
+
+| 平台 | 安装后的入口形式 | 示例 |
+| --- | --- | --- |
+| `codex` | `$zc-*` skill | `zc:start -> $zc-start` |
+| `claude` | `/zc-*` command | `zc:start -> /zc-start` |
+| `opencode` | `/zc-*` command | `zc:start -> /zc-start` |
+| `qwen` | `zc:*` namespaced command | `zc:start -> zc:start` |
+
+同时：
+
+- workflow / 专项 skill 也会带 `zc-` 前缀
+- 不会直接把裸名字如 `start`、`spec`、`build` 安装到平台里
+- 这样可以减少和平台内置命令、社区插件或后续扩展发生冲突的风险
+
 ### 产物矩阵
 
 | 平台 | 产物 |
