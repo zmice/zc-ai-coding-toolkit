@@ -100,6 +100,8 @@
   - 看命名与上游身份映射规则
 - `docs/architecture/platform-deepening.md`
   - 看平台能力边界
+- `docs/architecture/platform-capability-matrix.md`
+  - 看各平台官方支持的安装面，以及当前 entry-file install 与后续 directory / extension install 的边界
 - `docs/architecture/release-versioning.md`
   - 看发布和版本策略
 - `docs/architecture/upstream-automation.md`
