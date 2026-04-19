@@ -1,5 +1,5 @@
 export {
-  createQoderGenerationPlan,
+  createOpenCodeGenerationPlan,
   packageName,
   platformName,
   templateFiles,

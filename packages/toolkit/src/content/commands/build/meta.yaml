@@ -16,7 +16,8 @@ suggests:
 platforms:
   - qwen
   - codex
-  - qoder
+  - claude
+  - opencode
 workflow_family: lifecycle
 workflow_role: stage-entry
 task_types:
@@ -25,7 +26,8 @@ task_types:
 platform_exposure:
   codex: prompt-entry
   qwen: command-style
-  qoder: command-style
+  claude: command-style
+  opencode: command-style
 source:
   upstream: agent-skills
   strategy: adapted

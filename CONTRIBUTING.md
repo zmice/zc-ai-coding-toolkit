@@ -39,7 +39,8 @@ pnpm verify
 
 - [packages/platform-qwen/README.md](packages/platform-qwen/README.md)
 - [packages/platform-codex/README.md](packages/platform-codex/README.md)
-- [packages/platform-qoder/README.md](packages/platform-qoder/README.md)
+- [packages/platform-claude/README.md](packages/platform-claude/README.md)
+- [packages/platform-opencode/README.md](packages/platform-opencode/README.md)
 
 ### 改上游治理
 

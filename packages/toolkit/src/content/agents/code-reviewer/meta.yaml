@@ -19,7 +19,8 @@ tools:
 platforms:
   - qwen
   - codex
-  - qoder
+  - claude
+  - opencode
 source:
   upstream: superpowers
   strategy: inspired

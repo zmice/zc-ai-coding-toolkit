@@ -2,7 +2,7 @@ import { access } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { homedir } from "node:os";
 
-type PlatformName = "qwen" | "codex" | "qoder";
+type PlatformName = "qwen" | "codex" | "claude" | "opencode";
 type ProjectRootMarker = ".git" | "pnpm-workspace.yaml" | "package.json";
 type InstallSelectorMode = "project" | "global" | "dir";
 
@@ -68,11 +68,17 @@ function resolveOfficialGlobalTarget(platform: PlatformName): InstallTargetResol
         source: "official-global",
         hint: "Codex 官方文档将 Codex home（默认 `~/.codex`）定义为全局级 `AGENTS.md` 的位置。",
       };
-    case "qoder":
+    case "claude":
       return {
-        root: resolve(home, ".qoder"),
+        root: resolve(home, ".claude"),
         source: "official-global",
-        hint: "Qoder 官方文档定义用户级 memory 文件位于 `~/.qoder/AGENTS.md`。",
+        hint: "Claude Code 官方文档定义用户级 memory 文件位于 `~/.claude/CLAUDE.md`。",
+      };
+    case "opencode":
+      return {
+        root: resolve(home, ".config", "opencode"),
+        source: "official-global",
+        hint: "OpenCode 官方文档定义全局 rules 位于 `~/.config/opencode/AGENTS.md`，commands/skills/agents 目录也位于该配置根下。",
       };
     case "qwen":
       return {

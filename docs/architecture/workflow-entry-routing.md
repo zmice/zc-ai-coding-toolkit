@@ -476,7 +476,7 @@ Codex 不能直接套用 slash command 心智。
 其中：
 
 - Codex 保持自然语言入口，不把 command 等同于 slash/skill trigger
-- Qwen / Qoder 可以使用更接近命令的呈现方式，但不提前承诺真实触发机制
+- Qwen / Claude / OpenCode 可以使用更接近命令或目录化入口的呈现方式，但不提前承诺完全相同的触发机制
 
 ## 元数据优化建议
 
@@ -497,7 +497,8 @@ task_types:
 platform_exposure:
   codex: prompt-entry
   qwen: command-style
-  qoder: command-style
+  claude: command-style
+  opencode: command-style
 ```
 
 这层字段的作用不是给平台展示，而是为 `start`、`recommend` 和后续 CLI 路由提供结构化依据。

@@ -4,7 +4,7 @@
 
 把 `platform` 相关能力收束成一个统一 contract，解决当前三类问题：
 
-1. `platform` 共享逻辑分散在 `packages/platform-qwen`、`packages/platform-codex`、`packages/platform-qoder` 内部，重复实现太多。
+1. `platform` 共享逻辑分散在 `packages/platform-qwen`、`packages/platform-codex`、`packages/platform-claude`、`packages/platform-opencode` 内部，重复实现太多。
 2. `generate` / `install` 的语义不一致，尤其是写文件、覆盖文件、冲突处理的规则不够明确。
 3. CLI 只能“能跑”，但缺少稳定的 UX contract，导致未来新增平台、模板或安装策略时容易漂移。
 
@@ -26,7 +26,8 @@
   - `packages/toolkit`
   - `packages/platform-qwen`
   - `packages/platform-codex`
-  - `packages/platform-qoder`
+  - `packages/platform-claude`
+  - `packages/platform-opencode`
 
 ## Commands
 
@@ -36,7 +37,8 @@
 - `pnpm --dir apps/cli build`
 - `pnpm --dir packages/platform-qwen test`
 - `pnpm --dir packages/platform-codex test`
-- `pnpm --dir packages/platform-qoder test`
+- `pnpm --dir packages/platform-claude test`
+- `pnpm --dir packages/platform-opencode test`
 - `pnpm verify`
 
 CLI contract 命令：
@@ -84,7 +86,7 @@ CLI contract 命令：
 平台层必须以“plan”作为唯一中间契约，而不是直接拼文件写盘。
 
 ```ts
-type PlatformName = "qwen" | "codex" | "qoder";
+type PlatformName = "qwen" | "codex" | "claude" | "opencode";
 
 interface PlatformAsset {
   id: string;
@@ -219,7 +221,8 @@ template context 必须统一，平台渲染器只能在这个上下文上做特
   - `extensionManifest` 的字段结构
 - `codex`
   - `agentsFileName`
-- `qoder`
+- `claude`
+- `opencode`
   - `instructionsFileName`
 
 平台特化内容必须挂在命名清晰的子字段下，不能污染共享字段。
@@ -229,7 +232,7 @@ template context 必须统一，平台渲染器只能在这个上下文上做特
 ### `zc platform generate`
 
 - 语义：根据 toolkit manifest 生成平台产物到输出目录
-- 必需参数：`<target>`，取值只能是 `qwen | codex | qoder`
+- 必需参数：`<target>`，取值只能是 `qwen | codex | claude | opencode`
 - 可选参数：`-d, --dir <dir>`
 - 可选模式：
   - `--plan`：只输出产物计划，不写文件

@@ -82,7 +82,7 @@ describe("platform install receipt store", () => {
     const root = await createTempDir();
     const receipt = await readPlatformInstallReceipt(
       resolvePlatformInstallReceiptPath({
-        platform: "qoder",
+        platform: "claude",
         destinationRoot: root,
       }),
     );

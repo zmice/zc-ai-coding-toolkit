@@ -9,7 +9,7 @@ import {
 } from "../platform-state/receipt.js";
 import type { PlatformInstallPlanLike, PlatformInstallReceipt } from "../platform-state/types.js";
 
-const platformNames = ["qwen", "codex", "qoder"] as const satisfies readonly PlatformName[];
+const platformNames = ["qwen", "codex", "claude", "opencode"] as const satisfies readonly PlatformName[];
 const overwriteModes = ["error", "force"] as const satisfies readonly OverwriteMode[];
 const receiptDirectorySegments = [".zc", "platform-state"] as const;
 

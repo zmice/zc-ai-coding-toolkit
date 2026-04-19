@@ -11,7 +11,8 @@ const internalPackages = [
   { name: "platform-core", tsconfig: "packages/platform-core/tsconfig.json", dist: "packages/platform-core/dist/index.js" },
   { name: "platform-qwen", tsconfig: "packages/platform-qwen/tsconfig.json", dist: "packages/platform-qwen/dist/index.js" },
   { name: "platform-codex", tsconfig: "packages/platform-codex/tsconfig.json", dist: "packages/platform-codex/dist/index.js" },
-  { name: "platform-qoder", tsconfig: "packages/platform-qoder/tsconfig.json", dist: "packages/platform-qoder/dist/index.js" },
+  { name: "platform-claude", tsconfig: "packages/platform-claude/tsconfig.json", dist: "packages/platform-claude/dist/index.js" },
+  { name: "platform-opencode", tsconfig: "packages/platform-opencode/tsconfig.json", dist: "packages/platform-opencode/dist/index.js" },
 ];
 
 function resolveTscBin() {

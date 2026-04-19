@@ -1,5 +1,5 @@
 export const toolkitKinds = ["skill", "command", "agent"] as const;
-export const toolkitPlatforms = ["qwen", "codex", "qoder"] as const;
+export const toolkitPlatforms = ["qwen", "codex", "claude", "opencode"] as const;
 export const toolkitAssetTiers = ["core", "recommended", "optional", "experimental"] as const;
 export const toolkitAssetAudiences = ["default", "advanced", "maintainer"] as const;
 export const toolkitAssetStabilities = ["stable", "evolving", "experimental", "deprecated"] as const;
@@ -59,7 +59,8 @@ export interface ToolkitAssetRelationships {
 export interface ToolkitPlatformExposure {
   codex?: ToolkitPlatformExposureMode;
   qwen?: ToolkitPlatformExposureMode;
-  qoder?: ToolkitPlatformExposureMode;
+  claude?: ToolkitPlatformExposureMode;
+  opencode?: ToolkitPlatformExposureMode;
 }
 
 export interface ToolkitAssetMeta {

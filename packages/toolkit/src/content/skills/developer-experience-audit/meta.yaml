@@ -10,7 +10,8 @@ suggests:
 platforms:
   - qwen
   - codex
-  - qoder
+  - claude
+  - opencode
 source:
   upstream: gstack
   strategy: inspired

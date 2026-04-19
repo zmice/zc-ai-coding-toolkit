@@ -19,7 +19,7 @@ interface ToolkitAssetMetaLike {
   workflowRole?: string;
   routingWorkflows?: readonly string[];
   taskTypes?: readonly string[];
-  platformExposure?: Partial<Record<"qwen" | "codex" | "qoder", string>>;
+  platformExposure?: Partial<Record<"qwen" | "codex" | "claude" | "opencode", string>>;
   source?: {
     upstream: string;
     strategy: string;

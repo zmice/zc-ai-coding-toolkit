@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 
-export type PlatformName = "qwen" | "codex" | "qoder";
+export type PlatformName = "qwen" | "codex" | "claude" | "opencode";
 export type ToolkitAssetKind = "skill" | "command" | "agent";
 export type OverwriteMode = "error" | "force";
 export type InstallScope = "project" | "global" | "dir";

@@ -26,7 +26,8 @@ pnpm upstream -- <subcommand>
 当前 CLI 维护主要跟踪三类上游：
 
 - Codex 官方文档与 `AGENTS.md` / skills 机制
-- Qoder 官方 CLI、commands、skills、agents 文档
+- Claude Code 官方 memory、slash commands、sub-agents 文档
+- OpenCode 官方 rules、commands、skills、agents 文档
 - Qwen 官方 extensions、skills、`qwen extensions` 命令文档
 
 也就是说：
@@ -97,11 +98,11 @@ zc --help
 
 ### Platform
 
-- `zc platform generate <qwen|codex|qoder>`
-- `zc platform install <qwen|codex|qoder>`
-- `zc platform status <qwen|codex|qoder>`
-- `zc platform update <qwen|codex|qoder>`
-- `zc platform where <qwen|codex|qoder>`
+- `zc platform generate <qwen|codex|claude|opencode>`
+- `zc platform install <qwen|codex|claude|opencode>`
+- `zc platform status <qwen|codex|claude|opencode>`
+- `zc platform update <qwen|codex|claude|opencode>`
+- `zc platform where <qwen|codex|claude|opencode>`
 
 常用参数：
 
@@ -122,18 +123,27 @@ zc --help
   - `skills/zc-<command>/SKILL.md`
   - `skills/zc-<skill>/SKILL.md`
 
-### Qoder
+### Claude Code
+
+- 项目级：
+  - `CLAUDE.md`
+  - `.claude/commands`
+  - `.claude/agents`
+- 用户级 / 自定义目录：
+  - `CLAUDE.md`
+  - `commands`
+  - `agents`
+
+### OpenCode
 
 - 项目级：
   - `AGENTS.md`
-  - `.qoder/commands`
-  - `.qoder/skills`
-  - `.qoder/agents`
+  - `.opencode/commands`
+  - `.opencode/skills`
 - 用户级 / 自定义目录：
   - `AGENTS.md`
   - `commands`
   - `skills`
-  - `agents`
 
 ### Qwen
 
@@ -157,7 +167,8 @@ zc platform where codex --global --json
 zc platform install codex --global
 zc platform status codex --global --json
 
-zc platform install qoder --global
+zc platform install claude --global
+zc platform install opencode --global
 zc platform install qwen --global
 zc platform status qwen --global --json
 ```

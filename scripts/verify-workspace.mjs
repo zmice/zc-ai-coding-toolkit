@@ -68,7 +68,8 @@ function main() {
   run("node", [tscBin, "-p", "packages/platform-core/tsconfig.json"], "build platform-core");
   run("node", [tscBin, "-p", "packages/platform-qwen/tsconfig.json"], "build platform-qwen");
   run("node", [tscBin, "-p", "packages/platform-codex/tsconfig.json"], "build platform-codex");
-  run("node", [tscBin, "-p", "packages/platform-qoder/tsconfig.json"], "build platform-qoder");
+  run("node", [tscBin, "-p", "packages/platform-claude/tsconfig.json"], "build platform-claude");
+  run("node", [tscBin, "-p", "packages/platform-opencode/tsconfig.json"], "build platform-opencode");
   run("pnpm", ["--dir", "apps/cli", "build"], "build apps/cli");
 
   run(
@@ -83,7 +84,8 @@ function main() {
       "--test",
       "packages/platform-qwen/dist/index.test.js",
       "packages/platform-codex/dist/index.test.js",
-      "packages/platform-qoder/dist/index.test.js"
+      "packages/platform-claude/dist/index.test.js",
+      "packages/platform-opencode/dist/index.test.js"
     ],
     "test platform packages"
   );
@@ -103,20 +105,20 @@ function main() {
     assertFile(join(smokeRoot, "qwen-extension.json"), /"platform": "qwen"/);
     run(
       "node",
-      ["apps/cli/dist/cli/index.js", "platform", "install", "codex", "--dir", installRoot],
-      "smoke platform install codex"
+      ["apps/cli/dist/cli/index.js", "platform", "install", "claude", "--dir", installRoot],
+      "smoke platform install claude"
     );
-    assertFile(join(installRoot, "AGENTS.md"), /Codex 平台说明/);
-    assertFile(join(installRoot, ".zc", "platform-state", "codex.install-receipt.json"), /"platform": "codex"/);
+    assertFile(join(installRoot, "CLAUDE.md"), /Claude Code 工作流入口/);
+    assertFile(join(installRoot, ".zc", "platform-state", "claude.install-receipt.json"), /"platform": "claude"/);
     run(
       "node",
-      ["apps/cli/dist/cli/index.js", "platform", "status", "codex", "--dir", installRoot, "--json"],
-      "smoke platform status codex"
+      ["apps/cli/dist/cli/index.js", "platform", "status", "claude", "--dir", installRoot, "--json"],
+      "smoke platform status claude"
     );
     run(
       "node",
-      ["apps/cli/dist/cli/index.js", "platform", "update", "codex", "--dir", installRoot, "--plan", "--json"],
-      "smoke platform update codex --plan"
+      ["apps/cli/dist/cli/index.js", "platform", "update", "claude", "--dir", installRoot, "--plan", "--json"],
+      "smoke platform update claude --plan"
     );
 
     const publishedRoot = mkdtempSync(join(tmpdir(), "ai-coding-zc-published-"));
@@ -129,8 +131,8 @@ function main() {
       run("node", [join(publishedRoot, "dist/cli/index.js"), "toolkit", "validate"], "smoke published zc toolkit validate");
       run(
         "node",
-        [join(publishedRoot, "dist/cli/index.js"), "platform", "where", "codex", "--global", "--json"],
-        "smoke published zc platform where codex --global"
+        [join(publishedRoot, "dist/cli/index.js"), "platform", "where", "opencode", "--global", "--json"],
+        "smoke published zc platform where opencode --global"
       );
     } finally {
       rmSync(publishedRoot, { recursive: true, force: true });

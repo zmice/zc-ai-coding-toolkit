@@ -2,21 +2,55 @@
 
 ## 目标
 
-基于各平台**官方文档**重新定义 `zc platform install` 的适配边界，避免继续把“平台安装”简单理解为“写一个入口文件”。
+基于各平台**官方文档**重新定义 `zc platform install` 的适配边界，避免把“平台安装”继续等同于“写一个入口文件”。
 
-这份文档只回答 3 个问题：
+这份文档回答 4 个问题：
 
 1. 各平台官方到底支持哪些自定义安装面
-2. 当前仓库已经覆盖了哪些能力
-3. 下一步应该如何分阶段补齐
+2. 哪些平台有自己的 extension / plugin 生命周期
+3. 当前仓库准备覆盖哪些能力
+4. 不同平台后续应该采用哪种安装模型
 
 ## 官方能力矩阵
 
-| 平台 | Memory / Entry File | Skills Dir | Commands Dir | Agents Dir | Extension / Plugin | 用户级 | 项目级 |
+| 平台 | Entry / Memory | Commands | Skills | Agents | Extension / Plugin | 用户级 | 项目级 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Codex | `AGENTS.md` | `~/.codex/skills` | 未见官方目录模型 | 未见官方目录模型 | 未见官方 plugin 安装模型 | Yes | Yes |
-| Qoder | `AGENTS.md` | `~/.qoder/skills` / `.qoder/skills` | `~/.qoder/commands` / `.qoder/commands` | `~/.qoder/agents` / `.qoder/agents` | 未见独立 plugin 安装模型 | Yes | Yes |
-| Qwen | `QWEN.md` | `~/.qwen/skills` / `.qwen/skills` | extension 内支持 | extension 内支持 | `~/.qwen/extensions` / `.qwen/extensions` | Yes | Yes |
+| Codex | `AGENTS.md` | 未见官方目录模型 | `~/.codex/skills` | 未见官方目录模型 | 未见官方 plugin 安装模型 | Yes | Yes |
+| Claude Code | `CLAUDE.md` | `~/.claude/commands` / `.claude/commands` | 未见官方 skills 目录模型 | `~/.claude/agents` / `.claude/agents` | 未见官方 plugin 安装模型 | Yes | Yes |
+| Qwen | `QWEN.md` | extension 内支持 | `~/.qwen/skills` / `.qwen/skills` | extension 内支持 | `~/.qwen/extensions` / `.qwen/extensions` + 官方 `qwen extensions` CLI | Yes | Yes |
+| OpenCode | `AGENTS.md` | `~/.config/opencode/commands` / `.opencode/commands` | `~/.config/opencode/skills` / `.opencode/skills` | `~/.config/opencode/agents` / `.opencode/agents` | 未见独立 plugin 安装模型 | Yes | Yes |
+
+## 平台分型
+
+### 1. Entry File + Skills
+
+- 平台：`Codex`
+- 推荐安装面：
+  - `AGENTS.md`
+  - `skills/`
+- 处理原则：
+  - 不发明没有官方依据的 `commands/` / `agents/` 目录
+
+### 2. Entry File + Native Directories
+
+- 平台：`Claude Code`、`OpenCode`
+- 推荐安装面：
+  - `CLAUDE.md` / `AGENTS.md`
+  - `commands/`
+  - `agents/` 或 `skills/`
+- 处理原则：
+  - 直接写官方目录结构
+  - 不伪造“插件安装”
+
+### 3. Entry File + Extension Lifecycle
+
+- 平台：`Qwen`
+- 推荐安装面：
+  - extension bundle
+  - extension 内的 `QWEN.md`、`commands/`、`skills/`、`agents/`
+- 处理原则：
+  - 用户级优先用官方 `qwen extensions` CLI 管理
+  - 项目级保留 workspace extension 目录安装
 
 ## 官方要求摘要
 
@@ -25,30 +59,30 @@
 - 全局级 / 项目级说明入口：`AGENTS.md`
 - 全局级默认位置：`~/.codex/AGENTS.md`
 - Skills 目录：`~/.codex/skills`
-- 当前没有可靠官方依据表明 Codex 支持与 Qoder/Qwen 类似的 `commands/` 或 `agents/` 目录模型
+- 当前没有可靠官方依据表明 Codex 支持 `commands/` 或 `agents/` 目录模型
 
 来源：
 
 - OpenAI Developers `AGENTS.md` 指南
 - OpenAI `openai/skills`
 
-### Qoder
+### Claude Code
 
-- 用户级 memory：`~/.qoder/AGENTS.md`
-- 项目级 memory：`<project>/AGENTS.md`
+- 用户级 memory：`~/.claude/CLAUDE.md`
+- 项目级 memory：`./CLAUDE.md`
 - 用户级 / 项目级 commands：
-  - `~/.qoder/commands/`
-  - `<project>/.qoder/commands/`
-- 用户级 / 项目级 skills：
-  - `~/.qoder/skills/{skill-name}/SKILL.md`
-  - `<project>/.qoder/skills/{skill-name}/SKILL.md`
+  - `~/.claude/commands/`
+  - `.claude/commands/`
 - 用户级 / 项目级 agents：
-  - `~/.qoder/agents/<agent>.md`
-  - `<project>/.qoder/agents/<agent>.md`
+  - `~/.claude/agents/`
+  - `.claude/agents/`
+- 当前没有可靠官方依据表明 Claude Code 提供单独的官方 skills 目录或 plugin 生命周期
 
 来源：
 
-- Qoder CLI / Commands / Skills / Subagent / Custom Agent 官方文档
+- Anthropic Claude Code memory
+- Anthropic Claude Code slash commands
+- Anthropic Claude Code sub-agents
 
 ### Qwen
 
@@ -65,56 +99,63 @@
   - `commands/`
   - `skills/`
   - `agents/`
+- 官方提供 `qwen extensions install|update|uninstall|link`
 
 来源：
 
 - 阿里云帮助中心
-- Qwen Code Docs skills / extension 官方文档
+- Qwen Code Docs skills / extension / extensions 管理文档
 
-## 当前仓库覆盖面
+### OpenCode
 
-| 平台 | 当前实现 | 覆盖评价 |
+- 用户级 rules：`~/.config/opencode/AGENTS.md`
+- 项目级 rules：`AGENTS.md`
+- 用户级 / 项目级 commands：
+  - `~/.config/opencode/commands/`
+  - `.opencode/commands/`
+- 用户级 / 项目级 skills：
+  - `~/.config/opencode/skills/`
+  - `.opencode/skills/`
+- 用户级 / 项目级 agents：
+  - `~/.config/opencode/agents/`
+  - `.opencode/agents/`
+- 兼容 Claude Code 的 `CLAUDE.md` 与 `.claude/skills` 回退发现，但不应替代原生 `.opencode/*`
+
+来源：
+
+- OpenCode Rules
+- OpenCode Commands
+- OpenCode Skills
+- OpenCode Agents
+- OpenCode Config
+
+## 当前目标覆盖面
+
+| 平台 | 目标实现 | 覆盖评价 |
 | --- | --- | --- |
 | Codex | 项目级安装 `AGENTS.md`；用户级 / 自定义目录安装 `AGENTS.md` + `skills/zc-<command>/SKILL.md` + `skills/zc-<skill>/SKILL.md` | 保守适配，覆盖官方明确能力 |
-| Qoder | 安装 `AGENTS.md` + `commands` + `skills` + `agents` | 已覆盖官方目录模型 |
-| Qwen | 优先通过官方 `qwen extensions link` 管理 `zc-toolkit` 扩展；扩展内容为 `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md` + 带 `version` 的 `qwen-extension.json` + `commands` + `skills` + `agents` | 已升级为完整 extension 安装 |
-
-换句话说，当前 `zc platform install` 已经不再只是“写一个入口文件”，而是按平台能力矩阵选择：
-
-- 入口文件安装
-- 目录化 assets 安装
-- extension 目录安装
+| Claude Code | `CLAUDE.md` + `commands/zc-*.md` + `agents/zc-*.md` | 目录化原生安装 |
+| Qwen | 优先通过官方 `qwen extensions` CLI 管理 `zc-toolkit` 扩展；扩展内容为 `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md` + `qwen-extension.json` + `commands` + `skills` + `agents` | extension 原生安装 |
+| OpenCode | `AGENTS.md` + `.opencode/commands/zc-*.md` + `.opencode/skills/zc-*/SKILL.md` + 全局对应目录 | 目录化原生安装（第一版保守不上 agents） |
 
 ## 结论
 
 当前阶段结论：
 
 - `Codex`：继续保守，只做 `AGENTS.md` + 官方 skills
-- `Qoder`：已是目录化原生安装
-- `Qwen`：已是 extension 原生安装
-
-## 分阶段适配策略
-
-### 已完成
-
-- Codex：`AGENTS.md` + 用户级 / 自定义目录 `skills`
-- Qoder：`AGENTS.md` + `commands / skills / agents`
-- Qwen：extension 目录安装
-
-### 后续只保留两类增量
-
-- 更精确的平台版本/状态治理
-- 平台原生命令/skills/agents 内容投影策略继续打磨
+- `Claude Code`：走官方目录结构，不做插件抽象
+- `Qwen`：走官方 extension 生命周期
+- `OpenCode`：走官方目录结构，第一版聚焦 `AGENTS.md + commands + skills`
 
 ## 对 `zc platform install` 的模型要求
 
-后续平台安装不应只有一个 `artifact list` 概念，而应显式区分：
+平台安装不能只有一个 `artifact list` 概念，而应显式区分：
 
 - `entry-file artifacts`
 - `directory artifacts`
 - `extension artifacts`
 
-这意味着后续 `platform-core` 需要能描述：
+这意味着 `platform-core` 需要能描述：
 
 - 写到根目录的文件
 - 写到子目录的结构化内容
@@ -122,8 +163,8 @@
 
 ## 建议的下一步
 
-1. 先收一个 `platform capability` 数据模型
-2. 再优先实现 `Qoder directory install`
-3. 最后实现 `Qwen extension install`
-
-Codex 继续保守，只补 skills，不发明无官方依据的扩展目录。
+1. 收口新的 `platform capability` 数据模型
+2. 收口旧平台集合并切到新目标集（已完成）
+3. 新增 `platform-claude`
+4. 新增 `platform-opencode`
+5. 最后统一收 CLI、文档与 verify

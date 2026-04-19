@@ -55,7 +55,7 @@
 - `command:product-analysis` 是 `product-analysis` 的独立 workflow-entry
 - `sdd-tdd` 只是 `full-delivery` 的默认 workflow-entry，不是统一分诊入口
 - Codex 按 `prompt-entry` / 自然语言入口理解
-- Qwen / Qoder 当前只按 `command-style` 文案理解，不假定真实原生命令
+- Qwen / Claude / OpenCode 当前只按各自平台的命令式或目录化暴露理解，不假定完全同构
 
 ### Platform 适配与安装
 
@@ -64,7 +64,8 @@
 - `packages/platform-core/README.md`
 - `packages/platform-qwen/README.md`
 - `packages/platform-codex/README.md`
-- `packages/platform-qoder/README.md`
+- `packages/platform-claude/README.md`
+- `packages/platform-opencode/README.md`
 
 适用任务：
 

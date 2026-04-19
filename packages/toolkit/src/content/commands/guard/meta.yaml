@@ -13,7 +13,8 @@ supersedes:
 platforms:
   - qwen
   - codex
-  - qoder
+  - claude
+  - opencode
 workflow_family: support
 workflow_role: guardrail
 task_types:
@@ -26,7 +27,8 @@ task_types:
 platform_exposure:
   codex: prompt-entry
   qwen: command-style
-  qoder: command-style
+  claude: command-style
+  opencode: command-style
 source:
   upstream: toolkit-original
   strategy: curated

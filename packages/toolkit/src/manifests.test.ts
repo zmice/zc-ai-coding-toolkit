@@ -121,7 +121,7 @@ describe("createToolkitManifest", () => {
     ]);
     assert.deepEqual(
       getToolkitAssetById(manifest, "command:verify")?.meta.platforms,
-      ["qwen", "codex", "qoder"]
+      ["qwen", "codex", "claude", "opencode"]
     );
     assert.ok(listToolkitAssetsByKind(manifest, "agent").length >= 1);
   });
@@ -155,7 +155,7 @@ describe("loadToolkitManifest", () => {
     ]);
     assert.deepEqual(
       manifest.byId["agent:test-engineer"]?.meta.platforms,
-      ["qwen", "codex", "qoder"]
+      ["qwen", "codex", "claude", "opencode"]
     );
   });
 });

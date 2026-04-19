@@ -71,7 +71,7 @@ describe("resolveInstallTarget", () => {
   it("falls back to cwd when no project root markers exist", async () => {
     const cwd = await createTempDir();
 
-    const result = await resolveInstallTarget("qoder", { cwd });
+    const result = await resolveInstallTarget("claude", { cwd });
 
     assert.equal(result.root, cwd);
     assert.equal(result.source, "cwd");
@@ -85,12 +85,20 @@ describe("resolveInstallTarget", () => {
     assert.ok(result.hint?.includes("~/.codex"));
   });
 
-  it("resolves Qoder global scope to ~/.qoder", async () => {
-    const result = await resolveInstallTarget("qoder", { global: true });
+  it("resolves Claude global scope to ~/.claude", async () => {
+    const result = await resolveInstallTarget("claude", { global: true });
 
     assert.equal(result.source, "official-global");
-    assert.ok(result.root.endsWith(`${join(".qoder")}`));
-    assert.ok(result.hint?.includes("~/.qoder/AGENTS.md"));
+    assert.ok(result.root.endsWith(`${join(".claude")}`));
+    assert.ok(result.hint?.includes("~/.claude/CLAUDE.md"));
+  });
+
+  it("resolves OpenCode global scope to ~/.config/opencode", async () => {
+    const result = await resolveInstallTarget("opencode", { global: true });
+
+    assert.equal(result.source, "official-global");
+    assert.ok(result.root.endsWith(join(".config", "opencode")));
+    assert.ok(result.hint?.includes("~/.config/opencode/AGENTS.md"));
   });
 
   it("resolves Qwen global scope to ~/.qwen", async () => {

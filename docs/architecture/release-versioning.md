@@ -21,7 +21,8 @@
 - `@zmice/platform-core`
 - `@zmice/platform-qwen`
 - `@zmice/platform-codex`
-- `@zmice/platform-qoder`
+- `@zmice/platform-claude`
+- `@zmice/platform-opencode`
 
 这些内部包保留独立边界是为了：
 
@@ -37,7 +38,7 @@
 - 同时把内部依赖 vendoring 到 `apps/cli/vendor/`
 - vendored 内容至少包括：
   - `packages/toolkit` 的 `dist`、`src/content`、`templates`
-  - `packages/platform-qwen` / `platform-codex` / `platform-qoder` 的 `dist`、`templates`
+  - `packages/platform-qwen` / `platform-codex` / `platform-claude` / `platform-opencode` 的 `dist`、`templates`
   - `packages/platform-core` 的运行时代码
   - `references/upstreams.yaml`
 
@@ -59,7 +60,8 @@
 | `@zmice/platform-core` | 平台共享 contract | No |
 | `@zmice/platform-qwen` | Qwen 平台实现 | No |
 | `@zmice/platform-codex` | Codex 平台实现 | No |
-| `@zmice/platform-qoder` | Qoder 平台实现 | No |
+| `@zmice/platform-claude` | Claude Code 平台实现 | No |
+| `@zmice/platform-opencode` | OpenCode 平台实现 | No |
 
 非发布区域：
 

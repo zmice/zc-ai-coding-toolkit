@@ -14,21 +14,6 @@ importers:
 
   apps/cli:
     dependencies:
-      '@zmice/platform-codex':
-        specifier: workspace:*
-        version: link:../../packages/platform-codex
-      '@zmice/platform-core':
-        specifier: workspace:*
-        version: link:../../packages/platform-core
-      '@zmice/platform-qoder':
-        specifier: workspace:*
-        version: link:../../packages/platform-qoder
-      '@zmice/platform-qwen':
-        specifier: workspace:*
-        version: link:../../packages/platform-qwen
-      '@zmice/toolkit':
-        specifier: workspace:*
-        version: link:../../packages/toolkit
       commander:
         specifier: ^13.0.0
         version: 13.1.0
@@ -36,12 +21,43 @@ importers:
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.17
+      '@zmice/platform-claude':
+        specifier: workspace:*
+        version: link:../../packages/platform-claude
+      '@zmice/platform-codex':
+        specifier: workspace:*
+        version: link:../../packages/platform-codex
+      '@zmice/platform-core':
+        specifier: workspace:*
+        version: link:../../packages/platform-core
+      '@zmice/platform-opencode':
+        specifier: workspace:*
+        version: link:../../packages/platform-opencode
+      '@zmice/platform-qwen':
+        specifier: workspace:*
+        version: link:../../packages/platform-qwen
+      '@zmice/toolkit':
+        specifier: workspace:*
+        version: link:../../packages/toolkit
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
       vitest:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@22.19.17)
+
+  packages/platform-claude:
+    dependencies:
+      '@zmice/platform-core':
+        specifier: workspace:*
+        version: link:../platform-core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.17
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
 
   packages/platform-codex:
     dependencies:
@@ -65,7 +81,7 @@ importers:
         specifier: ^5.7.0
         version: 5.9.3
 
-  packages/platform-qoder:
+  packages/platform-opencode:
     dependencies:
       '@zmice/platform-core':
         specifier: workspace:*

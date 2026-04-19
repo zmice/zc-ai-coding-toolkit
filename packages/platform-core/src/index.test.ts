@@ -24,7 +24,7 @@ const manifest: ToolkitManifestLike = {
     {
       id: "command-beta",
       kind: "command",
-      platforms: ["qoder"],
+      platforms: ["claude"],
       title: "Beta command",
     },
   ],

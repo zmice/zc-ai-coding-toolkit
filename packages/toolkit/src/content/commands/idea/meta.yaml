@@ -12,7 +12,8 @@ suggests:
 platforms:
   - qwen
   - codex
-  - qoder
+  - claude
+  - opencode
 workflow_family: specialized
 workflow_role: specialized-entry
 task_types:
@@ -21,7 +22,8 @@ task_types:
 platform_exposure:
   codex: prompt-entry
   qwen: command-style
-  qoder: command-style
+  claude: command-style
+  opencode: command-style
 source:
   upstream: toolkit-original
   strategy: curated

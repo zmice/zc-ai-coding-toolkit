@@ -1,8 +1,8 @@
 {
-  "name": "@zmice/platform-qoder",
+  "name": "@zmice/platform-opencode",
   "private": true,
   "version": "0.1.0",
-  "description": "Manifest-driven generation and install scaffolding for Qoder platform artifacts",
+  "description": "Manifest-driven generation and install scaffolding for OpenCode platform artifacts",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

@@ -124,30 +124,41 @@ npm install -g @openai/codex
 codex --upgrade
 ```
 
-### Qoder CLI
+### Claude Code
 
 官方来源：
 
-- Qoder CLI Quick Start
-  https://docs.qoder.com/cli/quick-start
-- Qoder Using CLI
-  https://docs.qoder.com/cli/using-cli
+- Claude Code memory
+  https://docs.anthropic.com/en/docs/claude-code/memory
+- Claude Code slash commands
+  https://docs.anthropic.com/en/docs/claude-code/slash-commands
+- Claude Code sub-agents
+  https://docs.anthropic.com/en/docs/claude-code/sub-agents
+
+说明：
+
+- 这一节只记录自定义内容目录模型
+- 安装 Claude Code CLI 本身应以 Anthropic 官方最新安装页为准
+
+### OpenCode
+
+官方来源：
+
+- OpenCode intro / install
+  https://opencode.ai/docs/
+- OpenCode rules
+  https://opencode.ai/docs/rules/
+- OpenCode commands
+  https://opencode.ai/docs/commands/
+- OpenCode skills
+  https://opencode.ai/docs/skills
+- OpenCode agents
+  https://opencode.ai/docs/agents/
 
 安装：
 
 ```bash
-curl -fsSL https://qoder.com/install | bash
-# 或
-brew install qoderai/qoder/qodercli --cask
-# 或
-npm install -g @qoder-ai/qodercli
-```
-
-更新：
-
-```bash
-qodercli update
-# 或重新执行官方安装命令
+curl -fsSL https://opencode.ai/install | bash
 ```
 
 ### Qwen Code
@@ -192,7 +203,8 @@ npm install -g @qwen-code/qwen-code@latest
 | 平台 | 产物 |
 | --- | --- |
 | `codex` | `AGENTS.md`、`skills/zc-<command>/SKILL.md`、`skills/zc-<skill>/SKILL.md` |
-| `qoder` | `AGENTS.md`、`.qoder/commands`、`.qoder/skills`、`.qoder/agents` |
+| `claude` | `CLAUDE.md`、`.claude/commands`、`.claude/agents` |
+| `opencode` | `AGENTS.md`、`.opencode/commands`、`.opencode/skills` |
 | `qwen` | 优先通过官方 `qwen extensions link` 管理 `zc-toolkit` 扩展；扩展目录位于 `.qwen/extensions/zc-toolkit/`，其中包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/`、`skills/`、`agents/` |
 
 ### 官方默认位置矩阵
@@ -200,7 +212,8 @@ npm install -g @qwen-code/qwen-code@latest
 | 平台 | 项目级默认位置 | 全局级默认位置 | 说明 |
 | --- | --- | --- | --- |
 | `codex` | `<project-root>/AGENTS.md` | `~/.codex/AGENTS.md` | OpenAI 官方文档将 Codex home（默认 `~/.codex`）作为全局级 `AGENTS.md` 位置 |
-| `qoder` | `<project-root>/AGENTS.md` | `~/.qoder/AGENTS.md` | Qoder 官方文档明确给出 user-level 与 project-level memory 路径 |
+| `claude` | `<project-root>/CLAUDE.md` | `~/.claude/CLAUDE.md` | Claude Code 官方文档明确给出 project/user memory 位置 |
+| `opencode` | `<project-root>/AGENTS.md` | `~/.config/opencode/AGENTS.md` | OpenCode 官方文档明确给出 project/global rules 位置 |
 | `qwen` | `<project-root>/QWEN.md` | `~/.qwen/QWEN.md` | 官方文档明确 `/init` 会在项目目录创建 `QWEN.md`，并明确用户级配置目录为 `~/.qwen`；阿里云官方帮助文档同时给出了 Qwen CLI 的用户级 `QWEN.md` 位置 |
 
 ### 4.1 项目安装
@@ -210,7 +223,8 @@ npm install -g @qwen-code/qwen-code@latest
 ```bash
 cd /path/to/project
 zc platform install codex
-zc platform install qoder
+zc platform install claude
+zc platform install opencode
 zc platform install qwen
 # 或显式声明
 zc platform install codex --project
@@ -233,11 +247,14 @@ zc platform install codex --project
 
 - `codex`
   - `<project>/AGENTS.md`
-- `qoder`
+- `claude`
+  - `<project>/CLAUDE.md`
+  - `<project>/.claude/commands/zc-<command>.md`
+  - `<project>/.claude/agents/zc-<agent>.md`
+- `opencode`
   - `<project>/AGENTS.md`
-  - `<project>/.qoder/commands/zc-<command>.md`
-  - `<project>/.qoder/skills/zc-<skill>/SKILL.md`
-  - `<project>/.qoder/agents/zc-<agent>.md`
+  - `<project>/.opencode/commands/zc-<command>.md`
+  - `<project>/.opencode/skills/zc-<skill>/SKILL.md`
 - `qwen`
   - `<project>/.qwen/extensions/zc-toolkit/QWEN.md`
   - `<project>/.qwen/extensions/zc-toolkit/qwen-extension.json`
@@ -251,12 +268,14 @@ zc platform install codex --project
 
 ```bash
 zc platform install codex --global
-zc platform install qoder --global
+zc platform install claude --global
+zc platform install opencode --global
 zc platform install qwen --global
 zc platform status codex --global --json
 zc platform update codex --global --plan --json
 zc platform where codex --global
-zc platform where qoder --global --json
+zc platform where claude --global --json
+zc platform where opencode --global --json
 zc platform where qwen --global --json
 ```
 
@@ -266,11 +285,14 @@ zc platform where qwen --global --json
   - 默认安装到 `~/.codex/AGENTS.md`
   - 同时安装 `~/.codex/skills/zc-<command>/SKILL.md`
   - 同时安装 `~/.codex/skills/zc-<skill>/SKILL.md`
-- `qoder --global`
-  - 默认安装到 `~/.qoder/AGENTS.md`
-  - 同时安装 `~/.qoder/commands/zc-<command>.md`
-  - 同时安装 `~/.qoder/skills/zc-<skill>/SKILL.md`
-  - 同时安装 `~/.qoder/agents/zc-<agent>.md`
+- `claude --global`
+  - 默认安装到 `~/.claude/CLAUDE.md`
+  - 同时安装 `~/.claude/commands/zc-<command>.md`
+  - 同时安装 `~/.claude/agents/zc-<agent>.md`
+- `opencode --global`
+  - 默认安装到 `~/.config/opencode/AGENTS.md`
+  - 同时安装 `~/.config/opencode/commands/zc-<command>.md`
+  - 同时安装 `~/.config/opencode/skills/zc-<skill>/SKILL.md`
 - `qwen --global`
   - 默认优先通过官方 `qwen extensions link` 管理 `~/.qwen/extensions/zc-toolkit/`
   - 其中包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/`、`skills/`、`agents/`
@@ -280,7 +302,8 @@ zc platform where qwen --global --json
 
 ```bash
 zc platform install codex --dir <codex-global-root>
-zc platform install qoder --dir <qoder-global-root>
+zc platform install claude --dir <claude-global-root>
+zc platform install opencode --dir <opencode-global-root>
 zc platform install qwen --dir <qwen-global-root>
 ```
 
@@ -291,7 +314,8 @@ zc platform install qwen --dir <qwen-global-root>
 ```bash
 zc platform install codex --plan
 zc platform install codex --global --plan
-zc platform install qoder --plan --json
+zc platform install claude --plan --json
+zc platform install opencode --plan --json
 zc platform install qwen --global --plan --json
 zc platform where codex --global
 ```
@@ -359,6 +383,7 @@ pnpm verify
 ```bash
 zc platform install codex --plan
 zc platform install codex --global --plan
-zc platform install qoder --plan
+zc platform install claude --plan
+zc platform install opencode --plan
 zc platform install qwen --plan
 ```

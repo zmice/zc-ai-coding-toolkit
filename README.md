@@ -9,7 +9,7 @@
 仓库内部还包含：
 
 - `packages/toolkit`：skills / commands / agents 的唯一事实源
-- `packages/platform-*`：Qwen / Codex / Qoder 平台适配层
+- `packages/platform-*`：Qwen / Codex / Claude / OpenCode 平台适配层
 - `references`：上游项目治理、快照、审阅记录
 
 ## 适合谁
@@ -28,7 +28,8 @@
   - 使用 `meta.yaml + body.md + assets/` 维护 skills、commands、agents
 - 平台原生安装
   - Codex：`AGENTS.md` + `skills`
-  - Qoder：`AGENTS.md` + `commands / skills / agents`
+  - Claude Code：`CLAUDE.md` + `commands / agents`
+  - OpenCode：`AGENTS.md` + `commands / skills`
   - Qwen：`QWEN.md` + extension 目录
 - 上游治理
   - 记录、快照、比对、报告、导入提案
@@ -88,7 +89,8 @@ zc platform where qwen --global --json
 
 # 生成或安装平台内容
 zc platform install codex --global
-zc platform install qoder --global
+zc platform install claude --global
+zc platform install opencode --global
 zc platform install qwen --global
 
 # 查看已安装状态
@@ -107,7 +109,8 @@ zc platform status qwen --global --json
 │   ├── platform-core/          # 平台生成/安装共享 contract
 │   ├── platform-qwen/
 │   ├── platform-codex/
-│   └── platform-qoder/
+│   ├── platform-claude/
+│   └── platform-opencode/
 ├── references/                 # 上游治理：upstreams、notes、snapshots
 ├── docs/
 │   ├── adr/                    # 架构决策记录
@@ -145,7 +148,8 @@ zc toolkit recommend <query>
 ```bash
 zc platform generate qwen --plan --json
 zc platform install codex --global
-zc platform install qoder --global
+zc platform install claude --global
+zc platform install opencode --global
 zc platform install qwen --global
 zc platform status codex --global --json
 zc platform update codex --global --plan --json
@@ -189,7 +193,8 @@ pnpm upstream -- report all --format md
 当前重点跟踪：
 
 - Codex 官方文档
-- Qoder 官方 CLI / commands / skills / agents 文档
+- Claude Code 官方 memory / slash commands / agents 文档
+- OpenCode 官方 rules / commands / skills / agents 文档
 - Qwen 官方扩展、skills、extensions CLI 文档
 
 相关入口说明见：

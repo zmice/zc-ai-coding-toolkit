@@ -12,7 +12,8 @@ const platformMocks = vi.hoisted(() => ({
   createQwenGenerationPlan: vi.fn(),
   createQwenInstallPlan: vi.fn(),
   createCodexInstallPlan: vi.fn(),
-  createQoderInstallPlan: vi.fn(),
+  createClaudeInstallPlan: vi.fn(),
+  createOpenCodeInstallPlan: vi.fn(),
   loadToolkitManifest: vi.fn(),
   importWorkspaceDistModule: vi.fn(),
   normalizeInstallSelector: vi.fn(),
@@ -75,7 +76,7 @@ function createGenerationPlan(artifacts: Array<{ path: string; content: string }
 }
 
 function createInstallPlan(
-  platform: "codex" | "qoder",
+  platform: "codex" | "claude",
   destinationRoot: string,
   artifacts: Array<{ path: string; content: string }>,
   scope: "project" | "global" | "dir" = "dir",
@@ -103,7 +104,7 @@ function createInstallPlan(
 
   return {
     platform,
-    packageName: platform === "codex" ? "@zmice/platform-codex" : "@zmice/platform-qoder",
+    packageName: platform === "codex" ? "@zmice/platform-codex" : "@zmice/platform-claude",
     manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
     matchedAssets: [],
     destinationRoot,
@@ -153,7 +154,8 @@ describe("platform CLI", () => {
     platformMocks.createQwenGenerationPlan.mockReset();
     platformMocks.createQwenInstallPlan.mockReset();
     platformMocks.createCodexInstallPlan.mockReset();
-    platformMocks.createQoderInstallPlan.mockReset();
+    platformMocks.createClaudeInstallPlan.mockReset();
+    platformMocks.createOpenCodeInstallPlan.mockReset();
     platformMocks.loadToolkitManifest.mockReset();
     platformMocks.importWorkspaceDistModule.mockReset();
     platformMocks.normalizeInstallSelector.mockReset();
@@ -201,8 +203,12 @@ describe("platform CLI", () => {
         return { createCodexInstallPlan: platformMocks.createCodexInstallPlan };
       }
 
-      if (relativePath === "packages/platform-qoder/dist/index.js") {
-        return { createQoderInstallPlan: platformMocks.createQoderInstallPlan };
+      if (relativePath === "packages/platform-claude/dist/index.js") {
+        return { createClaudeInstallPlan: platformMocks.createClaudeInstallPlan };
+      }
+
+      if (relativePath === "packages/platform-opencode/dist/index.js") {
+        return { createOpenCodeInstallPlan: platformMocks.createOpenCodeInstallPlan };
       }
 
       throw new Error(`unexpected import: ${relativePath}`);
@@ -635,8 +641,8 @@ describe("platform CLI", () => {
   });
 
   it("passes global scope through install target resolution and exposes official path hints", async () => {
-    platformMocks.createQoderInstallPlan.mockReturnValue(
-      createInstallPlan("qoder", "/home/test/.qoder", [{ path: "/home/test/.qoder/AGENTS.md", content: "# agents" }]),
+    platformMocks.createClaudeInstallPlan.mockReturnValue(
+      createInstallPlan("claude", "/home/test/.claude", [{ path: "/home/test/.claude/CLAUDE.md", content: "# claude" }]),
     );
     platformMocks.writeArtifacts.mockResolvedValue({
       created: 1,
@@ -647,27 +653,27 @@ describe("platform CLI", () => {
     });
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     platformMocks.resolveInstallTarget.mockResolvedValue({
-      root: "/home/test/.qoder",
+      root: "/home/test/.claude",
       source: "official-global",
-      hint: "Qoder 官方文档定义用户级 memory 文件位于 `~/.qoder/AGENTS.md`。",
+      hint: "Claude Code 官方文档定义用户级 memory 文件位于 `~/.claude/CLAUDE.md`。",
     });
 
-    await runPlatformInstall("qoder", { global: true });
+    await runPlatformInstall("claude", { global: true });
 
-    expect(platformMocks.resolveInstallTarget).toHaveBeenCalledWith("qoder", {
+    expect(platformMocks.resolveInstallTarget).toHaveBeenCalledWith("claude", {
       dir: undefined,
       cwd: process.cwd(),
       project: undefined,
       global: true,
     });
-    expect(platformMocks.createQoderInstallPlan).toHaveBeenCalledWith(
+    expect(platformMocks.createClaudeInstallPlan).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
-        destinationRoot: "/home/test/.qoder",
+        destinationRoot: "/home/test/.claude",
         scope: "global",
       }),
     );
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("提示：Qoder 官方文档定义用户级 memory 文件位于 `~/.qoder/AGENTS.md`。"));
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("提示：Claude Code 官方文档定义用户级 memory 文件位于 `~/.claude/CLAUDE.md`。"));
 
     logSpy.mockRestore();
   });

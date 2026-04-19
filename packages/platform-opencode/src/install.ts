@@ -1,5 +1,5 @@
 export {
-  createQoderInstallPlan,
+  createOpenCodeInstallPlan,
   type InstallOptions,
   type InstallPlan,
   type ToolkitManifestLike,

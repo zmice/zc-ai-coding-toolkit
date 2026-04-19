@@ -17,7 +17,8 @@ const fixturePackages = [
   ["packages/platform-core/package.json", { name: "@zmice/platform-core", version: "0.1.0", private: true }],
   ["packages/platform-qwen/package.json", { name: "@zmice/platform-qwen", version: "0.1.0", private: true }],
   ["packages/platform-codex/package.json", { name: "@zmice/platform-codex", version: "0.1.0", private: true }],
-  ["packages/platform-qoder/package.json", { name: "@zmice/platform-qoder", version: "0.1.0", private: true }]
+  ["packages/platform-claude/package.json", { name: "@zmice/platform-claude", version: "0.1.0", private: true }],
+  ["packages/platform-opencode/package.json", { name: "@zmice/platform-opencode", version: "0.1.0", private: true }]
 ];
 
 function writeFixtureFile(root, relativePath, content) {

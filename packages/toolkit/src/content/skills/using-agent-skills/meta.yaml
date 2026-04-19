@@ -13,7 +13,8 @@ suggests:
 platforms:
   - qwen
   - codex
-  - qoder
+  - claude
+  - opencode
 source:
   upstream: agent-skills
   strategy: adapted

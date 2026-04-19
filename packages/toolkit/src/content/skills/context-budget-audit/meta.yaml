@@ -10,7 +10,8 @@ requires:
 platforms:
   - qwen
   - codex
-  - qoder
+  - claude
+  - opencode
 source:
   upstream: toolkit-original
   strategy: curated

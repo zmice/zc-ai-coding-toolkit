@@ -12,6 +12,7 @@
     "@zmice/platform-core",
     "@zmice/platform-qwen",
     "@zmice/platform-codex",
-    "@zmice/platform-qoder"
+    "@zmice/platform-claude",
+    "@zmice/platform-opencode"
   ]
 }

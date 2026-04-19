@@ -26,7 +26,8 @@ suggests:
 platforms:
   - qwen
   - codex
-  - qoder
+  - claude
+  - opencode
 workflow_family: intake
 workflow_role: intake-router
 routing_workflows:
@@ -46,7 +47,8 @@ task_types:
 platform_exposure:
   codex: prompt-entry
   qwen: command-style
-  qoder: command-style
+  claude: command-style
+  opencode: command-style
 source:
   upstream: toolkit-original
   strategy: curated

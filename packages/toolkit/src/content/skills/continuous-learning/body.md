@@ -162,7 +162,7 @@ Hooks 是确定性的 — 只要事件触发，脚本就一定执行，不受模
 ### 文件结构
 
 ```
-~/.qoder/homunculus/
+~/.zc/homunculus/
 ├── observations.jsonl          # 全局观察（无项目时的 fallback）
 ├── instincts/
 │   ├── personal/               # 全局自动学习的 instincts
@@ -197,8 +197,8 @@ Hooks 是确定性的 — 只要事件触发，脚本就一定执行，不受模
 # 自动检测平台并安装
 bash skills/continuous-learning/hooks/setup.sh
 
-# 指定平台
-bash skills/continuous-learning/hooks/setup.sh --platform qoder
+# 指定平台适配器（按脚本支持情况选择）
+bash skills/continuous-learning/hooks/setup.sh --platform codex
 bash skills/continuous-learning/hooks/setup.sh --platform qwen-code
 ```
 
@@ -207,8 +207,8 @@ bash skills/continuous-learning/hooks/setup.sh --platform qwen-code
 # 自动检测平台并安装
 .\skills\continuous-learning\hooks\setup.ps1
 
-# 指定平台
-.\skills\continuous-learning\hooks\setup.ps1 -Platform qoder
+# 指定平台适配器（按脚本支持情况选择）
+.\skills\continuous-learning\hooks\setup.ps1 -Platform codex
 .\skills\continuous-learning\hooks\setup.ps1 -Platform qwen-code
 
 # 卸载
@@ -217,16 +217,16 @@ bash skills/continuous-learning/hooks/setup.sh --platform qwen-code
 
 ### 手动配置
 
-在 `~/.qoder/settings.json`（Qoder）或对应配置文件中添加：
+在你所使用平台支持的 hooks / automation 配置文件中接入观察脚本。下面只给出一个通用示意，实际键名和事件名应以目标平台官方文档为准：
 
 **macOS / Linux:**
 ```json
 {
   "hooks": {
-    "PostToolUse": [{"matcher": "*", "hooks": [{"type": "command", "command": "~/.qoder/hooks/continuous-learning/observe.sh"}]}],
-    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "~/.qoder/hooks/continuous-learning/observe.sh"}]}],
-    "PostToolUseFailure": [{"matcher": "*", "hooks": [{"type": "command", "command": "~/.qoder/hooks/continuous-learning/observe.sh"}]}],
-    "Stop": [{"hooks": [{"type": "command", "command": "~/.qoder/hooks/continuous-learning/session-end.sh"}]}]
+    "PostToolUse": [{"matcher": "*", "hooks": [{"type": "command", "command": "~/.zc/hooks/continuous-learning/observe.sh"}]}],
+    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "~/.zc/hooks/continuous-learning/observe.sh"}]}],
+    "PostToolUseFailure": [{"matcher": "*", "hooks": [{"type": "command", "command": "~/.zc/hooks/continuous-learning/observe.sh"}]}],
+    "Stop": [{"hooks": [{"type": "command", "command": "~/.zc/hooks/continuous-learning/session-end.sh"}]}]
   }
 }
 ```
@@ -235,10 +235,10 @@ bash skills/continuous-learning/hooks/setup.sh --platform qwen-code
 ```json
 {
   "hooks": {
-    "PostToolUse": [{"matcher": "*", "hooks": [{"type": "command", "command": "pwsh -NoProfile -File \"~/.qoder/hooks/continuous-learning/observe.ps1\""}]}],
-    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "pwsh -NoProfile -File \"~/.qoder/hooks/continuous-learning/observe.ps1\""}]}],
-    "PostToolUseFailure": [{"matcher": "*", "hooks": [{"type": "command", "command": "pwsh -NoProfile -File \"~/.qoder/hooks/continuous-learning/observe.ps1\""}]}],
-    "Stop": [{"hooks": [{"type": "command", "command": "pwsh -NoProfile -File \"~/.qoder/hooks/continuous-learning/session-end.ps1\""}]}]
+    "PostToolUse": [{"matcher": "*", "hooks": [{"type": "command", "command": "pwsh -NoProfile -File \"~/.zc/hooks/continuous-learning/observe.ps1\""}]}],
+    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "pwsh -NoProfile -File \"~/.zc/hooks/continuous-learning/observe.ps1\""}]}],
+    "PostToolUseFailure": [{"matcher": "*", "hooks": [{"type": "command", "command": "pwsh -NoProfile -File \"~/.zc/hooks/continuous-learning/observe.ps1\""}]}],
+    "Stop": [{"hooks": [{"type": "command", "command": "pwsh -NoProfile -File \"~/.zc/hooks/continuous-learning/session-end.ps1\""}]}]
   }
 }
 ```
@@ -360,7 +360,7 @@ Memory 存储格式：
 设置完成后确认：
 
 - [ ] Hook 脚本已安装且有执行权限
-- [ ] `~/.qoder/homunculus/` 目录结构已创建
+- [ ] `~/.zc/homunculus/` 目录结构已创建
 - [ ] PostToolUse hook 能正常记录观察（检查 observations.jsonl）
 - [ ] `/learn` 命令能正确分析并提取 instincts
 - [ ] 高置信度 instincts 已同步到 Agent Memory

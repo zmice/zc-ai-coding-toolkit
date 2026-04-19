@@ -36,8 +36,9 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@zmice/platform-codex": "workspace:*",
+    "@zmice/platform-claude": "workspace:*",
     "@zmice/platform-core": "workspace:*",
-    "@zmice/platform-qoder": "workspace:*",
+    "@zmice/platform-opencode": "workspace:*",
     "@zmice/platform-qwen": "workspace:*",
     "@zmice/toolkit": "workspace:*",
     "typescript": "^5.7.0",

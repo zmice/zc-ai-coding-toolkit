@@ -11,7 +11,8 @@ const workspacePackages = [
   "packages/platform-core",
   "packages/platform-qwen",
   "packages/platform-codex",
-  "packages/platform-qoder",
+  "packages/platform-claude",
+  "packages/platform-opencode",
   "apps/cli"
 ];
 

@@ -56,8 +56,8 @@ zc platform install codex --project --force
 新增命令：
 
 ```bash
-zc platform status <qwen|codex|qoder>
-zc platform update <qwen|codex|qoder>
+zc platform status <qwen|codex|claude|opencode>
+zc platform update <qwen|codex|claude|opencode>
 ```
 
 命令参数保持与 `install/where` 一致：

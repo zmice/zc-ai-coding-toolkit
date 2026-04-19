@@ -78,7 +78,7 @@ describe("loadToolkitAssetUnit", () => {
     assert.equal(unit.meta.source?.originPath, "skills/sdd-tdd-workflow/SKILL.md");
     assert.match(unit.body, /SDD\+TDD|spec|test|workflow/i);
     assert.ok(unit.attachments.length >= 0);
-    assert.deepEqual(unit.meta.platforms, ["qwen", "codex", "qoder"]);
+    assert.deepEqual(unit.meta.platforms, ["qwen", "codex", "claude", "opencode"]);
   });
 });
 

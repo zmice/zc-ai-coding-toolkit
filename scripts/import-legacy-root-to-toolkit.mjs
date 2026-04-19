@@ -3,7 +3,7 @@ import { join, resolve } from "node:path";
 
 const root = process.cwd();
 const targetRoot = resolve(root, "packages/toolkit/src/content");
-const defaultPlatforms = ["qwen", "codex", "qoder"];
+const defaultPlatforms = ["qwen", "codex", "claude", "opencode"];
 
 function ensureDir(path) {
   mkdirSync(path, { recursive: true });

@@ -29,7 +29,7 @@ import {
   updateQwenExtensionWithOfficialCli,
 } from "../utils/qwen-extension-cli.js";
 
-type PlatformName = "qwen" | "codex" | "qoder";
+type PlatformName = "qwen" | "codex" | "claude" | "opencode";
 type PlatformOutputFormat = "text" | "json";
 type PlatformInstallScope = "project" | "global" | "dir";
 type PlatformAction = "generate" | "install" | "update";
@@ -38,7 +38,7 @@ type PlatformTargetSelectorOpts = {
   project?: boolean;
   global?: boolean;
 };
-const platformNames: readonly PlatformName[] = ["qwen", "codex", "qoder"];
+const platformNames: readonly PlatformName[] = ["qwen", "codex", "claude", "opencode"];
 
 interface ToolkitAssetMetaLike {
   kind: "skill" | "command" | "agent";
@@ -108,8 +108,13 @@ interface PlatformModule {
     manifest: PlatformManifestLike,
     opts: { manifestSource?: string; destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode; extensionVersion?: string }
   ) => InstallPlan;
-  createQoderGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string; extensionVersion?: string }) => GenerationPlan;
-  createQoderInstallPlan?: (
+  createClaudeGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string; extensionVersion?: string }) => GenerationPlan;
+  createClaudeInstallPlan?: (
+    manifest: PlatformManifestLike,
+    opts: { manifestSource?: string; destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode; extensionVersion?: string }
+  ) => InstallPlan;
+  createOpenCodeGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string; extensionVersion?: string }) => GenerationPlan;
+  createOpenCodeInstallPlan?: (
     manifest: PlatformManifestLike,
     opts: { manifestSource?: string; destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode; extensionVersion?: string }
   ) => InstallPlan;
@@ -175,7 +180,7 @@ function summarizeCapability(plan: PlatformPlanLike): string[] {
   ];
 }
 
-const defaultPlatforms: readonly PlatformName[] = ["qwen", "codex", "qoder"];
+const defaultPlatforms: readonly PlatformName[] = ["qwen", "codex", "claude", "opencode"];
 
 function getCliVersion(): string {
   const packageJsonPath = new URL("../../package.json", import.meta.url);
@@ -215,7 +220,8 @@ async function loadPlatformModule(platform: PlatformName): Promise<PlatformModul
   const packageMap: Record<PlatformName, string> = {
     qwen: "packages/platform-qwen/dist/index.js",
     codex: "packages/platform-codex/dist/index.js",
-    qoder: "packages/platform-qoder/dist/index.js"
+    claude: "packages/platform-claude/dist/index.js",
+    opencode: "packages/platform-opencode/dist/index.js"
   };
 
   return importWorkspaceDistModule<PlatformModule>(packageMap[platform]);
@@ -239,11 +245,16 @@ function createGenerationPlan(
         throw new Error("Codex 平台包未导出 createCodexGenerationPlan()");
       }
       return finalizePlan(platformModule.createCodexGenerationPlan(manifest, { manifestSource: manifest.source, extensionVersion }));
-    case "qoder":
-      if (!platformModule.createQoderGenerationPlan) {
-        throw new Error("Qoder 平台包未导出 createQoderGenerationPlan()");
+    case "claude":
+      if (!platformModule.createClaudeGenerationPlan) {
+        throw new Error("Claude 平台包未导出 createClaudeGenerationPlan()");
       }
-      return finalizePlan(platformModule.createQoderGenerationPlan(manifest, { manifestSource: manifest.source, extensionVersion }));
+      return finalizePlan(platformModule.createClaudeGenerationPlan(manifest, { manifestSource: manifest.source, extensionVersion }));
+    case "opencode":
+      if (!platformModule.createOpenCodeGenerationPlan) {
+        throw new Error("OpenCode 平台包未导出 createOpenCodeGenerationPlan()");
+      }
+      return finalizePlan(platformModule.createOpenCodeGenerationPlan(manifest, { manifestSource: manifest.source, extensionVersion }));
   }
 }
 
@@ -279,11 +290,22 @@ function createInstallPlan(
         overwrite,
         extensionVersion,
       }));
-    case "qoder":
-      if (!platformModule.createQoderInstallPlan) {
-        throw new Error("Qoder 平台包未导出 createQoderInstallPlan()");
+    case "claude":
+      if (!platformModule.createClaudeInstallPlan) {
+        throw new Error("Claude 平台包未导出 createClaudeInstallPlan()");
       }
-      return finalizePlan(platformModule.createQoderInstallPlan(manifest, {
+      return finalizePlan(platformModule.createClaudeInstallPlan(manifest, {
+        manifestSource: manifest.source,
+        destinationRoot,
+        scope,
+        overwrite,
+        extensionVersion,
+      }));
+    case "opencode":
+      if (!platformModule.createOpenCodeInstallPlan) {
+        throw new Error("OpenCode 平台包未导出 createOpenCodeInstallPlan()");
+      }
+      return finalizePlan(platformModule.createOpenCodeInstallPlan(manifest, {
         manifestSource: manifest.source,
         destinationRoot,
         scope,
@@ -1201,7 +1223,7 @@ export function registerPlatformCommand(program: Command): void {
     .command("generate")
     .alias("g")
     .description("根据工具包清单生成平台原生内容产物")
-    .argument("<target>", "目标平台 (qwen|codex|qoder)", parsePlatformName)
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
     .option("-d, --dir <dir>", "输出目录")
     .option("--plan", "只输出产物计划，不落盘")
     .option("-j, --json", "直接输出 JSON")
@@ -1212,7 +1234,7 @@ export function registerPlatformCommand(program: Command): void {
     .command("install")
     .alias("i")
     .description("根据工具包清单生成并安装平台原生内容")
-    .argument("<target>", "目标平台 (qwen|codex|qoder)", parsePlatformName)
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
     .option("-d, --dir <dir>", "显式安装目录")
     .option("-p, --project", "安装到当前目录向上解析出的最近项目根")
     .option("-g, --global", "安装到官方文档定义的默认全局位置")
@@ -1225,7 +1247,7 @@ export function registerPlatformCommand(program: Command): void {
     .command("where")
     .alias("w")
     .description("解析平台原生内容安装目录，不执行写入")
-    .argument("<target>", "目标平台 (qwen|codex|qoder)", parsePlatformName)
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
     .option("-d, --dir <dir>", "显式安装目录")
     .option("-p, --project", "解析最近项目根")
     .option("-g, --global", "解析官方文档定义的默认全局位置")
@@ -1235,7 +1257,7 @@ export function registerPlatformCommand(program: Command): void {
   platform
     .command("status")
     .description("读取安装回执并检查平台原生内容状态")
-    .argument("<target>", "目标平台 (qwen|codex|qoder)", parsePlatformName)
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
     .option("-d, --dir <dir>", "显式安装目录")
     .option("-p, --project", "解析最近项目根")
     .option("-g, --global", "解析官方文档定义的默认全局位置")
@@ -1245,7 +1267,7 @@ export function registerPlatformCommand(program: Command): void {
   platform
     .command("update")
     .description("基于安装回执更新平台原生内容")
-    .argument("<target>", "目标平台 (qwen|codex|qoder)", parsePlatformName)
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
     .option("-d, --dir <dir>", "显式安装目录")
     .option("-p, --project", "解析最近项目根")
     .option("-g, --global", "解析官方文档定义的默认全局位置")
