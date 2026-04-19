@@ -186,6 +186,10 @@ zc --help
 - 用户级 / 自定义目录：
   - `extensions/zc-toolkit/`
 - 用户级默认优先通过官方 `qwen extensions` 管理
+- 默认安装源：
+  - `https://github.com/zmice/zc-qwen-extension.git`
+- 默认更新方式：
+  - `qwen extensions update zc-toolkit`
 
 ## 高频用法
 

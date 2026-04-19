@@ -95,6 +95,19 @@ describe("qwen official CLI wrapper", () => {
     ]);
   });
 
+  it("uses the official update command for repo-managed extensions", async () => {
+    const mod = await modPromise;
+    spawnMock.mockImplementation(() =>
+      createFakeChild({
+        type: "success",
+      }),
+    );
+
+    await expect(mod.updateQwenExtensionWithOfficialCli("zc-toolkit")).resolves.toBeUndefined();
+    assert.equal(spawnMock.mock.calls.length, 1);
+    assert.deepEqual(spawnMock.mock.calls[0]?.[1], ["extensions", "update", "zc-toolkit"]);
+  });
+
   it("treats uninstalling a missing extension as a no-op", async () => {
     const mod = await modPromise;
     spawnMock.mockImplementation(() =>
@@ -105,7 +118,7 @@ describe("qwen official CLI wrapper", () => {
       }),
     );
 
-    await expect(mod.updateQwenExtensionWithOfficialCli("zc-toolkit")).resolves.toBeUndefined();
+    await expect(mod.uninstallQwenExtensionWithOfficialCli("zc-toolkit")).resolves.toBeUndefined();
     assert.equal(spawnMock.mock.calls.length, 1);
     assert.deepEqual(spawnMock.mock.calls[0]?.[1], ["extensions", "uninstall", "zc-toolkit"]);
   });

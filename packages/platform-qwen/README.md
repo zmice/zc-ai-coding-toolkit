@@ -43,9 +43,11 @@ zc platform where qwen --global --json
   - 安装 `<project>/.qwen/extensions/zc-toolkit/agents/zc-<agent>.md`
 - `--global`
   - 优先通过官方 `qwen extensions` CLI 管理 `zc-toolkit`
-  - CLI 会先生成发布态 bundle：
-    - `~/.qwen/.zc/platform-bundles/qwen/zc-toolkit/`
-  - 再通过官方命令接入该 bundle
+  - 默认安装源：
+    - `https://github.com/zmice/zc-qwen-extension.git`
+  - 对应官方命令语义：
+    - 首次安装：`qwen extensions install https://github.com/zmice/zc-qwen-extension.git`
+    - 后续更新：`qwen extensions update zc-toolkit`
   - 实际扩展目录仍位于 `~/.qwen/extensions/zc-toolkit/`
   - 其中包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/zc/<command>.md`、`skills/zc-<skill>/SKILL.md`、`agents/zc-<agent>.md`
   - 如需导出独立发布态 bundle：
@@ -61,7 +63,10 @@ zc platform where qwen --global --json
 当前仓库已经提供一条保守的 GitHub Actions 发布路径：
 
 - 工作流：`.github/workflows/publish-qwen-extension-repo.yml`
-- 触发方式：`workflow_dispatch`
+- 默认目标仓库：`zmice/zc-qwen-extension`
+- 触发方式：
+  - `workflow_dispatch`
+  - `@zmice/zc@*` tag push 后自动同步
 - 作用：
   - 先导出 Qwen 发布态 bundle
   - 再把 bundle 同步到独立扩展仓库根目录

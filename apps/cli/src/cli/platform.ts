@@ -29,7 +29,9 @@ import {
 } from "../utils/workspace.js";
 import {
   QwenOfficialCliUnavailableError,
+  installQwenExtensionFromOfficialRepoWithCli,
   installQwenExtensionWithOfficialCli,
+  qwenOfficialExtensionRepoUrl,
   relinkQwenExtensionWithOfficialCli,
   resolveQwenOfficialCliReleaseBundleDir,
   syncQwenOfficialCliReleaseBundle,
@@ -105,6 +107,8 @@ interface PlatformResultExtra {
   status?: string | null;
   noop?: boolean;
   installMethod?: "filesystem" | "qwen-cli";
+  installSource?: "github-repo" | "local-bundle" | null;
+  sourceRef?: string | null;
   bundleType?: "source-bundle" | "release-bundle" | null;
   bundlePath?: string | null;
 }
@@ -471,6 +475,8 @@ function summarizeResult(action: PlatformAction, target: PlatformName, root: str
     formatRootLabel(action, root, metadata),
     ...(metadata?.status ? [`状态：${metadata.status}`] : []),
     ...(metadata?.installMethod ? [`安装方式：${metadata.installMethod === "qwen-cli" ? "官方 qwen extensions CLI" : "直接写入"}`] : []),
+    ...(metadata?.installSource ? [`安装来源：${metadata.installSource === "github-repo" ? "GitHub 扩展仓库" : "本地 bundle"}`] : []),
+    ...(metadata?.sourceRef ? [`来源：${metadata.sourceRef}`] : []),
     ...(metadata?.bundleType ? [`Bundle 类型：${metadata.bundleType === "release-bundle" ? "发布态扩展包" : "开发态源包"}`] : []),
     ...(metadata?.bundlePath ? [`Bundle 目录：${metadata.bundlePath}`] : []),
     ...(metadata?.receiptPath ? [`回执：${metadata.receiptPath}`] : []),
@@ -485,11 +491,13 @@ function summarizeResult(action: PlatformAction, target: PlatformName, root: str
 
 function summarizePlan(action: PlatformAction, target: PlatformName, root: string, plan: PlatformPlanLike, metadata?: PlatformResolutionMetadata & {
   status?: string;
-} & Pick<PlatformResultExtra, "bundleType" | "bundlePath">): string {
+} & Pick<PlatformResultExtra, "installSource" | "sourceRef" | "bundleType" | "bundlePath">): string {
   return [
     `${target} ${formatActionLabel(action)}计划`,
     formatRootLabel(action, root, metadata),
     ...(metadata?.status ? [`状态：${metadata.status}`] : []),
+    ...(metadata?.installSource ? [`安装来源：${metadata.installSource === "github-repo" ? "GitHub 扩展仓库" : "本地 bundle"}`] : []),
+    ...(metadata?.sourceRef ? [`来源：${metadata.sourceRef}`] : []),
     ...(metadata?.bundleType ? [`Bundle 类型：${metadata.bundleType === "release-bundle" ? "发布态扩展包" : "开发态源包"}`] : []),
     ...(metadata?.bundlePath ? [`Bundle 目录：${metadata.bundlePath}`] : []),
     ...(metadata?.hint ? [`提示：${metadata.hint}`] : []),
@@ -501,7 +509,7 @@ function summarizePlan(action: PlatformAction, target: PlatformName, root: strin
 
 function buildPlanPayload(action: PlatformAction, target: PlatformName, root: string, plan: PlatformPlanLike, metadata?: PlatformResolutionMetadata & {
   status?: string | null;
-} & Pick<PlatformResultExtra, "bundleType" | "bundlePath">) {
+} & Pick<PlatformResultExtra, "installSource" | "sourceRef" | "bundleType" | "bundlePath">) {
   return {
     mode: "plan",
     action,
@@ -512,6 +520,8 @@ function buildPlanPayload(action: PlatformAction, target: PlatformName, root: st
     autoResolvedRoot: metadata?.autoResolvedRoot ?? false,
     hint: metadata?.hint ?? null,
     status: metadata?.status ?? null,
+    installSource: metadata?.installSource ?? null,
+    sourceRef: metadata?.sourceRef ?? null,
     bundleType: metadata?.bundleType ?? null,
     bundlePath: metadata?.bundlePath ?? null,
     capability: getPlanCapabilitySummary(plan),
@@ -547,6 +557,8 @@ function buildResultPayload(action: PlatformAction, target: PlatformName, root: 
     autoResolvedRoot: metadata?.autoResolvedRoot ?? false,
     hint: metadata?.hint ?? null,
     installMethod: metadata?.installMethod ?? "filesystem",
+    installSource: metadata?.installSource ?? null,
+    sourceRef: metadata?.sourceRef ?? null,
     bundleType: metadata?.bundleType ?? null,
     bundlePath: metadata?.bundlePath ?? null,
     receiptPath: metadata?.receiptPath ?? null,
@@ -560,6 +572,10 @@ function buildResultPayload(action: PlatformAction, target: PlatformName, root: 
 
 function shouldPreferQwenOfficialCli(target: PlatformName, scope: PlatformInstallScope): boolean {
   return target === "qwen" && scope === "global";
+}
+
+function shouldPreferQwenOfficialRepoInstall(target: PlatformName, scope: PlatformInstallScope): boolean {
+  return shouldPreferQwenOfficialCli(target, scope);
 }
 
 function estimateManagedInstallResult(
@@ -674,6 +690,8 @@ function summarizeStatus(target: PlatformName, root: string, status: PlatformIns
   zcVersion?: string;
   plan: PlatformPlanLike;
   installMethod?: "filesystem" | "qwen-cli";
+  installSource?: "github-repo" | "local-bundle";
+  sourceRef?: string;
   bundleType?: "source-bundle" | "release-bundle";
   bundlePath?: string;
 }): string {
@@ -687,6 +705,8 @@ function summarizeStatus(target: PlatformName, root: string, status: PlatformIns
     ...(status.installedZcVersion ? [`已安装 zc 版本：${status.installedZcVersion}`] : []),
     ...(metadata.zcVersion ? [`当前 zc 版本：${metadata.zcVersion}`] : []),
     ...(metadata.installMethod ? [`推荐安装方式：${metadata.installMethod === "qwen-cli" ? "官方 qwen extensions CLI" : "直接写入"}`] : []),
+    ...(metadata.installSource ? [`推荐来源：${metadata.installSource === "github-repo" ? "GitHub 扩展仓库" : "本地 bundle"}`] : []),
+    ...(metadata.sourceRef ? [`来源：${metadata.sourceRef}`] : []),
     ...(metadata.bundleType ? [`推荐 Bundle：${metadata.bundleType === "release-bundle" ? "发布态扩展包" : "开发态源包"}`] : []),
     ...(metadata.bundlePath ? [`Bundle 目录：${metadata.bundlePath}`] : []),
     ...(status.installedContentFingerprint ? [`已安装内容指纹：${status.installedContentFingerprint}`] : []),
@@ -703,6 +723,8 @@ function buildStatusPayload(target: PlatformName, root: string, status: Platform
   zcVersion?: string;
   plan: PlatformPlanLike;
   installMethod?: "filesystem" | "qwen-cli";
+  installSource?: "github-repo" | "local-bundle";
+  sourceRef?: string;
   bundleType?: "source-bundle" | "release-bundle";
   bundlePath?: string;
 }) {
@@ -715,6 +737,8 @@ function buildStatusPayload(target: PlatformName, root: string, status: Platform
     hint: metadata.hint ?? null,
     capability: getPlanCapabilitySummary(metadata.plan),
     installMethod: metadata.installMethod ?? null,
+    installSource: metadata.installSource ?? null,
+    sourceRef: metadata.sourceRef ?? null,
     bundleType: metadata.bundleType ?? null,
     bundlePath: metadata.bundlePath ?? null,
     status: status.kind,
@@ -799,6 +823,8 @@ function summarizeUninstall(
   metadata: PlatformResolutionMetadata & {
     receiptPath: string;
     installMethod?: "filesystem" | "qwen-cli";
+    installSource?: "github-repo" | "local-bundle" | null;
+    sourceRef?: string | null;
     bundlePath?: string | null;
   },
 ): string {
@@ -806,6 +832,8 @@ function summarizeUninstall(
     `${target} 卸载完成`,
     formatRootLabel("uninstall", root, metadata),
     ...(metadata.installMethod ? [`安装方式：${metadata.installMethod === "qwen-cli" ? "官方 qwen extensions CLI" : "直接写入"}`] : []),
+    ...(metadata.installSource ? [`安装来源：${metadata.installSource === "github-repo" ? "GitHub 扩展仓库" : "本地 bundle"}`] : []),
+    ...(metadata.sourceRef ? [`来源：${metadata.sourceRef}`] : []),
     ...(metadata.bundlePath ? [`Bundle 目录：${metadata.bundlePath}`] : []),
     `回执：${metadata.receiptPath}`,
     ...(metadata.hint ? [`提示：${metadata.hint}`] : []),
@@ -829,6 +857,8 @@ function buildUninstallPayload(
   metadata: PlatformResolutionMetadata & {
     receiptPath: string;
     installMethod?: "filesystem" | "qwen-cli";
+    installSource?: "github-repo" | "local-bundle" | null;
+    sourceRef?: string | null;
     bundlePath?: string | null;
   },
 ) {
@@ -842,6 +872,8 @@ function buildUninstallPayload(
     autoResolvedRoot: metadata.autoResolvedRoot ?? false,
     hint: metadata.hint ?? null,
     installMethod: metadata.installMethod ?? null,
+    installSource: metadata.installSource ?? null,
+    sourceRef: metadata.sourceRef ?? null,
     bundlePath: metadata.bundlePath ?? null,
     receiptPath: metadata.receiptPath,
     ...result,
@@ -1000,6 +1032,7 @@ export async function runPlatformInstall(
     const qwenReleaseBundlePath = shouldPreferQwenOfficialCli(target, scope)
       ? resolveQwenOfficialCliReleaseBundleDir(plan)
       : null;
+    const qwenInstallSource = shouldPreferQwenOfficialRepoInstall(target, scope) ? "github-repo" : "local-bundle";
 
     if (opts.plan) {
       emitOutput(
@@ -1009,11 +1042,19 @@ export async function runPlatformInstall(
           rootSource: targetResolution.source,
           hint: targetResolution.hint,
           scope,
+          installSource: target === "qwen" && scope === "global" ? qwenInstallSource : null,
+          sourceRef: target === "qwen" && scope === "global" && qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
+          bundleType: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : null,
+          bundlePath: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath : null,
         }),
         summarizePlan("install", target, destinationRoot, plan, {
           autoResolvedRoot,
           rootSource: targetResolution.source,
           hint: targetResolution.hint,
+          installSource: target === "qwen" && scope === "global" ? qwenInstallSource : null,
+          sourceRef: target === "qwen" && scope === "global" && qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
+          bundleType: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : null,
+          bundlePath: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath : null,
         })
       );
       return;
@@ -1039,25 +1080,39 @@ export async function runPlatformInstall(
       }
 
       try {
-        const releaseBundle = await syncQwenOfficialCliReleaseBundle(plan);
+        let releaseBundleDir: string | null = null;
 
         if (format === "text") {
-          console.log(`正在调用官方命令：qwen extensions ${status.kind === "not-installed" ? "link" : "relink"} …`);
+          console.log(`正在调用官方命令：qwen extensions ${status.kind === "not-installed" ? "install" : "update"} …`);
         }
 
         if (status.kind === "not-installed") {
-          await installQwenExtensionWithOfficialCli(releaseBundle.bundleDir);
+          if (qwenInstallSource === "github-repo") {
+            await installQwenExtensionFromOfficialRepoWithCli(qwenOfficialExtensionRepoUrl);
+          } else {
+            const releaseBundle = await syncQwenOfficialCliReleaseBundle(plan);
+            releaseBundleDir = releaseBundle.bundleDir;
+            await installQwenExtensionWithOfficialCli(releaseBundle.bundleDir);
+          }
         } else if (status.kind !== "up-to-date") {
-          await updateQwenExtensionWithOfficialCli(releaseBundle.extensionName);
-          await relinkQwenExtensionWithOfficialCli(releaseBundle.bundleDir);
+          if (qwenInstallSource === "github-repo") {
+            await updateQwenExtensionWithOfficialCli(plan.capability?.extension?.name ?? "zc-toolkit");
+          } else {
+            const releaseBundle = await syncQwenOfficialCliReleaseBundle(plan);
+            releaseBundleDir = releaseBundle.bundleDir;
+            await uninstallQwenExtensionWithOfficialCli(releaseBundle.extensionName);
+            await relinkQwenExtensionWithOfficialCli(releaseBundle.bundleDir);
+          }
         }
 
         await writePlatformInstallReceiptForPlan(plan, {
           installedAt: new Date().toISOString(),
           zcVersion: getCliVersion(),
           installMethod: "qwen-cli",
-          bundleType: "release-bundle",
-          bundlePath: releaseBundle.bundleDir,
+          installSource: qwenInstallSource,
+          sourceRef: qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : undefined,
+          bundleType: qwenInstallSource === "local-bundle" ? "release-bundle" : undefined,
+          bundlePath: qwenInstallSource === "local-bundle" ? releaseBundleDir ?? qwenReleaseBundlePath ?? undefined : undefined,
         });
 
         const result = status.kind === "up-to-date"
@@ -1083,8 +1138,10 @@ export async function runPlatformInstall(
             status: status.kind === "up-to-date" ? status.kind : "installed",
             noop: status.kind === "up-to-date",
             installMethod: "qwen-cli",
-            bundleType: "release-bundle",
-            bundlePath: releaseBundle.bundleDir,
+            installSource: qwenInstallSource,
+            sourceRef: qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
+            bundleType: qwenInstallSource === "local-bundle" ? "release-bundle" : null,
+            bundlePath: qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath : null,
           }),
           summarizeResult("install", target, destinationRoot, result, {
             autoResolvedRoot,
@@ -1096,8 +1153,10 @@ export async function runPlatformInstall(
             status: status.kind === "up-to-date" ? `${status.kind}（${formatStatusLabel(status.kind)}）` : "installed",
             noop: status.kind === "up-to-date",
             installMethod: "qwen-cli",
-            bundleType: "release-bundle",
-            bundlePath: releaseBundle.bundleDir,
+            installSource: qwenInstallSource,
+            sourceRef: qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
+            bundleType: qwenInstallSource === "local-bundle" ? "release-bundle" : null,
+            bundlePath: qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath : null,
           }),
         );
         return;
@@ -1137,6 +1196,8 @@ export async function runPlatformInstall(
         contentFingerprint: plan.metadata?.fingerprint.value ?? null,
         status: "installed",
         installMethod: "filesystem",
+        installSource: null,
+        sourceRef: null,
         bundleType: null,
         bundlePath: qwenReleaseBundlePath,
       }),
@@ -1149,6 +1210,8 @@ export async function runPlatformInstall(
         contentFingerprint: plan.metadata?.fingerprint.value ?? null,
         status: "installed",
         installMethod: "filesystem",
+        installSource: null,
+        sourceRef: null,
         bundleType: undefined,
         bundlePath: qwenReleaseBundlePath ?? undefined,
       })
@@ -1190,11 +1253,11 @@ export async function runPlatformStatus(
     const plan = createInstallPlan(target, platformModule, manifest, destinationRoot, scope, "error");
     const status = await resolvePlatformInstallStatus(plan);
     const zcVersion = getCliVersion();
-    const qwenBundlePath = shouldPreferQwenOfficialCli(target, scope)
-      ? resolveQwenOfficialCliReleaseBundleDir(plan)
-      : undefined;
+    const qwenBundlePath = target === "qwen" && scope === "global" ? undefined : undefined;
     const installMethod = target === "qwen" && scope === "global" ? "qwen-cli" : undefined;
-    const bundleType = target === "qwen" && scope === "global" ? "release-bundle" : undefined;
+    const installSource = target === "qwen" && scope === "global" ? "github-repo" : undefined;
+    const sourceRef = target === "qwen" && scope === "global" ? qwenOfficialExtensionRepoUrl : undefined;
+    const bundleType = undefined;
 
     emitOutput(
       format,
@@ -1205,6 +1268,8 @@ export async function runPlatformStatus(
         zcVersion,
         plan,
         installMethod,
+        installSource,
+        sourceRef,
         bundleType,
         bundlePath: qwenBundlePath,
       }),
@@ -1215,6 +1280,8 @@ export async function runPlatformStatus(
         zcVersion,
         plan,
         installMethod,
+        installSource,
+        sourceRef,
         bundleType,
         bundlePath: qwenBundlePath,
       }),
@@ -1260,6 +1327,7 @@ export async function runPlatformUpdate(
     const qwenReleaseBundlePath = shouldPreferQwenOfficialCli(target, scope)
       ? resolveQwenOfficialCliReleaseBundleDir(statusPlan)
       : undefined;
+    const qwenInstallSource = shouldPreferQwenOfficialRepoInstall(target, scope) ? "github-repo" : "local-bundle";
 
     if (status.kind === "not-installed") {
       emitPlatformError(
@@ -1298,8 +1366,10 @@ export async function runPlatformUpdate(
           status: status.kind,
           noop: true,
           installMethod: target === "qwen" && scope === "global" ? "qwen-cli" : undefined,
-          bundleType: target === "qwen" && scope === "global" ? "release-bundle" : null,
-          bundlePath: qwenReleaseBundlePath ?? null,
+          installSource: target === "qwen" && scope === "global" ? qwenInstallSource : null,
+          sourceRef: target === "qwen" && scope === "global" && qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
+          bundleType: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : null,
+          bundlePath: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath ?? null : null,
         }),
         summarizeResult("update", target, destinationRoot, result, {
           autoResolvedRoot,
@@ -1311,8 +1381,10 @@ export async function runPlatformUpdate(
           status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
           noop: true,
           installMethod: target === "qwen" && scope === "global" ? "qwen-cli" : undefined,
-          bundleType: target === "qwen" && scope === "global" ? "release-bundle" : undefined,
-          bundlePath: qwenReleaseBundlePath,
+          installSource: target === "qwen" && scope === "global" ? qwenInstallSource : null,
+          sourceRef: target === "qwen" && scope === "global" && qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
+          bundleType: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : undefined,
+          bundlePath: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath : undefined,
         }),
       );
       return;
@@ -1346,12 +1418,20 @@ export async function runPlatformUpdate(
           hint: targetResolution.hint,
           scope,
           status: status.kind,
+          installSource: target === "qwen" && scope === "global" ? qwenInstallSource : null,
+          sourceRef: target === "qwen" && scope === "global" && qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
+          bundleType: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : null,
+          bundlePath: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath ?? null : null,
         }),
         summarizePlan("update", target, destinationRoot, plan, {
           autoResolvedRoot,
           rootSource: targetResolution.source,
           hint: targetResolution.hint,
           status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
+          installSource: target === "qwen" && scope === "global" ? qwenInstallSource : null,
+          sourceRef: target === "qwen" && scope === "global" && qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
+          bundleType: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : null,
+          bundlePath: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath ?? null : null,
         }),
       );
       return;
@@ -1359,20 +1439,25 @@ export async function runPlatformUpdate(
 
     if (shouldPreferQwenOfficialCli(target, scope)) {
       try {
-        const releaseBundle = await syncQwenOfficialCliReleaseBundle(plan);
-
         if (format === "text") {
-          console.log("正在调用官方命令：qwen extensions relink …");
+          console.log("正在调用官方命令：qwen extensions update …");
         }
 
-        await updateQwenExtensionWithOfficialCli(releaseBundle.extensionName);
-        await relinkQwenExtensionWithOfficialCli(releaseBundle.bundleDir);
+        if (qwenInstallSource === "github-repo") {
+          await updateQwenExtensionWithOfficialCli(plan.capability?.extension?.name ?? "zc-toolkit");
+        } else {
+          const releaseBundle = await syncQwenOfficialCliReleaseBundle(plan);
+          await uninstallQwenExtensionWithOfficialCli(releaseBundle.extensionName);
+          await relinkQwenExtensionWithOfficialCli(releaseBundle.bundleDir);
+        }
         await writePlatformInstallReceiptForPlan(plan, {
           installedAt: new Date().toISOString(),
           zcVersion,
           installMethod: "qwen-cli",
-          bundleType: "release-bundle",
-          bundlePath: releaseBundle.bundleDir,
+          installSource: qwenInstallSource,
+          sourceRef: qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : undefined,
+          bundleType: qwenInstallSource === "local-bundle" ? "release-bundle" : undefined,
+          bundlePath: qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath ?? undefined : undefined,
         });
 
         const result = estimateManagedInstallResult(plan, status);
@@ -1389,8 +1474,10 @@ export async function runPlatformUpdate(
             contentFingerprint: plan.metadata?.fingerprint.value ?? null,
             status: status.kind,
             installMethod: "qwen-cli",
-            bundleType: "release-bundle",
-            bundlePath: releaseBundle.bundleDir,
+            installSource: qwenInstallSource,
+            sourceRef: qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
+            bundleType: qwenInstallSource === "local-bundle" ? "release-bundle" : null,
+            bundlePath: qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath ?? null : null,
           }),
           summarizeResult("update", target, destinationRoot, result, {
             autoResolvedRoot,
@@ -1401,8 +1488,10 @@ export async function runPlatformUpdate(
             contentFingerprint: plan.metadata?.fingerprint.value ?? null,
             status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
             installMethod: "qwen-cli",
-            bundleType: "release-bundle",
-            bundlePath: releaseBundle.bundleDir,
+            installSource: qwenInstallSource,
+            sourceRef: qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
+            bundleType: qwenInstallSource === "local-bundle" ? "release-bundle" : null,
+            bundlePath: qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath ?? null : null,
           }),
         );
         return;
@@ -1442,6 +1531,8 @@ export async function runPlatformUpdate(
         contentFingerprint: plan.metadata?.fingerprint.value ?? null,
         status: status.kind,
         installMethod: "filesystem",
+        installSource: null,
+        sourceRef: null,
         bundleType: null,
         bundlePath: null,
       }),
@@ -1454,6 +1545,8 @@ export async function runPlatformUpdate(
         contentFingerprint: plan.metadata?.fingerprint.value ?? null,
         status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
         installMethod: "filesystem",
+        installSource: null,
+        sourceRef: null,
         bundleType: undefined,
         bundlePath: undefined,
       }),
@@ -1533,6 +1626,8 @@ export async function runPlatformUninstall(
     }
 
     const installMethod = status.receipt.installMethod ?? "filesystem";
+    const installSource = status.receipt.installSource ?? null;
+    const sourceRef = status.receipt.sourceRef ?? null;
     const bundlePath = status.receipt.bundlePath ?? null;
 
     if (opts.plan) {
@@ -1550,6 +1645,8 @@ export async function runPlatformUninstall(
           status: status.kind,
           receiptPath: status.receiptPath,
           installMethod,
+          installSource,
+          sourceRef,
           bundlePath,
           artifactCount: status.receipt.artifacts.length,
           artifacts: status.receipt.artifacts.map((artifact) => artifact.path),
@@ -1563,6 +1660,8 @@ export async function runPlatformUninstall(
           }),
           `状态：${status.kind}（${formatStatusLabel(status.kind)}）`,
           `安装方式：${installMethod === "qwen-cli" ? "官方 qwen extensions CLI" : "直接写入"}`,
+          ...(installSource ? [`安装来源：${installSource === "github-repo" ? "GitHub 扩展仓库" : "本地 bundle"}`] : []),
+          ...(sourceRef ? [`来源：${sourceRef}`] : []),
           `回执：${status.receiptPath}`,
           ...(bundlePath ? [`Bundle 目录：${bundlePath}`] : []),
           `受管产物：${status.receipt.artifacts.length}`,
@@ -1610,6 +1709,8 @@ export async function runPlatformUninstall(
         scope,
         receiptPath: status.receiptPath,
         installMethod,
+        installSource,
+        sourceRef,
         bundlePath,
       }),
       summarizeUninstall(target, destinationRoot, result, {
@@ -1619,6 +1720,8 @@ export async function runPlatformUninstall(
         scope,
         receiptPath: status.receiptPath,
         installMethod,
+        installSource,
+        sourceRef,
         bundlePath,
       }),
     );
@@ -1673,9 +1776,13 @@ export async function runPlatformRepair(
     }
 
     const installMethod = status.receipt.installMethod ?? "filesystem";
+    const installSource = status.receipt.installSource
+      ?? (target === "qwen" && scope === "global" ? "github-repo" : undefined);
+    const sourceRef = status.receipt.sourceRef
+      ?? (installSource === "github-repo" ? qwenOfficialExtensionRepoUrl : undefined);
     const bundlePath = status.receipt.bundlePath
       ?? (shouldPreferQwenOfficialCli(target, scope) ? resolveQwenOfficialCliReleaseBundleDir(statusPlan) : null);
-    const bundleMissing = bundlePath ? !(await pathExists(bundlePath)) : false;
+    const bundleMissing = installSource === "local-bundle" && bundlePath ? !(await pathExists(bundlePath)) : false;
 
     if (status.kind === "up-to-date" && !(target === "qwen" && installMethod === "qwen-cli" && bundleMissing)) {
       const result = {
@@ -1699,6 +1806,8 @@ export async function runPlatformRepair(
           status: status.kind,
           noop: true,
           installMethod,
+          installSource,
+          sourceRef,
           bundleType: status.receipt.bundleType ?? null,
           bundlePath,
         }),
@@ -1713,6 +1822,8 @@ export async function runPlatformRepair(
           status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
           noop: true,
           installMethod,
+          installSource,
+          sourceRef,
           bundleType: status.receipt.bundleType ?? undefined,
           bundlePath: bundlePath ?? undefined,
         }),
@@ -1732,37 +1843,52 @@ export async function runPlatformRepair(
           hint: targetResolution.hint,
           scope,
           status: status.kind,
+          installSource: installSource ?? null,
+          sourceRef: sourceRef ?? null,
+          bundleType: status.receipt.bundleType ?? null,
+          bundlePath: bundlePath ?? null,
         }),
         summarizePlan("repair", target, destinationRoot, plan, {
           autoResolvedRoot,
           rootSource: targetResolution.source,
           hint: targetResolution.hint,
           status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
+          installSource: installSource ?? null,
+          sourceRef: sourceRef ?? null,
+          bundleType: status.receipt.bundleType ?? null,
+          bundlePath: bundlePath ?? null,
         }),
       );
       return;
     }
 
     if (target === "qwen" && installMethod === "qwen-cli") {
-      const releaseBundle = await syncQwenOfficialCliReleaseBundle(plan);
-
       if (format === "text") {
-        console.log(`正在调用官方命令：qwen extensions ${bundleMissing ? "link" : "relink"} …`);
+        console.log(`正在调用官方命令：qwen extensions ${installSource === "github-repo" ? "update" : bundleMissing ? "link" : "relink"} …`);
       }
 
-      if (bundleMissing) {
-        await relinkQwenExtensionWithOfficialCli(releaseBundle.bundleDir);
-      } else {
-        await updateQwenExtensionWithOfficialCli(releaseBundle.extensionName);
-        await relinkQwenExtensionWithOfficialCli(releaseBundle.bundleDir);
-      }
+      let repairedBundlePath: string | undefined;
+        if (installSource === "github-repo") {
+          await updateQwenExtensionWithOfficialCli(plan.capability?.extension?.name ?? "zc-toolkit");
+        } else {
+          const releaseBundle = await syncQwenOfficialCliReleaseBundle(plan);
+          repairedBundlePath = releaseBundle.bundleDir;
+          if (bundleMissing) {
+            await relinkQwenExtensionWithOfficialCli(releaseBundle.bundleDir);
+          } else {
+            await uninstallQwenExtensionWithOfficialCli(releaseBundle.extensionName);
+            await relinkQwenExtensionWithOfficialCli(releaseBundle.bundleDir);
+          }
+        }
 
       await writePlatformInstallReceiptForPlan(plan, {
         installedAt: new Date().toISOString(),
         zcVersion: getCliVersion(),
         installMethod: "qwen-cli",
-        bundleType: "release-bundle",
-        bundlePath: releaseBundle.bundleDir,
+        installSource,
+        sourceRef,
+        bundleType: installSource === "local-bundle" ? "release-bundle" : undefined,
+        bundlePath: installSource === "local-bundle" ? repairedBundlePath ?? bundlePath ?? undefined : undefined,
       });
 
       const result = status.kind === "up-to-date"
@@ -1787,8 +1913,10 @@ export async function runPlatformRepair(
           contentFingerprint: plan.metadata?.fingerprint.value ?? null,
           status: status.kind,
           installMethod: "qwen-cli",
-          bundleType: "release-bundle",
-          bundlePath: releaseBundle.bundleDir,
+          installSource,
+          sourceRef,
+          bundleType: installSource === "local-bundle" ? "release-bundle" : null,
+          bundlePath: installSource === "local-bundle" ? repairedBundlePath ?? bundlePath ?? null : null,
         }),
         summarizeResult("repair", target, destinationRoot, result, {
           autoResolvedRoot,
@@ -1800,8 +1928,10 @@ export async function runPlatformRepair(
           contentFingerprint: plan.metadata?.fingerprint.value ?? null,
           status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
           installMethod: "qwen-cli",
-          bundleType: "release-bundle",
-          bundlePath: releaseBundle.bundleDir,
+          installSource,
+          sourceRef,
+          bundleType: installSource === "local-bundle" ? "release-bundle" : null,
+          bundlePath: installSource === "local-bundle" ? repairedBundlePath ?? bundlePath ?? null : null,
         }),
       );
       return;
@@ -1821,6 +1951,8 @@ export async function runPlatformRepair(
       installedAt: new Date().toISOString(),
       zcVersion: getCliVersion(),
       installMethod,
+      installSource,
+      sourceRef,
       bundleType: status.receipt.bundleType,
       bundlePath: status.receipt.bundlePath,
     });
@@ -1837,6 +1969,8 @@ export async function runPlatformRepair(
         contentFingerprint: plan.metadata?.fingerprint.value ?? null,
         status: status.kind,
         installMethod,
+        installSource,
+        sourceRef,
         bundleType: status.receipt.bundleType ?? null,
         bundlePath: status.receipt.bundlePath ?? null,
       }),
@@ -1850,6 +1984,8 @@ export async function runPlatformRepair(
         contentFingerprint: plan.metadata?.fingerprint.value ?? null,
         status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
         installMethod,
+        installSource,
+        sourceRef,
         bundleType: status.receipt.bundleType ?? undefined,
         bundlePath: status.receipt.bundlePath ?? undefined,
       }),

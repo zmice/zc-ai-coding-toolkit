@@ -40,6 +40,8 @@ export class QwenExtensionsCommandError extends Error {
   }
 }
 
+export const qwenOfficialExtensionRepoUrl = "https://github.com/zmice/zc-qwen-extension.git" as const;
+
 export interface QwenExtensionCapabilityLike {
   readonly relativeDir: string;
   readonly name: string;
@@ -218,7 +220,15 @@ export async function installQwenExtensionWithOfficialCli(sourceDir: string): Pr
   await runQwenExtensionsCommand(["extensions", "link", sourceDir]);
 }
 
+export async function installQwenExtensionFromOfficialRepoWithCli(repoUrl: string): Promise<void> {
+  await runQwenExtensionsCommand(["extensions", "install", repoUrl]);
+}
+
 export async function updateQwenExtensionWithOfficialCli(extensionName: string): Promise<void> {
+  await runQwenExtensionsCommand(["extensions", "update", extensionName]);
+}
+
+export async function uninstallQwenExtensionWithOfficialCli(extensionName: string): Promise<void> {
   try {
     await runQwenExtensionsCommand(["extensions", "uninstall", extensionName]);
   } catch (error) {
@@ -231,10 +241,6 @@ export async function updateQwenExtensionWithOfficialCli(extensionName: string):
 
     throw error;
   }
-}
-
-export async function uninstallQwenExtensionWithOfficialCli(extensionName: string): Promise<void> {
-  await updateQwenExtensionWithOfficialCli(extensionName);
 }
 
 export async function relinkQwenExtensionWithOfficialCli(sourceDir: string): Promise<void> {

@@ -30,6 +30,8 @@ export interface PlatformInstallReceipt {
   readonly zcVersion?: string;
   readonly contentFingerprint?: string;
   readonly installMethod?: "filesystem" | "qwen-cli";
+  readonly installSource?: "github-repo" | "local-bundle";
+  readonly sourceRef?: string;
   readonly bundleType?: "source-bundle" | "release-bundle";
   readonly bundlePath?: string;
   readonly artifacts: readonly PlatformInstallReceiptArtifact[];

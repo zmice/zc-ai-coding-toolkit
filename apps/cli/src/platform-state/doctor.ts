@@ -97,8 +97,9 @@ export async function resolvePlatformInstallDoctor(
 
   if (status.receipt?.installMethod === "qwen-cli") {
     const bundlePath = status.receipt.bundlePath;
+    const installSource = status.receipt.installSource;
 
-    if (!bundlePath || !(await pathExists(bundlePath))) {
+    if (installSource !== "github-repo" && (!bundlePath || !(await pathExists(bundlePath)))) {
       issues.push({
         code: "qwen-bundle-missing",
         severity: "warning",

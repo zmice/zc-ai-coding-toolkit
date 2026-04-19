@@ -46,6 +46,8 @@ function isPlatformInstallReceipt(value: unknown): value is PlatformInstallRecei
     (value.zcVersion === undefined || typeof value.zcVersion === "string") &&
     (value.contentFingerprint === undefined || typeof value.contentFingerprint === "string") &&
     (value.installMethod === undefined || value.installMethod === "filesystem" || value.installMethod === "qwen-cli") &&
+    (value.installSource === undefined || value.installSource === "github-repo" || value.installSource === "local-bundle") &&
+    (value.sourceRef === undefined || typeof value.sourceRef === "string") &&
     (value.bundleType === undefined || value.bundleType === "source-bundle" || value.bundleType === "release-bundle") &&
     (value.bundlePath === undefined || typeof value.bundlePath === "string") &&
     Array.isArray(value.artifacts) &&

@@ -193,6 +193,12 @@ zc platform install opencode --global
 zc platform install qwen --global
 ```
 
+其中 Qwen 用户级安装默认会优先走官方扩展仓库：
+
+- 安装源：`https://github.com/zmice/zc-qwen-extension.git`
+- 安装方式：`qwen extensions install`
+- 更新方式：`qwen extensions update zc-toolkit`
+
 安装后需要注意：
 
 - `toolkit` 里的 canonical command / skill 名称不会原样暴露给平台
@@ -216,8 +222,8 @@ zc platform status qwen --global --json
 其中 Qwen 用户级安装会额外暴露：
 
 - 安装方式：`qwen extensions` 官方 CLI
-- Bundle 类型：发布态扩展包
-- Bundle 目录：`~/.qwen/.zc/platform-bundles/qwen/zc-toolkit/`
+- 安装来源：GitHub 扩展仓库
+- 来源地址：`https://github.com/zmice/zc-qwen-extension.git`
 - 如需导出独立扩展包：`zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit`
 - 如需同步到独立 GitHub 扩展仓库：可手动触发 `.github/workflows/publish-qwen-extension-repo.yml`
 

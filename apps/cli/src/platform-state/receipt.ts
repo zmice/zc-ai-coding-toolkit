@@ -9,6 +9,8 @@ export interface CreatePlatformInstallReceiptOptions {
   readonly installedAt?: string | Date;
   readonly zcVersion?: string;
   readonly installMethod?: "filesystem" | "qwen-cli";
+  readonly installSource?: "github-repo" | "local-bundle";
+  readonly sourceRef?: string;
   readonly bundleType?: "source-bundle" | "release-bundle";
   readonly bundlePath?: string;
 }
@@ -43,6 +45,8 @@ export function createPlatformInstallReceipt(
     ...(options.zcVersion ? { zcVersion: options.zcVersion } : {}),
     ...(plan.metadata?.fingerprint.value ? { contentFingerprint: plan.metadata.fingerprint.value } : {}),
     ...(options.installMethod ? { installMethod: options.installMethod } : {}),
+    ...(options.installSource ? { installSource: options.installSource } : {}),
+    ...(options.sourceRef ? { sourceRef: options.sourceRef } : {}),
     ...(options.bundleType ? { bundleType: options.bundleType } : {}),
     ...(options.bundlePath ? { bundlePath: options.bundlePath } : {}),
     artifacts: plan.artifacts.map((artifact) => createPlatformInstallReceiptArtifact(artifact)),

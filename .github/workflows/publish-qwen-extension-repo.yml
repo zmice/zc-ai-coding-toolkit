@@ -1,12 +1,11 @@
 name: Publish Qwen Extension Repo
 
 on:
+  push:
+    tags:
+      - "@zmice/zc@*"
   workflow_dispatch:
     inputs:
-      target_repository:
-        description: "目标扩展仓库（owner/repo）"
-        required: true
-        type: string
       target_branch:
         description: "目标分支"
         required: false
@@ -28,9 +27,9 @@ jobs:
     timeout-minutes: 20
     env:
       EXTENSION_REPO_TOKEN: ${{ secrets.QWEN_EXTENSION_REPO_TOKEN }}
-      EXTENSION_REPO: ${{ inputs.target_repository }}
-      EXTENSION_BRANCH: ${{ inputs.target_branch }}
-      EXTENSION_COMMIT_MESSAGE: ${{ inputs.commit_message }}
+      EXTENSION_REPO: "zmice/zc-qwen-extension"
+      EXTENSION_BRANCH: "${{ github.event.inputs.target_branch || 'main' }}"
+      EXTENSION_COMMIT_MESSAGE: "${{ github.event.inputs.commit_message || 'chore: sync qwen extension bundle' }}"
 
     steps:
       - name: Validate token
@@ -66,8 +65,8 @@ jobs:
       - name: Checkout target extension repository
         uses: actions/checkout@v4
         with:
-          repository: ${{ inputs.target_repository }}
-          ref: ${{ inputs.target_branch }}
+          repository: ${{ env.EXTENSION_REPO }}
+          ref: ${{ env.EXTENSION_BRANCH }}
           token: ${{ secrets.QWEN_EXTENSION_REPO_TOKEN }}
           path: .qwen-extension-repo
 

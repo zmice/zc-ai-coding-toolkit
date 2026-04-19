@@ -29,6 +29,7 @@ const platformMocks = vi.hoisted(() => ({
   syncQwenOfficialCliSourceBundle: vi.fn(),
   syncQwenOfficialCliReleaseBundle: vi.fn(),
   toQwenOfficialCliReleaseArtifacts: vi.fn(),
+  installQwenExtensionFromOfficialRepoWithCli: vi.fn(),
   installQwenExtensionWithOfficialCli: vi.fn(),
   uninstallQwenExtensionWithOfficialCli: vi.fn(),
   updateQwenExtensionWithOfficialCli: vi.fn(),
@@ -68,12 +69,14 @@ vi.mock("../../utils/platform-install-cleanup.js", () => ({
 
 vi.mock("../../utils/qwen-extension-cli.js", () => ({
   QwenOfficialCliUnavailableError: class QwenOfficialCliUnavailableError extends Error {},
+  qwenOfficialExtensionRepoUrl: "https://github.com/zmice/zc-qwen-extension.git",
   syncQwenOfficialCliSourceBundle: platformMocks.syncQwenOfficialCliSourceBundle,
   syncQwenOfficialCliReleaseBundle: platformMocks.syncQwenOfficialCliReleaseBundle,
   toQwenOfficialCliReleaseArtifacts: platformMocks.toQwenOfficialCliReleaseArtifacts,
   resolveQwenOfficialCliReleaseBundleDir: vi.fn((plan: { destinationRoot: string }) => (
     `${plan.destinationRoot}/.zc/platform-bundles/qwen/zc-toolkit`
   )),
+  installQwenExtensionFromOfficialRepoWithCli: platformMocks.installQwenExtensionFromOfficialRepoWithCli,
   installQwenExtensionWithOfficialCli: platformMocks.installQwenExtensionWithOfficialCli,
   uninstallQwenExtensionWithOfficialCli: platformMocks.uninstallQwenExtensionWithOfficialCli,
   updateQwenExtensionWithOfficialCli: platformMocks.updateQwenExtensionWithOfficialCli,
@@ -197,6 +200,7 @@ describe("platform CLI", () => {
     platformMocks.syncQwenOfficialCliSourceBundle.mockReset();
     platformMocks.syncQwenOfficialCliReleaseBundle.mockReset();
     platformMocks.toQwenOfficialCliReleaseArtifacts.mockReset();
+    platformMocks.installQwenExtensionFromOfficialRepoWithCli.mockReset();
     platformMocks.installQwenExtensionWithOfficialCli.mockReset();
     platformMocks.uninstallQwenExtensionWithOfficialCli.mockReset();
     platformMocks.updateQwenExtensionWithOfficialCli.mockReset();
@@ -319,6 +323,7 @@ describe("platform CLI", () => {
         { path: `${bundleDir}/commands/zc/start.md`, content: "# start" },
       ],
     );
+    platformMocks.installQwenExtensionFromOfficialRepoWithCli.mockResolvedValue(undefined);
     platformMocks.installQwenExtensionWithOfficialCli.mockResolvedValue(undefined);
     platformMocks.uninstallQwenExtensionWithOfficialCli.mockResolvedValue(undefined);
     platformMocks.updateQwenExtensionWithOfficialCli.mockResolvedValue(undefined);
@@ -836,12 +841,11 @@ describe("platform CLI", () => {
 
     await runPlatformInstall("qwen", { global: true });
 
-    expect(platformMocks.syncQwenOfficialCliReleaseBundle).toHaveBeenCalledWith(
-      expect.objectContaining({
-        destinationRoot: "/home/test/.qwen",
-      }),
+    expect(platformMocks.installQwenExtensionFromOfficialRepoWithCli).toHaveBeenCalledWith(
+      "https://github.com/zmice/zc-qwen-extension.git",
     );
-    expect(platformMocks.installQwenExtensionWithOfficialCli).toHaveBeenCalledWith("/tmp/qwen-release");
+    expect(platformMocks.syncQwenOfficialCliReleaseBundle).not.toHaveBeenCalled();
+    expect(platformMocks.installQwenExtensionWithOfficialCli).not.toHaveBeenCalled();
     expect(platformMocks.relinkQwenExtensionWithOfficialCli).not.toHaveBeenCalled();
     expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
   });
@@ -915,13 +919,10 @@ describe("platform CLI", () => {
 
     await runPlatformUpdate("qwen", { global: true });
 
-    expect(platformMocks.syncQwenOfficialCliReleaseBundle).toHaveBeenCalledWith(
-      expect.objectContaining({
-        destinationRoot: "/home/test/.qwen",
-      }),
-    );
+    expect(platformMocks.syncQwenOfficialCliReleaseBundle).not.toHaveBeenCalled();
     expect(platformMocks.updateQwenExtensionWithOfficialCli).toHaveBeenCalledWith("zc-toolkit");
-    expect(platformMocks.relinkQwenExtensionWithOfficialCli).toHaveBeenCalledWith("/tmp/qwen-release");
+    expect(platformMocks.uninstallQwenExtensionWithOfficialCli).not.toHaveBeenCalled();
+    expect(platformMocks.relinkQwenExtensionWithOfficialCli).not.toHaveBeenCalled();
     expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
   });
 
@@ -993,8 +994,8 @@ describe("platform CLI", () => {
         overwrite: "error",
         installedAt: "2026-04-19T12:00:00.000Z",
         installMethod: "qwen-cli",
-        bundleType: "release-bundle",
-        bundlePath: "/tmp/qwen-release",
+        installSource: "github-repo",
+        sourceRef: "https://github.com/zmice/zc-qwen-extension.git",
         artifacts: [
           {
             path: "/home/test/.qwen/extensions/zc-toolkit/QWEN.md",
@@ -1017,7 +1018,7 @@ describe("platform CLI", () => {
     await runPlatformUninstall("qwen", { global: true });
 
     expect(platformMocks.uninstallQwenExtensionWithOfficialCli).toHaveBeenCalledWith("zc-toolkit");
-    expect(platformMocks.removeManagedPaths).toHaveBeenCalledWith(["/tmp/qwen-release"]);
+    expect(platformMocks.removeManagedPaths).not.toHaveBeenCalled();
     expect(platformMocks.deletePlatformInstallReceipt).toHaveBeenCalledWith(
       "/home/test/.qwen/.zc/platform-state/qwen.install-receipt.json",
     );
