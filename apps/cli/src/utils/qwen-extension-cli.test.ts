@@ -5,10 +5,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 type SpawnBehavior =
   | { type: "success" }
+  | { type: "success-on-input" }
   | { type: "not-found" }
   | { type: "failure"; code?: number; stderr?: string; stdout?: string };
 
 const spawnMock = vi.fn<(command: string, args: readonly string[], options: object) => EventEmitter & {
+  stdin: PassThrough;
   stdout: PassThrough;
   stderr: PassThrough;
 }>();
@@ -19,12 +21,20 @@ vi.mock("node:child_process", () => ({
 
 function createFakeChild(behavior: SpawnBehavior) {
   const child = new EventEmitter() as EventEmitter & {
+    stdin: PassThrough;
     stdout: PassThrough;
     stderr: PassThrough;
   };
 
+  child.stdin = new PassThrough();
   child.stdout = new PassThrough();
   child.stderr = new PassThrough();
+
+  if (behavior.type === "success-on-input") {
+    child.stdin.once("data", () => {
+      child.emit("close", 0, null);
+    });
+  }
 
   queueMicrotask(() => {
     if (behavior.type === "not-found") {
@@ -43,6 +53,8 @@ function createFakeChild(behavior: SpawnBehavior) {
       child.emit("close", behavior.code ?? 1, null);
       return;
     }
+
+    if (behavior.type === "success-on-input") { return; }
 
     child.emit("close", 0, null);
   });
@@ -106,6 +118,46 @@ describe("qwen official CLI wrapper", () => {
     await expect(mod.updateQwenExtensionWithOfficialCli("zc-toolkit")).resolves.toBeUndefined();
     assert.equal(spawnMock.mock.calls.length, 1);
     assert.deepEqual(spawnMock.mock.calls[0]?.[1], ["extensions", "update", "zc-toolkit"]);
+    assert.deepEqual(spawnMock.mock.calls[0]?.[2], { stdio: "pipe" });
+  });
+
+  it("forwards interactive stdin to the qwen child process", async () => {
+    const mod = await modPromise;
+    const input = new PassThrough();
+    const originalStdin = process.stdin;
+
+    spawnMock.mockImplementation(() =>
+      createFakeChild({
+        type: "success-on-input",
+      }),
+    );
+
+    Object.defineProperty(process, "stdin", {
+      configurable: true,
+      value: input,
+    });
+
+    try {
+      const installPromise = mod.installQwenExtensionFromOfficialRepoWithCli(
+        "https://github.com/zmice/zc-qwen-extension.git",
+      );
+
+      const child = spawnMock.mock.results[0]?.value;
+      assert.ok(child);
+      const forwardedChunks: string[] = [];
+      child.stdin.on("data", (chunk: Buffer | string) => {
+        forwardedChunks.push(typeof chunk === "string" ? chunk : chunk.toString("utf8"));
+      });
+      input.write("Y\n");
+
+      await expect(installPromise).resolves.toBeUndefined();
+      assert.equal(forwardedChunks.join(""), "Y\n");
+    } finally {
+      Object.defineProperty(process, "stdin", {
+        configurable: true,
+        value: originalStdin,
+      });
+    }
   });
 
   it("treats uninstalling a missing extension as a no-op", async () => {

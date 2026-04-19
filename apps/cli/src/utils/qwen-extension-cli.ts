@@ -177,6 +177,30 @@ async function runQwenExtensionsCommand(args: readonly string[]): Promise<void> 
     }) as ChildProcessWithoutNullStreams;
     let stdout = "";
     let stderr = "";
+    let stdinWasResumed = false;
+
+    const cleanupStdinForwarding = () => {
+      process.stdin.removeListener("error", handleStdinError);
+      if (child.stdin.writable) {
+        process.stdin.unpipe(child.stdin);
+      }
+      if (stdinWasResumed && !process.stdin.destroyed && !process.stdin.isTTY) {
+        process.stdin.pause();
+      }
+    };
+
+    const handleStdinError = () => {
+      cleanupStdinForwarding();
+    };
+
+    if (!process.stdin.destroyed) {
+      stdinWasResumed = process.stdin.isPaused();
+      if (stdinWasResumed) {
+        process.stdin.resume();
+      }
+      process.stdin.on("error", handleStdinError);
+      process.stdin.pipe(child.stdin);
+    }
 
     child.stdout.on("data", (chunk: Buffer | string) => {
       const text = typeof chunk === "string" ? chunk : chunk.toString("utf8");
@@ -191,6 +215,7 @@ async function runQwenExtensionsCommand(args: readonly string[]): Promise<void> 
     });
 
     child.once("error", (error) => {
+      cleanupStdinForwarding();
       if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") {
         rejectPromise(new QwenOfficialCliUnavailableError());
         return;
@@ -200,6 +225,7 @@ async function runQwenExtensionsCommand(args: readonly string[]): Promise<void> 
     });
 
     child.once("close", (code, signal) => {
+      cleanupStdinForwarding();
       if (code === 0) {
         resolvePromise();
         return;
