@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const cliRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const workspaceRoot = resolve(cliRoot, "..", "..");
 const vendorRoot = join(cliRoot, "vendor");
-const tmpRoot = join(workspaceRoot, ".tmp");
+const tmpRoot = join(cliRoot, ".vendor-tmp");
 
 const copyEntries = [
   ["packages/toolkit/dist", "packages/toolkit/dist"],

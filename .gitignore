@@ -4,6 +4,7 @@ node_modules/
 # Build output
 apps/*/dist/
 apps/*/vendor/
+apps/*/.vendor-tmp/
 packages/*/dist/
 .generated/
 coverage/
