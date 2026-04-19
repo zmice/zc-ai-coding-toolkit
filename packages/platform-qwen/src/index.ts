@@ -75,6 +75,7 @@ export interface GenerationOptions {
   readonly packageName?: string;
   readonly manifestSource?: string;
   readonly scope?: InstallScope;
+  readonly extensionVersion?: string;
 }
 
 export type InstallOptions = GenerationOptions & InstallPlanOptions;
@@ -291,6 +292,7 @@ ${renderAssetList(assets)}
 
 function renderExtensionManifest(
   packageName: string,
+  extensionVersion: string,
   manifestSource: string,
   assets: readonly ToolkitAssetLike[],
   commands: readonly ToolkitAssetLike[],
@@ -300,12 +302,13 @@ function renderExtensionManifest(
   return `${JSON.stringify(
     {
       name: templateFiles.extensionName,
+      version: extensionVersion,
       packageName,
       platform: platformName,
       namespace: capability.namespace,
       manifestSource,
       extensionType: "toolkit-bundle",
-      contextFile: templateFiles.context,
+      contextFileName: templateFiles.context,
       commandsDir: capability.commands?.relativeDir,
       skillsDir: capability.skills?.relativeDir,
       agentsDir: capability.agents?.relativeDir,
@@ -388,6 +391,7 @@ export function createQwenGenerationPlan(
   const agents = selectMatchedAssetsByKind(manifest, "agent");
   const manifestSource = options.manifestSource ?? manifest.source ?? "toolkit-manifest";
   const resolvedPackageName = options.packageName ?? packageName;
+  const resolvedExtensionVersion = options.extensionVersion ?? "0.1.0";
   const extensionRoot = getExtensionRoot(options.scope);
 
   return {
@@ -405,6 +409,7 @@ export function createQwenGenerationPlan(
         path: `${extensionRoot}/${templateFiles.extensionManifest}`,
         content: renderExtensionManifest(
           resolvedPackageName,
+          resolvedExtensionVersion,
           manifestSource,
           matchedAssets,
           commands,

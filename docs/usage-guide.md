@@ -193,7 +193,7 @@ npm install -g @qwen-code/qwen-code@latest
 | --- | --- |
 | `codex` | `AGENTS.md`、`skills/zc-<command>/SKILL.md`、`skills/zc-<skill>/SKILL.md` |
 | `qoder` | `AGENTS.md`、`.qoder/commands`、`.qoder/skills`、`.qoder/agents` |
-| `qwen` | 优先通过官方 `qwen extensions install/update` 管理 `zc-toolkit` 扩展；扩展目录位于 `.qwen/extensions/zc-toolkit/`，其中包含 `QWEN.md`、`qwen-extension.json`、`commands/`、`skills/`、`agents/` |
+| `qwen` | 优先通过官方 `qwen extensions link` 管理 `zc-toolkit` 扩展；扩展目录位于 `.qwen/extensions/zc-toolkit/`，其中包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/`、`skills/`、`agents/` |
 
 ### 官方默认位置矩阵
 
@@ -272,8 +272,8 @@ zc platform where qwen --global --json
   - 同时安装 `~/.qoder/skills/zc-<skill>/SKILL.md`
   - 同时安装 `~/.qoder/agents/zc-<agent>.md`
 - `qwen --global`
-  - 默认优先通过官方 `qwen extensions install/update` 管理 `~/.qwen/extensions/zc-toolkit/`
-  - 其中包含 `QWEN.md`、`qwen-extension.json`、`commands/`、`skills/`、`agents/`
+  - 默认优先通过官方 `qwen extensions link` 管理 `~/.qwen/extensions/zc-toolkit/`
+  - 其中包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/`、`skills/`、`agents/`
   - 如果本机没有 `qwen` 命令，会明确提示并回退为直接写入扩展目录
 
 如果你已经明确知道目标工具的自定义全局目录，也可以继续显式指定：

@@ -24,6 +24,7 @@ const platformMocks = vi.hoisted(() => ({
   syncQwenOfficialCliSourceBundle: vi.fn(),
   installQwenExtensionWithOfficialCli: vi.fn(),
   updateQwenExtensionWithOfficialCli: vi.fn(),
+  relinkQwenExtensionWithOfficialCli: vi.fn(),
 }));
 
 vi.mock("../../utils/workspace.js", () => ({
@@ -52,6 +53,7 @@ vi.mock("../../utils/qwen-extension-cli.js", () => ({
   syncQwenOfficialCliSourceBundle: platformMocks.syncQwenOfficialCliSourceBundle,
   installQwenExtensionWithOfficialCli: platformMocks.installQwenExtensionWithOfficialCli,
   updateQwenExtensionWithOfficialCli: platformMocks.updateQwenExtensionWithOfficialCli,
+  relinkQwenExtensionWithOfficialCli: platformMocks.relinkQwenExtensionWithOfficialCli,
 }));
 
 import {
@@ -163,6 +165,7 @@ describe("platform CLI", () => {
     platformMocks.syncQwenOfficialCliSourceBundle.mockReset();
     platformMocks.installQwenExtensionWithOfficialCli.mockReset();
     platformMocks.updateQwenExtensionWithOfficialCli.mockReset();
+    platformMocks.relinkQwenExtensionWithOfficialCli.mockReset();
 
     platformMocks.loadToolkitManifest.mockResolvedValue({
       generatedAt: "2026-04-19T12:00:00.000Z",
@@ -257,6 +260,7 @@ describe("platform CLI", () => {
     });
     platformMocks.installQwenExtensionWithOfficialCli.mockResolvedValue(undefined);
     platformMocks.updateQwenExtensionWithOfficialCli.mockResolvedValue(undefined);
+    platformMocks.relinkQwenExtensionWithOfficialCli.mockResolvedValue(undefined);
   });
 
   it("uses safe overwrite defaults for platform generate writes", async () => {
@@ -705,6 +709,7 @@ describe("platform CLI", () => {
       }),
     );
     expect(platformMocks.installQwenExtensionWithOfficialCli).toHaveBeenCalledWith("/tmp/qwen-source");
+    expect(platformMocks.relinkQwenExtensionWithOfficialCli).not.toHaveBeenCalled();
     expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
   });
 
@@ -783,6 +788,7 @@ describe("platform CLI", () => {
       }),
     );
     expect(platformMocks.updateQwenExtensionWithOfficialCli).toHaveBeenCalledWith("zc-toolkit");
+    expect(platformMocks.relinkQwenExtensionWithOfficialCli).toHaveBeenCalledWith("/tmp/qwen-source");
     expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
   });
 

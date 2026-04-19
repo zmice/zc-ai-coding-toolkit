@@ -134,7 +134,7 @@ npm install -g @zmice/zc@latest
 - `qwen`
   - 项目级：`.qwen/extensions/zc-toolkit/`
   - 用户级 / 自定义目录：`extensions/zc-toolkit/`
-  - 用户级默认优先通过官方 `qwen extensions install/update` 管理
+  - 用户级默认优先通过官方 `qwen extensions link` 管理
   - extension 内包含 `QWEN.md`、`qwen-extension.json`、`commands/`、`skills/`、`agents/`
 
 ## 高频用法

@@ -126,9 +126,13 @@ async function runQwenExtensionsCommand(args: readonly string[]): Promise<void> 
 }
 
 export async function installQwenExtensionWithOfficialCli(sourceDir: string): Promise<void> {
-  await runQwenExtensionsCommand(["extensions", "install", sourceDir]);
+  await runQwenExtensionsCommand(["extensions", "link", sourceDir]);
 }
 
 export async function updateQwenExtensionWithOfficialCli(extensionName: string): Promise<void> {
-  await runQwenExtensionsCommand(["extensions", "update", extensionName]);
+  await runQwenExtensionsCommand(["extensions", "uninstall", extensionName]);
+}
+
+export async function relinkQwenExtensionWithOfficialCli(sourceDir: string): Promise<void> {
+  await runQwenExtensionsCommand(["extensions", "link", sourceDir]);
 }

@@ -24,6 +24,7 @@ import {
 import {
   QwenOfficialCliUnavailableError,
   installQwenExtensionWithOfficialCli,
+  relinkQwenExtensionWithOfficialCli,
   syncQwenOfficialCliSourceBundle,
   updateQwenExtensionWithOfficialCli,
 } from "../utils/qwen-extension-cli.js";
@@ -102,20 +103,20 @@ interface ToolkitModule {
 }
 
 interface PlatformModule {
-  createCodexGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string }) => GenerationPlan;
+  createCodexGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string; extensionVersion?: string }) => GenerationPlan;
   createCodexInstallPlan?: (
     manifest: PlatformManifestLike,
-    opts: { manifestSource?: string; destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode }
+    opts: { manifestSource?: string; destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode; extensionVersion?: string }
   ) => InstallPlan;
-  createQoderGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string }) => GenerationPlan;
+  createQoderGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string; extensionVersion?: string }) => GenerationPlan;
   createQoderInstallPlan?: (
     manifest: PlatformManifestLike,
-    opts: { manifestSource?: string; destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode }
+    opts: { manifestSource?: string; destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode; extensionVersion?: string }
   ) => InstallPlan;
-  createQwenGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string }) => GenerationPlan;
+  createQwenGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string; extensionVersion?: string }) => GenerationPlan;
   createQwenInstallPlan?: (
     manifest: PlatformManifestLike,
-    opts: { manifestSource?: string; destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode }
+    opts: { manifestSource?: string; destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode; extensionVersion?: string }
   ) => InstallPlan;
 }
 
@@ -225,22 +226,24 @@ function createGenerationPlan(
   platformModule: PlatformModule,
   manifest: PlatformManifestLike
 ): GenerationPlan {
+  const extensionVersion = getCliVersion();
+
   switch (platform) {
     case "qwen":
       if (!platformModule.createQwenGenerationPlan) {
         throw new Error("Qwen 平台包未导出 createQwenGenerationPlan()");
       }
-      return finalizePlan(platformModule.createQwenGenerationPlan(manifest, { manifestSource: manifest.source }));
+      return finalizePlan(platformModule.createQwenGenerationPlan(manifest, { manifestSource: manifest.source, extensionVersion }));
     case "codex":
       if (!platformModule.createCodexGenerationPlan) {
         throw new Error("Codex 平台包未导出 createCodexGenerationPlan()");
       }
-      return finalizePlan(platformModule.createCodexGenerationPlan(manifest, { manifestSource: manifest.source }));
+      return finalizePlan(platformModule.createCodexGenerationPlan(manifest, { manifestSource: manifest.source, extensionVersion }));
     case "qoder":
       if (!platformModule.createQoderGenerationPlan) {
         throw new Error("Qoder 平台包未导出 createQoderGenerationPlan()");
       }
-      return finalizePlan(platformModule.createQoderGenerationPlan(manifest, { manifestSource: manifest.source }));
+      return finalizePlan(platformModule.createQoderGenerationPlan(manifest, { manifestSource: manifest.source, extensionVersion }));
   }
 }
 
@@ -252,6 +255,7 @@ function createInstallPlan(
   scope: InstallScope,
   overwrite: OverwriteMode
 ): InstallPlan {
+  const extensionVersion = getCliVersion();
   switch (platform) {
     case "qwen":
       if (!platformModule.createQwenInstallPlan) {
@@ -261,7 +265,8 @@ function createInstallPlan(
         manifestSource: manifest.source,
         destinationRoot,
         scope,
-        overwrite
+        overwrite,
+        extensionVersion,
       }));
     case "codex":
       if (!platformModule.createCodexInstallPlan) {
@@ -271,7 +276,8 @@ function createInstallPlan(
         manifestSource: manifest.source,
         destinationRoot,
         scope,
-        overwrite
+        overwrite,
+        extensionVersion,
       }));
     case "qoder":
       if (!platformModule.createQoderInstallPlan) {
@@ -281,7 +287,8 @@ function createInstallPlan(
         manifestSource: manifest.source,
         destinationRoot,
         scope,
-        overwrite
+        overwrite,
+        extensionVersion,
       }));
   }
 }
@@ -738,13 +745,14 @@ export async function runPlatformInstall(
         const sourceBundle = await syncQwenOfficialCliSourceBundle(plan);
 
         if (format === "text") {
-          console.log(`正在调用官方命令：qwen extensions ${status.kind === "not-installed" ? "install" : "update"} …`);
+          console.log(`正在调用官方命令：qwen extensions ${status.kind === "not-installed" ? "link" : "relink"} …`);
         }
 
         if (status.kind === "not-installed") {
           await installQwenExtensionWithOfficialCli(sourceBundle.sourceDir);
         } else if (status.kind !== "up-to-date") {
           await updateQwenExtensionWithOfficialCli(sourceBundle.extensionName);
+          await relinkQwenExtensionWithOfficialCli(sourceBundle.sourceDir);
         }
 
         await writePlatformInstallReceiptForPlan(plan, {
@@ -1028,10 +1036,11 @@ export async function runPlatformUpdate(
         const sourceBundle = await syncQwenOfficialCliSourceBundle(plan);
 
         if (format === "text") {
-          console.log("正在调用官方命令：qwen extensions update …");
+          console.log("正在调用官方命令：qwen extensions relink …");
         }
 
         await updateQwenExtensionWithOfficialCli(sourceBundle.extensionName);
+        await relinkQwenExtensionWithOfficialCli(sourceBundle.sourceDir);
         await writePlatformInstallReceiptForPlan(plan, {
           installedAt: new Date().toISOString(),
           zcVersion,

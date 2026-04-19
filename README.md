@@ -160,7 +160,7 @@ node apps/cli/dist/cli/index.js platform install qoder --plan --json
 - 当前平台原生安装面：
 - `codex`：`AGENTS.md` + `skills/zc-<command>/SKILL.md` + `skills/zc-<skill>/SKILL.md`
   - `qoder`：`AGENTS.md` + `.qoder/commands|skills|agents`
-- `qwen`：优先通过官方 `qwen extensions install/update` 管理 `zc-toolkit` 扩展；产物落在 `.qwen/extensions/zc-toolkit/` 下，包含 `QWEN.md`、`qwen-extension.json`、`commands/`、`skills/`、`agents/`
+- `qwen`：优先通过官方 `qwen extensions link` 管理 `zc-toolkit` 扩展；产物落在 `.qwen/extensions/zc-toolkit/` 下，包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/`、`skills/`、`agents/`
 
 ### 3. 审阅上游更新
 

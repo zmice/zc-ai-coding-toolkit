@@ -67,6 +67,8 @@ describe("@zmice/platform-qwen scaffold", () => {
     assert.ok(plan.artifacts[0]?.content.includes("zc:start"));
     assert.ok(plan.artifacts[0]?.content.includes("固定 workflow"));
     assert.ok(plan.artifacts[1]?.content.includes(`"name": "${templateFiles.extensionName}"`));
+    assert.ok(plan.artifacts[1]?.content.includes(`"version": "0.1.0"`));
+    assert.ok(plan.artifacts[1]?.content.includes(`"contextFileName": "${templateFiles.context}"`));
     assert.ok(plan.artifacts[2]?.content.includes('name: "zc:start"'));
     assert.ok(plan.artifacts[3]?.content.includes('name: "zc-alpha"'));
     assert.ok(plan.artifacts[4]?.content.includes('name: "zc-reviewer"'));
