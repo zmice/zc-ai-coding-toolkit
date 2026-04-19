@@ -56,6 +56,7 @@ function renderReadme() {
 [![source repo](https://img.shields.io/badge/source-zc--ai--coding--toolkit-24292f)](https://github.com/zmice/zc-ai-coding-toolkit)
 [![npm version](https://img.shields.io/npm/v/@zmice/zc)](https://www.npmjs.com/package/@zmice/zc)
 [![license](https://img.shields.io/github/license/zmice/zc-ai-coding-toolkit)](LICENSE)
+[![qwen extension](https://img.shields.io/badge/Qwen%20Code-extension-1677ff)](https://github.com/zmice/zc-qwen-extension)
 
 这是由 [zc AI Coding Toolkit](https://github.com/zmice/zc-ai-coding-toolkit) 自动导出的 Qwen 扩展仓库。
 
