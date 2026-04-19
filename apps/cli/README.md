@@ -19,6 +19,27 @@
 pnpm upstream -- <subcommand>
 ```
 
+## 上游维护边界
+
+`zc` 不直接提供 upstream 治理命令，但它的命令面和安装行为会持续对齐平台官方能力。
+
+当前 CLI 维护主要跟踪三类上游：
+
+- Codex 官方文档与 `AGENTS.md` / skills 机制
+- Qoder 官方 CLI、commands、skills、agents 文档
+- Qwen 官方 extensions、skills、`qwen extensions` 命令文档
+
+也就是说：
+
+- 内容参考上游的治理在 `references/`
+- 平台行为与安装语义的维护体现在 `apps/cli` 和 `packages/platform-*`
+
+仓库级 upstream 治理由下面入口承担：
+
+```bash
+pnpm upstream -- <subcommand>
+```
+
 ## 安装
 
 ### npm 全局安装

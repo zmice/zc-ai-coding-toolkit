@@ -159,6 +159,45 @@ pnpm upstream -- diff agent-skills
 pnpm upstream -- report all --format md
 ```
 
+## 上游参考与维护
+
+这个仓库不是从零凭空设计出来的。内容层和 workflow 组织方式，会持续参考一组公开上游项目，再通过人工审阅吸收到 `toolkit`。
+
+当前登记的内容参考上游包括：
+
+- [`addyosmani/agent-skills`](https://github.com/addyosmani/agent-skills)
+- [`obra/superpowers`](https://github.com/obra/superpowers)
+- [`affaan-m/everything-claude-code`](https://github.com/affaan-m/everything-claude-code)
+- [`garrytan/gstack`](https://github.com/garrytan/gstack)
+- [`multica-ai/andrej-karpathy-skills`](https://github.com/multica-ai/andrej-karpathy-skills)
+
+对应治理入口：
+
+- [references/upstreams.yaml](references/upstreams.yaml)
+- [references/README.md](references/README.md)
+
+维护规则：
+
+- upstream 只提供参考，不直接覆盖本仓库内容
+- 所有吸收都先进入 `references`
+- 经过人工审阅后，才会落到 `packages/toolkit`
+
+### CLI 的上游维护边界
+
+`zc` 本身不承载 upstream 治理命令，但它的安装行为和平台适配会持续对齐官方平台文档。
+
+当前重点跟踪：
+
+- Codex 官方文档
+- Qoder 官方 CLI / commands / skills / agents 文档
+- Qwen 官方扩展、skills、extensions CLI 文档
+
+相关入口说明见：
+
+- [docs/usage-guide.md](docs/usage-guide.md)
+- [docs/architecture/platform-capability-matrix.md](docs/architecture/platform-capability-matrix.md)
+- [apps/cli/README.md](apps/cli/README.md)
+
 ## 文档入口
 
 先看这些：
