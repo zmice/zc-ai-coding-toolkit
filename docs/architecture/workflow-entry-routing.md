@@ -217,71 +217,105 @@
 - release
 - investigation
 
-## 标准 workflow 家族
+## 固定 workflow 集合
 
-统一入口背后，应显式组织为几类 workflow family。
+统一入口背后，不再是“从命令表里挑一个”，而是先评估任务，再进入 6 条固定 workflow 之一。
 
-### A. Full Delivery Workflow
+### A. Product Analysis Workflow
+
+适用：
+
+- 需求模糊
+- 目标用户、价值、范围或验收标准还不稳定
+- 需要先把产品语言压成工程可执行方案
+
+默认入口：
+
+- `idea`
+
+使用现有资产：
+
+- `idea`
+- `product-owner`
+- `brainstorming-and-design`
+- `spec`
+- `plan-review`
+
+目标：
+
+- 收敛问题定义
+- 明确范围、优先级、验收标准
+- 形成可落地的执行方案
+- 决定是否转入 `full-delivery`
+
+### B. Full Delivery Workflow
 
 适用：
 
 - 新功能
 - 新项目
 - 复杂重构
-- 范围不小于一个垂直切片的需求
-
-路由：
-
-- `brainstorming-and-design`（必要时）
-- `spec`
-- `plan-review`（可选）
-- `task-plan`
-- `build`
-- `quality-review`
-- `verify`
-- `commit`
-- `retro`
+- 已确认要做，且足够进入完整交付门控
 
 默认入口：
 
 - `sdd-tdd`
 
-### B. Bugfix Workflow
+说明：
+
+- `sdd-tdd` 是 `full-delivery` 的 workflow-entry
+- 它负责完整交付门控
+- 它不是统一分诊入口，也不负责替代 `start` 做任务判型
+
+典型流转：
+
+- `spec`
+- `plan-review`（必要时）
+- `task-plan`
+- `build`
+- `quality-review`
+- `verify`
+- `ship`（必要时）
+
+### C. Bugfix Workflow
 
 适用：
 
 - 异常行为
-- 测试失败
+- 失败测试
 - 构建失败
 - 线上问题回放
 
-路由：
+默认入口：
+
+- `debug`
+
+典型流转：
 
 - `debug`
 - `build`
+- `quality-review`（必要时）
 - `verify`
-- `quality-review`
 
-必要时补：
-
-- `spec`
-
-### C. Review Closure Workflow
+### D. Review Closure Workflow
 
 适用：
 
-- 代码审查
-- review 响应
-- 分支收尾
+- 已有改动
+- 当前重点是代码审查、反馈处理、分支收尾
 
-路由：
+默认入口：
+
+- `quality-review`
+
+典型流转：
 
 - `quality-review`
 - `review-response-and-resolution`
 - `branch-finish-and-cleanup`
 - `verify`
 
-### D. Documentation / Release Workflow
+### E. Docs Release Workflow
 
 适用：
 
@@ -290,44 +324,53 @@
 - 发布说明
 - 发布前后同步
 
-路由：
+默认入口：
+
+- `doc`
+
+典型流转：
 
 - `doc`
 - `release-documentation-sync`
 - `ship`
-- `verify`
+- `verify`（必要时）
 
-### E. Investigation / Context Workflow
+### F. Investigation Workflow
 
 适用：
 
 - 陌生代码库
 - 会话质量下降
 - 需要重新理解上下文
-- 需要建立任务进入前的最小上下文
+- 当前先要摸清技术与上下文状态，而不是先做产品判断
 
-路由：
+默认入口：
+
+- `onboard`
+
+典型流转：
 
 - `onboard`
 - `ctx-health`
 - `context-budget-audit`
-- `idea`
+- `idea`（必要时）
 
 ## 内容层组织建议
 
-`toolkit` 中与 workflow 有关的内容应重新按 4 层理解。
+`toolkit` 中与 workflow 有关的内容应按 4 层理解，但 `start` 的职责已经明确为“在 6 条固定 workflow 中选一条”。
 
 ### Layer 1: Intake
 
 统一入口层：
 
-- `command:start`（新增）
+- `command:start`
 
 职责：
 
 - intake
 - task classification
 - workflow routing
+- 在 `product-analysis / full-delivery / bugfix / review-closure / docs-release / investigation` 中选一条固定 workflow
 
 ### Layer 2: Core Lifecycle
 
@@ -342,6 +385,11 @@
 - `command:verify`
 - `command:commit`
 - `command:retro`
+
+说明：
+
+- `command:sdd-tdd` 是 `full-delivery` 的 workflow-entry
+- 它不再被定义为所有任务的默认开始方式
 
 ### Layer 3: Specialized Workflow
 
@@ -404,6 +452,7 @@ Codex 不能直接套用 slash command 心智。
    - “统一任务开始方式”
    - 而不是“Codex 有 `/start` 命令”
    - 也不是“Codex 已实现 `$zc-start` 之类的技能触发名”
+   - 它的职责是先评估任务，再选择 6 条固定 workflow 之一
 
 4. 文案必须明确区分：
    - canonical command 名称
@@ -459,6 +508,57 @@ platform_exposure:
 - 避免把 canonical command 误解释成平台原生命令
 - 为 `platform-*` 生成器提供正确渲染策略
 
+## Start 路由方式
+
+`start` 的职责不是把用户直接丢给十几个命令，而是按固定矩阵先选 workflow，再给出该 workflow 的默认入口。
+
+### 第一步：AI 做任务评估
+
+至少评估：
+
+- 任务主类型
+- 需求成熟度
+- 当前阶段
+- 是否需要 overlay（如 guardrails、context-reset、onboarding）
+
+### 第二步：映射到固定 workflow
+
+推荐矩阵：
+
+- `product-analysis`
+  - 需求模糊、范围未收敛、需要形成可执行方案
+  - 默认入口：`idea`
+- `full-delivery`
+  - 要进入完整交付门控
+  - 默认入口：`sdd-tdd`
+- `bugfix`
+  - 重点是根因定位与修复
+  - 默认入口：`debug`
+- `review-closure`
+  - 重点是审查、反馈处理、收尾
+  - 默认入口：`quality-review`
+- `docs-release`
+  - 重点是文档、ADR、发布说明、上线准备
+  - 默认入口：`doc`
+- `investigation`
+  - 重点是技术摸底、项目理解、上下文恢复
+  - 默认入口：`onboard`
+
+### 第三步：在 workflow 内选阶段入口
+
+同一条 workflow 内，仍可以按成熟度切入更具体的阶段：
+
+- `product-analysis`
+  - 模糊：`idea`
+  - 方案已成形：`spec`
+  - 已有规格待评审：`plan-review`
+- `full-delivery`
+  - 规格待写：`sdd-tdd` 或 `spec`
+  - 已有 spec：`task-plan`
+  - 已有 plan：`build`
+  - 待审查：`quality-review`
+  - 待验证：`verify`
+
 ## CLI / 产品面建议
 
 后续如果进入 CLI 实现阶段，可以考虑提供一个统一任务入口，用来接住：
@@ -497,7 +597,8 @@ platform_exposure:
 真正缺的只有两件事：
 
 1. 一个统一的 task intake / routing 入口
-2. 一套显式的 workflow family / task type / platform exposure 元数据
+2. 一套显式的固定 workflow 与路由矩阵
+3. 一套 workflow family / task type / platform exposure 元数据
 
 ## 实施顺序
 

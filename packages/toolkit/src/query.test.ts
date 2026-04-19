@@ -44,6 +44,7 @@ describe("toolkit query helpers", () => {
     assert.deepEqual(recommendation?.route, {
       family: "lifecycle",
       role: "stage-entry",
+      workflows: ["full-delivery", "bugfix"],
       taskTypes: ["feature", "bugfix"],
       next: ["command:quality-review", "command:verify"],
       requiresFullLifecycle: true
@@ -59,6 +60,36 @@ describe("toolkit query helpers", () => {
     const recommendation = recommendToolkitAssets(manifest, "start");
 
     assert.equal(recommendation?.target.id, "command:start");
+    assert.deepEqual(recommendation?.route, {
+      family: "intake",
+      role: "intake-router",
+      workflows: [
+        "product-analysis",
+        "full-delivery",
+        "bugfix",
+        "review-closure",
+        "docs-release",
+        "investigation"
+      ],
+      taskTypes: ["feature", "bugfix", "review", "docs", "release", "investigation"],
+      next: [
+        "command:sdd-tdd",
+        "command:spec",
+        "command:plan-review",
+        "command:task-plan",
+        "command:build",
+        "command:quality-review",
+        "command:verify",
+        "command:debug",
+        "command:doc",
+        "command:ship",
+        "command:onboard",
+        "command:ctx-health",
+        "command:idea",
+        "command:guard"
+      ],
+      requiresFullLifecycle: false
+    });
     assert.deepEqual(recommendation?.entry, {
       commandId: "command:start",
       reason: "该资产本身就是统一任务开始入口。"

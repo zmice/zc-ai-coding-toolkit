@@ -41,8 +41,27 @@ describe("createToolkitManifest", () => {
       "workflow-entry"
     );
     assert.deepEqual(
+      getToolkitAssetById(manifest, "command:start")?.meta.routingWorkflows,
+      [
+        "product-analysis",
+        "full-delivery",
+        "bugfix",
+        "review-closure",
+        "docs-release",
+        "investigation"
+      ]
+    );
+    assert.deepEqual(
       getToolkitAssetById(manifest, "command:start")?.meta.taskTypes,
       ["feature", "bugfix", "review", "docs", "release", "investigation"]
+    );
+    assert.deepEqual(
+      getToolkitAssetById(manifest, "command:build")?.meta.routingWorkflows,
+      ["full-delivery", "bugfix"]
+    );
+    assert.deepEqual(
+      getToolkitAssetById(manifest, "command:quality-review")?.meta.routingWorkflows,
+      ["full-delivery", "bugfix", "review-closure"]
     );
     assert.equal(
       getToolkitAssetById(manifest, "command:spec")?.meta.source?.upstream,

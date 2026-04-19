@@ -4,6 +4,14 @@ export const toolkitAssetTiers = ["core", "recommended", "optional", "experiment
 export const toolkitAssetAudiences = ["default", "advanced", "maintainer"] as const;
 export const toolkitAssetStabilities = ["stable", "evolving", "experimental", "deprecated"] as const;
 export const toolkitWorkflowFamilies = ["intake", "lifecycle", "specialized", "support"] as const;
+export const toolkitWorkflowRoutes = [
+  "product-analysis",
+  "full-delivery",
+  "bugfix",
+  "review-closure",
+  "docs-release",
+  "investigation"
+] as const;
 export const toolkitWorkflowRoles = [
   "intake-router",
   "workflow-entry",
@@ -27,6 +35,7 @@ export type ToolkitAssetTier = (typeof toolkitAssetTiers)[number];
 export type ToolkitAssetAudience = (typeof toolkitAssetAudiences)[number];
 export type ToolkitAssetStability = (typeof toolkitAssetStabilities)[number];
 export type ToolkitWorkflowFamily = (typeof toolkitWorkflowFamilies)[number];
+export type ToolkitWorkflowRoute = (typeof toolkitWorkflowRoutes)[number];
 export type ToolkitWorkflowRole = (typeof toolkitWorkflowRoles)[number];
 export type ToolkitTaskType = (typeof toolkitTaskTypes)[number];
 export type ToolkitPlatformExposureMode = (typeof toolkitPlatformExposureModes)[number];
@@ -71,6 +80,7 @@ export interface ToolkitAssetMeta {
   supersedes?: readonly string[];
   workflowFamily?: ToolkitWorkflowFamily;
   workflowRole?: ToolkitWorkflowRole;
+  routingWorkflows?: readonly ToolkitWorkflowRoute[];
   taskTypes?: readonly ToolkitTaskType[];
   platformExposure?: ToolkitPlatformExposure;
   source?: ToolkitAssetSource;
@@ -121,6 +131,7 @@ export interface ToolkitManifest {
 export interface ToolkitRouteHint {
   family: ToolkitWorkflowFamily;
   role: ToolkitWorkflowRole;
+  workflows: readonly ToolkitWorkflowRoute[];
   taskTypes: readonly ToolkitTaskType[];
   next: readonly string[];
   requiresFullLifecycle: boolean;

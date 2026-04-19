@@ -45,6 +45,14 @@
 额外边界：
 
 - `command:start` 是 toolkit 内容入口，不是当前已实现的 `zc start`
+- `command:start` 当前负责在 6 条固定 workflow 中做任务分流：
+  - `product-analysis`
+  - `full-delivery`
+  - `bugfix`
+  - `review-closure`
+  - `docs-release`
+  - `investigation`
+- `sdd-tdd` 只是 `full-delivery` 的默认 workflow-entry，不是统一分诊入口
 - Codex 按 `prompt-entry` / 自然语言入口理解
 - Qwen / Qoder 当前只按 `command-style` 文案理解，不假定真实原生命令
 
@@ -86,7 +94,7 @@
 - `docs/architecture/toolkit-content-optimization.md`
   - 看内容优化主线
 - `docs/architecture/workflow-entry-routing.md`
-  - 看统一任务入口、canonical command 与平台暴露分离、以及当前没有 `zc start` CLI 的边界
+  - 看 6 条固定 workflow、统一任务入口、canonical command 与平台暴露分离、以及当前没有 `zc start` CLI 的边界
 - `docs/architecture/toolkit-naming-and-source-identity.md`
   - 看命名与上游身份映射规则
 - `docs/architecture/platform-deepening.md`

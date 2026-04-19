@@ -17,6 +17,7 @@ interface ToolkitAssetMetaLike {
   supersedes?: readonly string[];
   workflowFamily?: string;
   workflowRole?: string;
+  routingWorkflows?: readonly string[];
   taskTypes?: readonly string[];
   platformExposure?: Partial<Record<"qwen" | "codex" | "qoder", string>>;
   source?: {
@@ -60,6 +61,7 @@ interface ToolkitModule {
     route?: {
       family: string;
       role: string;
+      workflows: readonly string[];
       taskTypes: readonly string[];
       next: readonly string[];
       requiresFullLifecycle: boolean;
@@ -133,6 +135,7 @@ function printAssetDetails(asset: ToolkitAssetLike): void {
   console.log(`替代：${asset.meta.supersedes?.join(", ") ?? "-"}`);
   console.log(`工作流家族：${asset.meta.workflowFamily ?? "-"}`);
   console.log(`工作流角色：${asset.meta.workflowRole ?? "-"}`);
+  console.log(`固定工作流：${asset.meta.routingWorkflows?.join(", ") ?? "-"}`);
   console.log(`任务类型：${asset.meta.taskTypes?.join(", ") ?? "-"}`);
   console.log(
     `平台暴露：${asset.meta.platformExposure ? Object.entries(asset.meta.platformExposure).map(([platform, mode]) => `${platform}=${mode}`).join(", ") : "-"}`
@@ -151,7 +154,7 @@ function printAssetList(title: string, assets: readonly ToolkitAssetLike[]): voi
 
   for (const asset of assets) {
     const routeSummary = asset.meta.workflowFamily
-      ? ` | workflow=${asset.meta.workflowFamily}/${asset.meta.workflowRole ?? "-"} | task=${asset.meta.taskTypes?.join(", ") ?? "-"}`
+      ? ` | workflow=${asset.meta.workflowFamily}/${asset.meta.workflowRole ?? "-"} | route=${asset.meta.routingWorkflows?.join(", ") ?? "-"} | task=${asset.meta.taskTypes?.join(", ") ?? "-"}`
       : "";
     console.log(`- ${asset.id} [${asset.meta.kind}] ${asset.meta.title}${routeSummary}`);
   }
@@ -287,6 +290,7 @@ export function registerToolkitCommand(program: Command): void {
       if (recommendation.route) {
         console.log(`- 工作流家族：${recommendation.route.family}`);
         console.log(`- 工作流角色：${recommendation.route.role}`);
+        console.log(`- 固定工作流：${recommendation.route.workflows.join(", ") || "-"}`);
         console.log(`- 任务类型：${recommendation.route.taskTypes.join(", ") || "-"}`);
         console.log(`- 下一跳：${recommendation.route.next.join(", ") || "-"}`);
         console.log(`- 需要完整生命周期：${recommendation.route.requiresFullLifecycle ? "是" : "否"}`);

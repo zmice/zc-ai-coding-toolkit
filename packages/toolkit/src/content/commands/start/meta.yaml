@@ -1,13 +1,16 @@
 kind: command
 name: start
 title: 开始
-description: 统一任务开始入口，先判断任务类型、阶段和风险，再路由到合适的 workflow 或下一条命令。
+description: 统一任务开始入口，先评估任务，再在 6 条固定 workflow 中选择合适的路线和默认入口。
 tier: core
 audience: default
 stability: stable
 suggests:
+  - agent:product-owner
+  - skill:brainstorming-and-design
   - command:sdd-tdd
   - command:spec
+  - command:plan-review
   - command:task-plan
   - command:build
   - command:quality-review
@@ -25,6 +28,13 @@ platforms:
   - qoder
 workflow_family: intake
 workflow_role: intake-router
+routing_workflows:
+  - product-analysis
+  - full-delivery
+  - bugfix
+  - review-closure
+  - docs-release
+  - investigation
 task_types:
   - feature
   - bugfix
@@ -39,4 +49,4 @@ platform_exposure:
 source:
   upstream: toolkit-original
   strategy: curated
-  notes: 本仓库新增的统一任务入口，用于 intake、任务判型和 workflow 路由。
+  notes: 本仓库新增的统一任务入口，用于 intake、任务判型，并在 product-analysis、full-delivery、bugfix、review-closure、docs-release、investigation 六条固定 workflow 中选路。

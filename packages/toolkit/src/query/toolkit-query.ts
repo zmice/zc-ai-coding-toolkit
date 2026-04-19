@@ -4,6 +4,7 @@ import type {
   ToolkitRecommendation,
   ToolkitRouteHint,
   ToolkitTaskType,
+  ToolkitWorkflowRoute,
   ToolkitWorkflowRole,
 } from "../types.js";
 
@@ -52,6 +53,10 @@ export function searchToolkitAssets(
   return manifest.assets.filter((asset) => assetSearchText(asset).includes(normalizedKeyword));
 }
 
+function buildRoutingWorkflows(asset: ToolkitAssetUnit): readonly ToolkitWorkflowRoute[] {
+  return asset.meta.routingWorkflows ?? [];
+}
+
 function buildRouteHint(asset: ToolkitAssetUnit): ToolkitRouteHint | undefined {
   if (!asset.meta.workflowFamily || !asset.meta.workflowRole) {
     return undefined;
@@ -65,6 +70,7 @@ function buildRouteHint(asset: ToolkitAssetUnit): ToolkitRouteHint | undefined {
   return {
     family: asset.meta.workflowFamily,
     role: asset.meta.workflowRole,
+    workflows: buildRoutingWorkflows(asset),
     taskTypes: asset.meta.taskTypes ?? [],
     next,
     requiresFullLifecycle: asset.meta.workflowFamily === "lifecycle" || asset.id === "command:sdd-tdd"

@@ -7,6 +7,7 @@ import {
   toolkitPlatforms,
   toolkitTaskTypes,
   toolkitWorkflowFamilies,
+  toolkitWorkflowRoutes,
   toolkitWorkflowRoles,
   type ToolkitAssetAudience,
   type ToolkitAssetMeta,
@@ -17,6 +18,7 @@ import {
   type ToolkitAssetTier,
   type ToolkitPlatform,
   type ToolkitWorkflowFamily,
+  type ToolkitWorkflowRoute,
   type ToolkitWorkflowRole
 } from "../types.js";
 
@@ -96,6 +98,24 @@ function assertTaskTypeArray(value: unknown): readonly ToolkitTaskType[] | undef
   }
 
   return taskTypes as readonly ToolkitTaskType[];
+}
+
+function assertWorkflowRouteArray(value: unknown): readonly ToolkitWorkflowRoute[] | undefined {
+  const workflows = assertStringArray(value, "routing_workflows");
+
+  if (!workflows) {
+    return undefined;
+  }
+
+  for (const workflow of workflows) {
+    if (!(toolkitWorkflowRoutes as readonly string[]).includes(workflow)) {
+      throw new Error(
+        `Invalid asset meta: routing_workflows must only contain ${toolkitWorkflowRoutes.join(", ")}`
+      );
+    }
+  }
+
+  return workflows as readonly ToolkitWorkflowRoute[];
 }
 
 function assertEnumValue<T extends string>(
@@ -191,6 +211,60 @@ function assertPlatformExposureRecord(value: unknown): ToolkitPlatformExposure |
   return Object.keys(normalized).length > 0 ? normalized : undefined;
 }
 
+function inferRoutingWorkflows(input: {
+  kind: string;
+  name: string;
+  workflowFamily?: ToolkitWorkflowFamily;
+  workflowRole?: ToolkitWorkflowRole;
+  taskTypes?: readonly ToolkitTaskType[];
+}): readonly ToolkitWorkflowRoute[] | undefined {
+  const fixedRoutes = [...toolkitWorkflowRoutes];
+
+  if (input.workflowRole === "intake-router") {
+    return fixedRoutes;
+  }
+
+  if (input.workflowFamily === "support") {
+    return fixedRoutes;
+  }
+
+  const inferred = new Set<ToolkitWorkflowRoute>();
+
+  for (const taskType of input.taskTypes ?? []) {
+    switch (taskType) {
+      case "feature":
+        inferred.add("full-delivery");
+        break;
+      case "bugfix":
+        inferred.add("bugfix");
+        break;
+      case "review":
+        inferred.add("review-closure");
+        break;
+      case "docs":
+      case "release":
+        inferred.add("docs-release");
+        break;
+      case "investigation":
+        inferred.add("investigation");
+        break;
+    }
+  }
+
+  if (
+    input.kind === "command" &&
+    ["idea", "spec", "plan-review"].includes(input.name)
+  ) {
+    inferred.add("product-analysis");
+  }
+
+  if (input.kind === "command" && input.name === "start") {
+    return fixedRoutes;
+  }
+
+  return fixedRoutes.filter((workflow) => inferred.has(workflow));
+}
+
 export function validateToolkitAssetMeta(input: unknown): ToolkitAssetMeta {
   if (typeof input !== "object" || input === null) {
     throw new Error("Invalid asset meta: expected an object");
@@ -235,9 +309,19 @@ export function validateToolkitAssetMeta(input: unknown): ToolkitAssetMeta {
     "workflow_role",
     toolkitWorkflowRoles
   );
+  const routingWorkflows = assertWorkflowRouteArray(record.routing_workflows);
   const taskTypes = assertTaskTypeArray(record.task_types);
   const platformExposure = assertPlatformExposureRecord(record.platform_exposure);
   const source = assertSourceRecord(record.source);
+  const normalizedRoutingWorkflows =
+    routingWorkflows ??
+    inferRoutingWorkflows({
+      kind,
+      name,
+      workflowFamily,
+      workflowRole,
+      taskTypes
+    });
 
   return {
     kind,
@@ -257,6 +341,9 @@ export function validateToolkitAssetMeta(input: unknown): ToolkitAssetMeta {
     ...(supersedes ? { supersedes } : {}),
     ...(workflowFamily ? { workflowFamily } : {}),
     ...(workflowRole ? { workflowRole } : {}),
+    ...(normalizedRoutingWorkflows && normalizedRoutingWorkflows.length > 0
+      ? { routingWorkflows: normalizedRoutingWorkflows }
+      : {}),
     ...(taskTypes ? { taskTypes } : {}),
     ...(platformExposure ? { platformExposure } : {}),
     ...(source ? { source } : {})
