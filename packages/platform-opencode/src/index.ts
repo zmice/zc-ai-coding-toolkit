@@ -16,7 +16,8 @@ export type InstallScope = "project" | "global" | "dir";
 export type PlatformCapabilitySurface =
   | "entry-file"
   | "commands-dir"
-  | "skills-dir";
+  | "skills-dir"
+  | "agents-dir";
 
 export interface PlatformCapability {
   readonly platform: typeof platformName;
@@ -32,6 +33,10 @@ export interface PlatformCapability {
   readonly skills: {
     readonly relativeDir: string;
     readonly fileName: "SKILL.md";
+  };
+  readonly agents: {
+    readonly relativeDir: string;
+    readonly fileExtension: ".md";
   };
 }
 
@@ -68,7 +73,7 @@ export const templateFiles = {
 export const capability: PlatformCapability = {
   platform: platformName,
   namespace: "zc",
-  surfaces: ["entry-file", "commands-dir", "skills-dir"],
+  surfaces: ["entry-file", "commands-dir", "skills-dir", "agents-dir"],
   entryFile: {
     fileName: templateFiles.agents,
   },
@@ -79,6 +84,10 @@ export const capability: PlatformCapability = {
   skills: {
     relativeDir: ".opencode/skills",
     fileName: "SKILL.md",
+  },
+  agents: {
+    relativeDir: ".opencode/agents",
+    fileExtension: ".md",
   },
 };
 
@@ -93,6 +102,10 @@ function createCapability(layout: ScopeLayout): PlatformCapability {
       ...capability.skills,
       relativeDir: layout.skillsDir,
     },
+    agents: {
+      ...capability.agents,
+      relativeDir: layout.agentsDir,
+    },
   };
 }
 
@@ -100,8 +113,10 @@ interface ScopeLayout {
   readonly entryFile: string;
   readonly commandsDir: string;
   readonly skillsDir: string;
+  readonly agentsDir: string;
   readonly displayCommandsDir: string;
   readonly displaySkillsDir: string;
+  readonly displayAgentsDir: string;
 }
 
 function getScopeLayout(scope: InstallScope): ScopeLayout {
@@ -110,8 +125,10 @@ function getScopeLayout(scope: InstallScope): ScopeLayout {
       entryFile: "AGENTS.md",
       commandsDir: "commands",
       skillsDir: "skills",
+      agentsDir: "agents",
       displayCommandsDir: "~/.config/opencode/commands",
       displaySkillsDir: "~/.config/opencode/skills",
+      displayAgentsDir: "~/.config/opencode/agents",
     };
   }
 
@@ -120,8 +137,10 @@ function getScopeLayout(scope: InstallScope): ScopeLayout {
       entryFile: "AGENTS.md",
       commandsDir: "commands",
       skillsDir: "skills",
+      agentsDir: "agents",
       displayCommandsDir: "commands",
       displaySkillsDir: "skills",
+      displayAgentsDir: "agents",
     };
   }
 
@@ -129,13 +148,15 @@ function getScopeLayout(scope: InstallScope): ScopeLayout {
     entryFile: templateFiles.agents,
     commandsDir: ".opencode/commands",
     skillsDir: ".opencode/skills",
+    agentsDir: ".opencode/agents",
     displayCommandsDir: ".opencode/commands",
     displaySkillsDir: ".opencode/skills",
+    displayAgentsDir: ".opencode/agents",
   };
 }
 
 function isSupportedAsset(asset: ToolkitAssetLike): boolean {
-  return asset.kind === "command" || asset.kind === "skill";
+  return asset.kind === "command" || asset.kind === "skill" || asset.kind === "agent";
 }
 
 function selectMatchedAssetsByKind(
@@ -164,6 +185,7 @@ function renderAgentsFile(
 ): string {
   const commandCount = assets.filter((asset) => asset.kind === "command").length;
   const skillCount = assets.filter((asset) => asset.kind === "skill").length;
+  const agentCount = assets.filter((asset) => asset.kind === "agent").length;
 
   return `# OpenCode 工作流入口
 
@@ -173,7 +195,7 @@ function renderAgentsFile(
 
 1. 给出统一任务开始方式
 2. 说明固定 workflow 的选路规则
-3. 指向 \`${layout.displayCommandsDir}\`、\`${layout.displaySkillsDir}\` 里的详细内容
+3. 指向 \`${layout.displayCommandsDir}\`、\`${layout.displaySkillsDir}\`、\`${layout.displayAgentsDir}\` 里的详细内容
 
 ## 核心规则
 
@@ -228,7 +250,8 @@ function renderAgentsFile(
 
 - commands：查看 \`${layout.displayCommandsDir}/zc-*.md\`
 - skills：查看 \`${layout.displaySkillsDir}/zc-*/SKILL.md\`
-- 如果入口页不足以判断，就先打开对应 command 或 skill 再继续
+- agents：查看 \`${layout.displayAgentsDir}/zc-*.md\`
+- 如果入口页不足以判断，就先打开对应 command、skill 或 agent 再继续
 
 ## 已安装能力
 
@@ -236,6 +259,7 @@ function renderAgentsFile(
 - 匹配到的资产：${assets.length}
 - commands：${commandCount} 个
 - skills：${skillCount} 个
+- agents：${agentCount} 个
 
 ${renderAssetList(assets)}
 `;
@@ -286,6 +310,19 @@ function renderSkillFile(options: {
   return `${renderYamlFrontmatter({
     name: options.name,
     description: options.description,
+  })}\n${options.body.trim()}\n`;
+}
+
+function renderMarkdownAgentFile(options: {
+  readonly name: string;
+  readonly description: string;
+  readonly body: string;
+  readonly tools?: readonly string[];
+}): string {
+  return `${renderYamlFrontmatter({
+    name: options.name,
+    description: options.description,
+    tools: options.tools,
   })}\n${options.body.trim()}\n`;
 }
 
@@ -344,6 +381,29 @@ function renderSkillArtifacts(
   });
 }
 
+function renderAgentArtifacts(
+  scope: InstallScope,
+  assets: readonly ToolkitAssetLike[],
+): readonly PlatformArtifact[] {
+  const layout = getScopeLayout(scope);
+
+  return assets.map((asset) => {
+    const slug = toNamespacedSlug(asset);
+    const assetTools =
+      "tools" in asset && Array.isArray(asset.tools) ? (asset.tools as readonly string[]) : undefined;
+
+    return {
+      path: `${layout.agentsDir}/${slug}.md`,
+      content: renderMarkdownAgentFile({
+        name: slug,
+        description: asset.summary ?? describeAsset(asset),
+        body: asset.body ?? `# ${describeAsset(asset)}\n`,
+        tools: assetTools,
+      }),
+    };
+  });
+}
+
 export function createOpenCodeGenerationPlan(
   manifest: ToolkitManifestLike,
   options: GenerationOptions = {},
@@ -356,6 +416,7 @@ export function createOpenCodeGenerationPlan(
   );
   const commandAssets = selectMatchedAssetsByKind(manifest, "command");
   const skillAssets = selectMatchedAssetsByKind(manifest, "skill");
+  const agentAssets = selectMatchedAssetsByKind(manifest, "agent");
   const manifestSource = options.manifestSource ?? manifest.source ?? "toolkit-manifest";
   const resolvedPackageName = options.packageName ?? packageName;
 
@@ -372,6 +433,7 @@ export function createOpenCodeGenerationPlan(
       },
       ...renderCommandArtifacts(scope, commandAssets),
       ...renderSkillArtifacts(scope, skillAssets),
+      ...renderAgentArtifacts(scope, agentAssets),
     ],
   }) as GenerationPlan;
 }

@@ -37,8 +37,8 @@ const manifest = {
       platforms: ["opencode"],
       name: "reviewer",
       title: "审查代理",
-      summary: "Should be ignored in v1",
-      body: "Ignore me.",
+      summary: "Review implementation quality",
+      body: "Review me.",
     },
   ],
 } as unknown as ToolkitManifestLike;
@@ -51,20 +51,31 @@ describe("@zmice/platform-opencode scaffold", () => {
     assert.equal(plan.packageName, packageName);
     assert.equal(plan.manifestSource, "toolkit-manifest");
     assert.equal(plan.capability?.namespace, capability.namespace);
+    assert.deepEqual(plan.capability?.surfaces, [
+      "entry-file",
+      "commands-dir",
+      "skills-dir",
+      "agents-dir",
+    ]);
+    assert.equal(plan.capability?.agents.relativeDir, ".opencode/agents");
     assert.deepEqual(plan.matchedAssets.map((asset) => asset.id), [
       "skill:sdd-tdd-workflow",
       "command:start",
+      "agent:reviewer",
     ]);
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
       "AGENTS.md",
       ".opencode/commands/zc-start.md",
       ".opencode/skills/zc-sdd-tdd-workflow/SKILL.md",
+      ".opencode/agents/zc-reviewer.md",
     ]);
     assert.ok(plan.artifacts[0]?.content.includes("OpenCode 工作流入口"));
     assert.ok(plan.artifacts[0]?.content.includes(".opencode/commands"));
+    assert.ok(plan.artifacts[0]?.content.includes(".opencode/agents"));
     assert.ok(plan.artifacts[1]?.content.includes('description: "Start command summary"'));
     assert.ok(!plan.artifacts[1]?.content.includes("\nname: "));
     assert.ok(plan.artifacts[2]?.content.includes('name: "zc-sdd-tdd-workflow"'));
+    assert.ok(plan.artifacts[3]?.content.includes('name: "zc-reviewer"'));
   });
 
   it("creates a project-scoped install plan with .opencode directories", () => {
@@ -77,6 +88,7 @@ describe("@zmice/platform-opencode scaffold", () => {
       "/tmp/opencode-project/AGENTS.md",
       "/tmp/opencode-project/.opencode/commands/zc-start.md",
       "/tmp/opencode-project/.opencode/skills/zc-sdd-tdd-workflow/SKILL.md",
+      "/tmp/opencode-project/.opencode/agents/zc-reviewer.md",
     ]);
   });
 
@@ -90,6 +102,7 @@ describe("@zmice/platform-opencode scaffold", () => {
       "/tmp/home/AGENTS.md",
       "/tmp/home/commands/zc-start.md",
       "/tmp/home/skills/zc-sdd-tdd-workflow/SKILL.md",
+      "/tmp/home/agents/zc-reviewer.md",
     ]);
   });
 
@@ -103,6 +116,7 @@ describe("@zmice/platform-opencode scaffold", () => {
       "/tmp/opencode-bundle/AGENTS.md",
       "/tmp/opencode-bundle/commands/zc-start.md",
       "/tmp/opencode-bundle/skills/zc-sdd-tdd-workflow/SKILL.md",
+      "/tmp/opencode-bundle/agents/zc-reviewer.md",
     ]);
   });
 });

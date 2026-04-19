@@ -29,7 +29,7 @@
 - 平台原生安装
   - Codex：`AGENTS.md` + `skills`
   - Claude Code：`CLAUDE.md` + `commands / agents`
-  - OpenCode：`AGENTS.md` + `commands / skills`
+  - OpenCode：`AGENTS.md` + `commands / skills / agents`
   - Qwen：`QWEN.md` + extension 目录
 - 上游治理
   - 记录、快照、比对、报告、导入提案

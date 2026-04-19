@@ -230,7 +230,7 @@ npm install -g @qwen-code/qwen-code@latest
 | --- | --- |
 | `codex` | `AGENTS.md`、`skills/zc-<command>/SKILL.md`、`skills/zc-<skill>/SKILL.md` |
 | `claude` | `CLAUDE.md`、`.claude/commands`、`.claude/agents` |
-| `opencode` | `AGENTS.md`、`.opencode/commands`、`.opencode/skills` |
+| `opencode` | `AGENTS.md`、`.opencode/commands`、`.opencode/skills`、`.opencode/agents` |
 | `qwen` | 用户级优先通过官方 `qwen extensions` CLI 管理 `zc-toolkit` 的发布态 extension bundle；扩展目录位于 `.qwen/extensions/zc-toolkit/`，其中包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/`、`skills/`、`agents/` |
 
 ### 官方默认位置矩阵
@@ -281,6 +281,7 @@ zc platform install codex --project
   - `<project>/AGENTS.md`
   - `<project>/.opencode/commands/zc-<command>.md`
   - `<project>/.opencode/skills/zc-<skill>/SKILL.md`
+  - `<project>/.opencode/agents/zc-<agent>.md`
 - `qwen`
   - `<project>/.qwen/extensions/zc-toolkit/QWEN.md`
   - `<project>/.qwen/extensions/zc-toolkit/qwen-extension.json`
@@ -319,6 +320,7 @@ zc platform where qwen --global --json
   - 默认安装到 `~/.config/opencode/AGENTS.md`
   - 同时安装 `~/.config/opencode/commands/zc-<command>.md`
   - 同时安装 `~/.config/opencode/skills/zc-<skill>/SKILL.md`
+  - 同时安装 `~/.config/opencode/agents/zc-<agent>.md`
 - `qwen --global`
   - 默认优先通过官方 `qwen extensions` CLI 管理 `~/.qwen/extensions/zc-toolkit/`
   - CLI 会先生成发布态 bundle：
