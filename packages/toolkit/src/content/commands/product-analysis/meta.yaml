@@ -1,0 +1,33 @@
+kind: command
+name: product-analysis
+title: 产品分析
+description: 将模糊需求收敛为可落地的执行方案，先明确价值、范围、验收标准，再决定是否进入完整交付。
+tier: core
+audience: default
+stability: stable
+suggests:
+  - command:idea
+  - agent:product-owner
+  - skill:brainstorming-and-design
+  - command:spec
+  - command:plan-review
+  - command:task-plan
+platforms:
+  - qwen
+  - codex
+  - qoder
+workflow_family: lifecycle
+workflow_role: workflow-entry
+routing_workflows:
+  - product-analysis
+task_types:
+  - feature
+  - investigation
+platform_exposure:
+  codex: prompt-entry
+  qwen: command-style
+  qoder: command-style
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库整理的产品分析入口，用于承接 start 的 product-analysis workflow，并把模糊需求压成可执行方案。

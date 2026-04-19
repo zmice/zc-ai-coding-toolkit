@@ -6,6 +6,7 @@ tier: core
 audience: default
 stability: stable
 suggests:
+  - command:product-analysis
   - agent:product-owner
   - skill:brainstorming-and-design
   - command:sdd-tdd
@@ -49,4 +50,4 @@ platform_exposure:
 source:
   upstream: toolkit-original
   strategy: curated
-  notes: 本仓库新增的统一任务入口，用于 intake、任务判型，并在 product-analysis、full-delivery、bugfix、review-closure、docs-release、investigation 六条固定 workflow 中选路。
+  notes: 本仓库新增的统一任务入口，用于 intake、任务判型，并在 product-analysis、full-delivery、bugfix、review-closure、docs-release、investigation 六条固定 workflow 中选路；其中 product-analysis 由独立 workflow-entry 承接。

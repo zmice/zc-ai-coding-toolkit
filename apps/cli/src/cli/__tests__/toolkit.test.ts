@@ -86,6 +86,7 @@ describe("toolkit CLI", () => {
     expect(result.stdout).toContain("工作流家族：lifecycle");
     expect(result.stdout).toContain("工作流角色：stage-entry");
     expect(result.stdout).toContain("固定工作流：full-delivery, bugfix");
+    expect(result.stdout).toContain("工作流入口：full-delivery=command:sdd-tdd, bugfix=command:debug");
     expect(result.stdout).toContain("推荐起始入口：command:start");
     expect(result.stdout).toContain("skill:incremental-implementation");
     expect(result.stdout).toContain("skill:test-driven-development");
@@ -103,5 +104,28 @@ describe("toolkit CLI", () => {
     expect(result.stdout).toContain(
       "固定工作流：product-analysis, full-delivery, bugfix, review-closure, docs-release, investigation"
     );
+  });
+
+  it("toolkit show prints workflow-entry metadata for product-analysis", async () => {
+    const result = await runCli(["toolkit", "show", "command:product-analysis"]);
+
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("ID：command:product-analysis");
+    expect(result.stdout).toContain("工作流角色：workflow-entry");
+    expect(result.stdout).toContain("固定工作流：product-analysis");
+  });
+
+  it("toolkit recommend returns product-analysis as its own workflow entry", async () => {
+    const result = await runCli(["toolkit", "recommend", "product-analysis"]);
+
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("推荐目标：command:product-analysis");
+    expect(result.stdout).toContain("工作流角色：workflow-entry");
+    expect(result.stdout).toContain("固定工作流：product-analysis");
+    expect(result.stdout).toContain("工作流入口：product-analysis=command:product-analysis");
+    expect(result.stdout).toContain("推荐起始入口：command:product-analysis");
+    expect(result.stdout).toContain("command:idea");
+    expect(result.stdout).toContain("command:spec");
+    expect(result.stdout).toContain("command:task-plan");
   });
 });

@@ -37,6 +37,10 @@ describe("createToolkitManifest", () => {
       "intake"
     );
     assert.equal(
+      getToolkitAssetById(manifest, "command:product-analysis")?.meta.workflowRole,
+      "workflow-entry"
+    );
+    assert.equal(
       getToolkitAssetById(manifest, "command:sdd-tdd")?.meta.workflowRole,
       "workflow-entry"
     );
@@ -63,6 +67,14 @@ describe("createToolkitManifest", () => {
       getToolkitAssetById(manifest, "command:quality-review")?.meta.routingWorkflows,
       ["full-delivery", "bugfix", "review-closure"]
     );
+    assert.deepEqual(
+      getToolkitAssetById(manifest, "command:product-analysis")?.meta.routingWorkflows,
+      ["product-analysis"]
+    );
+    assert.deepEqual(
+      getToolkitAssetById(manifest, "command:product-analysis")?.meta.taskTypes,
+      ["feature", "investigation"]
+    );
     assert.equal(
       getToolkitAssetById(manifest, "command:spec")?.meta.source?.upstream,
       "agent-skills"
@@ -79,6 +91,15 @@ describe("createToolkitManifest", () => {
     assert.ok(Boolean(getToolkitAssetById(manifest, "skill:branch-finish-and-cleanup")));
     assert.ok(Boolean(getToolkitAssetById(manifest, "skill:release-documentation-sync")));
     assert.ok(Boolean(getToolkitAssetById(manifest, "skill:developer-experience-audit")));
+    assert.deepEqual(manifest.byRelationship.requires["command:product-analysis"], []);
+    assert.deepEqual(manifest.byRelationship.suggests["command:product-analysis"], [
+      "command:idea",
+      "agent:product-owner",
+      "skill:brainstorming-and-design",
+      "command:spec",
+      "command:plan-review",
+      "command:task-plan"
+    ]);
     assert.deepEqual(manifest.byRelationship.requires["command:build"], [
       "skill:incremental-implementation",
       "skill:test-driven-development"
@@ -118,6 +139,7 @@ describe("loadToolkitManifest", () => {
     assert.ok(Boolean(manifest.byId["skill:release-documentation-sync"]));
     assert.ok(Boolean(manifest.byId["skill:developer-experience-audit"]));
     assert.ok(Boolean(manifest.byId["command:start"]));
+    assert.ok(Boolean(manifest.byId["command:product-analysis"]));
     assert.ok(Boolean(manifest.byId["command:spec"]));
     assert.ok(Boolean(manifest.byId["agent:architect"]));
     assert.equal(manifest.byId["skill:sdd-tdd-workflow"]?.meta.tier, "core");

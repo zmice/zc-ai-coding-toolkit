@@ -69,11 +69,14 @@ node ../../apps/cli/dist/cli/index.js toolkit recommend <query>
 统一任务开始入口资产为：
 
 - `command:start`
+- `command:product-analysis`
 
 需要注意：
 
 - `command:start` 是 `toolkit` 内容层里的 canonical command
 - 它表示“统一任务开始入口”这条内容语义
+- `command:product-analysis` 是 `product-analysis` 固定 workflow 的默认入口
+- `command:sdd-tdd` 只负责 `full-delivery` 的 workflow-entry
 - 它**不是**当前已经实现的 `zc start` CLI 子命令
 - 当前阶段仍通过 `zc toolkit show/recommend/search` 消费这层路由信息
 

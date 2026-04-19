@@ -57,11 +57,48 @@ function buildRoutingWorkflows(asset: ToolkitAssetUnit): readonly ToolkitWorkflo
   return asset.meta.routingWorkflows ?? [];
 }
 
-function buildRouteHint(asset: ToolkitAssetUnit): ToolkitRouteHint | undefined {
+function pickDefaultWorkflowEntry(
+  manifest: ToolkitManifest,
+  workflow: ToolkitWorkflowRoute
+): string | undefined {
+  const candidatesByWorkflow: Record<ToolkitWorkflowRoute, readonly string[]> = {
+    "product-analysis": ["command:product-analysis", "command:idea", "command:spec"],
+    "full-delivery": ["command:sdd-tdd", "command:spec", "command:task-plan", "command:build"],
+    bugfix: ["command:debug", "command:build"],
+    "review-closure": ["command:quality-review"],
+    "docs-release": ["command:doc", "command:ship"],
+    investigation: ["command:onboard", "command:ctx-health", "command:idea"]
+  };
+
+  return candidatesByWorkflow[workflow].find((assetId) => Boolean(manifest.byId[assetId]));
+}
+
+function buildWorkflowEntries(
+  manifest: ToolkitManifest,
+  workflows: readonly ToolkitWorkflowRoute[]
+): ToolkitRouteHint["workflowEntries"] {
+  const workflowEntries: Partial<Record<ToolkitWorkflowRoute, string>> = {};
+
+  for (const workflow of workflows) {
+    const entry = pickDefaultWorkflowEntry(manifest, workflow);
+
+    if (entry) {
+      workflowEntries[workflow] = entry;
+    }
+  }
+
+  return workflowEntries;
+}
+
+function buildRouteHint(
+  manifest: ToolkitManifest,
+  asset: ToolkitAssetUnit
+): ToolkitRouteHint | undefined {
   if (!asset.meta.workflowFamily || !asset.meta.workflowRole) {
     return undefined;
   }
 
+  const workflows = buildRoutingWorkflows(asset);
   const next = [
     ...(asset.meta.requires ?? []).filter((target) => target.startsWith("command:")),
     ...(asset.meta.suggests ?? []).filter((target) => target.startsWith("command:"))
@@ -70,7 +107,8 @@ function buildRouteHint(asset: ToolkitAssetUnit): ToolkitRouteHint | undefined {
   return {
     family: asset.meta.workflowFamily,
     role: asset.meta.workflowRole,
-    workflows: buildRoutingWorkflows(asset),
+    workflows,
+    workflowEntries: buildWorkflowEntries(manifest, workflows),
     taskTypes: asset.meta.taskTypes ?? [],
     next,
     requiresFullLifecycle: asset.meta.workflowFamily === "lifecycle" || asset.id === "command:sdd-tdd"
@@ -101,6 +139,17 @@ function buildRecommendedEntry(
   }
 
   if (route.role === "stage-entry") {
+    if (route.workflows.length === 1) {
+      const defaultEntry = route.workflowEntries[route.workflows[0]];
+
+      if (defaultEntry && defaultEntry !== target.id) {
+        return {
+          commandId: defaultEntry,
+          reason: "该资产属于固定 workflow 的阶段节点，建议先从该 workflow 的默认入口开始。"
+        };
+      }
+    }
+
     if (route.family === "lifecycle") {
       return {
         commandId: "command:start",
@@ -136,7 +185,7 @@ export function recommendToolkitAssets(
   const suggested = (target.meta.suggests ?? [])
     .map((assetId) => manifest.byId[assetId])
     .filter(Boolean);
-  const route = buildRouteHint(target);
+  const route = buildRouteHint(manifest, target);
   const entry = buildRecommendedEntry(manifest, target, route);
 
   return {
@@ -149,9 +198,10 @@ export function recommendToolkitAssets(
 }
 
 export function getToolkitRouteHint(
+  manifest: ToolkitManifest,
   asset: ToolkitAssetUnit
 ): ToolkitRouteHint | undefined {
-  return buildRouteHint(asset);
+  return buildRouteHint(manifest, asset);
 }
 
 export function formatToolkitTaskTypes(taskTypes: readonly ToolkitTaskType[]): string {

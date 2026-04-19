@@ -231,9 +231,9 @@
 
 默认入口：
 
-- `idea`
+- `command:product-analysis`
 
-使用现有资产：
+内部接力：
 
 - `idea`
 - `product-owner`
@@ -527,7 +527,7 @@ platform_exposure:
 
 - `product-analysis`
   - 需求模糊、范围未收敛、需要形成可执行方案
-  - 默认入口：`idea`
+  - 默认入口：`command:product-analysis`
 - `full-delivery`
   - 要进入完整交付门控
   - 默认入口：`sdd-tdd`
@@ -549,6 +549,7 @@ platform_exposure:
 同一条 workflow 内，仍可以按成熟度切入更具体的阶段：
 
 - `product-analysis`
+  - 主入口：`product-analysis`
   - 模糊：`idea`
   - 方案已成形：`spec`
   - 已有规格待评审：`plan-review`

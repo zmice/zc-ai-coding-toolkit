@@ -147,6 +147,8 @@ zc platform where qwen --global --json
 
 workflow entry routing 的当前边界：
 - `command:start` 是 `toolkit` 内容入口，不是 CLI 子命令
+- `command:product-analysis` 是 `product-analysis` 固定 workflow 的默认入口
+- `command:sdd-tdd` 只属于 `full-delivery`，不再承担统一任务分诊
 - Codex 侧按 `prompt-entry` / 自然语言入口理解
 - Qwen / Qoder 侧当前只按 `command-style` 暴露理解，不写成已存在的原生命令机制
 

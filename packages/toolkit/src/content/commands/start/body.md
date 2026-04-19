@@ -18,17 +18,9 @@
 - 目标用户、价值、范围或验收标准不稳定
 - 需要先把想法压成可执行方案
 
-使用现有资产：
-
-- `idea`
-- `product-owner`
-- `brainstorming-and-design`
-- `spec`
-- `plan-review`
-
 默认入口：
 
-- `idea`
+- `product-analysis`
 
 ### 2. `full-delivery`
 
@@ -106,7 +98,8 @@
 ## 在 workflow 内部的切入点
 
 - `product-analysis`
-  - 模糊想法：`idea`
+  - 主入口：`product-analysis`
+  - 需要先发散想法：`idea`
   - 需要产品判断：`product-owner`
   - 需要方案探索：`brainstorming-and-design`
   - 需要沉淀规格：`spec`

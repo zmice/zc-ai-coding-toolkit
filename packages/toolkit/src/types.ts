@@ -132,6 +132,7 @@ export interface ToolkitRouteHint {
   family: ToolkitWorkflowFamily;
   role: ToolkitWorkflowRole;
   workflows: readonly ToolkitWorkflowRoute[];
+  workflowEntries: Readonly<Partial<Record<ToolkitWorkflowRoute, string>>>;
   taskTypes: readonly ToolkitTaskType[];
   next: readonly string[];
   requiresFullLifecycle: boolean;

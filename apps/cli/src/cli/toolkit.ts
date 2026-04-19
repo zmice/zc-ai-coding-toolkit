@@ -62,6 +62,7 @@ interface ToolkitModule {
       family: string;
       role: string;
       workflows: readonly string[];
+      workflowEntries: Readonly<Partial<Record<string, string>>>;
       taskTypes: readonly string[];
       next: readonly string[];
       requiresFullLifecycle: boolean;
@@ -158,6 +159,11 @@ function printAssetList(title: string, assets: readonly ToolkitAssetLike[]): voi
       : "";
     console.log(`- ${asset.id} [${asset.meta.kind}] ${asset.meta.title}${routeSummary}`);
   }
+}
+
+function formatWorkflowEntries(entries: Readonly<Partial<Record<string, string>>>): string {
+  const formatted = Object.entries(entries).map(([workflow, commandId]) => `${workflow}=${commandId}`);
+  return formatted.length > 0 ? formatted.join(", ") : "-";
 }
 
 export function registerToolkitCommand(program: Command): void {
@@ -291,6 +297,7 @@ export function registerToolkitCommand(program: Command): void {
         console.log(`- 工作流家族：${recommendation.route.family}`);
         console.log(`- 工作流角色：${recommendation.route.role}`);
         console.log(`- 固定工作流：${recommendation.route.workflows.join(", ") || "-"}`);
+        console.log(`- 工作流入口：${formatWorkflowEntries(recommendation.route.workflowEntries)}`);
         console.log(`- 任务类型：${recommendation.route.taskTypes.join(", ") || "-"}`);
         console.log(`- 下一跳：${recommendation.route.next.join(", ") || "-"}`);
         console.log(`- 需要完整生命周期：${recommendation.route.requiresFullLifecycle ? "是" : "否"}`);

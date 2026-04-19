@@ -52,6 +52,7 @@
   - `review-closure`
   - `docs-release`
   - `investigation`
+- `command:product-analysis` 是 `product-analysis` 的独立 workflow-entry
 - `sdd-tdd` 只是 `full-delivery` 的默认 workflow-entry，不是统一分诊入口
 - Codex 按 `prompt-entry` / 自然语言入口理解
 - Qwen / Qoder 当前只按 `command-style` 文案理解，不假定真实原生命令
