@@ -1,5 +1,10 @@
 # zc AI Coding Toolkit
 
+[![npm version](https://img.shields.io/npm/v/@zmice/zc)](https://www.npmjs.com/package/@zmice/zc)
+[![license](https://img.shields.io/github/license/zmice/zc-ai-coding-toolkit)](LICENSE)
+[![qwen extension](https://img.shields.io/badge/Qwen-extension_repo-blue)](https://github.com/zmice/zc-qwen-extension)
+[![platforms](https://img.shields.io/badge/platforms-Codex%20%7C%20Claude%20%7C%20OpenCode%20%7C%20Qwen-2ea44f)](#支持的平台)
+
 面向 AI 编码工作流的开源工具包。
 
 它把一套可治理的 `commands / skills / agents` 内容系统、统一入口 CLI `zc`、以及不同 AI 平台的原生安装适配收在一个仓库里。目标不是堆 prompt，而是把 **任务入口、固定 workflow、平台安装、更新与状态检查** 做成可维护、可发布、可扩展的产品。
@@ -50,12 +55,12 @@ zc platform status codex --global --json
 
 ## 支持的平台
 
-| 平台 | 当前安装形态 | 统一入口适配 |
-| --- | --- | --- |
-| Codex | `AGENTS.md` + `skills/` | `zc:start -> $zc-start` |
-| Claude Code | `CLAUDE.md` + `commands/` + `agents/` | `zc:start -> /zc-start` |
-| OpenCode | `AGENTS.md` + `commands/` + `skills/` + `agents/` | `zc:start -> /zc-start` |
-| Qwen | `QWEN.md` + extension 目录 | `zc:start -> zc:start` |
+| 平台 | 入口文件 | Commands | Skills | Agents | Extension / Plugin | 统一入口适配 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Codex | `AGENTS.md` | - | Yes | - | - | `zc:start -> $zc-start` |
+| Claude Code | `CLAUDE.md` | Yes | - | Yes | - | `zc:start -> /zc-start` |
+| OpenCode | `AGENTS.md` | Yes | Yes | Yes | - | `zc:start -> /zc-start` |
+| Qwen | `QWEN.md` | Yes | Yes | Yes | Yes | `zc:start -> zc:start` |
 
 补充说明：
 
@@ -63,6 +68,7 @@ zc platform status codex --global --json
 - Claude Code 和 OpenCode 通过 `/zc-*` 命令承接统一语义
 - Qwen 通过 `zc:*` namespaced command 承接统一语义
 - 这样做是为了避免和平台内置命令、社区插件或未来扩展冲突
+- 更细的官方能力边界见 [docs/architecture/platform-capability-matrix.md](docs/architecture/platform-capability-matrix.md)
 
 ## 内容模型
 

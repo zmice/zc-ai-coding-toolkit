@@ -1,15 +1,19 @@
 {
   "name": "@zmice/zc",
   "version": "0.2.2",
-  "description": "Operator/runtime CLI for the zc AI Coding Toolkit workspace",
+  "description": "Unified CLI for installing, updating, and querying zc AI coding workflows across Codex, Claude Code, OpenCode, and Qwen",
   "keywords": [
     "cli",
-    "orchestration",
-    "tmux",
-    "team",
     "ai",
     "codex",
-    "multi-agent"
+    "claude-code",
+    "opencode",
+    "qwen",
+    "workflow",
+    "agents",
+    "skills",
+    "commands",
+    "developer-tools"
   ],
   "license": "MIT",
   "type": "module",

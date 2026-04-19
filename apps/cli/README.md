@@ -2,11 +2,31 @@
 
 `@zmice/zc` 是 zc AI Coding Toolkit 的统一入口 CLI，也是当前仓库唯一对外发布的 npm 包。
 
-如果你只是想安装和更新平台内容，先看：
+如果你是从 npm 页面进入，先记住这件事：
+
+- `zc` 不是单个平台插件
+- 它是一个统一入口安装器
+- 用来给 Codex、Claude Code、OpenCode、Qwen 安装、更新、诊断和导出结构化 AI 编码内容
+
+## 最短路径
+
+```bash
+npm install -g @zmice/zc
+zc platform install codex --global
+zc platform status codex --global --json
+```
+
+如果你想装到别的平台，把 `codex` 换成：
+
+- `claude`
+- `opencode`
+- `qwen`
+
+如果你只是想安装和更新平台内容，优先看：
 
 - `安装`
-- `命名空间适配`
 - `平台安装模型`
+- `命名空间适配`
 - `高频用法`
 
 它负责：
@@ -25,6 +45,21 @@
 ```bash
 pnpm upstream -- <subcommand>
 ```
+
+## 支持的平台
+
+| 平台 | 当前安装形态 | 统一入口适配 |
+| --- | --- | --- |
+| Codex | `AGENTS.md` + `skills/` | `zc:start -> $zc-start` |
+| Claude Code | `CLAUDE.md` + `commands/` + `agents/` | `zc:start -> /zc-start` |
+| OpenCode | `AGENTS.md` + `commands/` + `skills/` + `agents/` | `zc:start -> /zc-start` |
+| Qwen | `QWEN.md` + extension 目录 | `zc:start -> zc:start` |
+
+用户级 Qwen 安装默认会优先走官方扩展链：
+
+- 安装源：`https://github.com/zmice/zc-qwen-extension.git`
+- 安装方式：`qwen extensions install`
+- 更新方式：`qwen extensions update zc-toolkit`
 
 ## 参考边界
 
