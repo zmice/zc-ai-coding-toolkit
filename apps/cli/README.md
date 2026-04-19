@@ -19,21 +19,22 @@
 pnpm upstream -- <subcommand>
 ```
 
-## 上游维护边界
+## 参考边界
 
-`zc` 不直接提供 upstream 治理命令，但它的命令面和安装行为会持续对齐平台官方能力。
+`zc` 不直接提供 upstream 治理命令，但它的命令面和安装行为会持续对齐平台官方能力与成熟社区实践。
 
-当前 CLI 维护主要跟踪三类上游：
+CLI 侧当前重点参考：
 
-- Codex 官方文档与 `AGENTS.md` / skills 机制
-- Claude Code 官方 memory、slash commands、sub-agents 文档
-- OpenCode 官方 rules、commands、skills、agents 文档
-- Qwen 官方 extensions、skills、`qwen extensions` 命令文档
+- `oh-my-codex`
+- Codex 官方 `AGENTS.md` / skills 文档
+- Claude Code 官方 memory / slash commands / sub-agents 文档
+- OpenCode 官方 rules / commands / skills / agents 文档
+- Qwen 官方 extensions / skills / `qwen extensions` 文档
 
 也就是说：
 
 - 内容参考上游的治理在 `references/`
-- 平台行为与安装语义的维护体现在 `apps/cli` 和 `packages/platform-*`
+- CLI 只吸收与命令体验、安装语义、平台适配直接相关的部分
 
 仓库级 upstream 治理由下面入口承担：
 
@@ -171,6 +172,20 @@ zc platform install claude --global
 zc platform install opencode --global
 zc platform install qwen --global
 zc platform status qwen --global --json
+```
+
+如果你主要是把 `zc` 当安装器使用，最常见的循环是：
+
+```bash
+# 看平台默认安装位置
+zc platform where codex --global --json
+
+# 安装或更新平台内容
+zc platform install codex --global
+zc platform update codex --global --plan --json
+
+# 检查当前状态
+zc platform status codex --global --json
 ```
 
 ## 设计边界

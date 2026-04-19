@@ -34,6 +34,44 @@
 - 上游治理
   - 记录、快照、比对、报告、导入提案
 
+## 内容包含什么
+
+当前 `toolkit` 主要维护三类内容：
+
+- `commands`
+  - 统一任务入口和阶段入口，例如：
+    - `start`
+    - `product-analysis`
+    - `spec`
+    - `task-plan`
+    - `build`
+    - `quality-review`
+    - `verify`
+- `skills`
+  - 完整 workflow 和专项方法，例如：
+    - `sdd-tdd-workflow`
+    - `spec-driven-development`
+    - `debugging-and-error-recovery`
+    - `documentation-and-adrs`
+    - `shipping-and-launch`
+- `agents`
+  - 常见协作角色，例如：
+    - `architect`
+    - `product-owner`
+    - `code-reviewer`
+    - `test-engineer`
+
+当前内容组织方式以固定 workflow 为主：
+
+- `product-analysis`
+- `full-delivery`
+- `bugfix`
+- `review-closure`
+- `docs-release`
+- `investigation`
+
+`start` 负责先做任务判型，再把任务引导到对应 workflow。
+
 ## 安装
 
 ### 普通使用
@@ -127,47 +165,61 @@ zc platform status qwen --global --json
 
 ## 常用工作流
 
-### 调整 toolkit 内容
-
-内容修改默认发生在：
-
-- `packages/toolkit/src/content/`
-
-常用命令：
+### 1. 查询和选择内容
 
 ```bash
-pnpm --dir packages/toolkit test
 zc toolkit lint --json
-zc toolkit show <query>
-zc toolkit search <keyword>
-zc toolkit recommend <query>
+zc toolkit search review
+zc toolkit show command:start
+zc toolkit recommend build
 ```
 
-### 生成或安装平台产物
+### 2. 给 AI 平台安装内容
 
 ```bash
-zc platform generate qwen --plan --json
 zc platform install codex --global
 zc platform install claude --global
 zc platform install opencode --global
 zc platform install qwen --global
-zc platform status codex --global --json
-zc platform update codex --global --plan --json
 ```
 
-### 审阅上游变化
+### 3. 查看安装位置和状态
 
 ```bash
-pnpm upstream -- list
-pnpm upstream -- diff agent-skills
-pnpm upstream -- report all --format md
+zc platform where codex --global --json
+zc platform where qwen --global --json
+zc platform status codex --global --json
+zc platform status qwen --global --json
 ```
 
-## 上游参考与维护
+### 4. 预演更新或重装
 
-这个仓库不是从零凭空设计出来的。内容层和 workflow 组织方式，会持续参考一组公开上游项目，再通过人工审阅吸收到 `toolkit`。
+```bash
+zc platform update codex --global --plan --json
+zc platform install claude --global --plan --json
+zc platform install opencode --global --plan --json
+zc platform install qwen --global --plan --json
+```
 
-当前登记的内容参考上游包括：
+### 5. 仓库开发者维护内容
+
+内容源码默认位于：
+
+- `packages/toolkit/src/content/`
+
+开发者常用命令：
+
+```bash
+pnpm --dir packages/toolkit test
+pnpm --dir apps/cli test
+pnpm verify
+```
+
+## 参考项目
+
+这个仓库会参考公开项目和官方文档，但不会直接镜像或自动覆盖内容。
+
+主要内容参考：
 
 - [`addyosmani/agent-skills`](https://github.com/addyosmani/agent-skills)
 - [`obra/superpowers`](https://github.com/obra/superpowers)
@@ -175,33 +227,15 @@ pnpm upstream -- report all --format md
 - [`garrytan/gstack`](https://github.com/garrytan/gstack)
 - [`multica-ai/andrej-karpathy-skills`](https://github.com/multica-ai/andrej-karpathy-skills)
 
-对应治理入口：
+CLI 和平台安装语义也参考了现成项目与官方文档：
+
+- [`Yeachan-Heo/oh-my-codex`](https://github.com/Yeachan-Heo/oh-my-codex)
+- Codex / Claude Code / OpenCode / Qwen 官方文档
+
+如需查看治理记录和上游登记清单：
 
 - [references/upstreams.yaml](references/upstreams.yaml)
 - [references/README.md](references/README.md)
-
-维护规则：
-
-- upstream 只提供参考，不直接覆盖本仓库内容
-- 所有吸收都先进入 `references`
-- 经过人工审阅后，才会落到 `packages/toolkit`
-
-### CLI 的上游维护边界
-
-`zc` 本身不承载 upstream 治理命令，但它的安装行为和平台适配会持续对齐官方平台文档。
-
-当前重点跟踪：
-
-- Codex 官方文档
-- Claude Code 官方 memory / slash commands / agents 文档
-- OpenCode 官方 rules / commands / skills / agents 文档
-- Qwen 官方扩展、skills、extensions CLI 文档
-
-相关入口说明见：
-
-- [docs/usage-guide.md](docs/usage-guide.md)
-- [docs/architecture/platform-capability-matrix.md](docs/architecture/platform-capability-matrix.md)
-- [apps/cli/README.md](apps/cli/README.md)
 
 ## 文档入口
 
