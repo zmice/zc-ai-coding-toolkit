@@ -3,10 +3,14 @@
 `references/` 是仓库的上游治理层，用来回答三件事：
 
 - 内容从哪里来
-- 观察到了什么变化
+- 上游发生了什么变化
 - 哪些变化已经被人工审阅
 
-它不是 runtime 输入，也不是 `zc` 的产品能力。
+它不是：
+
+- runtime 输入
+- `zc` 的产品命令面
+- 内容事实源
 
 ## 目录结构
 
@@ -33,4 +37,9 @@ pnpm upstream -- import agent-skills --dry-run
 
 - 先把变化记录到 `references`，再决定是否吸收到 `packages/toolkit`
 - `notes` 可以修改，`snapshots` 只追加不改写
-- 对 `toolkit`、平台产物或发布面有影响的变化必须走人工审阅
+- 影响 `toolkit`、平台产物或发布面的变化必须走人工审阅
+
+## 进一步阅读
+
+- [../docs/architecture/upstream-automation.md](../docs/architecture/upstream-automation.md)
+- [../docs/architecture/toolkit-naming-and-source-identity.md](../docs/architecture/toolkit-naming-and-source-identity.md)
