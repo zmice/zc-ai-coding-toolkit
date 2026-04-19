@@ -90,6 +90,13 @@ npm install -g @zmice/zc@latest
 - workflow 角色
 - 推荐起始入口
 
+当前没有这些 CLI 子命令：
+- `zc start`
+- `zc spec`
+- `zc build`
+
+这些名称在当前阶段仍然属于 `toolkit` 内容层里的 canonical command，用于路由、推荐和平台文案，不是 `zc` 已经实现的直接子命令。
+
 ### Platform
 
 - `zc platform generate <qwen|codex|qoder>`
@@ -137,6 +144,11 @@ zc platform where qwen --global --json
 - `zc` 不承载仓库内 upstream 治理命令
 - `zc` 的公开命令面只保留实际产品能力，不保留历史重复入口
 - 公开发布时只发布 `@zmice/zc`；内部 `toolkit/platform-*` 能力会随 `zc` 一起打包
+
+workflow entry routing 的当前边界：
+- `command:start` 是 `toolkit` 内容入口，不是 CLI 子命令
+- Codex 侧按 `prompt-entry` / 自然语言入口理解
+- Qwen / Qoder 侧当前只按 `command-style` 暴露理解，不写成已存在的原生命令机制
 
 ## 开发者入口
 

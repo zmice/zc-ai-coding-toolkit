@@ -38,15 +38,16 @@
 - 明确区分 feature / bugfix / review / docs / release / investigation
 - 明确“先判型，再选流程”
 - 不假定所有平台都存在同名原生命令
+- 不把它写成当前已实现的 `zc start`
 
 ### Task 1.2 扩展 command/skill 元数据
 
 在 `ToolkitAssetMeta` 中新增 workflow 路由字段：
 
-- `workflow.family`
-- `workflow.taskTypes`
-- `workflow.role`
-- `workflow.platformExposure`
+- `workflow_family`
+- `workflow_role`
+- `task_types`
+- `platform_exposure`
 
 同时更新：
 
@@ -76,6 +77,7 @@
 - 明确 workflow family
 - 明确 task type
 - 明确平台暴露方式
+- 明确它们服务于内容路由，而不是声明对应 CLI 已实现
 
 ## Wave 2：推荐与关系图增强（可并行）
 
@@ -117,7 +119,7 @@
 
 - 把 canonical command 与 platform exposure 的两层规则写进长期文档
 - 明确 Codex 是自然语言入口 / prompt-entry，不是 slash command
-- 明确 Qwen / Qoder 当前只是命令式入口文案，不承诺真实触发器
+- 明确 Qwen / Qoder 当前只是 `command-style` 入口文案，不承诺真实触发器或原生命令
 
 涉及：
 
@@ -182,3 +184,6 @@
    - canonical command
    - platform exposure
 5. `pnpm verify` 继续通过
+6. 文档明确：
+   - `command:start` 是 toolkit 内容入口
+   - 当前没有 `zc start` CLI

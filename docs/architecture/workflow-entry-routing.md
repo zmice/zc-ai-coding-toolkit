@@ -170,7 +170,9 @@
 注意：
 
 - 在 `toolkit` 中它可以叫 `command:start`
-- 但在任何平台上，都不应先假定存在同名原生命令
+- 它是内容模型里的 canonical command，不是已实现的 CLI 子命令
+- 当前阶段没有 `zc start`
+- 在任何平台上，都不应先假定存在同名原生命令
 - Codex 侧更合理的暴露方式是：
   - 在 `AGENTS.md` 中把它呈现为“统一任务开始方式”
   - 附自然语言触发模板
@@ -380,6 +382,7 @@
 
 - 存在同名平台原生命令
 - 已经存在统一的 `zc:*` 触发器
+- 已经存在真正的 slash command 或内置命令机制
 
 ### Codex
 
@@ -400,6 +403,7 @@ Codex 不能直接套用 slash command 心智。
 3. `start` 在 Codex 上应被呈现为：
    - “统一任务开始方式”
    - 而不是“Codex 有 `/start` 命令”
+   - 也不是“Codex 已实现 `$zc-start` 之类的技能触发名”
 
 4. 文案必须明确区分：
    - canonical command 名称
@@ -432,29 +436,19 @@ Codex 不能直接套用 slash command 心智。
 建议新增字段：
 
 ```yaml
-workflow:
-  family: intake | lifecycle | specialized | support
-  task_types:
-    - feature
-    - bugfix
-    - review
-    - docs
-    - release
-    - investigation
-  entry_stage:
-    - define
-    - plan
-    - build
-    - review
-    - release
-  default_when:
-    - new non-trivial feature
-  avoid_when:
-    - docs-only tweak
-  platform_exposure:
-    codex: prompt-entry
-    qwen: command-style
-    qoder: command-style
+workflow_family: intake | lifecycle | specialized | support
+workflow_role: intake-router | workflow-entry | stage-entry | specialized-entry | guardrail | support
+task_types:
+  - feature
+  - bugfix
+  - review
+  - docs
+  - release
+  - investigation
+platform_exposure:
+  codex: prompt-entry
+  qwen: command-style
+  qoder: command-style
 ```
 
 这层字段的作用不是给平台展示，而是为 `start`、`recommend` 和后续 CLI 路由提供结构化依据。
@@ -467,14 +461,13 @@ workflow:
 
 ## CLI / 产品面建议
 
-后续如果进入 CLI 实现阶段，可以考虑提供统一入口，例如：
+后续如果进入 CLI 实现阶段，可以考虑提供一个统一任务入口，用来接住：
 
-```bash
-zc start "实现用户登录"
-zc start "修复导出重复数据问题"
-zc start "审查最近的改动"
-zc start "补齐发布说明和升级文档"
-```
+- 新功能 / 新项目
+- Bug / 异常行为
+- 审查 / 收尾
+- 文档 / 发布
+- 调研 / 上下文修复
 
 但这不是当前阶段的交付目标。当前阶段只要求：
 
@@ -514,7 +507,11 @@ zc start "补齐发布说明和升级文档"
 
 - 新增 `command:start`
 - 新增 workflow 路由规范
-- 为核心 commands 补 `workflow.*` 元数据
+- 为核心 commands 补：
+  - `workflow_family`
+  - `workflow_role`
+  - `task_types`
+  - `platform_exposure`
 
 ### Phase 2
 
@@ -527,7 +524,7 @@ zc start "补齐发布说明和升级文档"
 
 再考虑 CLI 实现：
 
-- `zc start`
+- 统一任务入口 CLI（例如 `zc start`）
 - 更强的 `toolkit recommend`
 
 ## 不做的事

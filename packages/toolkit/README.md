@@ -70,11 +70,28 @@ node ../../apps/cli/dist/cli/index.js toolkit recommend <query>
 
 - `command:start`
 
+需要注意：
+
+- `command:start` 是 `toolkit` 内容层里的 canonical command
+- 它表示“统一任务开始入口”这条内容语义
+- 它**不是**当前已经实现的 `zc start` CLI 子命令
+- 当前阶段仍通过 `zc toolkit show/recommend/search` 消费这层路由信息
+
 ## 与其他层的关系
 
 - `apps/cli` 读取 toolkit，但不拥有内容
 - `packages/platform-*` 消费 toolkit 生成平台产物
 - `references` 记录上游治理信息，但不是运行时输入
+
+## 平台暴露边界
+
+`command:*` 是仓库内部稳定的 canonical command，不等于平台上已经存在同名原生命令。
+
+- Codex：走 `prompt-entry` / 自然语言入口
+- Qwen：当前只定义 `command-style` 暴露
+- Qoder：当前只定义 `command-style` 暴露
+
+这里的 `command-style` 只表示“用接近命令的方式组织入口文案”，不承诺平台已经提供真实触发器或同名命令机制。
 
 ## 进一步阅读
 

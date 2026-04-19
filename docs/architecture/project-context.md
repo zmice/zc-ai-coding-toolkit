@@ -40,6 +40,13 @@
 - 调整 skills / commands / agents
 - 补元数据、关系图、来源映射
 - 优化 search / show / recommend
+- 收口 workflow entry routing 文档与内容边界
+
+额外边界：
+
+- `command:start` 是 toolkit 内容入口，不是当前已实现的 `zc start`
+- Codex 按 `prompt-entry` / 自然语言入口理解
+- Qwen / Qoder 当前只按 `command-style` 文案理解，不假定真实原生命令
 
 ### Platform 适配与安装
 
@@ -79,7 +86,7 @@
 - `docs/architecture/toolkit-content-optimization.md`
   - 看内容优化主线
 - `docs/architecture/workflow-entry-routing.md`
-  - 看统一任务入口与 workflow 路由设计
+  - 看统一任务入口、canonical command 与平台暴露分离、以及当前没有 `zc start` CLI 的边界
 - `docs/architecture/toolkit-naming-and-source-identity.md`
   - 看命名与上游身份映射规则
 - `docs/architecture/platform-deepening.md`

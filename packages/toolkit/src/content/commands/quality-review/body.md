@@ -1,6 +1,8 @@
-调用 `code-review-and-quality`，审查当前变更。
+这是 `command:start` 之后的 **实现后审查阶段入口**。
 
-## 核心动作
+当 `command:build` 已完成当前切片或当前变更已经成型，就从这里接力到 `code-review-and-quality`，判断是否可以继续收口。
+
+## 当前阶段要做什么
 
 执行五维度审查：
 
@@ -11,28 +13,21 @@
 5. **性能**：是否引入无界操作、热点低效或资源问题
 
 输出按 `Critical / Important / Suggestion` 分级，附具体位置和修复建议。
-如果审查结论包含待处理问题，继续进入 `review-response-and-resolution`，把反馈分类、修复、回归验证和回复动作收敛完。
+如果发现待处理问题，继续进入 `review-response-and-resolution` 做响应、修复和回归。
 
-## 相关原则
+## 当前阶段的边界
 
 - 先报真实问题，再做概括总结
 - 优先指出会阻塞合并的缺陷
 - 评审结论必须有代码位置或验证依据支撑
-- 审查结束不等于闭环结束；有问题就必须进入响应闭环
+- 审查通过前，不进入“已完成”叙事
+
+## 从这里通常接到哪里
+
+- 审查通过：进入 `command:verify`
+- 审查发现问题：进入 `review-response-and-resolution`，然后回到验证
+- 如果问题暴露计划失真，可回到 `command:task-plan`
 
 ## 使用方式
 
-在 `/quality-review` 后指定审查范围，我会输出结构化中文审查报告。
-
-### 示例
-
-```
-# 审查最近的 git 变更
-/quality-review 检查最近的 git 变更，重点关注安全性和性能
-
-# 审查指定文件
-/quality-review 审查 src/services/PaymentService.java
-
-# 审查指定 PR
-/quality-review 检查 PR #142 的变更，这是数据库分页查询优化
-```
+提供当前变更范围、文件、提交或任务上下文，我会输出结构化中文审查报告，并明确下一步是否进入验证。
