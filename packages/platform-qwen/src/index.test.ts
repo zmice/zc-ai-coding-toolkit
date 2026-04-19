@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  capability,
   createQwenGenerationPlan,
   createQwenInstallPlan,
   packageName,
@@ -14,45 +15,79 @@ const manifest: ToolkitManifestLike = {
   source: "toolkit-manifest",
   assets: [
     {
-      id: "skill-alpha",
+      id: "skill:alpha",
       kind: "skill",
       platforms: ["qwen", "codex"],
       title: "Alpha skill",
+      body: "Alpha skill body",
     },
     {
-      id: "command-beta",
+      id: "command:start",
       kind: "command",
-      platforms: ["codex"],
-      title: "Beta command",
+      platforms: ["qwen"],
+      title: "Start command",
+      summary: "Route the task into the right workflow",
+      body: "Start command body",
+    },
+    {
+      id: "agent:reviewer",
+      kind: "agent",
+      platforms: ["qwen"],
+      title: "Reviewer agent",
+      summary: "Review implementation quality",
+      body: "Reviewer agent body",
+      tools: ["read", "grep"],
+      requires: ["skill:alpha"],
     },
   ],
 };
 
 describe("@zmice/platform-qwen scaffold", () => {
-  it("creates a generation plan from toolkit assets", () => {
+  it("creates a project-scope extension generation plan from toolkit assets", () => {
     const plan = createQwenGenerationPlan(manifest);
 
     assert.equal(plan.platform, platformName);
     assert.equal(plan.packageName, packageName);
     assert.equal(plan.manifestSource, "toolkit-manifest");
-    assert.deepEqual(plan.matchedAssets.map((asset) => asset.id), ["skill-alpha"]);
-    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
-      templateFiles.context,
-      templateFiles.extensionManifest,
+    assert.equal(plan.capability?.extension?.name, templateFiles.extensionName);
+    assert.deepEqual(plan.capability, capability);
+    assert.deepEqual(plan.matchedAssets.map((asset) => asset.id), [
+      "skill:alpha",
+      "command:start",
+      "agent:reviewer",
     ]);
-    assert.ok(plan.artifacts[0]?.content.includes("skill-alpha"));
-    assert.ok(plan.artifacts[1]?.content.includes(`"contextFile": "${templateFiles.context}"`));
+    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
+      ".qwen/extensions/zc-toolkit/QWEN.md",
+      ".qwen/extensions/zc-toolkit/qwen-extension.json",
+      ".qwen/extensions/zc-toolkit/commands/zc/start.md",
+      ".qwen/extensions/zc-toolkit/skills/zc-alpha/SKILL.md",
+      ".qwen/extensions/zc-toolkit/agents/zc-reviewer.md",
+    ]);
+    assert.ok(plan.artifacts[0]?.content.includes("命令入口：1 个"));
+    assert.ok(plan.artifacts[1]?.content.includes(`"name": "${templateFiles.extensionName}"`));
+    assert.ok(plan.artifacts[2]?.content.includes('name: "zc:start"'));
+    assert.ok(plan.artifacts[3]?.content.includes('name: "zc-alpha"'));
+    assert.ok(plan.artifacts[4]?.content.includes('name: "zc-reviewer"'));
   });
 
-  it("creates an install plan that is rooted at the caller destination", () => {
-    const plan = createQwenInstallPlan(manifest, { destinationRoot: "/tmp/qwen" });
+  it("creates a global install plan rooted at the caller destination", () => {
+    const plan = createQwenInstallPlan(manifest, {
+      destinationRoot: "/tmp/qwen",
+      scope: "global",
+    });
 
     assert.equal(plan.destinationRoot, "/tmp/qwen");
+    assert.equal(plan.scope, "global");
     assert.equal(plan.overwrite, "error");
+    assert.equal(plan.capability?.namespace, "zc");
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
-      "/tmp/qwen/QWEN.md",
-      "/tmp/qwen/qwen-extension.json",
+      "/tmp/qwen/extensions/zc-toolkit/QWEN.md",
+      "/tmp/qwen/extensions/zc-toolkit/qwen-extension.json",
+      "/tmp/qwen/extensions/zc-toolkit/commands/zc/start.md",
+      "/tmp/qwen/extensions/zc-toolkit/skills/zc-alpha/SKILL.md",
+      "/tmp/qwen/extensions/zc-toolkit/agents/zc-reviewer.md",
     ]);
-    assert.ok(plan.artifacts[0]?.content.includes("工具包资产"));
+    assert.ok(plan.artifacts[0]?.content.includes("Qwen 平台上下文扩展"));
+    assert.ok(plan.artifacts[2]?.content.includes("Start command body"));
   });
 });

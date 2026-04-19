@@ -124,6 +124,18 @@ npm install -g @zmice/zc@latest
 - `--json`
 - `--force`
 
+当前平台安装面：
+- `codex`
+  - 项目级：`AGENTS.md`
+  - 用户级 / 自定义目录：`AGENTS.md` + `skills/zc-<skill>/SKILL.md`
+- `qoder`
+  - 项目级：`AGENTS.md` + `.qoder/commands|skills|agents`
+  - 用户级 / 自定义目录：`AGENTS.md` + `commands|skills|agents`
+- `qwen`
+  - 项目级：`.qwen/extensions/zc-toolkit/`
+  - 用户级 / 自定义目录：`extensions/zc-toolkit/`
+  - extension 内包含 `QWEN.md`、`qwen-extension.json`、`commands/`、`skills/`、`agents/`
+
 ## 高频用法
 
 ```bash

@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  capability,
   createCodexGenerationPlan,
   createCodexInstallPlan,
   packageName,
@@ -36,15 +37,37 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.equal(plan.packageName, packageName);
     assert.equal(plan.manifestSource, "toolkit-manifest");
     assert.deepEqual(plan.matchedAssets.map((asset) => asset.id), ["skill-alpha"]);
-    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [templateFiles.agents]);
+    assert.deepEqual(plan.capability, capability);
+    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
+      templateFiles.agents,
+      "skills/zc-skill-alpha/SKILL.md",
+    ]);
     assert.ok(plan.artifacts[0]?.content.includes("skill-alpha"));
+    assert.ok(plan.artifacts[1]?.content.includes("Alpha skill"));
   });
 
-  it("creates an install plan with safe overwrite defaults", () => {
-    const plan = createCodexInstallPlan(manifest, { destinationRoot: "/tmp/codex" });
+  it("creates a global install plan with AGENTS and skills", () => {
+    const plan = createCodexInstallPlan(manifest, {
+      destinationRoot: "/tmp/codex",
+      scope: "global",
+    });
 
     assert.equal(plan.destinationRoot, "/tmp/codex");
+    assert.equal(plan.scope, "global");
     assert.equal(plan.overwrite, "error");
-    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), ["/tmp/codex/AGENTS.md"]);
+    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
+      "/tmp/codex/AGENTS.md",
+      "/tmp/codex/skills/zc-skill-alpha/SKILL.md",
+    ]);
+  });
+
+  it("keeps project installs conservative and only writes AGENTS.md", () => {
+    const plan = createCodexInstallPlan(manifest, {
+      destinationRoot: "/tmp/project",
+      scope: "project",
+    });
+
+    assert.equal(plan.scope, "project");
+    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), ["/tmp/project/AGENTS.md"]);
   });
 });

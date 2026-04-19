@@ -1,7 +1,13 @@
 import { Command, InvalidArgumentError } from "commander";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { attachPlanMetadata, type GenerationPlan, type InstallPlan, type OverwriteMode } from "@zmice/platform-core";
+import {
+  attachPlanMetadata,
+  type GenerationPlan,
+  type InstallPlan,
+  type InstallScope,
+  type OverwriteMode
+} from "@zmice/platform-core";
 import { resolvePlatformInstallStatus } from "../platform-state/status.js";
 import type { PlatformInstallStatusResult } from "../platform-state/types.js";
 import { normalizeInstallSelector, resolveInstallTarget } from "../utils/install-target.js";
@@ -29,9 +35,12 @@ const platformNames: readonly PlatformName[] = ["qwen", "codex", "qoder"];
 
 interface ToolkitAssetMetaLike {
   kind: "skill" | "command" | "agent";
+  name: string;
   title: string;
   description: string;
+  tools?: readonly string[];
   platforms?: readonly PlatformName[];
+  requires?: readonly string[];
 }
 
 interface ToolkitAssetLike {
@@ -49,10 +58,13 @@ interface ToolkitManifestLike {
 interface PlatformAssetLike {
   id: string;
   kind: "skill" | "command" | "agent";
+  name?: string;
   platforms: readonly string[];
   title?: string;
   summary?: string;
   body?: string;
+  tools?: readonly string[];
+  requires?: readonly string[];
 }
 
 interface PlatformManifestLike {
@@ -85,17 +97,17 @@ interface PlatformModule {
   createCodexGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string }) => GenerationPlan;
   createCodexInstallPlan?: (
     manifest: PlatformManifestLike,
-    opts: { manifestSource?: string; destinationRoot: string; overwrite?: OverwriteMode }
+    opts: { manifestSource?: string; destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode }
   ) => InstallPlan;
   createQoderGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string }) => GenerationPlan;
   createQoderInstallPlan?: (
     manifest: PlatformManifestLike,
-    opts: { manifestSource?: string; destinationRoot: string; overwrite?: OverwriteMode }
+    opts: { manifestSource?: string; destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode }
   ) => InstallPlan;
   createQwenGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string }) => GenerationPlan;
   createQwenInstallPlan?: (
     manifest: PlatformManifestLike,
-    opts: { manifestSource?: string; destinationRoot: string; overwrite?: OverwriteMode }
+    opts: { manifestSource?: string; destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode }
   ) => InstallPlan;
 }
 
@@ -115,10 +127,13 @@ function normalizeManifest(manifest: ToolkitManifestLike): PlatformManifestLike 
     assets: manifest.assets.map((asset) => ({
       id: asset.id,
       kind: asset.meta.kind,
+      name: asset.meta.name,
       platforms: asset.meta.platforms ?? defaultPlatforms,
       title: asset.meta.title,
       summary: asset.meta.description,
-      body: asset.body
+      body: asset.body,
+      tools: asset.meta.tools,
+      requires: asset.meta.requires
     }))
   };
 }
@@ -171,6 +186,7 @@ function createInstallPlan(
   platformModule: PlatformModule,
   manifest: PlatformManifestLike,
   destinationRoot: string,
+  scope: InstallScope,
   overwrite: OverwriteMode
 ): InstallPlan {
   switch (platform) {
@@ -181,6 +197,7 @@ function createInstallPlan(
       return finalizePlan(platformModule.createQwenInstallPlan(manifest, {
         manifestSource: manifest.source,
         destinationRoot,
+        scope,
         overwrite
       }));
     case "codex":
@@ -190,6 +207,7 @@ function createInstallPlan(
       return finalizePlan(platformModule.createCodexInstallPlan(manifest, {
         manifestSource: manifest.source,
         destinationRoot,
+        scope,
         overwrite
       }));
     case "qoder":
@@ -199,6 +217,7 @@ function createInstallPlan(
       return finalizePlan(platformModule.createQoderInstallPlan(manifest, {
         manifestSource: manifest.source,
         destinationRoot,
+        scope,
         overwrite
       }));
   }
@@ -533,7 +552,7 @@ export async function runPlatformInstall(
     const overwrite = resolveOverwriteMode(opts.force);
     const manifest = await loadToolkitManifest();
     const platformModule = await loadPlatformModule(target);
-    const plan = createInstallPlan(target, platformModule, manifest, destinationRoot, overwrite);
+    const plan = createInstallPlan(target, platformModule, manifest, destinationRoot, scope, overwrite);
 
     if (opts.plan) {
       emitOutput(
@@ -624,7 +643,7 @@ export async function runPlatformStatus(
     const destinationRoot = resolve(targetResolution.root);
     const manifest = await loadToolkitManifest();
     const platformModule = await loadPlatformModule(target);
-    const plan = createInstallPlan(target, platformModule, manifest, destinationRoot, "error");
+    const plan = createInstallPlan(target, platformModule, manifest, destinationRoot, scope, "error");
     const status = await resolvePlatformInstallStatus(plan);
     const zcVersion = getCliVersion();
 
@@ -680,7 +699,7 @@ export async function runPlatformUpdate(
     destinationRoot = resolve(targetResolution.root);
     const manifest = await loadToolkitManifest();
     const platformModule = await loadPlatformModule(target);
-    const statusPlan = createInstallPlan(target, platformModule, manifest, destinationRoot, "error");
+    const statusPlan = createInstallPlan(target, platformModule, manifest, destinationRoot, scope, "error");
     const status = await resolvePlatformInstallStatus(statusPlan);
     const zcVersion = getCliVersion();
 
@@ -752,7 +771,7 @@ export async function runPlatformUpdate(
     }
 
     const overwrite = getUpdateOverwriteMode(status, opts.force);
-    const plan = createInstallPlan(target, platformModule, manifest, destinationRoot, overwrite);
+    const plan = createInstallPlan(target, platformModule, manifest, destinationRoot, scope, overwrite);
 
     if (opts.plan) {
       emitOutput(

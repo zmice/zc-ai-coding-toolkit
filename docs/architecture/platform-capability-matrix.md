@@ -75,86 +75,36 @@
 
 | 平台 | 当前实现 | 覆盖评价 |
 | --- | --- | --- |
-| Codex | 安装 `AGENTS.md` | 基础可用 |
-| Qoder | 安装 `AGENTS.md` | 仅覆盖 memory 层 |
-| Qwen | 安装 `QWEN.md` + `qwen-extension.json` | 仅覆盖入口层，未形成完整 extension 安装 |
+| Codex | 项目级安装 `AGENTS.md`；用户级 / 自定义目录安装 `AGENTS.md` + `skills/zc-<skill>/SKILL.md` | 保守适配，覆盖官方明确能力 |
+| Qoder | 安装 `AGENTS.md` + `commands` + `skills` + `agents` | 已覆盖官方目录模型 |
+| Qwen | 安装 `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md` + `qwen-extension.json` + `commands` + `skills` + `agents` | 已升级为完整 extension 安装 |
 
-换句话说，当前 `zc platform install` 更准确的语义是：
+换句话说，当前 `zc platform install` 已经不再只是“写一个入口文件”，而是按平台能力矩阵选择：
 
-- 安装平台级入口上下文
-
-而不是：
-
-- 完整安装平台原生的 skills / commands / agents / extension 生态
+- 入口文件安装
+- 目录化 assets 安装
+- extension 目录安装
 
 ## 结论
 
-当前实现可以继续保留，但它只能被定义为：
+当前阶段结论：
 
-- `phase 1: entry-file install`
-
-不能再被描述成：
-
-- `full platform-native install`
+- `Codex`：继续保守，只做 `AGENTS.md` + 官方 skills
+- `Qoder`：已是目录化原生安装
+- `Qwen`：已是 extension 原生安装
 
 ## 分阶段适配策略
 
-### Phase 1：保持现状并明确边界
+### 已完成
 
-- Codex：`AGENTS.md`
-- Qoder：`AGENTS.md`
-- Qwen：`QWEN.md` + `qwen-extension.json`
+- Codex：`AGENTS.md` + 用户级 / 自定义目录 `skills`
+- Qoder：`AGENTS.md` + `commands / skills / agents`
+- Qwen：extension 目录安装
 
-要求：
+### 后续只保留两类增量
 
-- 文档里明确这只是入口层安装
-- 不再把当前实现表述成完整平台原生安装
-
-### Phase 2：Qoder 目录化安装
-
-优先补：
-
-- `AGENTS.md`
-- `.qoder/commands/`
-- `.qoder/skills/`
-- `.qoder/agents/`
-
-原因：
-
-- 官方路径稳定、模型清晰
-- 不依赖 extension 封装
-- 与当前 `toolkit` 的 commands / skills / agents 三层结构最接近
-
-### Phase 3：Qwen extension 安装
-
-目标不是只写 `qwen-extension.json`，而是安装完整 extension 目录：
-
-- `<root>/.qwen/extensions/<extension-name>/`
-
-其中包含：
-
-- `qwen-extension.json`
-- `commands/`
-- `skills/`
-- `agents/`
-
-可选同时继续支持：
-
-- `QWEN.md`
-- `.qwen/skills/`
-
-### Phase 4：Codex skills 安装
-
-保守推进：
-
-- 继续保留 `AGENTS.md`
-- 新增 `~/.codex/skills` / `<project>/.codex/skills` 投影
-
-不做没有官方依据的：
-
-- `commands/`
-- `agents/`
-- plugin 目录
+- 更精确的平台版本/状态治理
+- 平台原生命令/skills/agents 内容投影策略继续打磨
 
 ## 对 `zc platform install` 的模型要求
 

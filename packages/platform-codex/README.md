@@ -7,6 +7,7 @@
 当前输出包括：
 
 - `AGENTS.md`
+- `skills/zc-<skill>/SKILL.md`
 
 ## 边界
 
@@ -25,6 +26,18 @@ zc platform install codex --plan --json
 ```
 
 `--global` 默认会安装到 `~/.codex/AGENTS.md`。
+
+当前安装模型：
+
+- `--project`
+  - 安装 `<project>/AGENTS.md`
+  - 保守处理，不额外生成项目级 skills 目录
+- `--global`
+  - 安装 `~/.codex/AGENTS.md`
+  - 同时安装 `~/.codex/skills/zc-<skill>/SKILL.md`
+- `--dir <path>`
+  - 安装 `<path>/AGENTS.md`
+  - 同时安装 `<path>/skills/zc-<skill>/SKILL.md`
 
 项目安装 / 全局安装的详细步骤见：
 

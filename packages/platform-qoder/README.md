@@ -7,6 +7,9 @@
 当前输出包括：
 
 - `AGENTS.md`
+- `commands/zc-<command>.md`
+- `skills/zc-<skill>/SKILL.md`
+- `agents/zc-<agent>.md`
 
 ## 边界
 
@@ -24,6 +27,24 @@ zc platform install qoder --plan --json
 ```
 
 省略 `--dir` 时，CLI 会优先把最近项目根解析为安装目录。
+
+当前安装模型：
+
+- `--project`
+  - 安装 `<project>/AGENTS.md`
+  - 安装 `<project>/.qoder/commands/zc-<command>.md`
+  - 安装 `<project>/.qoder/skills/zc-<skill>/SKILL.md`
+  - 安装 `<project>/.qoder/agents/zc-<agent>.md`
+- `--global`
+  - 安装 `~/.qoder/AGENTS.md`
+  - 安装 `~/.qoder/commands/zc-<command>.md`
+  - 安装 `~/.qoder/skills/zc-<skill>/SKILL.md`
+  - 安装 `~/.qoder/agents/zc-<agent>.md`
+- `--dir <path>`
+  - 安装 `<path>/AGENTS.md`
+  - 安装 `<path>/commands/zc-<command>.md`
+  - 安装 `<path>/skills/zc-<skill>/SKILL.md`
+  - 安装 `<path>/agents/zc-<agent>.md`
 
 项目安装 / 全局安装的详细步骤见：
 

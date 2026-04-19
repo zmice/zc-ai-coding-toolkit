@@ -65,6 +65,7 @@ function createInstallPlan(
   platform: "codex" | "qoder",
   destinationRoot: string,
   artifacts: Array<{ path: string; content: string }>,
+  scope: "project" | "global" | "dir" = "dir",
   overwrite: "error" | "force" = "error",
 ) {
   return {
@@ -73,6 +74,7 @@ function createInstallPlan(
     manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
     matchedAssets: [],
     destinationRoot,
+    scope,
     overwrite,
     artifacts,
   };
@@ -102,6 +104,7 @@ describe("platform CLI", () => {
           body: "body",
           meta: {
             kind: "skill",
+            name: "alpha",
             title: "Alpha",
             description: "desc",
             platforms: ["qwen", "codex"],
@@ -239,6 +242,7 @@ describe("platform CLI", () => {
       expect.anything(),
       expect.objectContaining({
         destinationRoot: "/tmp/install",
+        scope: "dir",
         overwrite: "error",
       }),
     );
@@ -306,6 +310,7 @@ describe("platform CLI", () => {
       expect.anything(),
       expect.objectContaining({
         destinationRoot: "/workspace/project",
+        scope: "project",
       }),
     );
     expect(logSpy).toHaveBeenCalledWith(
@@ -317,7 +322,7 @@ describe("platform CLI", () => {
 
   it("prints a JSON install plan without writing files when install uses --plan", async () => {
     platformMocks.createCodexInstallPlan.mockReturnValue(
-      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents" }], "error"),
+      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents" }], "dir", "error"),
     );
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -397,7 +402,7 @@ describe("platform CLI", () => {
       artifacts: [],
     });
     platformMocks.createCodexInstallPlan.mockReturnValue(
-      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents v2" }], "error"),
+      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents v2" }], "dir", "error"),
     );
 
     await runPlatformUpdate("codex", { dir: "/tmp/install", plan: true, json: true });
@@ -434,7 +439,7 @@ describe("platform CLI", () => {
       artifacts: [],
     });
     platformMocks.createCodexInstallPlan.mockReturnValue(
-      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents v2" }], "error"),
+      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents v2" }], "dir", "error"),
     );
     platformMocks.writeArtifacts.mockResolvedValue({
       created: 0,
@@ -576,6 +581,7 @@ describe("platform CLI", () => {
       expect.anything(),
       expect.objectContaining({
         destinationRoot: "/home/test/.qoder",
+        scope: "global",
       }),
     );
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("提示：Qoder 官方文档定义用户级 memory 文件位于 `~/.qoder/AGENTS.md`。"));
@@ -585,7 +591,7 @@ describe("platform CLI", () => {
 
   it("prints a JSON install plan with scope metadata", async () => {
     platformMocks.createCodexInstallPlan.mockReturnValue(
-      createInstallPlan("codex", "/home/test/.codex", [{ path: "/home/test/.codex/AGENTS.md", content: "# agents" }], "error"),
+      createInstallPlan("codex", "/home/test/.codex", [{ path: "/home/test/.codex/AGENTS.md", content: "# agents" }], "global", "error"),
     );
     platformMocks.resolveInstallTarget.mockResolvedValue({
       root: "/home/test/.codex",

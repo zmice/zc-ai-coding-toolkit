@@ -191,9 +191,9 @@ npm install -g @qwen-code/qwen-code@latest
 
 | 平台 | 产物 |
 | --- | --- |
-| `codex` | `AGENTS.md` |
-| `qoder` | `AGENTS.md` |
-| `qwen` | `QWEN.md`、`qwen-extension.json` |
+| `codex` | `AGENTS.md`、`skills/zc-<skill>/SKILL.md` |
+| `qoder` | `AGENTS.md`、`.qoder/commands`、`.qoder/skills`、`.qoder/agents` |
+| `qwen` | `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md`、`qwen-extension.json`、`commands/`、`skills/`、`agents/` |
 
 ### 官方默认位置矩阵
 
@@ -229,6 +229,22 @@ zc platform install codex --project
 - 给某个单独项目安装平台说明
 - 不希望影响同一台机器上的其他项目
 
+当前项目安装目录结构：
+
+- `codex`
+  - `<project>/AGENTS.md`
+- `qoder`
+  - `<project>/AGENTS.md`
+  - `<project>/.qoder/commands/zc-<command>.md`
+  - `<project>/.qoder/skills/zc-<skill>/SKILL.md`
+  - `<project>/.qoder/agents/zc-<agent>.md`
+- `qwen`
+  - `<project>/.qwen/extensions/zc-toolkit/QWEN.md`
+  - `<project>/.qwen/extensions/zc-toolkit/qwen-extension.json`
+  - `<project>/.qwen/extensions/zc-toolkit/commands/zc/<command>.md`
+  - `<project>/.qwen/extensions/zc-toolkit/skills/zc-<skill>/SKILL.md`
+  - `<project>/.qwen/extensions/zc-toolkit/agents/zc-<agent>.md`
+
 ### 4.2 全局安装
 
 对于已在官方文档中明确给出默认位置的平台，可以直接这样装：
@@ -248,11 +264,15 @@ zc platform where qwen --global --json
 
 - `codex --global`
   - 默认安装到 `~/.codex/AGENTS.md`
+  - 同时安装 `~/.codex/skills/zc-<skill>/SKILL.md`
 - `qoder --global`
   - 默认安装到 `~/.qoder/AGENTS.md`
+  - 同时安装 `~/.qoder/commands/zc-<command>.md`
+  - 同时安装 `~/.qoder/skills/zc-<skill>/SKILL.md`
+  - 同时安装 `~/.qoder/agents/zc-<agent>.md`
 - `qwen --global`
-  - 默认安装到 `~/.qwen/QWEN.md`
-  - 同目录还会生成 `qwen-extension.json`
+  - 默认安装到 `~/.qwen/extensions/zc-toolkit/`
+  - 其中包含 `QWEN.md`、`qwen-extension.json`、`commands/`、`skills/`、`agents/`
 
 如果你已经明确知道目标工具的自定义全局目录，也可以继续显式指定：
 

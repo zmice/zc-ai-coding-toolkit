@@ -157,6 +157,10 @@ node apps/cli/dist/cli/index.js platform install qoder --plan --json
 - `platform status` 只读检查安装状态，返回 `not-installed / up-to-date / update-available / drifted`
 - `platform update` 复用 install 逻辑；`update-available` 会安全覆盖受管产物，`drifted` 需要显式 `--force`
 - `platform where` 只解析目录，不执行写入
+- 当前平台原生安装面：
+  - `codex`：`AGENTS.md` + `skills/zc-<skill>/SKILL.md`
+  - `qoder`：`AGENTS.md` + `.qoder/commands|skills|agents`
+  - `qwen`：`.qwen/extensions/zc-toolkit/` 下的 `QWEN.md`、`qwen-extension.json`、`commands/`、`skills/`、`agents/`
 
 ### 3. 审阅上游更新
 

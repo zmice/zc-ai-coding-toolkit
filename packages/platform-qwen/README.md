@@ -8,6 +8,9 @@
 
 - `QWEN.md`
 - `qwen-extension.json`
+- `commands/zc/<command>.md`
+- `skills/zc-<skill>/SKILL.md`
+- `agents/zc-<agent>.md`
 
 ## 边界
 
@@ -29,6 +32,23 @@ zc platform where qwen --global --json
 项目安装 / 全局安装的详细步骤见：
 
 - `docs/usage-guide.md`
+
+当前安装模型：
+
+- `--project`
+  - 安装 `<project>/.qwen/extensions/zc-toolkit/QWEN.md`
+  - 安装 `<project>/.qwen/extensions/zc-toolkit/qwen-extension.json`
+  - 安装 `<project>/.qwen/extensions/zc-toolkit/commands/zc/<command>.md`
+  - 安装 `<project>/.qwen/extensions/zc-toolkit/skills/zc-<skill>/SKILL.md`
+  - 安装 `<project>/.qwen/extensions/zc-toolkit/agents/zc-<agent>.md`
+- `--global`
+  - 安装 `~/.qwen/extensions/zc-toolkit/QWEN.md`
+  - 安装 `~/.qwen/extensions/zc-toolkit/qwen-extension.json`
+  - 安装 `~/.qwen/extensions/zc-toolkit/commands/zc/<command>.md`
+  - 安装 `~/.qwen/extensions/zc-toolkit/skills/zc-<skill>/SKILL.md`
+  - 安装 `~/.qwen/extensions/zc-toolkit/agents/zc-<agent>.md`
+- `--dir <path>`
+  - 安装 `<path>/extensions/zc-toolkit/...`
 
 ## 验证
 
