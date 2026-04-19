@@ -24,6 +24,8 @@ zc platform where codex --global --json
 zc platform install codex --plan --json
 ```
 
+`--global` 默认会安装到 `~/.codex/AGENTS.md`。
+
 项目安装 / 全局安装的详细步骤见：
 
 - `docs/usage-guide.md`

@@ -585,12 +585,12 @@ describe("platform CLI", () => {
 
   it("prints a JSON install plan with scope metadata", async () => {
     platformMocks.createCodexInstallPlan.mockReturnValue(
-      createInstallPlan("codex", "/home/test", [{ path: "/home/test/AGENTS.md", content: "# agents" }], "error"),
+      createInstallPlan("codex", "/home/test/.codex", [{ path: "/home/test/.codex/AGENTS.md", content: "# agents" }], "error"),
     );
     platformMocks.resolveInstallTarget.mockResolvedValue({
-      root: "/home/test",
+      root: "/home/test/.codex",
       source: "official-global",
-      hint: "Codex 官方文档将 `~` 视为 AGENTS.md 的典型用户级位置。",
+      hint: "Codex 官方文档将 Codex home（默认 `~/.codex`）定义为全局级 `AGENTS.md` 的位置。",
     });
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -603,9 +603,9 @@ describe("platform CLI", () => {
         action: "install",
         target: "codex",
         scope: "global",
-        root: "/home/test",
+        root: "/home/test/.codex",
         rootSource: "official-global",
-        hint: "Codex 官方文档将 `~` 视为 AGENTS.md 的典型用户级位置。",
+        hint: "Codex 官方文档将 Codex home（默认 `~/.codex`）定义为全局级 `AGENTS.md` 的位置。",
       }),
     );
 
@@ -614,9 +614,9 @@ describe("platform CLI", () => {
 
   it("prints resolved install targets via platform where", async () => {
     platformMocks.resolveInstallTarget.mockResolvedValue({
-      root: "/home/test",
+      root: "/home/test/.codex",
       source: "official-global",
-      hint: "Codex 官方文档将 `~` 视为 AGENTS.md 的典型用户级位置。",
+      hint: "Codex 官方文档将 Codex home（默认 `~/.codex`）定义为全局级 `AGENTS.md` 的位置。",
     });
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -634,7 +634,7 @@ describe("platform CLI", () => {
         mode: "where",
         target: "codex",
         scope: "global",
-        root: "/home/test",
+        root: "/home/test/.codex",
         rootSource: "official-global",
       }),
     );

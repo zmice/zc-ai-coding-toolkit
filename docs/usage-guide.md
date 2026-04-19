@@ -199,7 +199,7 @@ npm install -g @qwen-code/qwen-code@latest
 
 | 平台 | 项目级默认位置 | 全局级默认位置 | 说明 |
 | --- | --- | --- | --- |
-| `codex` | `<project-root>/AGENTS.md` | `~/AGENTS.md` | OpenAI 官方说明将 `~` 和 Git 仓库都列为 `AGENTS.md` 的典型位置。这里的全局路径是基于官方说明做的直接映射 |
+| `codex` | `<project-root>/AGENTS.md` | `~/.codex/AGENTS.md` | OpenAI 官方文档将 Codex home（默认 `~/.codex`）作为全局级 `AGENTS.md` 位置 |
 | `qoder` | `<project-root>/AGENTS.md` | `~/.qoder/AGENTS.md` | Qoder 官方文档明确给出 user-level 与 project-level memory 路径 |
 | `qwen` | `<project-root>/QWEN.md` | `~/.qwen/QWEN.md` | 官方文档明确 `/init` 会在项目目录创建 `QWEN.md`，并明确用户级配置目录为 `~/.qwen`；阿里云官方帮助文档同时给出了 Qwen CLI 的用户级 `QWEN.md` 位置 |
 
@@ -247,7 +247,7 @@ zc platform where qwen --global --json
 当前行为：
 
 - `codex --global`
-  - 默认安装到 `~/AGENTS.md`
+  - 默认安装到 `~/.codex/AGENTS.md`
 - `qoder --global`
   - 默认安装到 `~/.qoder/AGENTS.md`
 - `qwen --global`

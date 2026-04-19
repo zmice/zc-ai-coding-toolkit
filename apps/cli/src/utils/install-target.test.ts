@@ -77,12 +77,12 @@ describe("resolveInstallTarget", () => {
     assert.equal(result.source, "cwd");
   });
 
-  it("resolves Codex global scope to the user home directory", async () => {
+  it("resolves Codex global scope to ~/.codex", async () => {
     const result = await resolveInstallTarget("codex", { global: true });
 
     assert.equal(result.source, "official-global");
-    assert.ok(result.root.length > 0);
-    assert.ok(result.hint?.includes("Codex"));
+    assert.ok(result.root.endsWith(`${join(".codex")}`));
+    assert.ok(result.hint?.includes("~/.codex"));
   });
 
   it("resolves Qoder global scope to ~/.qoder", async () => {

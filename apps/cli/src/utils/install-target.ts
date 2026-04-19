@@ -64,9 +64,9 @@ function resolveOfficialGlobalTarget(platform: PlatformName): InstallTargetResol
   switch (platform) {
     case "codex":
       return {
-        root: home,
+        root: resolve(home, ".codex"),
         source: "official-global",
-        hint: "Codex 官方文档将 `~` 视为 AGENTS.md 的典型用户级位置。",
+        hint: "Codex 官方文档将 Codex home（默认 `~/.codex`）定义为全局级 `AGENTS.md` 的位置。",
       };
     case "qoder":
       return {
