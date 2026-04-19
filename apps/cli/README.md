@@ -1,6 +1,6 @@
 # @zmice/zc
 
-`@zmice/zc` 是 AI Coding Toolkit 的统一入口 CLI，也是当前仓库唯一对外发布的 npm 包。
+`@zmice/zc` 是 zc AI Coding Toolkit 的统一入口 CLI，也是当前仓库唯一对外发布的 npm 包。
 
 它负责：
 

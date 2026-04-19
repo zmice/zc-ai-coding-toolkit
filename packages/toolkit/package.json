@@ -2,7 +2,7 @@
   "name": "@zmice/toolkit",
   "private": true,
   "version": "0.1.0",
-  "description": "Source-of-truth content package for AI Coding Toolkit skills, commands, and agents",
+  "description": "Source-of-truth content package for zc AI Coding Toolkit skills, commands, and agents",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

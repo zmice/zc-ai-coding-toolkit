@@ -2,7 +2,7 @@
   "name": "@zmice/platform-core",
   "private": true,
   "version": "0.1.0",
-  "description": "Shared contracts and helpers for AI Coding Toolkit platform packages",
+  "description": "Shared contracts and helpers for zc AI Coding Toolkit platform packages",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
