@@ -10,6 +10,7 @@ const platformMocks = vi.hoisted(() => ({
     }
   },
   createQwenGenerationPlan: vi.fn(),
+  createQwenInstallPlan: vi.fn(),
   createCodexInstallPlan: vi.fn(),
   createQoderInstallPlan: vi.fn(),
   loadToolkitManifest: vi.fn(),
@@ -68,6 +69,26 @@ function createInstallPlan(
   scope: "project" | "global" | "dir" = "dir",
   overwrite: "error" | "force" = "error",
 ) {
+  const capability = platform === "codex"
+    ? {
+        namespace: "zc",
+        surfaces: ["entry-file", "skills-dir"],
+        entryFile: "AGENTS.md",
+        commandsDir: null,
+        skillsDir: "skills",
+        agentsDir: null,
+        extensionDir: null,
+      }
+    : {
+        namespace: "zc",
+        surfaces: ["entry-file", "commands-dir", "skills-dir", "agents-dir"],
+        entryFile: "AGENTS.md",
+        commandsDir: "commands",
+        skillsDir: "skills",
+        agentsDir: "agents",
+        extensionDir: null,
+      };
+
   return {
     platform,
     packageName: platform === "codex" ? "@zmice/platform-codex" : "@zmice/platform-qoder",
@@ -76,6 +97,7 @@ function createInstallPlan(
     destinationRoot,
     scope,
     overwrite,
+    capability,
     artifacts,
   };
 }
@@ -84,6 +106,7 @@ describe("platform CLI", () => {
   beforeEach(() => {
     process.exitCode = undefined;
     platformMocks.createQwenGenerationPlan.mockReset();
+    platformMocks.createQwenInstallPlan.mockReset();
     platformMocks.createCodexInstallPlan.mockReset();
     platformMocks.createQoderInstallPlan.mockReset();
     platformMocks.loadToolkitManifest.mockReset();
@@ -119,7 +142,10 @@ describe("platform CLI", () => {
       }
 
       if (relativePath === "packages/platform-qwen/dist/index.js") {
-        return { createQwenGenerationPlan: platformMocks.createQwenGenerationPlan };
+        return {
+          createQwenGenerationPlan: platformMocks.createQwenGenerationPlan,
+          createQwenInstallPlan: platformMocks.createQwenInstallPlan,
+        };
       }
 
       if (relativePath === "packages/platform-codex/dist/index.js") {
@@ -619,6 +645,9 @@ describe("platform CLI", () => {
   });
 
   it("prints resolved install targets via platform where", async () => {
+    platformMocks.createCodexInstallPlan.mockReturnValue(
+      createInstallPlan("codex", "/home/test/.codex", [{ path: "/home/test/.codex/AGENTS.md", content: "# agents" }], "global"),
+    );
     platformMocks.resolveInstallTarget.mockResolvedValue({
       root: "/home/test/.codex",
       source: "official-global",
@@ -642,6 +671,10 @@ describe("platform CLI", () => {
         scope: "global",
         root: "/home/test/.codex",
         rootSource: "official-global",
+        capability: expect.objectContaining({
+          namespace: "zc",
+          surfaces: ["entry-file", "skills-dir"],
+        }),
       }),
     );
 
@@ -649,6 +682,25 @@ describe("platform CLI", () => {
   });
 
   it("resolves qwen global scope to the user-level ~/.qwen directory", async () => {
+    platformMocks.createQwenInstallPlan.mockReturnValue({
+      platform: "qwen",
+      packageName: "@zmice/platform-qwen",
+      manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
+      matchedAssets: [],
+      destinationRoot: "/home/test/.qwen",
+      scope: "global",
+      overwrite: "error",
+      capability: {
+        namespace: "zc",
+        surfaces: ["entry-file", "commands-dir", "skills-dir", "agents-dir", "extension-dir"],
+        entryFile: "QWEN.md",
+        commandsDir: "commands/zc",
+        skillsDir: "skills",
+        agentsDir: "agents",
+        extensionDir: "extensions/zc-toolkit",
+      },
+      artifacts: [{ path: "/home/test/.qwen/extensions/zc-toolkit/QWEN.md", content: "# context" }],
+    });
     platformMocks.resolveInstallTarget.mockResolvedValue({
       root: "/home/test/.qwen",
       source: "official-global",

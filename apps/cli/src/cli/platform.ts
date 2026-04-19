@@ -111,6 +111,61 @@ interface PlatformModule {
   ) => InstallPlan;
 }
 
+function getPlanCapabilitySummary(plan: PlatformPlanLike) {
+  const capability = plan.capability;
+
+  if (!capability) {
+    return null;
+  }
+
+  return {
+    namespace: capability.namespace,
+    surfaces: capability.surfaces,
+    entryFile: capability.entryFile?.fileName ?? null,
+    commandsDir: capability.commands?.relativeDir ?? null,
+    skillsDir: capability.skills?.relativeDir ?? null,
+    agentsDir: capability.agents?.relativeDir ?? null,
+    extensionDir: capability.extension
+      ? `${capability.extension.relativeDir}/${capability.extension.name}`
+      : null,
+  };
+}
+
+function formatSurfaceLabel(surface: string): string {
+  switch (surface) {
+    case "entry-file":
+      return "入口文件";
+    case "skills-dir":
+      return "skills 目录";
+    case "commands-dir":
+      return "commands 目录";
+    case "agents-dir":
+      return "agents 目录";
+    case "extension-dir":
+      return "extension 目录";
+    default:
+      return surface;
+  }
+}
+
+function summarizeCapability(plan: PlatformPlanLike): string[] {
+  const capability = getPlanCapabilitySummary(plan);
+
+  if (!capability) {
+    return [];
+  }
+
+  return [
+    `命名空间：${capability.namespace}`,
+    `安装面：${capability.surfaces.map((surface) => formatSurfaceLabel(surface)).join("、")}`,
+    ...(capability.entryFile ? [`入口文件：${capability.entryFile}`] : []),
+    ...(capability.commandsDir ? [`commands 目录：${capability.commandsDir}`] : []),
+    ...(capability.skillsDir ? [`skills 目录：${capability.skillsDir}`] : []),
+    ...(capability.agentsDir ? [`agents 目录：${capability.agentsDir}`] : []),
+    ...(capability.extensionDir ? [`extension 目录：${capability.extensionDir}`] : []),
+  ];
+}
+
 const defaultPlatforms: readonly PlatformName[] = ["qwen", "codex", "qoder"];
 
 function getCliVersion(): string {
@@ -328,6 +383,7 @@ function summarizePlan(action: PlatformAction, target: PlatformName, root: strin
     formatRootLabel(action, root, metadata),
     ...(metadata?.status ? [`状态：${metadata.status}`] : []),
     ...(metadata?.hint ? [`提示：${metadata.hint}`] : []),
+    ...summarizeCapability(plan),
     `产物数量：${plan.artifacts.length}`,
     ...plan.artifacts.map((artifact) => `- ${artifact.path}`),
   ].join("\n");
@@ -346,6 +402,7 @@ function buildPlanPayload(action: PlatformAction, target: PlatformName, root: st
     autoResolvedRoot: metadata?.autoResolvedRoot ?? false,
     hint: metadata?.hint ?? null,
     status: metadata?.status ?? null,
+    capability: getPlanCapabilitySummary(plan),
     artifactCount: plan.artifacts.length,
     contentFingerprint: plan.metadata?.fingerprint.value ?? null,
     overwrite: "overwrite" in plan ? plan.overwrite : null,
@@ -383,6 +440,7 @@ function summarizeWhere(target: PlatformName, root: string, metadata: {
   hint?: string;
   scope: PlatformInstallScope;
   marker?: string;
+  capability?: ReturnType<typeof getPlanCapabilitySummary>;
 }): string {
   return [
     `${target} 安装目标`,
@@ -390,6 +448,12 @@ function summarizeWhere(target: PlatformName, root: string, metadata: {
     `解析来源：${metadata.rootSource}`,
     ...(metadata.marker ? [`命中标记：${metadata.marker}`] : []),
     `目录：${root}`,
+    ...(metadata.capability
+      ? [
+          `命名空间：${metadata.capability.namespace}`,
+          `安装面：${metadata.capability.surfaces.map((surface) => formatSurfaceLabel(surface)).join("、")}`,
+        ]
+      : []),
     ...(metadata.hint ? [`提示：${metadata.hint}`] : []),
   ].join("\n");
 }
@@ -399,6 +463,7 @@ function buildWherePayload(target: PlatformName, root: string, metadata: {
   hint?: string;
   scope: PlatformInstallScope;
   marker?: string;
+  capability?: ReturnType<typeof getPlanCapabilitySummary>;
 }): object {
   return {
     mode: "where",
@@ -408,6 +473,7 @@ function buildWherePayload(target: PlatformName, root: string, metadata: {
     rootSource: metadata.rootSource,
     marker: metadata.marker ?? null,
     hint: metadata.hint ?? null,
+    capability: metadata.capability ?? null,
   };
 }
 
@@ -426,11 +492,13 @@ function summarizeStatus(target: PlatformName, root: string, status: PlatformIns
   rootSource: string;
   hint?: string;
   zcVersion?: string;
+  plan: PlatformPlanLike;
 }): string {
   return [
     `${target} 安装状态`,
     `范围：${metadata.scope}`,
     `目录：${root}`,
+    ...summarizeCapability(metadata.plan),
     `状态：${status.kind}（${formatStatusLabel(status.kind)}）`,
     `回执：${status.receiptPath}`,
     ...(status.installedZcVersion ? [`已安装 zc 版本：${status.installedZcVersion}`] : []),
@@ -447,6 +515,7 @@ function buildStatusPayload(target: PlatformName, root: string, status: Platform
   rootSource: string;
   hint?: string;
   zcVersion?: string;
+  plan: PlatformPlanLike;
 }) {
   return {
     mode: "status",
@@ -455,6 +524,7 @@ function buildStatusPayload(target: PlatformName, root: string, status: Platform
     root,
     rootSource: metadata.rootSource,
     hint: metadata.hint ?? null,
+    capability: getPlanCapabilitySummary(metadata.plan),
     status: status.kind,
     receiptPath: status.receiptPath,
     zcVersion: metadata.zcVersion ?? null,
@@ -649,20 +719,19 @@ export async function runPlatformStatus(
 
     emitOutput(
       format,
-      buildStatusPayload(target, destinationRoot, {
-        ...status,
-        zcVersion,
-      }, {
+      buildStatusPayload(target, destinationRoot, status, {
         scope,
         rootSource: targetResolution.source,
         hint: targetResolution.hint,
         zcVersion,
+        plan,
       }),
       summarizeStatus(target, destinationRoot, status, {
         scope,
         rootSource: targetResolution.source,
         hint: targetResolution.hint,
         zcVersion,
+        plan,
       }),
     );
   } catch (error) {
@@ -861,6 +930,9 @@ export async function runPlatformWhere(
       global: opts.global,
     });
     const root = resolve(targetResolution.root);
+    const manifest = await loadToolkitManifest();
+    const platformModule = await loadPlatformModule(target);
+    const plan = createInstallPlan(target, platformModule, manifest, root, scope, "error");
 
     emitOutput(
       format,
@@ -869,12 +941,14 @@ export async function runPlatformWhere(
         rootSource: targetResolution.source,
         marker: targetResolution.marker,
         hint: targetResolution.hint,
+        capability: getPlanCapabilitySummary(plan),
       }),
       summarizeWhere(target, root, {
         scope,
         rootSource: targetResolution.source,
         marker: targetResolution.marker,
         hint: targetResolution.hint,
+        capability: getPlanCapabilitySummary(plan),
       }),
     );
   } catch (error) {
@@ -897,12 +971,12 @@ function parsePlatformName(value: string): PlatformName {
 }
 
 export function registerPlatformCommand(program: Command): void {
-  const platform = program.command("platform").description("平台生成和安装命令");
+  const platform = program.command("platform").description("平台原生内容生成、安装与状态命令");
 
   platform
     .command("generate")
     .alias("g")
-    .description("根据工具包清单生成平台产物")
+    .description("根据工具包清单生成平台原生内容产物")
     .argument("<target>", "目标平台 (qwen|codex|qoder)", parsePlatformName)
     .option("-d, --dir <dir>", "输出目录")
     .option("--plan", "只输出产物计划，不落盘")
@@ -913,7 +987,7 @@ export function registerPlatformCommand(program: Command): void {
   platform
     .command("install")
     .alias("i")
-    .description("根据工具包清单生成并安装平台产物")
+    .description("根据工具包清单生成并安装平台原生内容")
     .argument("<target>", "目标平台 (qwen|codex|qoder)", parsePlatformName)
     .option("-d, --dir <dir>", "显式安装目录")
     .option("-p, --project", "安装到当前目录向上解析出的最近项目根")
@@ -926,7 +1000,7 @@ export function registerPlatformCommand(program: Command): void {
   platform
     .command("where")
     .alias("w")
-    .description("解析平台安装目录，不执行写入")
+    .description("解析平台原生内容安装目录，不执行写入")
     .argument("<target>", "目标平台 (qwen|codex|qoder)", parsePlatformName)
     .option("-d, --dir <dir>", "显式安装目录")
     .option("-p, --project", "解析最近项目根")
@@ -936,7 +1010,7 @@ export function registerPlatformCommand(program: Command): void {
 
   platform
     .command("status")
-    .description("读取安装回执并检查平台内容状态")
+    .description("读取安装回执并检查平台原生内容状态")
     .argument("<target>", "目标平台 (qwen|codex|qoder)", parsePlatformName)
     .option("-d, --dir <dir>", "显式安装目录")
     .option("-p, --project", "解析最近项目根")
@@ -946,7 +1020,7 @@ export function registerPlatformCommand(program: Command): void {
 
   platform
     .command("update")
-    .description("基于安装回执更新平台产物")
+    .description("基于安装回执更新平台原生内容")
     .argument("<target>", "目标平台 (qwen|codex|qoder)", parsePlatformName)
     .option("-d, --dir <dir>", "显式安装目录")
     .option("-p, --project", "解析最近项目根")
