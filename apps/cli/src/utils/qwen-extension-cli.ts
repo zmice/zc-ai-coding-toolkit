@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { rm } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
+import type { ChildProcessWithoutNullStreams } from "node:child_process";
 
 import { writeArtifacts, type GeneratedArtifact } from "./workspace.js";
 
@@ -8,6 +9,34 @@ export class QwenOfficialCliUnavailableError extends Error {
   constructor(message: string = "未检测到 qwen CLI，无法通过官方扩展命令安装。") {
     super(message);
     this.name = "QwenOfficialCliUnavailableError";
+  }
+}
+
+export class QwenExtensionsCommandError extends Error {
+  readonly command: string;
+  readonly exitCode: number | null;
+  readonly signal: NodeJS.Signals | null;
+  readonly stdout: string;
+  readonly stderr: string;
+
+  constructor(options: {
+    command: string;
+    exitCode: number | null;
+    signal: NodeJS.Signals | null;
+    stdout: string;
+    stderr: string;
+  }) {
+    super(
+      options.signal
+        ? `${options.command} 被信号 ${options.signal} 中断。`
+        : `${options.command} 退出码为 ${options.exitCode ?? "unknown"}。`,
+    );
+    this.name = "QwenExtensionsCommandError";
+    this.command = options.command;
+    this.exitCode = options.exitCode;
+    this.signal = options.signal;
+    this.stdout = options.stdout;
+    this.stderr = options.stderr;
   }
 }
 
@@ -96,7 +125,21 @@ async function runQwenExtensionsCommand(args: readonly string[]): Promise<void> 
 
   await new Promise<void>((resolvePromise, rejectPromise) => {
     const child = spawn("qwen", args, {
-      stdio: "inherit",
+      stdio: "pipe",
+    }) as ChildProcessWithoutNullStreams;
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (chunk: Buffer | string) => {
+      const text = typeof chunk === "string" ? chunk : chunk.toString("utf8");
+      stdout += text;
+      process.stdout.write(text);
+    });
+
+    child.stderr.on("data", (chunk: Buffer | string) => {
+      const text = typeof chunk === "string" ? chunk : chunk.toString("utf8");
+      stderr += text;
+      process.stderr.write(text);
     });
 
     child.once("error", (error) => {
@@ -114,13 +157,13 @@ async function runQwenExtensionsCommand(args: readonly string[]): Promise<void> 
         return;
       }
 
-      rejectPromise(
-        new Error(
-          signal
-            ? `${command} 被信号 ${signal} 中断。`
-            : `${command} 退出码为 ${code ?? "unknown"}。`,
-        ),
-      );
+      rejectPromise(new QwenExtensionsCommandError({
+        command,
+        exitCode: code,
+        signal,
+        stdout,
+        stderr,
+      }));
     });
   });
 }
@@ -130,7 +173,18 @@ export async function installQwenExtensionWithOfficialCli(sourceDir: string): Pr
 }
 
 export async function updateQwenExtensionWithOfficialCli(extensionName: string): Promise<void> {
-  await runQwenExtensionsCommand(["extensions", "uninstall", extensionName]);
+  try {
+    await runQwenExtensionsCommand(["extensions", "uninstall", extensionName]);
+  } catch (error) {
+    if (
+      error instanceof QwenExtensionsCommandError &&
+      /extension not found/i.test(`${error.stdout}\n${error.stderr}`)
+    ) {
+      return;
+    }
+
+    throw error;
+  }
 }
 
 export async function relinkQwenExtensionWithOfficialCli(sourceDir: string): Promise<void> {
