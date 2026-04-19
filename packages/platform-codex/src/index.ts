@@ -212,6 +212,21 @@ function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetL
 - 明确是 bug：直接用 \`$zc-debug\`
 - 明确是审查：直接用 \`$zc-quality-review\`
 
+## 最常用入口速查
+
+- 做新需求但范围还没收敛：\`$zc-product-analysis\`
+- 进入完整交付主流程：\`$zc-sdd-tdd\`
+- 修 bug：\`$zc-debug\`
+- 做代码审查和反馈收敛：\`$zc-quality-review\`
+- 补文档或发布说明：\`$zc-doc\`
+- 陌生项目先摸底：\`$zc-onboard\` 或 \`$zc-ctx-health\`
+
+## 详细内容在哪里
+
+- command-alias skills：查看 \`skills/zc-<command>/SKILL.md\`
+- workflow / 专项 skills：查看 \`skills/zc-<skill>/SKILL.md\`
+- 如果入口页不足以判断，就先打开对应 skill 再继续
+
 ## 已安装能力
 
 此安装当前包含：

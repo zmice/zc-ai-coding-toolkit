@@ -186,10 +186,20 @@ function renderClaudeFile(
 - 已确认是完整交付：进 \`/zc-sdd-tdd\`
 - 明确是 bug：进 \`/zc-debug\`
 
+## 最常用入口速查
+
+- 做新需求但范围还没收敛：\`/zc-product-analysis\`
+- 进入完整交付主流程：\`/zc-sdd-tdd\`
+- 修 bug：\`/zc-debug\`
+- 做代码审查和反馈收敛：\`/zc-quality-review\`
+- 补文档或发布说明：\`/zc-doc\`
+- 陌生项目先摸底：\`/zc-onboard\` 或 \`/zc-ctx-health\`
+
 ## 详细内容在哪里
 
 - commands：查看 \`.claude/commands/zc-*.md\`
 - agents：查看 \`.claude/agents/zc-*.md\`
+- 如果入口页不足以判断，就先打开对应 command 或 agent 再继续
 
 ## 已安装能力
 

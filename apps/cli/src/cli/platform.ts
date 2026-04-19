@@ -132,6 +132,51 @@ function getPlanCapabilitySummary(plan: PlatformPlanLike) {
     return null;
   }
 
+  const exposure = (() => {
+    switch (plan.platform) {
+      case "codex":
+        return {
+          style: "skill-alias",
+          entryPattern: "$zc-*",
+          examples: [
+            "zc:start -> $zc-start",
+            "zc:product-analysis -> $zc-product-analysis",
+            "zc:sdd-tdd -> $zc-sdd-tdd",
+          ],
+        };
+      case "claude":
+        return {
+          style: "slash-command",
+          entryPattern: "/zc-*",
+          examples: [
+            "zc:start -> /zc-start",
+            "zc:product-analysis -> /zc-product-analysis",
+            "zc:sdd-tdd -> /zc-sdd-tdd",
+          ],
+        };
+      case "opencode":
+        return {
+          style: "slash-command",
+          entryPattern: "/zc-*",
+          examples: [
+            "zc:start -> /zc-start",
+            "zc:product-analysis -> /zc-product-analysis",
+            "zc:sdd-tdd -> /zc-sdd-tdd",
+          ],
+        };
+      case "qwen":
+        return {
+          style: "namespaced-command",
+          entryPattern: "zc:*",
+          examples: [
+            "zc:start -> zc:start",
+            "zc:product-analysis -> zc:product-analysis",
+            "zc:sdd-tdd -> zc:sdd-tdd",
+          ],
+        };
+    }
+  })();
+
   return {
     namespace: capability.namespace,
     surfaces: capability.surfaces,
@@ -142,6 +187,7 @@ function getPlanCapabilitySummary(plan: PlatformPlanLike) {
     extensionDir: capability.extension
       ? `${capability.extension.relativeDir}/${capability.extension.name}`
       : null,
+    exposure,
   };
 }
 
@@ -171,12 +217,14 @@ function summarizeCapability(plan: PlatformPlanLike): string[] {
 
   return [
     `命名空间：${capability.namespace}`,
+    `入口形式：${capability.exposure.entryPattern}`,
     `安装面：${capability.surfaces.map((surface) => formatSurfaceLabel(surface)).join("、")}`,
     ...(capability.entryFile ? [`入口文件：${capability.entryFile}`] : []),
     ...(capability.commandsDir ? [`commands 目录：${capability.commandsDir}`] : []),
     ...(capability.skillsDir ? [`skills 目录：${capability.skillsDir}`] : []),
     ...(capability.agentsDir ? [`agents 目录：${capability.agentsDir}`] : []),
     ...(capability.extensionDir ? [`extension 目录：${capability.extensionDir}`] : []),
+    `示例映射：${capability.exposure.examples.join("；")}`,
   ];
 }
 
@@ -552,7 +600,9 @@ function summarizeWhere(target: PlatformName, root: string, metadata: {
     ...(metadata.capability
       ? [
           `命名空间：${metadata.capability.namespace}`,
+          `入口形式：${metadata.capability.exposure.entryPattern}`,
           `安装面：${metadata.capability.surfaces.map((surface) => formatSurfaceLabel(surface)).join("、")}`,
+          `示例映射：${metadata.capability.exposure.examples.join("；")}`,
         ]
       : []),
     ...(metadata.hint ? [`提示：${metadata.hint}`] : []),
