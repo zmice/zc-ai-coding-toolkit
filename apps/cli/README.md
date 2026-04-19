@@ -2,6 +2,12 @@
 
 `@zmice/zc` 是 zc AI Coding Toolkit 的统一入口 CLI，也是当前仓库唯一对外发布的 npm 包。
 
+相关入口：
+
+- 源码仓库：<https://github.com/zmice/zc-ai-coding-toolkit>
+- 问题反馈：<https://github.com/zmice/zc-ai-coding-toolkit/issues>
+- Qwen 扩展仓库：<https://github.com/zmice/zc-qwen-extension>
+
 如果你是从 npm 页面进入，先记住这件事：
 
 - `zc` 不是单个平台插件
