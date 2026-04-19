@@ -1,26 +1,22 @@
 # zc AI Coding Toolkit
 
-一个面向 AI 编码工作流的开源 monorepo。这个仓库把 **内容事实源**、**统一操作 CLI**、**平台适配层** 和 **上游治理层** 分开维护，用来持续沉淀并分发一套可治理的 `zc` AI 编码工具包。
+面向 AI 编码工作流的开源工具包。
+
+它把一套可治理的 `commands / skills / agents` 内容系统、统一入口 CLI `zc`、以及不同 AI 平台的原生安装适配收在一个仓库里。目标不是堆 prompt，而是把 **任务入口、固定 workflow、平台安装、更新与状态检查** 做成可维护、可发布、可扩展的产品。
 
 当前对外主产品只有：
 
 - `@zmice/zc`
 
-仓库内部还包含：
-
-- `packages/toolkit`：skills / commands / agents 的唯一事实源
-- `packages/platform-*`：Qwen / Codex / Claude / OpenCode 平台适配层
-- `references`：上游项目治理、快照、审阅记录
+如果你只想使用它，不需要理解整个 monorepo。
 
 ## 适合谁
 
-- 想用 `zc` 管理 AI 平台内容安装、更新和状态的人
-- 想维护一套可治理的 AI prompts / commands / skills / agents 的人
-- 想参考一个把内容层、CLI、平台安装和上游同步拆开的 monorepo 结构的人
+- 想用统一 CLI 给 Codex、Claude Code、OpenCode、Qwen 安装 AI 编码内容的人
+- 想维护一套可治理的 AI workflow 内容，而不是零散 prompt 文件的人
+- 想参考一个把内容层、CLI、平台适配和上游参考拆开的开源实现的人
 
-## 如果你只是想用 zc
-
-先看这三步就够了：
+## 三分钟上手
 
 ```bash
 npm install -g @zmice/zc
@@ -28,55 +24,61 @@ zc platform install codex --global
 zc platform status codex --global --json
 ```
 
-用户向入口：
+如果你想装到别的平台，直接把 `codex` 换成：
+
+- `claude`
+- `opencode`
+- `qwen`
+
+更完整的安装和更新说明见：
 
 - [apps/cli/README.md](apps/cli/README.md)
 - [docs/usage-guide.md](docs/usage-guide.md)
 
-## 核心能力
+## 这个项目解决什么问题
 
-- `zc` 统一入口 CLI
-  - runtime
-  - toolkit 查询
-  - platform 生成 / 安装 / 更新 / 状态检查
-- `toolkit` 内容层
-  - 使用 `meta.yaml + body.md + assets/` 维护 skills、commands、agents
-- 平台原生安装
-  - Codex：`AGENTS.md` + `skills`
-  - Claude Code：`CLAUDE.md` + `commands / agents`
-  - OpenCode：`AGENTS.md` + `commands / skills / agents`
-  - Qwen：`QWEN.md` + extension 目录
-- 上游治理
-  - 记录、快照、比对、报告、导入提案
+`zc` 主要解决 4 件事：
 
-## 内容包含什么
+- **统一入口**
+  - 用一套 `zc platform / zc toolkit` 命令处理平台安装、状态、更新和内容查询
+- **结构化内容**
+  - 用 `commands / skills / agents` 维护 AI 工作流内容，而不是散乱 prompt
+- **平台原生安装**
+  - 不同平台按官方支持的目录或扩展模型安装，不硬套一套假插件系统
+- **可更新、可诊断**
+  - 安装后可查看位置、状态、更新、修复、卸载，而不是“写完文件就结束”
 
-当前 `toolkit` 主要维护三类内容：
+## 支持的平台
+
+| 平台 | 当前安装形态 | 统一入口适配 |
+| --- | --- | --- |
+| Codex | `AGENTS.md` + `skills/` | `zc:start -> $zc-start` |
+| Claude Code | `CLAUDE.md` + `commands/` + `agents/` | `zc:start -> /zc-start` |
+| OpenCode | `AGENTS.md` + `commands/` + `skills/` + `agents/` | `zc:start -> /zc-start` |
+| Qwen | `QWEN.md` + extension 目录 | `zc:start -> zc:start` |
+
+补充说明：
+
+- Codex 通过 `$zc-*` skill 别名承接统一语义
+- Claude Code 和 OpenCode 通过 `/zc-*` 命令承接统一语义
+- Qwen 通过 `zc:*` namespaced command 承接统一语义
+- 这样做是为了避免和平台内置命令、社区插件或未来扩展冲突
+
+## 内容模型
+
+这个仓库的内容不是一堆平铺文件，而是三层能力：
 
 - `commands`
-  - 统一任务入口和阶段入口，例如：
-    - `start`
-    - `product-analysis`
-    - `spec`
-    - `task-plan`
-    - `build`
-    - `quality-review`
-    - `verify`
+  - 任务入口和阶段入口
+  - 例如：`start`、`product-analysis`、`spec`、`task-plan`、`build`、`quality-review`、`verify`
 - `skills`
-  - 完整 workflow 和专项方法，例如：
-    - `sdd-tdd-workflow`
-    - `spec-driven-development`
-    - `debugging-and-error-recovery`
-    - `documentation-and-adrs`
-    - `shipping-and-launch`
+  - 完整 workflow 和专项方法
+  - 例如：`sdd-tdd-workflow`、`debugging-and-error-recovery`、`documentation-and-adrs`
 - `agents`
-  - 常见协作角色，例如：
-    - `architect`
-    - `product-owner`
-    - `code-reviewer`
-    - `test-engineer`
+  - 常见协作角色模板
+  - 例如：`architect`、`product-owner`、`code-reviewer`、`test-engineer`
 
-当前内容组织方式以固定 workflow 为主：
+当前固定 workflow 有 6 条：
 
 - `product-analysis`
 - `full-delivery`
@@ -85,118 +87,39 @@ zc platform status codex --global --json
 - `docs-release`
 - `investigation`
 
-`start` 负责先做任务判型，再把任务引导到对应 workflow。
+其中：
+
+- `start` 是统一开始入口
+- 它先做任务判型
+- 再把任务引导到对应 workflow 的默认入口
 
 完整内容清单见：
 
 - [packages/toolkit/README.md](packages/toolkit/README.md)
 
-## 安装
+## 常见操作
 
-### 普通使用
-
-```bash
-npm install -g @zmice/zc
-zc --help
-```
-
-### 从源码运行
+### 1. 看平台会装到哪里
 
 ```bash
-pnpm install
-pnpm build
-node apps/cli/dist/cli/index.js --help
-```
-
-### 本地开发态 link
-
-```bash
-pnpm setup
-# 重新打开终端，或重新加载 shell
-pnpm install
-pnpm build
-pnpm --dir apps/cli link --global
-zc --help
-```
-
-如果你只是想验证最新仓库代码，不一定要全局 link，也可以直接运行：
-
-```bash
-node apps/cli/dist/cli/index.js --help
-```
-
-更完整的安装、更新和平台内容安装说明见：
-
-- [docs/usage-guide.md](docs/usage-guide.md)
-- [apps/cli/README.md](apps/cli/README.md)
-
-## 快速开始
-
-### 普通使用者
-
-```bash
-# 查看平台默认安装位置
 zc platform where codex --global --json
+zc platform where claude --global --json
+zc platform where opencode --global --json
 zc platform where qwen --global --json
+```
 
-# 安装平台内容
+### 2. 安装平台内容
+
+```bash
 zc platform install codex --global
 zc platform install claude --global
 zc platform install opencode --global
 zc platform install qwen --global
-
-# 查看已安装状态
-zc platform status codex --global --json
-zc platform status qwen --global --json
 ```
 
-### 仓库维护者
+### 3. 查看状态 / 更新 / 修复
 
 ```bash
-# 查看 toolkit 状态
-zc toolkit lint --json
-
-# 查询内容
-zc toolkit search review
-zc toolkit show command:start
-zc toolkit recommend build
-zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit
-```
-
-## 仓库结构
-
-```text
-.
-├── apps/
-│   └── cli/                    # @zmice/zc，统一 operator/runtime CLI
-├── packages/
-│   ├── toolkit/                # skills / commands / agents 的唯一事实源
-│   ├── platform-core/          # 平台生成/安装共享 contract
-│   ├── platform-qwen/
-│   ├── platform-codex/
-│   ├── platform-claude/
-│   └── platform-opencode/
-├── references/                 # 上游治理：upstreams、notes、snapshots
-├── docs/
-│   ├── adr/                    # 架构决策记录
-│   └── architecture/           # 长期架构与治理文档
-└── scripts/                    # workspace 验证、release preflight 等脚本
-```
-
-分层原则：
-
-- `apps/cli` 负责命令编排和用户入口，不维护 prompt 内容
-- `packages/toolkit` 是内容真相，平台包和 CLI 都消费它
-- `packages/platform-*` 只负责平台表达和安装，不维护第二份内容
-- `references` 只做上游治理，不作为运行时依赖
-
-## 常用工作流
-
-### 1. 普通使用者：安装、查看和更新平台内容
-
-```bash
-zc platform where codex --global --json
-zc platform install codex --global
 zc platform status codex --global --json
 zc platform update codex --global --plan --json
 zc platform doctor codex --global --json
@@ -204,32 +127,13 @@ zc platform repair codex --global --plan --json
 zc platform uninstall codex --global --plan --json
 ```
 
-### 2. 普通使用者：Qwen 官方扩展安装
-
-```bash
-zc platform install qwen --global
-zc platform status qwen --global --json
-zc platform update qwen --global --plan --json
-```
-
-其中 Qwen 用户级安装默认会优先走官方扩展仓库：
+Qwen 用户级安装默认会优先走官方扩展链：
 
 - 安装源：`https://github.com/zmice/zc-qwen-extension.git`
 - 安装方式：`qwen extensions install`
 - 更新方式：`qwen extensions update zc-toolkit`
 
-安装后需要注意：
-
-- `toolkit` 里的 canonical command / skill 名称不会原样暴露给平台
-- 平台侧都会做命名空间适配，避免和平台内置命令或未来插件冲突
-- 例如：
-  - Codex：`zc:start` 会映射成 `$zc-start`
-  - Claude Code：`zc:start` 会映射成 `/zc-start`
-  - OpenCode：`zc:start` 会映射成 `/zc-start`
-  - Qwen：`zc:start` 会映射成 `zc:start`
-- 详细规则见 [docs/usage-guide.md](docs/usage-guide.md)
-
-### 3. 仓库维护者：查询和选择内容
+### 4. 查询内容
 
 ```bash
 zc toolkit lint --json
@@ -238,35 +142,52 @@ zc toolkit show command:start
 zc toolkit recommend build
 ```
 
-### 4. 仓库维护者：导出和同步平台内容
+## 如果你在维护这个仓库
+
+常用命令：
 
 ```bash
-zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit
-```
-
-其中 Qwen 用户级安装会额外暴露：
-
-- 安装方式：`qwen extensions` 官方 CLI
-- 安装来源：GitHub 扩展仓库
-- 来源地址：`https://github.com/zmice/zc-qwen-extension.git`
-- 如需导出独立扩展包：`zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit`
-- 如需同步到独立 GitHub 扩展仓库：可手动触发 `.github/workflows/publish-qwen-extension-repo.yml`
-
-### 5. 仓库维护者：验证和内容维护
-
-内容源码默认位于：
-
-- `packages/toolkit/src/content/`
-
-开发者常用命令：
-
-```bash
-pnpm --dir packages/toolkit test
-pnpm --dir apps/cli test
+pnpm install
+pnpm build
 pnpm verify
+pnpm --dir apps/cli test
+pnpm --dir packages/toolkit test
 ```
 
-## 参考项目
+仓库分层：
+
+- `apps/cli`
+  - `zc` 统一入口 CLI
+- `packages/toolkit`
+  - `commands / skills / agents` 的唯一事实源
+- `packages/platform-*`
+  - 平台表达和安装实现
+- `references`
+  - 上游参考登记、快照和审阅记录
+- `docs`
+  - 长期架构、发布和使用文档
+
+维护入口：
+
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [docs/README.md](docs/README.md)
+- [docs/architecture/project-context.md](docs/architecture/project-context.md)
+
+## 文档入口
+
+如果你是普通使用者，优先看：
+
+- [apps/cli/README.md](apps/cli/README.md)
+- [docs/usage-guide.md](docs/usage-guide.md)
+
+如果你是仓库维护者，再看：
+
+- [packages/toolkit/README.md](packages/toolkit/README.md)
+- [references/README.md](references/README.md)
+- [docs/architecture/platform-capability-matrix.md](docs/architecture/platform-capability-matrix.md)
+- [docs/release-guide.md](docs/release-guide.md)
+
+## 参考项目与来源
 
 这个仓库会参考公开项目和官方文档，但不会直接镜像或自动覆盖内容。
 
@@ -278,46 +199,19 @@ pnpm verify
 - [`garrytan/gstack`](https://github.com/garrytan/gstack)
 - [`multica-ai/andrej-karpathy-skills`](https://github.com/multica-ai/andrej-karpathy-skills)
 
-CLI 和平台安装语义也参考了现成项目与官方文档：
+CLI 和安装语义还参考：
 
 - [`Yeachan-Heo/oh-my-codex`](https://github.com/Yeachan-Heo/oh-my-codex)
 - Codex / Claude Code / OpenCode / Qwen 官方文档
 
-如需查看治理记录和上游登记清单：
+治理记录与上游登记清单见：
 
 - [references/upstreams.yaml](references/upstreams.yaml)
 - [references/README.md](references/README.md)
 
-## 文档入口
-
-如果你是普通使用者，先看：
-
-- [apps/cli/README.md](apps/cli/README.md)
-- [docs/usage-guide.md](docs/usage-guide.md)
-
-如果你是仓库维护者，再看：
-
-- [CONTRIBUTING.md](CONTRIBUTING.md)：贡献方式、验证规则、提交边界
-- [packages/toolkit/README.md](packages/toolkit/README.md)：内容模型与治理规则
-- [references/README.md](references/README.md)：上游治理层说明
-
-长期技术文档：
-
-- [docs/README.md](docs/README.md)
-- [docs/architecture/project-context.md](docs/architecture/project-context.md)
-- [docs/architecture/monorepo-layers.md](docs/architecture/monorepo-layers.md)
-- [docs/architecture/platform-capability-matrix.md](docs/architecture/platform-capability-matrix.md)
-- [docs/release-guide.md](docs/release-guide.md)
-
 ## 开发与验证
 
-```bash
-pnpm install
-pnpm build
-pnpm verify
-```
-
-按层级验证：
+最低常用验证：
 
 - 文档改动：`git diff --check`
 - toolkit 内容改动：`zc toolkit lint --json` + 对应测试
