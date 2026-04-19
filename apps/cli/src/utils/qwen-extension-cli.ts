@@ -1,11 +1,8 @@
-import { execFile } from "node:child_process";
+import { spawn } from "node:child_process";
 import { rm } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
-import { promisify } from "node:util";
 
 import { writeArtifacts, type GeneratedArtifact } from "./workspace.js";
-
-const execFileAsync = promisify(execFile);
 
 export class QwenOfficialCliUnavailableError extends Error {
   constructor(message: string = "未检测到 qwen CLI，无法通过官方扩展命令安装。") {
@@ -95,25 +92,37 @@ export async function syncQwenOfficialCliSourceBundle(
 }
 
 async function runQwenExtensionsCommand(args: readonly string[]): Promise<void> {
-  try {
-    await execFileAsync("qwen", args, { encoding: "utf8" });
-  } catch (error) {
-    const command = `qwen ${args.join(" ")}`;
+  const command = `qwen ${args.join(" ")}`;
 
-    if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") {
-      throw new QwenOfficialCliUnavailableError();
-    }
+  await new Promise<void>((resolvePromise, rejectPromise) => {
+    const child = spawn("qwen", args, {
+      stdio: "inherit",
+    });
 
-    const stderr = typeof error === "object" && error !== null && "stderr" in error
-      ? String(error.stderr ?? "").trim()
-      : "";
-    const stdout = typeof error === "object" && error !== null && "stdout" in error
-      ? String(error.stdout ?? "").trim()
-      : "";
-    const message = stderr || stdout || (error instanceof Error ? error.message : "未知错误");
+    child.once("error", (error) => {
+      if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") {
+        rejectPromise(new QwenOfficialCliUnavailableError());
+        return;
+      }
 
-    throw new Error(`${command} 执行失败：${message}`);
-  }
+      rejectPromise(new Error(`${command} 执行失败：${error instanceof Error ? error.message : "未知错误"}`));
+    });
+
+    child.once("close", (code, signal) => {
+      if (code === 0) {
+        resolvePromise();
+        return;
+      }
+
+      rejectPromise(
+        new Error(
+          signal
+            ? `${command} 被信号 ${signal} 中断。`
+            : `${command} 退出码为 ${code ?? "unknown"}。`,
+        ),
+      );
+    });
+  });
 }
 
 export async function installQwenExtensionWithOfficialCli(sourceDir: string): Promise<void> {

@@ -737,6 +737,10 @@ export async function runPlatformInstall(
       try {
         const sourceBundle = await syncQwenOfficialCliSourceBundle(plan);
 
+        if (format === "text") {
+          console.log(`正在调用官方命令：qwen extensions ${status.kind === "not-installed" ? "install" : "update"} …`);
+        }
+
         if (status.kind === "not-installed") {
           await installQwenExtensionWithOfficialCli(sourceBundle.sourceDir);
         } else if (status.kind !== "up-to-date") {
@@ -1022,6 +1026,11 @@ export async function runPlatformUpdate(
     if (shouldPreferQwenOfficialCli(target, scope)) {
       try {
         const sourceBundle = await syncQwenOfficialCliSourceBundle(plan);
+
+        if (format === "text") {
+          console.log("正在调用官方命令：qwen extensions update …");
+        }
+
         await updateQwenExtensionWithOfficialCli(sourceBundle.extensionName);
         await writePlatformInstallReceiptForPlan(plan, {
           installedAt: new Date().toISOString(),
