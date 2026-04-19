@@ -50,6 +50,16 @@ zc platform where qwen --global --json
 
 如果本机没有 `qwen` 命令，CLI 会明确提示并回退为直接写入官方扩展目录。
 
+命名空间规则：
+
+- 统一语义通过 `zc:*` namespaced command 承接
+- workflow / 专项 skill 使用 `zc-<skill>` 目录名
+- 不会把裸名字如 `start`、`spec`、`build` 直接暴露给 Qwen
+- 例如：
+  - `zc:start -> zc:start`
+  - `zc:product-analysis -> zc:product-analysis`
+  - `zc:sdd-tdd -> zc:sdd-tdd`
+
 ## 验证
 
 ```bash

@@ -8,6 +8,30 @@
 - `.claude/commands/zc-*.md`
 - `.claude/agents/zc-*.md`
 
+命名空间规则：
+
+- 统一语义通过 `/zc-*` command 承接
+- 不会把裸名字如 `start`、`spec`、`build` 直接暴露给 Claude Code
+- 例如：
+  - `zc:start -> /zc-start`
+  - `zc:product-analysis -> /zc-product-analysis`
+  - `zc:sdd-tdd -> /zc-sdd-tdd`
+
+当前安装模型：
+
+- `--project`
+  - 安装 `<project>/CLAUDE.md`
+  - 安装 `<project>/.claude/commands/zc-<command>.md`
+  - 安装 `<project>/.claude/agents/zc-<agent>.md`
+- `--global`
+  - 安装 `~/.claude/CLAUDE.md`
+  - 安装 `~/.claude/commands/zc-<command>.md`
+  - 安装 `~/.claude/agents/zc-<agent>.md`
+- `--dir <path>`
+  - 安装 `<path>/CLAUDE.md`
+  - 安装 `<path>/commands/zc-<command>.md`
+  - 安装 `<path>/agents/zc-<agent>.md`
+
 官方依据：
 
 - Claude Code memory

@@ -37,6 +37,15 @@
 
 `--global` 的 `destinationRoot` 语义是用户 home 根目录，包内部会再拼接官方目录 `.config/opencode`。
 
+命名空间规则：
+
+- 统一语义通过 `/zc-*` command 承接
+- 不会把裸名字如 `start`、`spec`、`build` 直接暴露给 OpenCode
+- 例如：
+  - `zc:start -> /zc-start`
+  - `zc:product-analysis -> /zc-product-analysis`
+  - `zc:sdd-tdd -> /zc-sdd-tdd`
+
 常用验证：
 
 ```bash

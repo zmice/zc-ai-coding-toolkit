@@ -51,6 +51,15 @@ zc platform install codex --plan --json
   - `$zc-build`
 - 更完整的方法和专题能力继续通过 `$zc-<skill>` 使用
 
+命名空间规则：
+
+- 不会把裸名字如 `start`、`spec`、`build` 直接安装成 Codex 入口
+- 统一语义都会映射成 `$zc-*`
+- 例如：
+  - `zc:start -> $zc-start`
+  - `zc:product-analysis -> $zc-product-analysis`
+  - `zc:sdd-tdd -> $zc-sdd-tdd`
+
 项目安装 / 全局安装的详细步骤见：
 
 - `docs/usage-guide.md`
