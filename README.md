@@ -72,6 +72,10 @@
 
 `start` 负责先做任务判型，再把任务引导到对应 workflow。
 
+完整内容清单见：
+
+- [packages/toolkit/README.md](packages/toolkit/README.md)
+
 ## 安装
 
 ### 普通使用
