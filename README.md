@@ -18,6 +18,21 @@
 - 想维护一套可治理的 AI prompts / commands / skills / agents 的人
 - 想参考一个把内容层、CLI、平台安装和上游同步拆开的 monorepo 结构的人
 
+## 如果你只是想用 zc
+
+先看这三步就够了：
+
+```bash
+npm install -g @zmice/zc
+zc platform install codex --global
+zc platform status codex --global --json
+```
+
+用户向入口：
+
+- [apps/cli/README.md](apps/cli/README.md)
+- [docs/usage-guide.md](docs/usage-guide.md)
+
 ## 核心能力
 
 - `zc` 统一入口 CLI
@@ -113,8 +128,29 @@ node apps/cli/dist/cli/index.js --help
 更完整的安装、更新和平台内容安装说明见：
 
 - [docs/usage-guide.md](docs/usage-guide.md)
+- [apps/cli/README.md](apps/cli/README.md)
 
 ## 快速开始
+
+### 普通使用者
+
+```bash
+# 查看平台默认安装位置
+zc platform where codex --global --json
+zc platform where qwen --global --json
+
+# 安装平台内容
+zc platform install codex --global
+zc platform install claude --global
+zc platform install opencode --global
+zc platform install qwen --global
+
+# 查看已安装状态
+zc platform status codex --global --json
+zc platform status qwen --global --json
+```
+
+### 仓库维护者
 
 ```bash
 # 查看 toolkit 状态
@@ -124,26 +160,7 @@ zc toolkit lint --json
 zc toolkit search review
 zc toolkit show command:start
 zc toolkit recommend build
-
-# 查看平台安装位置
-zc platform where codex --global --json
-zc platform where qwen --global --json
-
-# 生成或安装平台内容
-zc platform install codex --global
-zc platform install claude --global
-zc platform install opencode --global
-zc platform install qwen --global
 zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit
-
-# 查看已安装状态
-zc platform status codex --global --json
-zc platform status qwen --global --json
-
-# 诊断、修复、卸载
-zc platform doctor codex --global --json
-zc platform repair codex --global --plan --json
-zc platform uninstall codex --global --plan --json
 ```
 
 ## 仓库结构
@@ -175,22 +192,24 @@ zc platform uninstall codex --global --plan --json
 
 ## 常用工作流
 
-### 1. 查询和选择内容
+### 1. 普通使用者：安装、查看和更新平台内容
 
 ```bash
-zc toolkit lint --json
-zc toolkit search review
-zc toolkit show command:start
-zc toolkit recommend build
+zc platform where codex --global --json
+zc platform install codex --global
+zc platform status codex --global --json
+zc platform update codex --global --plan --json
+zc platform doctor codex --global --json
+zc platform repair codex --global --plan --json
+zc platform uninstall codex --global --plan --json
 ```
 
-### 2. 给 AI 平台安装内容
+### 2. 普通使用者：Qwen 官方扩展安装
 
 ```bash
-zc platform install codex --global
-zc platform install claude --global
-zc platform install opencode --global
 zc platform install qwen --global
+zc platform status qwen --global --json
+zc platform update qwen --global --plan --json
 ```
 
 其中 Qwen 用户级安装默认会优先走官方扩展仓库：
@@ -210,13 +229,19 @@ zc platform install qwen --global
   - Qwen：`zc:start` 会映射成 `zc:start`
 - 详细规则见 [docs/usage-guide.md](docs/usage-guide.md)
 
-### 3. 查看安装位置和状态
+### 3. 仓库维护者：查询和选择内容
 
 ```bash
-zc platform where codex --global --json
-zc platform where qwen --global --json
-zc platform status codex --global --json
-zc platform status qwen --global --json
+zc toolkit lint --json
+zc toolkit search review
+zc toolkit show command:start
+zc toolkit recommend build
+```
+
+### 4. 仓库维护者：导出和同步平台内容
+
+```bash
+zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit
 ```
 
 其中 Qwen 用户级安装会额外暴露：
@@ -227,30 +252,7 @@ zc platform status qwen --global --json
 - 如需导出独立扩展包：`zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit`
 - 如需同步到独立 GitHub 扩展仓库：可手动触发 `.github/workflows/publish-qwen-extension-repo.yml`
 
-### 4. 预演更新或重装
-
-```bash
-zc platform update codex --global --plan --json
-zc platform install claude --global --plan --json
-zc platform install opencode --global --plan --json
-zc platform install qwen --global --plan --json
-```
-
-### 5. 诊断、修复和卸载
-
-```bash
-zc platform doctor codex --global --json
-zc platform repair codex --global --plan --json
-zc platform uninstall codex --global --plan --json
-```
-
-其中：
-
-- `doctor` 只读诊断，不写盘
-- `repair` 用于恢复 drift / missing / qwen bundle 失配
-- `uninstall` 只删除受管产物和回执，不碰未受管文件
-
-### 6. 仓库开发者维护内容
+### 5. 仓库维护者：验证和内容维护
 
 内容源码默认位于：
 
@@ -288,11 +290,14 @@ CLI 和平台安装语义也参考了现成项目与官方文档：
 
 ## 文档入口
 
-先看这些：
+如果你是普通使用者，先看：
 
-- [docs/usage-guide.md](docs/usage-guide.md)：安装、更新、平台使用说明
+- [apps/cli/README.md](apps/cli/README.md)
+- [docs/usage-guide.md](docs/usage-guide.md)
+
+如果你是仓库维护者，再看：
+
 - [CONTRIBUTING.md](CONTRIBUTING.md)：贡献方式、验证规则、提交边界
-- [apps/cli/README.md](apps/cli/README.md)：CLI 入口与命令分层
 - [packages/toolkit/README.md](packages/toolkit/README.md)：内容模型与治理规则
 - [references/README.md](references/README.md)：上游治理层说明
 

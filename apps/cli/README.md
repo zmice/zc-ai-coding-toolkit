@@ -2,6 +2,13 @@
 
 `@zmice/zc` 是 zc AI Coding Toolkit 的统一入口 CLI，也是当前仓库唯一对外发布的 npm 包。
 
+如果你只是想安装和更新平台内容，先看：
+
+- `安装`
+- `命名空间适配`
+- `平台安装模型`
+- `高频用法`
+
 它负责：
 
 - runtime：启动单工人或团队协作运行时
@@ -74,6 +81,30 @@ zc --help
 - `ERR_PNPM_NO_GLOBAL_BIN_DIR`
 
 说明是 pnpm 环境未初始化，不是 `zc` 构建问题。
+
+## 使用者与维护者
+
+### 普通使用者
+
+最常见的是这条循环：
+
+```bash
+zc platform where codex --global --json
+zc platform install codex --global
+zc platform status codex --global --json
+zc platform update codex --global --plan --json
+```
+
+### 仓库维护者
+
+如果你在维护 monorepo 本身，更常用的是：
+
+```bash
+pnpm install
+pnpm --dir apps/cli build
+pnpm --dir apps/cli test
+pnpm verify
+```
 
 ## 命令分层
 

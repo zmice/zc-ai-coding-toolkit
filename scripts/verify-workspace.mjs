@@ -96,13 +96,15 @@ function main() {
   const smokeRoot = mkdtempSync(join(tmpdir(), "ai-coding-verify-"));
   const installRoot = mkdtempSync(join(tmpdir(), "ai-coding-install-"));
   try {
+    const qwenExtensionRoot = join(smokeRoot, ".qwen", "extensions", "zc-toolkit");
     run(
       "node",
       ["apps/cli/dist/cli/index.js", "platform", "generate", "qwen", "--dir", smokeRoot],
       "smoke platform generate qwen"
     );
-    assertFile(join(smokeRoot, "QWEN.md"), /skill:api-and-interface-design|skill:sdd-tdd-workflow/);
-    assertFile(join(smokeRoot, "qwen-extension.json"), /"platform": "qwen"/);
+    assertFile(join(qwenExtensionRoot, "QWEN.md"), /skill:api-and-interface-design|skill:sdd-tdd-workflow/);
+    assertFile(join(qwenExtensionRoot, "qwen-extension.json"), /"platform": "qwen"/);
+    assertFile(join(qwenExtensionRoot, "commands", "zc", "start.md"), /zc:start/);
     run(
       "node",
       ["apps/cli/dist/cli/index.js", "platform", "install", "claude", "--dir", installRoot],

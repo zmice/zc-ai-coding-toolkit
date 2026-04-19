@@ -1,11 +1,19 @@
 # Usage Guide
 
-这份文档回答 4 类高频问题：
+这份文档按两类人来组织：
 
-1. 如何在本仓库内使用 `zc`
-2. 如何把 `zc` 安装到本机并更新
-3. 各 AI 工具官方推荐的安装 / 更新方式是什么
-4. 如何把 toolkit 内容安装到不同 AI 平台的项目目录或全局目录
+1. 普通使用者：怎么安装 `zc`、怎么给平台安装内容、怎么更新和诊断
+2. 仓库维护者：怎么在仓库里运行 `zc`、怎么导出 bundle、怎么对齐官方能力
+
+如果你只是想使用 `zc`，优先看：
+
+- `2. 把 zc 安装到本机`
+- `4. 给不同 AI 平台安装内容`
+
+如果你正在维护这个仓库，再看：
+
+- `1. 在仓库内使用 zc`
+- `3. AI 工具官方安装与更新`
 
 ## 1. 在仓库内使用 `zc`
 
@@ -96,6 +104,14 @@ node apps/cli/dist/cli/index.js <subcommand>
 ```
 
 如果只是临时验证 CLI，也可以优先用这条方式，避免受本机 pnpm 全局配置影响。
+
+## 2.1 普通使用者最短路径
+
+```bash
+npm install -g @zmice/zc
+zc platform install codex --global
+zc platform status codex --global --json
+```
 
 ## 3. AI 工具官方安装与更新
 

@@ -462,6 +462,88 @@ function formatStatusLabel(kind: PlatformInstallStatusResult["kind"]): string {
   }
 }
 
+function formatInstallMethodLabel(method: "filesystem" | "qwen-cli"): string {
+  return method === "qwen-cli" ? "官方 qwen extensions CLI" : "直接写入";
+}
+
+function formatInstallSourceLabel(source: "github-repo" | "local-bundle"): string {
+  return source === "github-repo" ? "GitHub 扩展仓库" : "本地 bundle";
+}
+
+function formatBundleTypeLabel(type: "source-bundle" | "release-bundle"): string {
+  return type === "release-bundle" ? "发布态扩展包" : "开发态源包";
+}
+
+function formatScopeFlag(scope: PlatformInstallScope, root: string): string {
+  switch (scope) {
+    case "global":
+      return " --global";
+    case "project":
+      return " --project";
+    case "dir":
+      return ` --dir ${JSON.stringify(root)}`;
+  }
+}
+
+function buildNextStep(
+  action: PlatformAction | "where" | "status" | "doctor",
+  target: PlatformName,
+  root: string,
+  options?: {
+    scope?: PlatformInstallScope;
+    status?: PlatformInstallStatusResult["kind"] | string | null;
+    health?: PlatformInstallDoctorResult["health"];
+    noop?: boolean;
+  },
+): string | null {
+  const scopeFlag = formatScopeFlag(options?.scope ?? "project", root);
+
+  switch (action) {
+    case "generate":
+      return `下一步：如需写入平台目录，运行 \`zc platform install ${target}${scopeFlag}\`。`;
+    case "install":
+      return options?.noop
+        ? `下一步：当前已是目标状态；如需确认细节，运行 \`zc platform status ${target}${scopeFlag} --json\`。`
+        : `下一步：运行 \`zc platform status ${target}${scopeFlag}\` 确认安装状态。`;
+    case "update":
+      return options?.noop
+        ? "下一步：当前已经是最新版本，无需额外操作。"
+        : `下一步：运行 \`zc platform status ${target}${scopeFlag}\` 确认更新结果。`;
+    case "repair":
+      return options?.noop
+        ? "下一步：当前安装健康，无需修复。"
+        : `下一步：运行 \`zc platform doctor ${target}${scopeFlag}\` 复查健康度。`;
+    case "uninstall":
+      return `下一步：如需重新安装，运行 \`zc platform install ${target}${scopeFlag}\`。`;
+    case "where":
+      return `下一步：运行 \`zc platform install ${target}${scopeFlag}\` 执行安装，或追加 \`--plan --json\` 先看计划。`;
+    case "status":
+      switch (options?.status) {
+        case "not-installed":
+          return `下一步：运行 \`zc platform install ${target}${scopeFlag}\`。`;
+        case "update-available":
+          return `下一步：运行 \`zc platform update ${target}${scopeFlag}\`。`;
+        case "drifted":
+          return `下一步：先运行 \`zc platform doctor ${target}${scopeFlag}\`，再按结果选择 \`repair\` 或带 \`--force\` 的 \`update\`。`;
+        case "up-to-date":
+          return "下一步：当前已是最新状态，无需动作。";
+        default:
+          return null;
+      }
+    case "doctor":
+      switch (options?.health) {
+        case "healthy":
+          return "下一步：未发现需要处理的问题。";
+        case "warning":
+          return `下一步：优先运行 \`zc platform repair ${target}${scopeFlag}\`，再复查状态。`;
+        case "broken":
+          return `下一步：先运行 \`zc platform repair ${target}${scopeFlag}\`；如仍异常，再查看 \`zc platform status ${target}${scopeFlag} --json\`。`;
+        default:
+          return null;
+      }
+  }
+}
+
 function summarizeResult(action: PlatformAction, target: PlatformName, root: string, result: {
   created: number;
   overwritten: number;
@@ -470,41 +552,56 @@ function summarizeResult(action: PlatformAction, target: PlatformName, root: str
   dryRun: boolean;
 }, metadata?: PlatformResolutionMetadata & PlatformResultExtra): string {
   const mode = result.dryRun ? "预演完成" : "完成";
-  return [
+  const lines = [
     `${target} ${formatActionLabel(action)}${mode}`,
     formatRootLabel(action, root, metadata),
     ...(metadata?.status ? [`状态：${metadata.status}`] : []),
-    ...(metadata?.installMethod ? [`安装方式：${metadata.installMethod === "qwen-cli" ? "官方 qwen extensions CLI" : "直接写入"}`] : []),
-    ...(metadata?.installSource ? [`安装来源：${metadata.installSource === "github-repo" ? "GitHub 扩展仓库" : "本地 bundle"}`] : []),
+    ...(metadata?.installMethod ? [`安装方式：${formatInstallMethodLabel(metadata.installMethod)}`] : []),
+    ...(metadata?.installSource ? [`安装来源：${formatInstallSourceLabel(metadata.installSource)}`] : []),
     ...(metadata?.sourceRef ? [`来源：${metadata.sourceRef}`] : []),
-    ...(metadata?.bundleType ? [`Bundle 类型：${metadata.bundleType === "release-bundle" ? "发布态扩展包" : "开发态源包"}`] : []),
+    ...(metadata?.bundleType ? [`Bundle 类型：${formatBundleTypeLabel(metadata.bundleType)}`] : []),
     ...(metadata?.bundlePath ? [`Bundle 目录：${metadata.bundlePath}`] : []),
     ...(metadata?.receiptPath ? [`回执：${metadata.receiptPath}`] : []),
-    ...(metadata?.zcVersion ? [`zc 版本：${metadata.zcVersion}`] : []),
-    ...(metadata?.contentFingerprint ? [`内容指纹：${metadata.contentFingerprint}`] : []),
     ...(metadata?.hint ? [`提示：${metadata.hint}`] : []),
     metadata?.noop
       ? "无需写入，当前安装已满足目标状态。"
       : `新增 ${result.created}，覆盖 ${result.overwritten}，未变更 ${result.unchanged}${result.dryRun ? `，跳过写入 ${result.skipped}` : ""}`,
-  ].join("\n");
+  ];
+  const nextStep = buildNextStep(action, target, root, {
+    scope: metadata?.scope,
+    status: metadata?.status,
+    noop: metadata?.noop,
+  });
+  if (nextStep) {
+    lines.push(nextStep);
+  }
+  return lines.join("\n");
 }
 
 function summarizePlan(action: PlatformAction, target: PlatformName, root: string, plan: PlatformPlanLike, metadata?: PlatformResolutionMetadata & {
   status?: string;
 } & Pick<PlatformResultExtra, "installSource" | "sourceRef" | "bundleType" | "bundlePath">): string {
-  return [
+  const lines = [
     `${target} ${formatActionLabel(action)}计划`,
     formatRootLabel(action, root, metadata),
     ...(metadata?.status ? [`状态：${metadata.status}`] : []),
-    ...(metadata?.installSource ? [`安装来源：${metadata.installSource === "github-repo" ? "GitHub 扩展仓库" : "本地 bundle"}`] : []),
+    ...(metadata?.installSource ? [`安装来源：${formatInstallSourceLabel(metadata.installSource)}`] : []),
     ...(metadata?.sourceRef ? [`来源：${metadata.sourceRef}`] : []),
-    ...(metadata?.bundleType ? [`Bundle 类型：${metadata.bundleType === "release-bundle" ? "发布态扩展包" : "开发态源包"}`] : []),
+    ...(metadata?.bundleType ? [`Bundle 类型：${formatBundleTypeLabel(metadata.bundleType)}`] : []),
     ...(metadata?.bundlePath ? [`Bundle 目录：${metadata.bundlePath}`] : []),
     ...(metadata?.hint ? [`提示：${metadata.hint}`] : []),
     ...summarizeCapability(plan),
     `产物数量：${plan.artifacts.length}`,
     ...plan.artifacts.map((artifact) => `- ${artifact.path}`),
-  ].join("\n");
+  ];
+  const nextStep = buildNextStep(action, target, root, {
+    scope: metadata?.scope,
+    status: metadata?.status,
+  });
+  if (nextStep) {
+    lines.push(nextStep);
+  }
+  return lines.join("\n");
 }
 
 function buildPlanPayload(action: PlatformAction, target: PlatformName, root: string, plan: PlatformPlanLike, metadata?: PlatformResolutionMetadata & {
@@ -636,7 +733,7 @@ function summarizeWhere(target: PlatformName, root: string, metadata: {
   marker?: string;
   capability?: ReturnType<typeof getPlanCapabilitySummary>;
 }): string {
-  return [
+  const lines = [
     `${target} 安装目标`,
     `范围：${metadata.scope}`,
     `解析来源：${metadata.rootSource}`,
@@ -651,7 +748,14 @@ function summarizeWhere(target: PlatformName, root: string, metadata: {
         ]
       : []),
     ...(metadata.hint ? [`提示：${metadata.hint}`] : []),
-  ].join("\n");
+  ];
+  const nextStep = buildNextStep("where", target, root, {
+    scope: metadata.scope,
+  });
+  if (nextStep) {
+    lines.push(nextStep);
+  }
+  return lines.join("\n");
 }
 
 function buildWherePayload(target: PlatformName, root: string, metadata: {
@@ -695,25 +799,28 @@ function summarizeStatus(target: PlatformName, root: string, status: PlatformIns
   bundleType?: "source-bundle" | "release-bundle";
   bundlePath?: string;
 }): string {
-  return [
+  const lines = [
     `${target} 安装状态`,
     `范围：${metadata.scope}`,
     `目录：${root}`,
-    ...summarizeCapability(metadata.plan),
     `状态：${status.kind}（${formatStatusLabel(status.kind)}）`,
     `回执：${status.receiptPath}`,
-    ...(status.installedZcVersion ? [`已安装 zc 版本：${status.installedZcVersion}`] : []),
-    ...(metadata.zcVersion ? [`当前 zc 版本：${metadata.zcVersion}`] : []),
-    ...(metadata.installMethod ? [`推荐安装方式：${metadata.installMethod === "qwen-cli" ? "官方 qwen extensions CLI" : "直接写入"}`] : []),
-    ...(metadata.installSource ? [`推荐来源：${metadata.installSource === "github-repo" ? "GitHub 扩展仓库" : "本地 bundle"}`] : []),
+    ...(metadata.installMethod ? [`推荐安装方式：${formatInstallMethodLabel(metadata.installMethod)}`] : []),
+    ...(metadata.installSource ? [`推荐来源：${formatInstallSourceLabel(metadata.installSource)}`] : []),
     ...(metadata.sourceRef ? [`来源：${metadata.sourceRef}`] : []),
-    ...(metadata.bundleType ? [`推荐 Bundle：${metadata.bundleType === "release-bundle" ? "发布态扩展包" : "开发态源包"}`] : []),
+    ...(metadata.bundleType ? [`推荐 Bundle：${formatBundleTypeLabel(metadata.bundleType)}`] : []),
     ...(metadata.bundlePath ? [`Bundle 目录：${metadata.bundlePath}`] : []),
-    ...(status.installedContentFingerprint ? [`已安装内容指纹：${status.installedContentFingerprint}`] : []),
-    ...(status.contentFingerprint ? [`当前内容指纹：${status.contentFingerprint}`] : []),
     `跟踪产物：${status.summary.trackedArtifacts}，漂移：${status.summary.driftedArtifacts}，缺失：${status.summary.missingArtifacts}，待更新：${status.summary.plannedChanges}`,
     ...(metadata.hint ? [`提示：${metadata.hint}`] : []),
-  ].join("\n");
+  ];
+  const nextStep = buildNextStep("status", target, root, {
+    scope: metadata.scope,
+    status: status.kind,
+  });
+  if (nextStep) {
+    lines.push(nextStep);
+  }
+  return lines.join("\n");
 }
 
 function buildStatusPayload(target: PlatformName, root: string, status: PlatformInstallStatusResult, metadata: {
@@ -764,11 +871,10 @@ function summarizeDoctor(
     plan: PlatformPlanLike;
   },
 ): string {
-  return [
+  const lines = [
     `${target} 安装诊断`,
     `范围：${metadata.scope}`,
     `目录：${root}`,
-    ...summarizeCapability(metadata.plan),
     `状态：${status.kind}（${formatStatusLabel(status.kind)}）`,
     `健康度：${doctor.health}`,
     ...(doctor.issues.length > 0
@@ -778,7 +884,16 @@ function summarizeDoctor(
         ])
       : ["- 未发现需要处理的问题。"]),
     ...(metadata.hint ? [`提示：${metadata.hint}`] : []),
-  ].join("\n");
+  ];
+  const nextStep = buildNextStep("doctor", target, root, {
+    scope: metadata.scope,
+    status: status.kind,
+    health: doctor.health,
+  });
+  if (nextStep) {
+    lines.push(nextStep);
+  }
+  return lines.join("\n");
 }
 
 function buildDoctorPayload(
@@ -828,11 +943,11 @@ function summarizeUninstall(
     bundlePath?: string | null;
   },
 ): string {
-  return [
+  const lines = [
     `${target} 卸载完成`,
     formatRootLabel("uninstall", root, metadata),
-    ...(metadata.installMethod ? [`安装方式：${metadata.installMethod === "qwen-cli" ? "官方 qwen extensions CLI" : "直接写入"}`] : []),
-    ...(metadata.installSource ? [`安装来源：${metadata.installSource === "github-repo" ? "GitHub 扩展仓库" : "本地 bundle"}`] : []),
+    ...(metadata.installMethod ? [`安装方式：${formatInstallMethodLabel(metadata.installMethod)}`] : []),
+    ...(metadata.installSource ? [`安装来源：${formatInstallSourceLabel(metadata.installSource)}`] : []),
     ...(metadata.sourceRef ? [`来源：${metadata.sourceRef}`] : []),
     ...(metadata.bundlePath ? [`Bundle 目录：${metadata.bundlePath}`] : []),
     `回执：${metadata.receiptPath}`,
@@ -840,7 +955,14 @@ function summarizeUninstall(
     `移除受管产物 ${result.removedArtifacts}，原本缺失 ${result.missingArtifacts}`,
     `Bundle：${result.bundleRemoved ? "已删除" : result.bundleMissing ? "本就不存在" : "未涉及"}`,
     `回执：${result.receiptRemoved ? "已删除" : result.receiptMissing ? "本就不存在" : "未涉及"}`,
-  ].join("\n");
+  ];
+  const nextStep = buildNextStep("uninstall", target, root, {
+    scope: metadata.scope,
+  });
+  if (nextStep) {
+    lines.push(nextStep);
+  }
+  return lines.join("\n");
 }
 
 function buildUninstallPayload(
@@ -1051,6 +1173,7 @@ export async function runPlatformInstall(
           autoResolvedRoot,
           rootSource: targetResolution.source,
           hint: targetResolution.hint,
+          scope,
           installSource: target === "qwen" && scope === "global" ? qwenInstallSource : null,
           sourceRef: target === "qwen" && scope === "global" && qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
           bundleType: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : null,
@@ -1147,6 +1270,7 @@ export async function runPlatformInstall(
             autoResolvedRoot,
             rootSource: targetResolution.source,
             hint: targetResolution.hint,
+            scope,
             receiptPath: resolvePlatformInstallReceiptPath(plan),
             zcVersion: getCliVersion(),
             contentFingerprint: plan.metadata?.fingerprint.value ?? null,
@@ -1205,6 +1329,7 @@ export async function runPlatformInstall(
         autoResolvedRoot,
         rootSource: targetResolution.source,
         hint: mergeHints(targetResolution.hint, fallbackHint),
+        scope,
         receiptPath: resolvePlatformInstallReceiptPath(plan),
         zcVersion: getCliVersion(),
         contentFingerprint: plan.metadata?.fingerprint.value ?? null,
@@ -1375,6 +1500,7 @@ export async function runPlatformUpdate(
           autoResolvedRoot,
           rootSource: targetResolution.source,
           hint: targetResolution.hint,
+          scope,
           receiptPath: status.receiptPath,
           zcVersion,
           contentFingerprint: status.contentFingerprint ?? null,
@@ -1427,6 +1553,7 @@ export async function runPlatformUpdate(
           autoResolvedRoot,
           rootSource: targetResolution.source,
           hint: targetResolution.hint,
+          scope,
           status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
           installSource: target === "qwen" && scope === "global" ? qwenInstallSource : null,
           sourceRef: target === "qwen" && scope === "global" && qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
@@ -1483,6 +1610,7 @@ export async function runPlatformUpdate(
             autoResolvedRoot,
             rootSource: targetResolution.source,
             hint: targetResolution.hint,
+            scope,
             receiptPath: resolvePlatformInstallReceiptPath(plan),
             zcVersion,
             contentFingerprint: plan.metadata?.fingerprint.value ?? null,
@@ -1540,6 +1668,7 @@ export async function runPlatformUpdate(
         autoResolvedRoot,
         rootSource: targetResolution.source,
         hint: mergeHints(targetResolution.hint, fallbackHint),
+        scope,
         receiptPath: resolvePlatformInstallReceiptPath(plan),
         zcVersion,
         contentFingerprint: plan.metadata?.fingerprint.value ?? null,
@@ -1852,6 +1981,7 @@ export async function runPlatformRepair(
           autoResolvedRoot,
           rootSource: targetResolution.source,
           hint: targetResolution.hint,
+          scope,
           status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
           installSource: installSource ?? null,
           sourceRef: sourceRef ?? null,
@@ -2103,96 +2233,96 @@ function parsePlatformName(value: string): PlatformName {
 }
 
 export function registerPlatformCommand(program: Command): void {
-  const platform = program.command("platform").description("平台原生内容生成、安装与状态命令");
+  const platform = program.command("platform").description("查看、安装、更新和诊断平台内容");
 
   platform
     .command("generate")
     .alias("g")
-    .description("根据工具包清单生成平台原生内容产物")
+    .description("导出平台内容或 Qwen 发布 bundle")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
     .option("-d, --dir <dir>", "输出目录")
     .option("-b, --bundle <type>", "导出指定 bundle 布局（当前仅 qwen: release-bundle）", parseGenerateBundleType)
-    .option("--plan", "只输出产物计划，不落盘")
-    .option("-j, --json", "直接输出 JSON")
+    .option("--plan", "只查看生成计划，不写文件")
+    .option("-j, --json", "输出 JSON")
     .option("-f, --force", "覆盖目标目录中已有但内容不同的产物")
     .action(runPlatformGenerate);
 
   platform
     .command("install")
     .alias("i")
-    .description("根据工具包清单生成并安装平台原生内容")
+    .description("把平台内容安装到项目、用户级或指定目录")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
-    .option("-d, --dir <dir>", "显式安装目录")
+    .option("-d, --dir <dir>", "安装到指定目录")
     .option("-p, --project", "安装到当前目录向上解析出的最近项目根")
-    .option("-g, --global", "安装到官方文档定义的默认全局位置")
-    .option("--plan", "只输出安装计划，不落盘")
-    .option("-j, --json", "直接输出 JSON")
+    .option("-g, --global", "安装到官方文档定义的用户级默认位置")
+    .option("--plan", "只查看安装计划，不写文件")
+    .option("-j, --json", "输出 JSON")
     .option("-f, --force", "覆盖目标目录中已有但内容不同的产物")
     .action(runPlatformInstall);
 
   platform
     .command("where")
     .alias("w")
-    .description("解析平台原生内容安装目录，不执行写入")
+    .description("查看平台内容会安装到哪里")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
-    .option("-d, --dir <dir>", "显式安装目录")
+    .option("-d, --dir <dir>", "指定目录")
     .option("-p, --project", "解析最近项目根")
     .option("-g, --global", "解析官方文档定义的默认全局位置")
-    .option("-j, --json", "直接输出 JSON")
+    .option("-j, --json", "输出 JSON")
     .action(runPlatformWhere);
 
   platform
     .command("status")
-    .description("读取安装回执并检查平台原生内容状态")
+    .description("查看是否已安装、是否可更新、是否漂移")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
-    .option("-d, --dir <dir>", "显式安装目录")
+    .option("-d, --dir <dir>", "指定目录")
     .option("-p, --project", "解析最近项目根")
     .option("-g, --global", "解析官方文档定义的默认全局位置")
-    .option("-j, --json", "直接输出 JSON")
+    .option("-j, --json", "输出 JSON")
     .action(runPlatformStatus);
 
   platform
     .command("update")
-    .description("基于安装回执更新平台原生内容")
+    .description("更新已安装的平台内容")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
-    .option("-d, --dir <dir>", "显式安装目录")
+    .option("-d, --dir <dir>", "指定目录")
     .option("-p, --project", "解析最近项目根")
     .option("-g, --global", "解析官方文档定义的默认全局位置")
-    .option("--plan", "只输出更新计划，不落盘")
-    .option("-j, --json", "直接输出 JSON")
+    .option("--plan", "只查看更新计划，不写文件")
+    .option("-j, --json", "输出 JSON")
     .option("-f, --force", "覆盖已漂移的已安装产物")
     .action(runPlatformUpdate);
 
   platform
     .command("uninstall")
-    .description("删除受管平台内容并移除安装回执")
+    .description("卸载受管平台内容并删除安装记录")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
-    .option("-d, --dir <dir>", "显式安装目录")
+    .option("-d, --dir <dir>", "指定目录")
     .option("-p, --project", "解析最近项目根")
     .option("-g, --global", "解析官方文档定义的默认全局位置")
-    .option("--plan", "只输出卸载计划，不写盘")
-    .option("-j, --json", "直接输出 JSON")
+    .option("--plan", "只查看卸载计划，不写文件")
+    .option("-j, --json", "输出 JSON")
     .option("-f, --force", "允许卸载已漂移的受管内容")
     .action(runPlatformUninstall);
 
   platform
     .command("repair")
-    .description("修复漂移、缺失或官方 CLI 失配的受管安装")
+    .description("修复漂移、缺失或官方 CLI 失配的安装")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
-    .option("-d, --dir <dir>", "显式安装目录")
+    .option("-d, --dir <dir>", "指定目录")
     .option("-p, --project", "解析最近项目根")
     .option("-g, --global", "解析官方文档定义的默认全局位置")
-    .option("--plan", "只输出修复计划，不写盘")
-    .option("-j, --json", "直接输出 JSON")
+    .option("--plan", "只查看修复计划，不写文件")
+    .option("-j, --json", "输出 JSON")
     .action(runPlatformRepair);
 
   platform
     .command("doctor")
     .description("诊断当前平台安装的健康度和下一步建议")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
-    .option("-d, --dir <dir>", "显式安装目录")
+    .option("-d, --dir <dir>", "指定目录")
     .option("-p, --project", "解析最近项目根")
     .option("-g, --global", "解析官方文档定义的默认全局位置")
-    .option("-j, --json", "直接输出 JSON")
+    .option("-j, --json", "输出 JSON")
     .action(runPlatformDoctor);
 }
