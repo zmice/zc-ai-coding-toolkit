@@ -6,6 +6,7 @@ import { afterEach, describe, it } from "vitest";
 
 import { hashPlatformArtifactContent } from "../platform-state/receipt.js";
 import {
+  deletePlatformInstallReceipt,
   readPlatformInstallReceipt,
   resolvePlatformInstallReceiptPath,
   writePlatformInstallReceiptForPlan,
@@ -93,6 +94,32 @@ describe("platform install receipt store", () => {
       }),
     );
 
+    assert.equal(receipt, null);
+  });
+
+  it("deletes a written receipt cleanly", async () => {
+    const root = await createTempDir();
+    const plan = {
+      platform: "claude" as const,
+      destinationRoot: root,
+      manifestSource: "packages/toolkit/src/content",
+      overwrite: "error" as const,
+      artifacts: [
+        {
+          path: join(root, "CLAUDE.md"),
+          content: "# claude\n",
+        },
+      ],
+    };
+
+    const receiptPath = resolvePlatformInstallReceiptPath(plan);
+    await writePlatformInstallReceiptForPlan(plan, {
+      installedAt: "2026-04-19T10:11:12.000Z",
+    });
+
+    await deletePlatformInstallReceipt(receiptPath);
+
+    const receipt = await readPlatformInstallReceipt(receiptPath);
     assert.equal(receipt, null);
   });
 });

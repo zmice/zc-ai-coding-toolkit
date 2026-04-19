@@ -8,13 +8,19 @@ import {
   type InstallScope,
   type OverwriteMode
 } from "@zmice/platform-core";
+import { resolvePlatformInstallDoctor } from "../platform-state/doctor.js";
 import { resolvePlatformInstallStatus } from "../platform-state/status.js";
-import type { PlatformInstallStatusResult } from "../platform-state/types.js";
+import type {
+  PlatformInstallDoctorResult,
+  PlatformInstallStatusResult,
+} from "../platform-state/types.js";
 import { normalizeInstallSelector, resolveInstallTarget } from "../utils/install-target.js";
 import {
+  deletePlatformInstallReceipt,
   resolvePlatformInstallReceiptPath,
   writePlatformInstallReceiptForPlan,
 } from "../utils/platform-install-receipt.js";
+import { pathExists, removeManagedPaths } from "../utils/platform-install-cleanup.js";
 import {
   ArtifactConflictError,
   importWorkspaceDistModule,
@@ -27,13 +33,14 @@ import {
   relinkQwenExtensionWithOfficialCli,
   resolveQwenOfficialCliReleaseBundleDir,
   syncQwenOfficialCliReleaseBundle,
+  uninstallQwenExtensionWithOfficialCli,
   updateQwenExtensionWithOfficialCli,
 } from "../utils/qwen-extension-cli.js";
 
 type PlatformName = "qwen" | "codex" | "claude" | "opencode";
 type PlatformOutputFormat = "text" | "json";
 type PlatformInstallScope = "project" | "global" | "dir";
-type PlatformAction = "generate" | "install" | "update";
+type PlatformAction = "generate" | "install" | "update" | "repair" | "uninstall";
 type PlatformTargetSelectorOpts = {
   dir?: string;
   project?: boolean;
@@ -394,7 +401,7 @@ function emitOutput(format: PlatformOutputFormat, payload: object, text: string)
 function emitPlatformError(
   format: PlatformOutputFormat,
   target: PlatformName | undefined,
-  action: PlatformAction | "where" | "status",
+  action: PlatformAction | "where" | "status" | "doctor",
   error: string,
   details?: object,
 ): void {
@@ -420,6 +427,10 @@ function formatActionLabel(action: PlatformAction): string {
       return "安装";
     case "update":
       return "更新";
+    case "repair":
+      return "修复";
+    case "uninstall":
+      return "卸载";
   }
 }
 
@@ -703,6 +714,126 @@ function buildStatusPayload(target: PlatformName, root: string, status: Platform
   };
 }
 
+function summarizeDoctor(
+  target: PlatformName,
+  root: string,
+  status: PlatformInstallStatusResult,
+  doctor: PlatformInstallDoctorResult,
+  metadata: {
+    scope: PlatformInstallScope;
+    rootSource: string;
+    hint?: string;
+    plan: PlatformPlanLike;
+  },
+): string {
+  return [
+    `${target} 安装诊断`,
+    `范围：${metadata.scope}`,
+    `目录：${root}`,
+    ...summarizeCapability(metadata.plan),
+    `状态：${status.kind}（${formatStatusLabel(status.kind)}）`,
+    `健康度：${doctor.health}`,
+    ...(doctor.issues.length > 0
+      ? doctor.issues.flatMap((issue) => [
+          `- [${issue.severity}] ${issue.code}: ${issue.message}`,
+          ...(issue.paths && issue.paths.length > 0 ? issue.paths.map((path) => `  - ${path}`) : []),
+        ])
+      : ["- 未发现需要处理的问题。"]),
+    ...(metadata.hint ? [`提示：${metadata.hint}`] : []),
+  ].join("\n");
+}
+
+function buildDoctorPayload(
+  target: PlatformName,
+  root: string,
+  status: PlatformInstallStatusResult,
+  doctor: PlatformInstallDoctorResult,
+  metadata: {
+    scope: PlatformInstallScope;
+    rootSource: string;
+    hint?: string;
+    plan: PlatformPlanLike;
+  },
+) {
+  return {
+    mode: "doctor",
+    target,
+    scope: metadata.scope,
+    root,
+    rootSource: metadata.rootSource,
+    hint: metadata.hint ?? null,
+    capability: getPlanCapabilitySummary(metadata.plan),
+    status: status.kind,
+    health: doctor.health,
+    receiptPath: status.receiptPath,
+    issues: doctor.issues,
+    summary: status.summary,
+  };
+}
+
+function summarizeUninstall(
+  target: PlatformName,
+  root: string,
+  result: {
+    removedArtifacts: number;
+    missingArtifacts: number;
+    bundleRemoved: boolean;
+    bundleMissing: boolean;
+    receiptRemoved: boolean;
+    receiptMissing: boolean;
+  },
+  metadata: PlatformResolutionMetadata & {
+    receiptPath: string;
+    installMethod?: "filesystem" | "qwen-cli";
+    bundlePath?: string | null;
+  },
+): string {
+  return [
+    `${target} 卸载完成`,
+    formatRootLabel("uninstall", root, metadata),
+    ...(metadata.installMethod ? [`安装方式：${metadata.installMethod === "qwen-cli" ? "官方 qwen extensions CLI" : "直接写入"}`] : []),
+    ...(metadata.bundlePath ? [`Bundle 目录：${metadata.bundlePath}`] : []),
+    `回执：${metadata.receiptPath}`,
+    ...(metadata.hint ? [`提示：${metadata.hint}`] : []),
+    `移除受管产物 ${result.removedArtifacts}，原本缺失 ${result.missingArtifacts}`,
+    `Bundle：${result.bundleRemoved ? "已删除" : result.bundleMissing ? "本就不存在" : "未涉及"}`,
+    `回执：${result.receiptRemoved ? "已删除" : result.receiptMissing ? "本就不存在" : "未涉及"}`,
+  ].join("\n");
+}
+
+function buildUninstallPayload(
+  target: PlatformName,
+  root: string,
+  result: {
+    removedArtifacts: number;
+    missingArtifacts: number;
+    bundleRemoved: boolean;
+    bundleMissing: boolean;
+    receiptRemoved: boolean;
+    receiptMissing: boolean;
+  },
+  metadata: PlatformResolutionMetadata & {
+    receiptPath: string;
+    installMethod?: "filesystem" | "qwen-cli";
+    bundlePath?: string | null;
+  },
+) {
+  return {
+    mode: "result",
+    action: "uninstall",
+    target,
+    root,
+    scope: metadata.scope ?? "project",
+    rootSource: metadata.rootSource ?? (metadata.autoResolvedRoot ? "project-root" : "explicit"),
+    autoResolvedRoot: metadata.autoResolvedRoot ?? false,
+    hint: metadata.hint ?? null,
+    installMethod: metadata.installMethod ?? null,
+    bundlePath: metadata.bundlePath ?? null,
+    receiptPath: metadata.receiptPath,
+    ...result,
+  };
+}
+
 export async function runPlatformGenerate(
   target: PlatformName,
   opts: { dir?: string; force?: boolean; plan?: boolean; json?: boolean }
@@ -764,6 +895,32 @@ function getUpdateOverwriteMode(
   }
 
   return resolveOverwriteMode(force);
+}
+
+async function removeOptionalManagedPath(path: string | null | undefined): Promise<{
+  removed: boolean;
+  missing: boolean;
+}> {
+  if (!path) {
+    return {
+      removed: false,
+      missing: false,
+    };
+  }
+
+  if (!(await pathExists(path))) {
+    return {
+      removed: false,
+      missing: true,
+    };
+  }
+
+  await removeManagedPaths([path]);
+
+  return {
+    removed: true,
+    missing: false,
+  };
 }
 
 export async function runPlatformInstall(
@@ -1269,6 +1426,443 @@ export async function runPlatformUpdate(
   }
 }
 
+export async function runPlatformUninstall(
+  target: PlatformName,
+  opts: PlatformTargetSelectorOpts & {
+    force?: boolean;
+    plan?: boolean;
+    json?: boolean;
+  },
+): Promise<void> {
+  const format = resolveOutputFormat(opts.json);
+
+  try {
+    const scope = resolveScopeFromSelector(opts);
+    const targetResolution = await resolveInstallTarget(target, {
+      dir: opts.dir,
+      cwd: process.cwd(),
+      project: opts.project,
+      global: opts.global,
+    });
+    const autoResolvedRoot = targetResolution.source !== "explicit";
+    const destinationRoot = resolve(targetResolution.root);
+    const manifest = await loadToolkitManifest();
+    const platformModule = await loadPlatformModule(target);
+    const plan = createInstallPlan(target, platformModule, manifest, destinationRoot, scope, "error");
+    const status = await resolvePlatformInstallStatus(plan);
+
+    if (!status.receipt) {
+      emitPlatformError(
+        format,
+        target,
+        "uninstall",
+        `${target} 当前目录没有受管安装回执，拒绝自动卸载。请先运行 \`zc platform status ${target}\` 检查。`,
+        {
+          root: destinationRoot,
+          receiptPath: status.receiptPath,
+          status: status.kind,
+        },
+      );
+      process.exitCode = 1;
+      return;
+    }
+
+    if (status.kind === "drifted" && !opts.force) {
+      emitPlatformError(
+        format,
+        target,
+        "uninstall",
+        `${target} 安装目录已漂移。请先运行 \`zc platform doctor ${target}\` 或 \`zc platform status ${target}\` 检查，确认后追加 \`--force\` 再卸载。`,
+        {
+          root: destinationRoot,
+          receiptPath: status.receiptPath,
+          status: status.kind,
+        },
+      );
+      process.exitCode = 1;
+      return;
+    }
+
+    const installMethod = status.receipt.installMethod ?? "filesystem";
+    const bundlePath = status.receipt.bundlePath ?? null;
+
+    if (opts.plan) {
+      emitOutput(
+        format,
+        {
+          mode: "plan",
+          action: "uninstall",
+          target,
+          root: destinationRoot,
+          scope,
+          rootSource: targetResolution.source,
+          autoResolvedRoot,
+          hint: targetResolution.hint ?? null,
+          status: status.kind,
+          receiptPath: status.receiptPath,
+          installMethod,
+          bundlePath,
+          artifactCount: status.receipt.artifacts.length,
+          artifacts: status.receipt.artifacts.map((artifact) => artifact.path),
+        },
+        [
+          `${target} 卸载计划`,
+          formatRootLabel("uninstall", destinationRoot, {
+            autoResolvedRoot,
+            rootSource: targetResolution.source,
+            hint: targetResolution.hint,
+          }),
+          `状态：${status.kind}（${formatStatusLabel(status.kind)}）`,
+          `安装方式：${installMethod === "qwen-cli" ? "官方 qwen extensions CLI" : "直接写入"}`,
+          `回执：${status.receiptPath}`,
+          ...(bundlePath ? [`Bundle 目录：${bundlePath}`] : []),
+          `受管产物：${status.receipt.artifacts.length}`,
+          ...status.receipt.artifacts.map((artifact) => `- ${artifact.path}`),
+        ].join("\n"),
+      );
+      return;
+    }
+
+    let artifactCleanup = { removed: 0, missing: 0 };
+
+    if (target === "qwen" && installMethod === "qwen-cli") {
+      const extensionName = plan.capability?.extension?.name ?? "zc-toolkit";
+
+      if (format === "text") {
+        console.log(`正在调用官方命令：qwen extensions uninstall ${extensionName} …`);
+      }
+
+      await uninstallQwenExtensionWithOfficialCli(extensionName);
+    } else {
+      artifactCleanup = await removeManagedPaths(status.receipt.artifacts.map((artifact) => artifact.path));
+    }
+
+    const bundleCleanup = await removeOptionalManagedPath(bundlePath);
+    const receiptExisted = await pathExists(status.receiptPath);
+    if (receiptExisted) {
+      await deletePlatformInstallReceipt(status.receiptPath);
+    }
+
+    const result = {
+      removedArtifacts: artifactCleanup.removed,
+      missingArtifacts: artifactCleanup.missing,
+      bundleRemoved: bundleCleanup.removed,
+      bundleMissing: bundleCleanup.missing,
+      receiptRemoved: receiptExisted,
+      receiptMissing: !receiptExisted,
+    };
+
+    emitOutput(
+      format,
+      buildUninstallPayload(target, destinationRoot, result, {
+        autoResolvedRoot,
+        rootSource: targetResolution.source,
+        hint: targetResolution.hint,
+        scope,
+        receiptPath: status.receiptPath,
+        installMethod,
+        bundlePath,
+      }),
+      summarizeUninstall(target, destinationRoot, result, {
+        autoResolvedRoot,
+        rootSource: targetResolution.source,
+        hint: targetResolution.hint,
+        scope,
+        receiptPath: status.receiptPath,
+        installMethod,
+        bundlePath,
+      }),
+    );
+  } catch (error) {
+    emitPlatformError(
+      format,
+      target,
+      "uninstall",
+      error instanceof Error ? `${target} 卸载失败：${error.message}` : `${target} 卸载失败。`,
+    );
+    process.exitCode = 1;
+  }
+}
+
+export async function runPlatformRepair(
+  target: PlatformName,
+  opts: PlatformTargetSelectorOpts & {
+    plan?: boolean;
+    json?: boolean;
+  },
+): Promise<void> {
+  const format = resolveOutputFormat(opts.json);
+
+  try {
+    const scope = resolveScopeFromSelector(opts);
+    const targetResolution = await resolveInstallTarget(target, {
+      dir: opts.dir,
+      cwd: process.cwd(),
+      project: opts.project,
+      global: opts.global,
+    });
+    const autoResolvedRoot = targetResolution.source !== "explicit";
+    const destinationRoot = resolve(targetResolution.root);
+    const manifest = await loadToolkitManifest();
+    const platformModule = await loadPlatformModule(target);
+    const statusPlan = createInstallPlan(target, platformModule, manifest, destinationRoot, scope, "error");
+    const status = await resolvePlatformInstallStatus(statusPlan);
+
+    if (!status.receipt) {
+      emitPlatformError(
+        format,
+        target,
+        "repair",
+        `${target} 当前目录尚未建立受管安装状态。请先运行 \`zc platform install ${target}\`。`,
+        {
+          root: destinationRoot,
+          receiptPath: status.receiptPath,
+        },
+      );
+      process.exitCode = 1;
+      return;
+    }
+
+    const installMethod = status.receipt.installMethod ?? "filesystem";
+    const bundlePath = status.receipt.bundlePath
+      ?? (shouldPreferQwenOfficialCli(target, scope) ? resolveQwenOfficialCliReleaseBundleDir(statusPlan) : null);
+    const bundleMissing = bundlePath ? !(await pathExists(bundlePath)) : false;
+
+    if (status.kind === "up-to-date" && !(target === "qwen" && installMethod === "qwen-cli" && bundleMissing)) {
+      const result = {
+        created: 0,
+        overwritten: 0,
+        unchanged: status.summary.trackedArtifacts,
+        skipped: 0,
+        dryRun: false,
+      };
+
+      emitOutput(
+        format,
+        buildResultPayload("repair", target, destinationRoot, result, {
+          autoResolvedRoot,
+          rootSource: targetResolution.source,
+          hint: targetResolution.hint,
+          scope,
+          receiptPath: status.receiptPath,
+          zcVersion: getCliVersion(),
+          contentFingerprint: status.contentFingerprint ?? null,
+          status: status.kind,
+          noop: true,
+          installMethod,
+          bundleType: status.receipt.bundleType ?? null,
+          bundlePath,
+        }),
+        summarizeResult("repair", target, destinationRoot, result, {
+          autoResolvedRoot,
+          rootSource: targetResolution.source,
+          hint: targetResolution.hint,
+          scope,
+          receiptPath: status.receiptPath,
+          zcVersion: getCliVersion(),
+          contentFingerprint: status.contentFingerprint ?? null,
+          status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
+          noop: true,
+          installMethod,
+          bundleType: status.receipt.bundleType ?? undefined,
+          bundlePath: bundlePath ?? undefined,
+        }),
+      );
+      return;
+    }
+
+    const overwrite: OverwriteMode = "force";
+    const plan = createInstallPlan(target, platformModule, manifest, destinationRoot, scope, overwrite);
+
+    if (opts.plan) {
+      emitOutput(
+        format,
+        buildPlanPayload("repair", target, destinationRoot, plan, {
+          autoResolvedRoot,
+          rootSource: targetResolution.source,
+          hint: targetResolution.hint,
+          scope,
+          status: status.kind,
+        }),
+        summarizePlan("repair", target, destinationRoot, plan, {
+          autoResolvedRoot,
+          rootSource: targetResolution.source,
+          hint: targetResolution.hint,
+          status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
+        }),
+      );
+      return;
+    }
+
+    if (target === "qwen" && installMethod === "qwen-cli") {
+      const releaseBundle = await syncQwenOfficialCliReleaseBundle(plan);
+
+      if (format === "text") {
+        console.log(`正在调用官方命令：qwen extensions ${bundleMissing ? "link" : "relink"} …`);
+      }
+
+      if (bundleMissing) {
+        await relinkQwenExtensionWithOfficialCli(releaseBundle.bundleDir);
+      } else {
+        await updateQwenExtensionWithOfficialCli(releaseBundle.extensionName);
+        await relinkQwenExtensionWithOfficialCli(releaseBundle.bundleDir);
+      }
+
+      await writePlatformInstallReceiptForPlan(plan, {
+        installedAt: new Date().toISOString(),
+        zcVersion: getCliVersion(),
+        installMethod: "qwen-cli",
+        bundleType: "release-bundle",
+        bundlePath: releaseBundle.bundleDir,
+      });
+
+      const result = status.kind === "up-to-date"
+        ? {
+            created: 0,
+            overwritten: 0,
+            unchanged: plan.artifacts.length,
+            skipped: 0,
+            dryRun: false,
+          }
+        : estimateManagedInstallResult(plan, status);
+
+      emitOutput(
+        format,
+        buildResultPayload("repair", target, destinationRoot, result, {
+          autoResolvedRoot,
+          rootSource: targetResolution.source,
+          hint: targetResolution.hint,
+          scope,
+          receiptPath: resolvePlatformInstallReceiptPath(plan),
+          zcVersion: getCliVersion(),
+          contentFingerprint: plan.metadata?.fingerprint.value ?? null,
+          status: status.kind,
+          installMethod: "qwen-cli",
+          bundleType: "release-bundle",
+          bundlePath: releaseBundle.bundleDir,
+        }),
+        summarizeResult("repair", target, destinationRoot, result, {
+          autoResolvedRoot,
+          rootSource: targetResolution.source,
+          hint: targetResolution.hint,
+          scope,
+          receiptPath: resolvePlatformInstallReceiptPath(plan),
+          zcVersion: getCliVersion(),
+          contentFingerprint: plan.metadata?.fingerprint.value ?? null,
+          status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
+          installMethod: "qwen-cli",
+          bundleType: "release-bundle",
+          bundlePath: releaseBundle.bundleDir,
+        }),
+      );
+      return;
+    }
+
+    const result = await writeArtifacts(
+      plan.artifacts.map((artifact) => ({
+        path: artifact.path,
+        content: artifact.content,
+      })),
+      {
+        dryRun: false,
+        overwrite,
+      },
+    );
+    await writePlatformInstallReceiptForPlan(plan, {
+      installedAt: new Date().toISOString(),
+      zcVersion: getCliVersion(),
+      installMethod,
+      bundleType: status.receipt.bundleType,
+      bundlePath: status.receipt.bundlePath,
+    });
+
+    emitOutput(
+      format,
+      buildResultPayload("repair", target, destinationRoot, result, {
+        autoResolvedRoot,
+        rootSource: targetResolution.source,
+        hint: targetResolution.hint,
+        scope,
+        receiptPath: resolvePlatformInstallReceiptPath(plan),
+        zcVersion: getCliVersion(),
+        contentFingerprint: plan.metadata?.fingerprint.value ?? null,
+        status: status.kind,
+        installMethod,
+        bundleType: status.receipt.bundleType ?? null,
+        bundlePath: status.receipt.bundlePath ?? null,
+      }),
+      summarizeResult("repair", target, destinationRoot, result, {
+        autoResolvedRoot,
+        rootSource: targetResolution.source,
+        hint: targetResolution.hint,
+        scope,
+        receiptPath: resolvePlatformInstallReceiptPath(plan),
+        zcVersion: getCliVersion(),
+        contentFingerprint: plan.metadata?.fingerprint.value ?? null,
+        status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
+        installMethod,
+        bundleType: status.receipt.bundleType ?? undefined,
+        bundlePath: status.receipt.bundlePath ?? undefined,
+      }),
+    );
+  } catch (error) {
+    emitPlatformError(
+      format,
+      target,
+      "repair",
+      error instanceof Error ? `${target} 修复失败：${error.message}` : `${target} 修复失败。`,
+    );
+    process.exitCode = 1;
+  }
+}
+
+export async function runPlatformDoctor(
+  target: PlatformName,
+  opts: PlatformTargetSelectorOpts & { json?: boolean },
+): Promise<void> {
+  const format = resolveOutputFormat(opts.json);
+
+  try {
+    const scope = resolveScopeFromSelector(opts);
+    const targetResolution = await resolveInstallTarget(target, {
+      dir: opts.dir,
+      cwd: process.cwd(),
+      project: opts.project,
+      global: opts.global,
+    });
+    const destinationRoot = resolve(targetResolution.root);
+    const manifest = await loadToolkitManifest();
+    const platformModule = await loadPlatformModule(target);
+    const plan = createInstallPlan(target, platformModule, manifest, destinationRoot, scope, "error");
+    const status = await resolvePlatformInstallStatus(plan);
+    const doctor = await resolvePlatformInstallDoctor(plan, status);
+
+    emitOutput(
+      format,
+      buildDoctorPayload(target, destinationRoot, status, doctor, {
+        scope,
+        rootSource: targetResolution.source,
+        hint: targetResolution.hint,
+        plan,
+      }),
+      summarizeDoctor(target, destinationRoot, status, doctor, {
+        scope,
+        rootSource: targetResolution.source,
+        hint: targetResolution.hint,
+        plan,
+      }),
+    );
+  } catch (error) {
+    emitPlatformError(
+      format,
+      target,
+      "doctor",
+      error instanceof Error ? `${target} 诊断失败：${error.message}` : `${target} 诊断失败。`,
+    );
+    process.exitCode = 1;
+  }
+}
+
 export async function runPlatformWhere(
   target: PlatformName,
   opts: PlatformTargetSelectorOpts & { json?: boolean },
@@ -1382,4 +1976,37 @@ export function registerPlatformCommand(program: Command): void {
     .option("-j, --json", "直接输出 JSON")
     .option("-f, --force", "覆盖已漂移的已安装产物")
     .action(runPlatformUpdate);
+
+  platform
+    .command("uninstall")
+    .description("删除受管平台内容并移除安装回执")
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
+    .option("-d, --dir <dir>", "显式安装目录")
+    .option("-p, --project", "解析最近项目根")
+    .option("-g, --global", "解析官方文档定义的默认全局位置")
+    .option("--plan", "只输出卸载计划，不写盘")
+    .option("-j, --json", "直接输出 JSON")
+    .option("-f, --force", "允许卸载已漂移的受管内容")
+    .action(runPlatformUninstall);
+
+  platform
+    .command("repair")
+    .description("修复漂移、缺失或官方 CLI 失配的受管安装")
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
+    .option("-d, --dir <dir>", "显式安装目录")
+    .option("-p, --project", "解析最近项目根")
+    .option("-g, --global", "解析官方文档定义的默认全局位置")
+    .option("--plan", "只输出修复计划，不写盘")
+    .option("-j, --json", "直接输出 JSON")
+    .action(runPlatformRepair);
+
+  platform
+    .command("doctor")
+    .description("诊断当前平台安装的健康度和下一步建议")
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
+    .option("-d, --dir <dir>", "显式安装目录")
+    .option("-p, --project", "解析最近项目根")
+    .option("-g, --global", "解析官方文档定义的默认全局位置")
+    .option("-j, --json", "直接输出 JSON")
+    .action(runPlatformDoctor);
 }

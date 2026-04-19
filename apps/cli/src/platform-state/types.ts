@@ -69,3 +69,24 @@ export interface PlatformInstallStatusResult {
   readonly summary: PlatformInstallStatusSummary;
   readonly artifacts: readonly PlatformInstallArtifactStatus[];
 }
+
+export interface PlatformInstallDoctorIssue {
+  readonly code:
+    | "not-installed"
+    | "unmanaged-artifacts-detected"
+    | "update-available"
+    | "drifted-artifacts"
+    | "missing-artifacts"
+    | "stale-managed-artifacts"
+    | "qwen-bundle-missing"
+    | "qwen-cli-required";
+  readonly severity: "info" | "warning" | "broken";
+  readonly message: string;
+  readonly paths?: readonly string[];
+}
+
+export interface PlatformInstallDoctorResult {
+  readonly platform: PlatformName;
+  readonly health: "healthy" | "warning" | "broken";
+  readonly issues: readonly PlatformInstallDoctorIssue[];
+}

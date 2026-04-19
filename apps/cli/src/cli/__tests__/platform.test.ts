@@ -17,14 +17,19 @@ const platformMocks = vi.hoisted(() => ({
   loadToolkitManifest: vi.fn(),
   importWorkspaceDistModule: vi.fn(),
   normalizeInstallSelector: vi.fn(),
+  pathExists: vi.fn(),
   resolveInstallTarget: vi.fn(),
+  resolvePlatformInstallDoctor: vi.fn(),
   resolvePlatformInstallReceiptPath: vi.fn(),
   resolvePlatformInstallStatus: vi.fn(),
+  removeManagedPaths: vi.fn(),
+  deletePlatformInstallReceipt: vi.fn(),
   writeArtifacts: vi.fn(),
   writePlatformInstallReceiptForPlan: vi.fn(),
   syncQwenOfficialCliSourceBundle: vi.fn(),
   syncQwenOfficialCliReleaseBundle: vi.fn(),
   installQwenExtensionWithOfficialCli: vi.fn(),
+  uninstallQwenExtensionWithOfficialCli: vi.fn(),
   updateQwenExtensionWithOfficialCli: vi.fn(),
   relinkQwenExtensionWithOfficialCli: vi.fn(),
 }));
@@ -45,9 +50,19 @@ vi.mock("../../platform-state/status.js", () => ({
   resolvePlatformInstallStatus: platformMocks.resolvePlatformInstallStatus,
 }));
 
+vi.mock("../../platform-state/doctor.js", () => ({
+  resolvePlatformInstallDoctor: platformMocks.resolvePlatformInstallDoctor,
+}));
+
 vi.mock("../../utils/platform-install-receipt.js", () => ({
+  deletePlatformInstallReceipt: platformMocks.deletePlatformInstallReceipt,
   resolvePlatformInstallReceiptPath: platformMocks.resolvePlatformInstallReceiptPath,
   writePlatformInstallReceiptForPlan: platformMocks.writePlatformInstallReceiptForPlan,
+}));
+
+vi.mock("../../utils/platform-install-cleanup.js", () => ({
+  pathExists: platformMocks.pathExists,
+  removeManagedPaths: platformMocks.removeManagedPaths,
 }));
 
 vi.mock("../../utils/qwen-extension-cli.js", () => ({
@@ -58,6 +73,7 @@ vi.mock("../../utils/qwen-extension-cli.js", () => ({
     `${plan.destinationRoot}/.zc/platform-bundles/qwen/zc-toolkit`
   )),
   installQwenExtensionWithOfficialCli: platformMocks.installQwenExtensionWithOfficialCli,
+  uninstallQwenExtensionWithOfficialCli: platformMocks.uninstallQwenExtensionWithOfficialCli,
   updateQwenExtensionWithOfficialCli: platformMocks.updateQwenExtensionWithOfficialCli,
   relinkQwenExtensionWithOfficialCli: platformMocks.relinkQwenExtensionWithOfficialCli,
 }));
@@ -65,7 +81,10 @@ vi.mock("../../utils/qwen-extension-cli.js", () => ({
 import {
   runPlatformGenerate,
   runPlatformInstall,
+  runPlatformDoctor,
+  runPlatformRepair,
   runPlatformStatus,
+  runPlatformUninstall,
   runPlatformUpdate,
   runPlatformWhere,
 } from "../platform.js";
@@ -164,14 +183,19 @@ describe("platform CLI", () => {
     platformMocks.loadToolkitManifest.mockReset();
     platformMocks.importWorkspaceDistModule.mockReset();
     platformMocks.normalizeInstallSelector.mockReset();
+    platformMocks.pathExists.mockReset();
     platformMocks.resolveInstallTarget.mockReset();
+    platformMocks.resolvePlatformInstallDoctor.mockReset();
     platformMocks.resolvePlatformInstallReceiptPath.mockReset();
     platformMocks.resolvePlatformInstallStatus.mockReset();
+    platformMocks.removeManagedPaths.mockReset();
+    platformMocks.deletePlatformInstallReceipt.mockReset();
     platformMocks.writeArtifacts.mockReset();
     platformMocks.writePlatformInstallReceiptForPlan.mockReset();
     platformMocks.syncQwenOfficialCliSourceBundle.mockReset();
     platformMocks.syncQwenOfficialCliReleaseBundle.mockReset();
     platformMocks.installQwenExtensionWithOfficialCli.mockReset();
+    platformMocks.uninstallQwenExtensionWithOfficialCli.mockReset();
     platformMocks.updateQwenExtensionWithOfficialCli.mockReset();
     platformMocks.relinkQwenExtensionWithOfficialCli.mockReset();
 
@@ -263,6 +287,17 @@ describe("platform CLI", () => {
       },
       artifacts: [],
     });
+    platformMocks.resolvePlatformInstallDoctor.mockResolvedValue({
+      platform: "codex",
+      health: "healthy",
+      issues: [],
+    });
+    platformMocks.pathExists.mockResolvedValue(true);
+    platformMocks.removeManagedPaths.mockResolvedValue({
+      removed: 1,
+      missing: 0,
+    });
+    platformMocks.deletePlatformInstallReceipt.mockResolvedValue(undefined);
 
     platformMocks.writePlatformInstallReceiptForPlan.mockResolvedValue({});
     platformMocks.syncQwenOfficialCliSourceBundle.mockResolvedValue({
@@ -276,6 +311,7 @@ describe("platform CLI", () => {
       artifactCount: 1,
     });
     platformMocks.installQwenExtensionWithOfficialCli.mockResolvedValue(undefined);
+    platformMocks.uninstallQwenExtensionWithOfficialCli.mockResolvedValue(undefined);
     platformMocks.updateQwenExtensionWithOfficialCli.mockResolvedValue(undefined);
     platformMocks.relinkQwenExtensionWithOfficialCli.mockResolvedValue(undefined);
   });
@@ -807,6 +843,234 @@ describe("platform CLI", () => {
     expect(platformMocks.updateQwenExtensionWithOfficialCli).toHaveBeenCalledWith("zc-toolkit");
     expect(platformMocks.relinkQwenExtensionWithOfficialCli).toHaveBeenCalledWith("/tmp/qwen-release");
     expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
+  });
+
+  it("uninstalls managed filesystem artifacts from the receipt", async () => {
+    platformMocks.createCodexInstallPlan.mockReturnValue(
+      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents" }]),
+    );
+    platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
+      kind: "up-to-date",
+      platform: "codex",
+      receiptPath: "/tmp/install/.zc/platform-state/codex.install-receipt.json",
+      receipt: {
+        schemaVersion: 1,
+        platform: "codex",
+        destinationRoot: "/tmp/install",
+        manifestSource: "/repo/packages/toolkit/src/content",
+        overwrite: "error",
+        installedAt: "2026-04-19T12:00:00.000Z",
+        installMethod: "filesystem",
+        artifacts: [
+          {
+            path: "/tmp/install/AGENTS.md",
+            sha256: "sha",
+            bytes: 8,
+          },
+        ],
+      },
+      contentFingerprint: "current-fingerprint",
+      installedContentFingerprint: "current-fingerprint",
+      summary: {
+        trackedArtifacts: 1,
+        driftedArtifacts: 0,
+        missingArtifacts: 0,
+        plannedChanges: 0,
+      },
+      artifacts: [],
+    });
+
+    await runPlatformUninstall("codex", { dir: "/tmp/install" });
+
+    expect(platformMocks.removeManagedPaths).toHaveBeenCalledWith(["/tmp/install/AGENTS.md"]);
+    expect(platformMocks.deletePlatformInstallReceipt).toHaveBeenCalledWith(
+      "/tmp/install/.zc/platform-state/codex.install-receipt.json",
+    );
+  });
+
+  it("prefers official qwen uninstall for qwen-cli managed installs", async () => {
+    platformMocks.createQwenInstallPlan.mockReturnValue(
+      createQwenInstallPlan(
+        "/home/test/.qwen",
+        [{ path: "/home/test/.qwen/extensions/zc-toolkit/QWEN.md", content: "# context" }],
+        "global",
+      ),
+    );
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: "/home/test/.qwen",
+      source: "official-global",
+      hint: "Qwen 官方文档定义用户级配置目录为 `~/.qwen`。",
+    });
+    platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
+      kind: "up-to-date",
+      platform: "qwen",
+      receiptPath: "/home/test/.qwen/.zc/platform-state/qwen.install-receipt.json",
+      receipt: {
+        schemaVersion: 1,
+        platform: "qwen",
+        destinationRoot: "/home/test/.qwen",
+        manifestSource: "/repo/packages/toolkit/src/content",
+        overwrite: "error",
+        installedAt: "2026-04-19T12:00:00.000Z",
+        installMethod: "qwen-cli",
+        bundleType: "release-bundle",
+        bundlePath: "/tmp/qwen-release",
+        artifacts: [
+          {
+            path: "/home/test/.qwen/extensions/zc-toolkit/QWEN.md",
+            sha256: "sha",
+            bytes: 9,
+          },
+        ],
+      },
+      contentFingerprint: "current-fingerprint",
+      installedContentFingerprint: "current-fingerprint",
+      summary: {
+        trackedArtifacts: 1,
+        driftedArtifacts: 0,
+        missingArtifacts: 0,
+        plannedChanges: 0,
+      },
+      artifacts: [],
+    });
+
+    await runPlatformUninstall("qwen", { global: true });
+
+    expect(platformMocks.uninstallQwenExtensionWithOfficialCli).toHaveBeenCalledWith("zc-toolkit");
+    expect(platformMocks.removeManagedPaths).toHaveBeenCalledWith(["/tmp/qwen-release"]);
+    expect(platformMocks.deletePlatformInstallReceipt).toHaveBeenCalledWith(
+      "/home/test/.qwen/.zc/platform-state/qwen.install-receipt.json",
+    );
+  });
+
+  it("repairs drifted filesystem installs by rewriting managed artifacts", async () => {
+    platformMocks.createCodexInstallPlan.mockReturnValue(
+      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents repaired" }]),
+    );
+    platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
+      kind: "drifted",
+      platform: "codex",
+      receiptPath: "/tmp/install/.zc/platform-state/codex.install-receipt.json",
+      receipt: {
+        schemaVersion: 1,
+        platform: "codex",
+        destinationRoot: "/tmp/install",
+        manifestSource: "/repo/packages/toolkit/src/content",
+        overwrite: "error",
+        installedAt: "2026-04-19T12:00:00.000Z",
+        installMethod: "filesystem",
+        artifacts: [
+          {
+            path: "/tmp/install/AGENTS.md",
+            sha256: "old-sha",
+            bytes: 8,
+          },
+        ],
+      },
+      contentFingerprint: "current-fingerprint",
+      installedContentFingerprint: "old-fingerprint",
+      summary: {
+        trackedArtifacts: 1,
+        driftedArtifacts: 1,
+        missingArtifacts: 0,
+        plannedChanges: 0,
+      },
+      artifacts: [
+        {
+          path: "/tmp/install/AGENTS.md",
+          receiptSha256: "old-sha",
+          actualSha256: "drifted-sha",
+          plannedSha256: "new-sha",
+          matchesReceiptOnDisk: false,
+          differsFromPlan: true,
+        },
+      ],
+    });
+    platformMocks.writeArtifacts.mockResolvedValue({
+      created: 0,
+      overwritten: 1,
+      unchanged: 0,
+      skipped: 0,
+      dryRun: false,
+    });
+
+    await runPlatformRepair("codex", { dir: "/tmp/install" });
+
+    expect(platformMocks.createCodexInstallPlan).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        destinationRoot: "/tmp/install",
+        overwrite: "force",
+      }),
+    );
+    expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
+      [{ path: "/tmp/install/AGENTS.md", content: "# agents repaired" }],
+      { dryRun: false, overwrite: "force" },
+    );
+    expect(platformMocks.writePlatformInstallReceiptForPlan).toHaveBeenCalled();
+  });
+
+  it("prints platform doctor health and issues", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    platformMocks.createCodexInstallPlan.mockReturnValue(
+      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents" }]),
+    );
+    platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
+      kind: "drifted",
+      platform: "codex",
+      receiptPath: "/tmp/install/.zc/platform-state/codex.install-receipt.json",
+      receipt: {
+        schemaVersion: 1,
+        platform: "codex",
+        destinationRoot: "/tmp/install",
+        manifestSource: "/repo/packages/toolkit/src/content",
+        overwrite: "error",
+        installedAt: "2026-04-19T12:00:00.000Z",
+        installMethod: "filesystem",
+        artifacts: [],
+      },
+      contentFingerprint: "current-fingerprint",
+      installedContentFingerprint: "old-fingerprint",
+      summary: {
+        trackedArtifacts: 1,
+        driftedArtifacts: 1,
+        missingArtifacts: 1,
+        plannedChanges: 0,
+      },
+      artifacts: [],
+    });
+    platformMocks.resolvePlatformInstallDoctor.mockResolvedValue({
+      platform: "codex",
+      health: "broken",
+      issues: [
+        {
+          code: "drifted-artifacts",
+          severity: "broken",
+          message: "受管产物和回执记录不一致，安装目录已漂移。",
+          paths: ["/tmp/install/AGENTS.md"],
+        },
+      ],
+    });
+
+    await runPlatformDoctor("codex", { dir: "/tmp/install", json: true });
+
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload).toEqual(
+      expect.objectContaining({
+        mode: "doctor",
+        target: "codex",
+        health: "broken",
+        status: "drifted",
+        issues: [
+          expect.objectContaining({
+            code: "drifted-artifacts",
+            severity: "broken",
+          }),
+        ],
+      }),
+    );
+
+    logSpy.mockRestore();
   });
 
   it("prints resolved install targets via platform where", async () => {

@@ -138,6 +138,11 @@ zc platform install qwen --global
 # 查看已安装状态
 zc platform status codex --global --json
 zc platform status qwen --global --json
+
+# 诊断、修复、卸载
+zc platform doctor codex --global --json
+zc platform repair codex --global --plan --json
+zc platform uninstall codex --global --plan --json
 ```
 
 ## 仓库结构
@@ -222,7 +227,21 @@ zc platform install opencode --global --plan --json
 zc platform install qwen --global --plan --json
 ```
 
-### 5. 仓库开发者维护内容
+### 5. 诊断、修复和卸载
+
+```bash
+zc platform doctor codex --global --json
+zc platform repair codex --global --plan --json
+zc platform uninstall codex --global --plan --json
+```
+
+其中：
+
+- `doctor` 只读诊断，不写盘
+- `repair` 用于恢复 drift / missing / qwen bundle 失配
+- `uninstall` 只删除受管产物和回执，不碰未受管文件
+
+### 6. 仓库开发者维护内容
 
 内容源码默认位于：
 

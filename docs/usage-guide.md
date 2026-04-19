@@ -299,6 +299,9 @@ zc platform install claude --global
 zc platform install opencode --global
 zc platform install qwen --global
 zc platform status codex --global --json
+zc platform doctor codex --global --json
+zc platform repair codex --global --plan --json
+zc platform uninstall codex --global --plan --json
 zc platform update codex --global --plan --json
 zc platform where codex --global
 zc platform where claude --global --json
@@ -362,6 +365,9 @@ zc platform where codex --global
   - `up-to-date`：直接返回无需更新
   - `update-available`：安全覆盖受 `zc` 管理的旧产物
   - `drifted`：要求显式追加 `--force`
+- `platform doctor` 是 `status` 的只读诊断层，会输出健康度、问题列表和下一步建议
+- `platform repair` 会在 receipt 基础上恢复 drift / missing / qwen bundle 失配
+- `platform uninstall` 只删除 receipt 跟踪的受管对象，不清理未受管文件
 - `platform where` 只解析目录和来源，不执行写入
 
 ## 5. 冲突与覆盖

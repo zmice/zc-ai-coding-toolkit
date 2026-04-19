@@ -225,6 +225,10 @@ export async function updateQwenExtensionWithOfficialCli(extensionName: string):
   }
 }
 
+export async function uninstallQwenExtensionWithOfficialCli(extensionName: string): Promise<void> {
+  await updateQwenExtensionWithOfficialCli(extensionName);
+}
+
 export async function relinkQwenExtensionWithOfficialCli(sourceDir: string): Promise<void> {
   await runQwenExtensionsCommand(["extensions", "link", sourceDir]);
 }

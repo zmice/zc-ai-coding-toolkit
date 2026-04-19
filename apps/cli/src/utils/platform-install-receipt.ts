@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { OverwriteMode, PlatformName } from "@zmice/platform-core";
 
@@ -82,6 +82,10 @@ export async function writePlatformInstallReceipt(
 ): Promise<void> {
   await mkdir(dirname(receiptPath), { recursive: true });
   await writeFile(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, "utf8");
+}
+
+export async function deletePlatformInstallReceipt(receiptPath: string): Promise<void> {
+  await rm(receiptPath, { force: true });
 }
 
 export async function writePlatformInstallReceiptForPlan(

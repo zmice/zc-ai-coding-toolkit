@@ -103,6 +103,9 @@ zc --help
 - `zc platform install <qwen|codex|claude|opencode>`
 - `zc platform status <qwen|codex|claude|opencode>`
 - `zc platform update <qwen|codex|claude|opencode>`
+- `zc platform uninstall <qwen|codex|claude|opencode>`
+- `zc platform repair <qwen|codex|claude|opencode>`
+- `zc platform doctor <qwen|codex|claude|opencode>`
 - `zc platform where <qwen|codex|claude|opencode>`
 
 常用参数：
@@ -169,10 +172,12 @@ zc --help
   - `AGENTS.md`
   - `.opencode/commands`
   - `.opencode/skills`
+  - `.opencode/agents`
 - 用户级 / 自定义目录：
   - `AGENTS.md`
   - `commands`
   - `skills`
+  - `agents`
 
 ### Qwen
 
@@ -200,6 +205,9 @@ zc platform install claude --global
 zc platform install opencode --global
 zc platform install qwen --global
 zc platform status qwen --global --json
+zc platform doctor codex --global --json
+zc platform repair qwen --global --json
+zc platform uninstall opencode --global --plan --json
 ```
 
 如果你主要是把 `zc` 当安装器使用，最常见的循环是：
@@ -214,6 +222,11 @@ zc platform update codex --global --plan --json
 
 # 检查当前状态
 zc platform status codex --global --json
+
+# 诊断、修复、卸载
+zc platform doctor codex --global --json
+zc platform repair codex --global --plan --json
+zc platform uninstall codex --global --plan --json
 ```
 
 ## 设计边界
