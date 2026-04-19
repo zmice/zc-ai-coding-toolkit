@@ -33,11 +33,20 @@ node apps/cli/dist/cli/index.js --help
 本地开发态安装到本机全局命令：
 
 ```bash
+pnpm setup
+# 重新打开终端，或 source 你的 shell rc
 pnpm install
 pnpm build
 pnpm --dir apps/cli link --global
 zc --help
 ```
+
+说明：
+
+- `pnpm --dir apps/cli link --global` 依赖 pnpm 的全局 bin 目录
+- 如果出现 `ERR_PNPM_NO_GLOBAL_BIN_DIR`，说明当前环境还没完成 `pnpm setup`
+- 这是 pnpm 环境问题，不是 `zc` 构建问题
+- 对普通使用者，更推荐直接用 `npm install -g @zmice/zc`
 
 安装公开发布包：
 

@@ -50,6 +50,8 @@ npm install -g @zmice/zc@latest
 ### 仓库开发态安装到本机
 
 ```bash
+pnpm setup
+# 重新打开终端，或 source 你的 shell rc
 pnpm install
 pnpm build
 pnpm --dir apps/cli link --global
@@ -60,6 +62,13 @@ zc --help
 
 - `apps/cli` 会生成 `dist/cli/index.js` 和 `vendor/`
 - `pnpm --dir apps/cli link --global` 会把本地构建好的 `zc` 挂到全局命令
+- `pnpm --dir apps/cli link --global` 依赖 pnpm 的全局 bin 目录，因此第一次使用前要先执行一次 `pnpm setup`
+- 如果报 `ERR_PNPM_NO_GLOBAL_BIN_DIR`，说明当前 shell 里还没有可用的 `PNPM_HOME`
+- 这种情况下：
+  - 先执行 `pnpm setup`
+  - 重新打开终端，或重新加载 shell 配置
+  - 再重新运行 `pnpm --dir apps/cli link --global`
+- 如果你只是正常使用 `zc`，更推荐直接使用 `npm install -g @zmice/zc`
 
 ### 更新仓库开发态安装
 
@@ -85,6 +94,8 @@ zc --help
 ```bash
 node apps/cli/dist/cli/index.js <subcommand>
 ```
+
+如果只是临时验证 CLI，也可以优先用这条方式，避免受本机 pnpm 全局配置影响。
 
 ## 3. AI 工具官方安装与更新
 

@@ -66,6 +66,12 @@ pnpm upstream -- report all --format md
 
 - [docs/usage-guide.md](docs/usage-guide.md)
 
+安装建议：
+
+- 普通使用者优先 `npm install -g @zmice/zc`
+- 只有在仓库开发态调试 CLI 时，才建议使用 `pnpm --dir apps/cli link --global`
+- 如果使用 `pnpm link --global`，第一次需要先执行一次 `pnpm setup`
+
 ## 仓库结构
 
 ```text
