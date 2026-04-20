@@ -14,6 +14,7 @@ import {
 export interface GenerationOptions {
   readonly packageName?: string;
   readonly manifestSource?: string;
+  readonly scope?: InstallScope;
 }
 
 export type InstallScope = "project" | "global" | "dir";
@@ -82,6 +83,50 @@ export const capability: PlatformCapability = {
   },
 };
 
+interface ScopeLayout {
+  readonly entryFile: string;
+  readonly skillsDir: string;
+  readonly displaySkillsDir: string;
+}
+
+function getScopeLayout(scope: InstallScope): ScopeLayout {
+  if (scope === "project") {
+    return {
+      entryFile: templateFiles.agents,
+      skillsDir: ".codex/skills",
+      displaySkillsDir: ".codex/skills",
+    };
+  }
+
+  if (scope === "global") {
+    return {
+      entryFile: templateFiles.agents,
+      skillsDir: "skills",
+      displaySkillsDir: "~/.codex/skills",
+    };
+  }
+
+  return {
+    entryFile: templateFiles.agents,
+    skillsDir: "skills",
+    displaySkillsDir: "skills",
+  };
+}
+
+function createCapability(layout: ScopeLayout): PlatformCapability {
+  return {
+    ...capability,
+    entryFile: {
+      ...capability.entryFile,
+      fileName: layout.entryFile,
+    },
+    skills: {
+      relativeDir: layout.skillsDir,
+      fileName: capability.skills!.fileName,
+    },
+  };
+}
+
 function selectMatchedAssetsByKind(
   manifest: ToolkitManifestLike,
   kind: ToolkitAssetLike["kind"],
@@ -99,7 +144,11 @@ function renderAssetList(assets: readonly ToolkitAssetLike[]): string {
     .join("\n");
 }
 
-function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetLike[]): string {
+function renderAgentsFile(
+  manifestSource: string,
+  assets: readonly ToolkitAssetLike[],
+  layout: ScopeLayout,
+): string {
   const commandCount = assets.filter((asset) => asset.kind === "command").length;
   const skillCount = assets.filter((asset) => asset.kind === "skill").length;
 
@@ -113,7 +162,7 @@ function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetL
 2. 说明固定 workflow 的选路规则
 3. 把 \`zc:*\` 命令语义映射成 Codex 实际可调用的 \`$zc-*\` skill
 
-详细方法不写在这里，完整内容都在 \`skills/zc-*/SKILL.md\`。
+详细方法不写在这里，完整内容都在 \`${layout.displaySkillsDir}/zc-*/SKILL.md\`。
 其中：
 
 - \`$zc-start\`、\`$zc-spec\`、\`$zc-build\` 这类是 command-alias skill
@@ -223,8 +272,8 @@ function renderAgentsFile(manifestSource: string, assets: readonly ToolkitAssetL
 
 ## 详细内容在哪里
 
-- command-alias skills：查看 \`skills/zc-<command>/SKILL.md\`
-- workflow / 专项 skills：查看 \`skills/zc-<skill>/SKILL.md\`
+- command-alias skills：查看 \`${layout.displaySkillsDir}/zc-<command>/SKILL.md\`
+- workflow / 专项 skills：查看 \`${layout.displaySkillsDir}/zc-<skill>/SKILL.md\`
 - 如果入口页不足以判断，就先打开对应 skill 再继续
 
 ## 已安装能力
@@ -244,8 +293,8 @@ function toCodexSkillSlug(asset: ToolkitAssetLike): string {
   return asset.id.replace(/^(skill|command):/, "");
 }
 
-function toCodexSkillDirectory(asset: ToolkitAssetLike): string {
-  return `skills/zc-${toCodexSkillSlug(asset)}`;
+function toCodexSkillDirectory(asset: ToolkitAssetLike, layout: ScopeLayout): string {
+  return `${layout.skillsDir}/zc-${toCodexSkillSlug(asset)}`;
 }
 
 function renderYamlFrontmatter(fields: Record<string, string | undefined>): string {
@@ -292,9 +341,12 @@ ${(asset.body ?? `# ${describeAsset(asset)}\n`).trim()}
 `;
 }
 
-function renderCodexSkillArtifacts(assets: readonly ToolkitAssetLike[]): readonly PlatformArtifact[] {
+function renderCodexSkillArtifacts(
+  assets: readonly ToolkitAssetLike[],
+  layout: ScopeLayout,
+): readonly PlatformArtifact[] {
   return assets.map((asset) => ({
-    path: `${toCodexSkillDirectory(asset)}/SKILL.md`,
+    path: `${toCodexSkillDirectory(asset, layout)}/SKILL.md`,
     content: renderSkillFile({
       name: `zc-${asset.name ?? toCodexSkillSlug(asset)}`,
       description: asset.summary ?? describeAsset(asset),
@@ -303,9 +355,12 @@ function renderCodexSkillArtifacts(assets: readonly ToolkitAssetLike[]): readonl
   }));
 }
 
-function renderCodexCommandAliasArtifacts(assets: readonly ToolkitAssetLike[]): readonly PlatformArtifact[] {
+function renderCodexCommandAliasArtifacts(
+  assets: readonly ToolkitAssetLike[],
+  layout: ScopeLayout,
+): readonly PlatformArtifact[] {
   return assets.map((asset) => ({
-    path: `${toCodexSkillDirectory(asset)}/SKILL.md`,
+    path: `${toCodexSkillDirectory(asset, layout)}/SKILL.md`,
     content: renderSkillFile({
       name: `zc-${asset.name ?? toCodexSkillSlug(asset)}`,
       description: asset.summary ?? describeAsset(asset),
@@ -318,6 +373,9 @@ export function createCodexGenerationPlan(
   manifest: ToolkitManifestLike,
   options: GenerationOptions = {},
 ): GenerationPlan {
+  const scope = options.scope ?? "dir";
+  const layout = getScopeLayout(scope);
+  const resolvedCapability = createCapability(layout);
   const matchedAssets = selectMatchedAssets(manifest, platformName);
   const commandAssets = selectMatchedAssetsByKind(manifest, "command");
   const skillAssets = selectMatchedAssetsByKind(manifest, "skill");
@@ -329,14 +387,14 @@ export function createCodexGenerationPlan(
     packageName: resolvedPackageName,
     manifestSource,
     matchedAssets,
-    capability,
+    capability: resolvedCapability,
     artifacts: [
       {
-        path: templateFiles.agents,
-        content: renderAgentsFile(manifestSource, matchedAssets),
+        path: layout.entryFile,
+        content: renderAgentsFile(manifestSource, matchedAssets, layout),
       },
-      ...renderCodexCommandAliasArtifacts(commandAssets),
-      ...renderCodexSkillArtifacts(skillAssets),
+      ...renderCodexCommandAliasArtifacts(commandAssets, layout),
+      ...renderCodexSkillArtifacts(skillAssets, layout),
     ],
   }) as GenerationPlan;
 }
@@ -347,29 +405,12 @@ export function createCodexInstallPlan(
 ): InstallPlan {
   const generationPlan = createCodexGenerationPlan(manifest, options);
 
-  if (options.scope === "project") {
-    const installPlan = createInstallPlan(
-      {
-        ...generationPlan,
-        artifacts: generationPlan.artifacts.filter((artifact) => artifact.path === templateFiles.agents),
-      },
-      options,
-    );
-
-    return {
-      ...(installPlan as BaseInstallPlan),
-      matchedAssets: generationPlan.matchedAssets,
-      capability,
-      scope: options.scope ?? "project",
-    };
-  }
-
   const installPlan = createInstallPlan(generationPlan, options);
 
   return {
     ...(installPlan as BaseInstallPlan),
     matchedAssets: generationPlan.matchedAssets,
-    capability,
+    capability: generationPlan.capability,
     scope: options.scope ?? "project",
   };
 }

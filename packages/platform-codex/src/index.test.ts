@@ -71,13 +71,19 @@ describe("@zmice/platform-codex scaffold", () => {
     ]);
   });
 
-  it("keeps project installs conservative and only writes AGENTS.md", () => {
+  it("installs project AGENTS.md and project-local .codex skills", () => {
     const plan = createCodexInstallPlan(manifest, {
       destinationRoot: "/tmp/project",
       scope: "project",
     });
 
     assert.equal(plan.scope, "project");
-    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), ["/tmp/project/AGENTS.md"]);
+    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
+      "/tmp/project/AGENTS.md",
+      "/tmp/project/.codex/skills/zc-start/SKILL.md",
+      "/tmp/project/.codex/skills/zc-skill-alpha/SKILL.md",
+    ]);
+    assert.deepEqual(plan.capability.skills?.relativeDir, ".codex/skills");
+    assert.ok(plan.artifacts[0]?.content.includes(".codex/skills/zc-<command>/SKILL.md"));
   });
 });

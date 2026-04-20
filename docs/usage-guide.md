@@ -253,7 +253,7 @@ npm install -g @qwen-code/qwen-code@latest
 
 | 平台 | 项目级默认位置 | 全局级默认位置 | 说明 |
 | --- | --- | --- | --- |
-| `codex` | `<project-root>/AGENTS.md` | `~/.codex/AGENTS.md` | OpenAI 官方文档将 Codex home（默认 `~/.codex`）作为全局级 `AGENTS.md` 位置 |
+| `codex` | `<project-root>/AGENTS.md` + `<project-root>/.codex/skills/` | `~/.codex/AGENTS.md` | OpenAI 官方文档将 Codex home（默认 `~/.codex`）作为全局级 `AGENTS.md` 位置；项目级 skills 使用 `.codex/skills/` |
 | `claude` | `<project-root>/CLAUDE.md` | `~/.claude/CLAUDE.md` | Claude Code 官方文档明确给出 project/user memory 位置 |
 | `opencode` | `<project-root>/AGENTS.md` | `~/.config/opencode/AGENTS.md` | OpenCode 官方文档明确给出 project/global rules 位置 |
 | `qwen` | `<project-root>/QWEN.md` | `~/.qwen/QWEN.md` | 官方文档明确 `/init` 会在项目目录创建 `QWEN.md`，并明确用户级配置目录为 `~/.qwen`；阿里云官方帮助文档同时给出了 Qwen CLI 的用户级 `QWEN.md` 位置 |
@@ -289,6 +289,8 @@ zc platform install codex --project
 
 - `codex`
   - `<project>/AGENTS.md`
+  - `<project>/.codex/skills/zc-<command>/SKILL.md`
+  - `<project>/.codex/skills/zc-<skill>/SKILL.md`
 - `claude`
   - `<project>/CLAUDE.md`
   - `<project>/.claude/commands/zc-<command>.md`

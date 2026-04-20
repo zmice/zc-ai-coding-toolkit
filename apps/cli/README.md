@@ -221,7 +221,10 @@ pnpm verify
 
 ### Codex
 
-- 项目级：`AGENTS.md`
+- 项目级：
+  - `AGENTS.md`
+  - `.codex/skills/zc-<command>/SKILL.md`
+  - `.codex/skills/zc-<skill>/SKILL.md`
 - 用户级 / 自定义目录：
   - `AGENTS.md`
   - `skills/zc-<command>/SKILL.md`

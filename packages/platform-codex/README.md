@@ -32,7 +32,8 @@ zc platform install codex --plan --json
 
 - `--project`
   - 安装 `<project>/AGENTS.md`
-  - 保守处理，不额外生成项目级 skills 目录
+  - 同时安装 `<project>/.codex/skills/zc-<command>/SKILL.md`
+  - 同时安装 `<project>/.codex/skills/zc-<skill>/SKILL.md`
 - `--global`
   - 安装 `~/.codex/AGENTS.md`
   - 同时安装 `~/.codex/skills/zc-<command>/SKILL.md`
