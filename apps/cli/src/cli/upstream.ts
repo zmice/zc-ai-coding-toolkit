@@ -1,8 +1,12 @@
 import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
+import { promisify } from "node:util";
 import type { Command } from "commander";
 import { Command as CommanderCommand } from "commander";
 import { resolveWorkspacePath } from "../utils/workspace.js";
+
+const execFileAsync = promisify(execFile);
 
 interface UpstreamRecord {
   id: string;
@@ -10,6 +14,7 @@ interface UpstreamRecord {
   kind?: string;
   status?: string;
   owner?: string;
+  sourceUrl?: string;
   notesPath?: string;
   snapshotsPath?: string;
   sourcePaths: string[];
@@ -26,12 +31,22 @@ interface SnapshotRecord {
     kind?: string;
     status?: string;
     owner?: string;
+    source_url?: string;
     source_paths?: string[];
   };
+  remote?: RemoteHeadEvidence;
   notes?: {
     path?: string;
     content?: string;
   };
+}
+
+interface RemoteHeadEvidence {
+  source_url: string;
+  checked_at: string;
+  command: "git ls-remote HEAD";
+  head_sha: string | null;
+  error?: string;
 }
 
 interface SnapshotResult {
@@ -44,6 +59,7 @@ interface SnapshotResult {
   summary: {
     source_paths: number;
     notes_lines: number;
+    remote_head: string | null;
   };
 }
 
@@ -84,6 +100,9 @@ interface UpstreamDiffResult {
   evidence: {
     notes_path: string | null;
     snapshot: string;
+    source_url: string | null;
+    source_paths: string[];
+    remote?: RemoteHeadEvidence;
   };
 }
 
@@ -217,6 +236,9 @@ function parseUpstreamBlocks(source: string): UpstreamRecord[] {
       case "owner":
         current.owner = parsed.value;
         break;
+      case "source_url":
+        current.sourceUrl = parsed.value;
+        break;
       case "notes_path":
         current.notesPath = parsed.value;
         break;
@@ -349,6 +371,7 @@ function compareMetadata(item: UpstreamRecord, baseline: SnapshotRecord): Metada
     kind: item.kind ?? "-",
     status: item.status ?? "-",
     owner: item.owner ?? "-",
+    source_url: item.sourceUrl ?? "-",
   };
 
   const baselineMetadata: Record<string, string> = {
@@ -356,6 +379,7 @@ function compareMetadata(item: UpstreamRecord, baseline: SnapshotRecord): Metada
     kind: baseline.metadata?.kind ?? "-",
     status: baseline.metadata?.status ?? "-",
     owner: baseline.metadata?.owner ?? "-",
+    source_url: baseline.metadata?.source_url ?? "-",
   };
 
   return Object.keys(currentMetadata)
@@ -402,10 +426,52 @@ function buildImpacts(result: UpstreamDiffResult["changes"]): ImpactRecord[] {
   return impacts;
 }
 
-async function createDiffResult(item: UpstreamRecord, against?: string): Promise<UpstreamDiffResult> {
+async function createRemoteHeadEvidence(item: UpstreamRecord): Promise<RemoteHeadEvidence> {
+  const checkedAt = new Date().toISOString();
+
+  if (!item.sourceUrl) {
+    return {
+      source_url: "-",
+      checked_at: checkedAt,
+      command: "git ls-remote HEAD",
+      head_sha: null,
+      error: "未配置 source_url。",
+    };
+  }
+
+  try {
+    const { stdout } = await execFileAsync("git", ["ls-remote", item.sourceUrl, "HEAD"], {
+      timeout: 15000,
+      maxBuffer: 1024 * 1024,
+    });
+    const [headSha] = stdout.trim().split(/\s+/);
+    return {
+      source_url: item.sourceUrl,
+      checked_at: checkedAt,
+      command: "git ls-remote HEAD",
+      head_sha: headSha || null,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      source_url: item.sourceUrl,
+      checked_at: checkedAt,
+      command: "git ls-remote HEAD",
+      head_sha: null,
+      error: message,
+    };
+  }
+}
+
+async function createDiffResult(
+  item: UpstreamRecord,
+  against?: string,
+  options: { withRemote?: boolean } = {},
+): Promise<UpstreamDiffResult> {
   const baselinePath = await resolveBaselinePath(item, against);
   const baseline = await loadSnapshot(baselinePath);
   const currentNotesContent = await readOptionalFile(item.notesPath);
+  const remote = options.withRemote ? await createRemoteHeadEvidence(item) : undefined;
 
   const changes = {
     structural: comparePathLists(baseline.metadata?.source_paths ?? [], item.sourcePaths),
@@ -424,6 +490,9 @@ async function createDiffResult(item: UpstreamRecord, against?: string): Promise
     evidence: {
       notes_path: item.notesPath ?? null,
       snapshot: toWorkspaceRelative(baselinePath),
+      source_url: item.sourceUrl ?? null,
+      source_paths: item.sourcePaths,
+      ...(remote ? { remote } : {}),
     },
   };
 }
@@ -432,6 +501,24 @@ function formatImpactLines(impacts: readonly ImpactRecord[]): string[] {
   return impacts.map(
     (impact) => `- ${impact.target}: ${impact.effect}（direct_write=${impact.directWrite ? "yes" : "no"}）`,
   );
+}
+
+function formatRemoteEvidenceLines(remote: RemoteHeadEvidence | undefined): string[] {
+  if (!remote) {
+    return ["- remote_head: 未采集（使用 `--with-remote` 启用）"];
+  }
+
+  const lines = [
+    `- remote_source: \`${remote.source_url}\``,
+    `- remote_checked_at: \`${remote.checked_at}\``,
+    `- remote_head: \`${remote.head_sha ?? "-"}\``,
+  ];
+
+  if (remote.error) {
+    lines.push(`- remote_error: \`${remote.error}\``);
+  }
+
+  return lines;
 }
 
 function formatDiffText(result: UpstreamDiffResult): string {
@@ -453,6 +540,9 @@ function formatDiffText(result: UpstreamDiffResult): string {
     `模式：${result.mode}`,
     `基线：${result.baseline}`,
     `审阅状态：${result.review_status}`,
+    `源地址：${result.evidence.source_url ?? "-"}`,
+    `源路径：${result.evidence.source_paths.join(", ") || "-"}`,
+    ...formatRemoteEvidenceLines(result.evidence.remote),
     "",
     "结构变化：",
     ...structuralLines,
@@ -485,6 +575,9 @@ function formatReportText(results: readonly UpstreamDiffResult[]): string {
         `- 结构变化：${result.changes.structural.length}`,
         `- 文本变化：${result.changes.text.length}`,
         `- 元数据变化：${result.changes.metadata.length}`,
+        `- 源地址：${result.evidence.source_url ?? "-"}`,
+        `- 源路径：${result.evidence.source_paths.join(", ") || "-"}`,
+        ...formatRemoteEvidenceLines(result.evidence.remote),
         "",
         "影响范围：",
         ...formatImpactLines(result.impacts),
@@ -509,6 +602,9 @@ function formatReportMarkdown(results: readonly UpstreamDiffResult[]): string {
       "## Evidence",
       `- baseline snapshot: \`${result.evidence.snapshot}\``,
       `- current notes: \`${result.evidence.notes_path ?? "-"}\``,
+      `- source url: \`${result.evidence.source_url ?? "-"}\``,
+      `- source paths: ${result.evidence.source_paths.map((pathValue) => `\`${pathValue}\``).join(", ") || "-"}`,
+      ...formatRemoteEvidenceLines(result.evidence.remote),
       "",
       "## Changes",
       `- structural: ${result.changes.structural.length}`,
@@ -579,6 +675,7 @@ function formatSnapshotText(result: SnapshotResult): string {
     "摘要：",
     `- source paths：${result.summary.source_paths}`,
     `- notes 有效行数：${result.summary.notes_lines}`,
+    `- remote head：${result.summary.remote_head ?? "未采集"}`,
     "",
     "说明：",
     "- snapshot 为追加式治理记录，不会直接写入 `packages/toolkit`。",
@@ -601,6 +698,7 @@ function formatSnapshotMarkdown(result: SnapshotResult): string {
     `- snapshot_path: \`${result.snapshot_path}\``,
     `- source_paths: ${result.summary.source_paths}`,
     `- notes_lines: ${result.summary.notes_lines}`,
+    `- remote_head: \`${result.summary.remote_head ?? "未采集"}\``,
     "",
     "## Boundary",
     "- append-only snapshot",
@@ -641,13 +739,18 @@ async function emitPayload(
   await emitOutput(formatPayload(format, payload, fallbackText), outputPath);
 }
 
-async function createSnapshot(item: UpstreamRecord, label?: string): Promise<SnapshotResult> {
+async function createSnapshot(
+  item: UpstreamRecord,
+  label?: string,
+  options: { withRemote?: boolean } = {},
+): Promise<SnapshotResult> {
   if (!item.snapshotsPath) {
     throw new Error(`上游 ${item.id} 未配置 snapshots_path。`);
   }
 
   const capturedAt = new Date().toISOString();
   const currentNotesContent = await readOptionalFile(item.notesPath);
+  const remote = options.withRemote ? await createRemoteHeadEvidence(item) : undefined;
   const snapshotPayload: SnapshotRecord = {
     upstream: item.id,
     captured_at: capturedAt,
@@ -657,8 +760,10 @@ async function createSnapshot(item: UpstreamRecord, label?: string): Promise<Sna
       kind: item.kind,
       status: item.status,
       owner: item.owner,
+      source_url: item.sourceUrl,
       source_paths: item.sourcePaths,
     },
+    remote,
     notes: item.notesPath
       ? {
           path: item.notesPath,
@@ -694,6 +799,7 @@ async function createSnapshot(item: UpstreamRecord, label?: string): Promise<Sna
     summary: {
       source_paths: item.sourcePaths.length,
       notes_lines: countMeaningfulLines(currentNotesContent),
+      remote_head: remote?.head_sha ?? null,
     },
   };
 }
@@ -808,7 +914,8 @@ function buildUpstreamCommand(): CommanderCommand {
     .argument("<id>", "上游 ID")
     .option("--against <baseline>", "指定基线 snapshot，相对 snapshots_path 解析")
     .option("--format <format>", "输出格式：text | json", "text")
-    .action(async (id: string, options: { against?: string; format?: DiffFormat }) => {
+    .option("--with-remote", "通过 git ls-remote 采集当前远端 HEAD 作为审阅证据")
+    .action(async (id: string, options: { against?: string; format?: DiffFormat; withRemote?: boolean }) => {
       try {
         const upstreams = await loadUpstreams();
         const item = findUpstreamOrExit(upstreams, id);
@@ -817,7 +924,7 @@ function buildUpstreamCommand(): CommanderCommand {
           return;
         }
 
-        const result = await createDiffResult(item, options.against);
+        const result = await createDiffResult(item, options.against, { withRemote: options.withRemote });
         await emitPayload(options.format ?? "text", result, formatDiffText(result));
       } catch (error) {
         printCommandError(error);
@@ -830,7 +937,8 @@ function buildUpstreamCommand(): CommanderCommand {
     .argument("<id>", "上游 ID")
     .option("--label <label>", "附加到 snapshot 文件名的标签")
     .option("--format <format>", "输出格式：text | json | md", "text")
-    .action(async (id: string, options: { label?: string; format?: ReportFormat }) => {
+    .option("--with-remote", "通过 git ls-remote 采集当前远端 HEAD 并写入 snapshot")
+    .action(async (id: string, options: { label?: string; format?: ReportFormat; withRemote?: boolean }) => {
       try {
         const upstreams = await loadUpstreams();
         const item = findUpstreamOrExit(upstreams, id);
@@ -839,7 +947,7 @@ function buildUpstreamCommand(): CommanderCommand {
           return;
         }
 
-        const result = await createSnapshot(item, options.label);
+        const result = await createSnapshot(item, options.label, { withRemote: options.withRemote });
         const format = options.format ?? "text";
 
         if (format === "md") {
@@ -859,7 +967,8 @@ function buildUpstreamCommand(): CommanderCommand {
     .argument("<target>", "上游 ID 或 all")
     .option("--format <format>", "输出格式：text | json | md", "text")
     .option("--output <path>", "把输出写入文件，而不是打印到终端")
-    .action(async (target: string, options: { format?: ReportFormat; output?: string }) => {
+    .option("--with-remote", "通过 git ls-remote 采集当前远端 HEAD 作为审阅证据")
+    .action(async (target: string, options: { format?: ReportFormat; output?: string; withRemote?: boolean }) => {
       try {
         const upstreams = await loadUpstreams();
         const items =
@@ -873,7 +982,7 @@ function buildUpstreamCommand(): CommanderCommand {
           return;
         }
 
-        const results = await Promise.all(items.map((item) => createDiffResult(item)));
+        const results = await Promise.all(items.map((item) => createDiffResult(item, undefined, { withRemote: options.withRemote })));
         const format = options.format ?? "text";
 
         if (format === "md") {

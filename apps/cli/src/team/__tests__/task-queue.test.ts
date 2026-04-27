@@ -28,4 +28,26 @@ describe("TaskQueue", () => {
     expect(task.status).toBe("pending");
     expect(queue.list()).toHaveLength(1);
   });
+
+  it("only returns dependency-ready pending tasks", async () => {
+    const first = await queue.create({
+      title: "Schema",
+      description: "schema",
+      dependencies: [],
+      files: ["src/schema.ts"],
+    });
+    const second = await queue.create({
+      title: "API",
+      description: "api",
+      dependencies: [first.id],
+      files: ["src/api.ts"],
+    });
+
+    expect(queue.getReady().map((task) => task.id)).toEqual([first.id]);
+
+    const { token } = await queue.claim(first.id, "w1");
+    await queue.transition(first.id, token, "completed");
+
+    expect(queue.getReady().map((task) => task.id)).toEqual([second.id]);
+  });
 });

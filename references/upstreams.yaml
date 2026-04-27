@@ -12,6 +12,7 @@ upstreams:
     kind: github-public-repo
     status: active
     owner: codex
+    source_url: https://github.com/addyosmani/agent-skills.git
     source_paths:
       - skills
       - commands
@@ -27,6 +28,7 @@ upstreams:
     kind: github-public-repo
     status: active
     owner: codex
+    source_url: https://github.com/obra/superpowers.git
     source_paths:
       - prompts
       - instructions
@@ -43,6 +45,7 @@ upstreams:
     kind: github-public-repo
     status: active
     owner: codex
+    source_url: https://github.com/affaan-m/everything-claude-code.git
     source_paths:
       - CLAUDE.md
       - docs
@@ -59,6 +62,7 @@ upstreams:
     kind: github-public-repo
     status: active
     owner: codex
+    source_url: https://github.com/garrytan/gstack.git
     source_paths:
       - prompts
       - commands
@@ -75,6 +79,7 @@ upstreams:
     kind: github-public-repo
     status: active
     owner: codex
+    source_url: https://github.com/multica-ai/andrej-karpathy-skills.git
     source_paths:
       - CLAUDE.md
       - README.md

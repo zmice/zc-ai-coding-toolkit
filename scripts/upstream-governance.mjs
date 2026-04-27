@@ -13,4 +13,6 @@ if (!existsSync(modulePath)) {
 
 const { createUpstreamProgram } = await import(pathToFileURL(modulePath).href);
 
-await createUpstreamProgram().parseAsync(process.argv);
+const argv = process.argv.filter((arg, index) => !(index === 2 && arg === "--"));
+
+await createUpstreamProgram().parseAsync(argv);

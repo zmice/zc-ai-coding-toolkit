@@ -27,12 +27,10 @@ zc platform plugin codex
 zc platform plugin codex --global
 ```
 
-如果你想装到其他平台，使用 install 路线：
+`plugin` 子命令当前只支持 Codex。其他平台使用 install 路线，可按需追加 `--global`：
 
 ```bash
-zc platform install claude
-zc platform install opencode
-zc platform install qwen
+zc platform install <claude|opencode|qwen> [--global]
 ```
 
 如果你只是想安装和更新平台内容，优先看：
@@ -59,11 +57,17 @@ zc platform install qwen
 pnpm upstream -- <subcommand>
 ```
 
+需要当前远端 HEAD 作为审阅证据时，使用 upstream 子命令的 `--with-remote`，例如：
+
+```bash
+pnpm upstream -- report all --format md --with-remote
+```
+
 ## 支持的平台
 
 | 平台 | 当前安装形态 | 统一入口适配 |
 | --- | --- | --- |
-| Codex | `AGENTS.md` + `skills/` | `zc:start -> $zc-start` |
+| Codex | `AGENTS.md` + `config.toml` + `skills/` + `agents/` | `zc:start -> $zc-start` |
 | Claude Code | `CLAUDE.md` + `commands/` + `agents/` | `zc:start -> /zc-start` |
 | OpenCode | `AGENTS.md` + `commands/` + `skills/` + `agents/` | `zc:start -> /zc-start` |
 | Qwen | `QWEN.md` + extension 目录 | `zc:start -> zc:start` |
@@ -172,6 +176,21 @@ pnpm verify
 - `zc msg ...`
 - `zc doctor`
 
+团队并行先 dry-run，再启动：
+
+```bash
+zc team plan -w 2 \
+  -t "API | files=src/api.ts,src/api.test.ts" \
+  -t "UI | files=src/ui.ts,src/ui.test.ts" \
+  --json
+
+zc team start -w "w1:codex,w2:codex" \
+  -t "API | files=src/api.ts,src/api.test.ts" \
+  -t "UI | files=src/ui.ts,src/ui.test.ts"
+```
+
+`zc team start` 会保守检查并行安全：多 worker 任务必须声明 `files=`，文件冲突或 `deps=` 依赖会阻止盲目并行。worktree 默认使用 `.worktrees/`，该目录必须被 git ignore；关闭前先用 `zc team shutdown <name> --plan` 查看 fan-in 状态。
+
 ### Toolkit
 
 - `zc toolkit lint`
@@ -259,12 +278,18 @@ pnpm verify
 
 - 项目级：
   - `AGENTS.md`
+  - `.codex/config.toml`
   - `.codex/skills/zc-<command>/SKILL.md`
   - `.codex/skills/zc-<skill>/SKILL.md`
+  - `.codex/agents/zc-<agent>.toml`
 - 用户级 / 自定义目录：
   - `AGENTS.md`
+  - `config.toml`
   - `skills/zc-<command>/SKILL.md`
   - `skills/zc-<skill>/SKILL.md`
+  - `agents/zc-<agent>.toml`
+
+`config.toml` 只负责注册 Codex custom agent role，避免生成了 `.toml` agent 文件但 Codex 无法通过 `[agents.*]` 找到对应角色。
 
 ### Claude Code
 

@@ -1,10 +1,16 @@
 import type { Command } from "commander";
 import { Orchestrator, type TeamSpec } from "../team/orchestrator.js";
 import { SessionManager } from "../runtime/session-manager.js";
-import { WorktreeManager } from "../runtime/worktree-manager.js";
+import { WorktreeManager, WorktreeSafetyError, type WorktreeBranchStatus } from "../runtime/worktree-manager.js";
 import { readJson } from "../runtime/state.js";
 import { resolve } from "node:path";
 import { rm } from "node:fs/promises";
+import {
+  createTeamPlan,
+  parseTeamTaskDescriptors,
+  type TeamPlan,
+  type TeamTaskSpec,
+} from "../team/planner.js";
 
 function getStateDir(): string {
   return resolve(process.cwd(), ".zc");
@@ -36,6 +42,99 @@ function defaultTeamName(): string {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
   return `team-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+}
+
+function formatTeamPlan(plan: TeamPlan): string {
+  const lines = [
+    `建议 worker：${plan.recommendedWorkers}`,
+    `需要 worktree：${plan.requiresWorktree ? "是" : "否"}`,
+    `可直接启动：${plan.canStart ? "是" : "否"}`,
+  ];
+
+  if (plan.reasons.length > 0) {
+    lines.push("\n原因：", ...plan.reasons.map((reason) => `- ${reason}`));
+  }
+
+  if (plan.blockers.length > 0) {
+    lines.push("\n阻塞项：", ...plan.blockers.map((blocker) => `- ${blocker}`));
+  }
+
+  if (plan.conflicts.length > 0) {
+    lines.push("\n文件冲突：");
+    for (const conflict of plan.conflicts) {
+      lines.push(`- ${conflict.file}: ${conflict.tasks.join(", ")}`);
+    }
+  }
+
+  lines.push("\n并行批次：");
+  plan.batches.forEach((batch, index) => {
+    lines.push(`- batch ${index + 1}: ${batch.join(", ")}`);
+  });
+
+  lines.push("\n任务：");
+  for (const task of plan.tasks) {
+    const files = task.files.length > 0 ? task.files.join(", ") : "未声明";
+    const deps = task.dependencies.length > 0 ? task.dependencies.join(", ") : "-";
+    lines.push(`- ${task.id}: ${task.title} | files=${files} | deps=${deps} | mode=${task.mode}`);
+  }
+
+  return lines.join("\n");
+}
+
+function printTeamPlan(plan: TeamPlan, json?: boolean): void {
+  if (json) {
+    console.log(JSON.stringify(plan, null, 2));
+    return;
+  }
+  console.log(formatTeamPlan(plan));
+}
+
+function formatWorktreeStatus(status: WorktreeBranchStatus): string {
+  const branch = status.branch ?? "-";
+  const ahead = status.ahead === null ? "unknown" : String(status.ahead);
+  const merged = status.merged === null ? "unknown" : status.merged ? "yes" : "no";
+  return `${status.name.padEnd(24)} ${status.status.padEnd(8)} branch=${branch} ahead=${ahead} merged=${merged} path=${status.path}`;
+}
+
+async function getShutdownWorktreeStatuses(
+  name: string,
+  stateDir: string,
+  worktree: Pick<WorktreeManager, "inspectTeam">,
+): Promise<WorktreeBranchStatus[]> {
+  const inspected = await worktree.inspectTeam(name);
+  if (inspected.length > 0) {
+    return inspected;
+  }
+
+  const statePath = resolve(stateDir, name, "state.json");
+  const status = await readJson<Record<string, unknown>>(statePath, null as unknown as Record<string, unknown>);
+  const workers = (status as { workers?: Array<{ id: string; worktreePath?: string }> } | null)?.workers ?? [];
+  return workers
+    .filter((worker) => worker.worktreePath)
+    .map((worker) => ({
+      name: `${name}-${worker.id}`,
+      path: worker.worktreePath ?? "",
+      branch: null,
+      status: "unknown" as const,
+      ahead: null,
+      merged: null,
+    }));
+}
+
+async function printShutdownPlan(
+  name: string,
+  stateDir: string,
+  worktree: Pick<WorktreeManager, "inspectTeam">,
+): Promise<void> {
+  const statuses = await getShutdownWorktreeStatuses(name, stateDir, worktree);
+  console.log(`团队 "${name}" 的 fan-in 收尾状态：`);
+  if (statuses.length === 0) {
+    console.log("- 未找到受管 worktree。");
+    return;
+  }
+  for (const status of statuses) {
+    console.log(`- ${formatWorktreeStatus(status)}`);
+  }
 }
 
 export async function shutdownTeamRuntime(
@@ -125,6 +224,25 @@ export function registerTeamCommand(program: Command): void {
 
   // --- start ---
   team
+    .command("plan")
+    .description("干跑分析团队并行计划，不启动 tmux 或创建 worktree")
+    .option("-t, --tasks <task...>", "任务描述（可重复）；可用 \"标题 | files=a,b | deps=task-1 | mode=worktree\"", [])
+    .option("-w, --workers <count>", "计划 worker 数", "2")
+    .option("-j, --json", "输出 JSON")
+    .action((opts: { tasks: string[]; workers: string; json?: boolean }) => {
+      if (opts.tasks.length === 0) {
+        console.error("错误：至少需要提供一个 --tasks。");
+        process.exitCode = 1;
+        return;
+      }
+
+      const workerCount = Number.parseInt(opts.workers, 10);
+      const tasks = parseTeamTaskDescriptors(opts.tasks);
+      const plan = createTeamPlan(tasks, Number.isFinite(workerCount) ? workerCount : undefined);
+      printTeamPlan(plan, opts.json);
+    });
+
+  team
     .command("start")
     .description("启动团队")
     .requiredOption(
@@ -144,10 +262,19 @@ export function registerTeamCommand(program: Command): void {
       }
 
       const workers = parseWorkers(opts.workers);
+      const parsedTasks: TeamTaskSpec[] = parseTeamTaskDescriptors(opts.tasks);
+      const plan = createTeamPlan(parsedTasks, workers.length);
+      if (!plan.canStart) {
+        console.error("团队任务不能安全并行启动。请先处理以下计划阻塞项，或改用单 worker 串行执行：");
+        console.error(formatTeamPlan(plan));
+        process.exitCode = 1;
+        return;
+      }
+
       const spec: TeamSpec = {
         name: opts.name,
         workers,
-        tasks: opts.tasks,
+        tasks: parsedTasks,
         model: opts.model,
         skills: opts.skills.length > 0 ? opts.skills : undefined,
         skillMatchMode: opts.skillMatch as "keyword" | "ai",
@@ -162,7 +289,11 @@ export function registerTeamCommand(program: Command): void {
       try {
         await runTeamRuntime(spec, getStateDir(), session, worktree, orch, process);
       } catch (err) {
-        console.error("启动团队失败：", err instanceof Error ? err.message : err);
+        if (err instanceof WorktreeSafetyError) {
+          console.error("启动团队失败：", err.message);
+        } else {
+          console.error("启动团队失败：", err instanceof Error ? err.message : err);
+        }
         process.exitCode = 1;
       }
     });
@@ -225,13 +356,19 @@ export function registerTeamCommand(program: Command): void {
     .command("shutdown")
     .description("关闭团队")
     .argument("<name>", "团队名称")
-    .action(async (name: string) => {
+    .option("--plan", "只输出 fan-in 收尾状态，不关闭 tmux 或删除 worktree")
+    .action(async (name: string, opts: { plan?: boolean }) => {
       console.log(`正在关闭团队 "${name}"...`);
 
       const session = new SessionManager();
       const worktree = new WorktreeManager(process.cwd());
 
       try {
+        await printShutdownPlan(name, getStateDir(), worktree);
+        if (opts.plan) {
+          console.log("dry-run：未关闭 tmux session，未删除 worktree。");
+          return;
+        }
         await shutdownTeamRuntime(name, getStateDir(), session, worktree);
         console.log(`团队 "${name}" 已关闭。`);
       } catch (err) {

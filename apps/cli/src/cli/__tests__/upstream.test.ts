@@ -111,6 +111,9 @@ describe("upstream governance commands", () => {
     expect(result.stdout).toContain("## Summary");
     expect(result.stdout).toContain("## Evidence");
     expect(result.stdout).toContain("## Decision");
+    expect(result.stdout).toContain("source url");
+    expect(result.stdout).toContain("https://github.com/addyosmani/agent-skills.git");
+    expect(result.stdout).toContain("remote_head: 未采集");
     expect(result.stdout).toContain("`pending-manual-review`");
     expect(result.stdout).toContain("人工审阅");
   });
@@ -129,12 +132,13 @@ describe("upstream governance commands", () => {
     const payload = JSON.parse(readFileSync(join(workspaceRoot, relativePath), "utf8")) as {
       upstream: string;
       label: string;
-      metadata: { status: string };
+      metadata: { status: string; source_url: string };
     };
 
     expect(payload.upstream).toBe("agent-skills");
     expect(payload.label).toBe(label);
     expect(payload.metadata.status).toBe("active");
+    expect(payload.metadata.source_url).toBe("https://github.com/addyosmani/agent-skills.git");
   }, 15000);
 
   it("report --output 会把 Markdown 审阅材料写入文件", async () => {

@@ -47,3 +47,25 @@ Current repo surface observed at registration time:
 
 - Run `pnpm upstream -- diff andrej-karpathy-skills` against the baseline
 - Continue extracting reusable principles instead of mirroring upstream structure
+
+## Latest Reviewed Upstream
+
+- remote head: `2c606141936f1eeef17fa3043a72095b4765b9c2`
+- observed date: 2026-04-27
+- notable upstream change: Chinese README sync and continued cross-editor packaging guidance
+
+## Extractable Upgrades
+
+- Existing `engineering-principles` already covers the core: assumptions, simplicity, surgical changes, and verification.
+- The main useful delta is wording pressure: force unclear assumptions into explicit questions before implementation.
+- Goal-driven execution should remain tied to concrete verification commands.
+
+## Non-Adoption Boundary
+
+- Do not add a duplicate Karpathy-specific skill.
+- Do not copy the CLAUDE.md wholesale; keep the principles integrated into existing zc workflow language.
+
+## Recommended Phase
+
+- Phase 1: minor wording alignment in existing principles if needed.
+- No separate content asset unless future review finds a non-overlapping workflow.

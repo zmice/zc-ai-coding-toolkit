@@ -57,6 +57,7 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.deepEqual(plan.capability, capability);
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
       templateFiles.agents,
+      templateFiles.config,
       "skills/zc-start/SKILL.md",
       "skills/zc-skill-alpha/SKILL.md",
       "agents/zc-code-reviewer.toml",
@@ -65,11 +66,14 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.ok(plan.artifacts[0]?.content.includes("$zc-sdd-tdd"));
     assert.ok(plan.artifacts[0]?.content.includes("统一命令语义到 Codex skill 的映射"));
     assert.ok(plan.artifacts[0]?.content.includes("固定 workflow"));
-    assert.ok(plan.artifacts[1]?.content.includes("command-alias skill"));
-    assert.ok(plan.artifacts[1]?.content.includes("$zc-start"));
-    assert.ok(plan.artifacts[2]?.content.includes("Alpha skill"));
-    assert.ok(plan.artifacts[3]?.content.includes('name = "zc_code_reviewer"'));
-    assert.ok(plan.artifacts[3]?.content.includes("developer_instructions"));
+    assert.ok(plan.artifacts[0]?.content.includes("config.toml"));
+    assert.ok(plan.artifacts[1]?.content.includes("[agents.zc_code_reviewer]"));
+    assert.ok(plan.artifacts[1]?.content.includes('config_file = "agents/zc-code-reviewer.toml"'));
+    assert.ok(plan.artifacts[2]?.content.includes("command-alias skill"));
+    assert.ok(plan.artifacts[2]?.content.includes("$zc-start"));
+    assert.ok(plan.artifacts[3]?.content.includes("Alpha skill"));
+    assert.ok(plan.artifacts[4]?.content.includes('name = "zc_code_reviewer"'));
+    assert.ok(plan.artifacts[4]?.content.includes("developer_instructions"));
   });
 
   it("creates a global install plan with AGENTS and skills", () => {
@@ -83,6 +87,7 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.equal(plan.overwrite, "error");
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
       "/tmp/codex/AGENTS.md",
+      "/tmp/codex/config.toml",
       "/tmp/codex/skills/zc-start/SKILL.md",
       "/tmp/codex/skills/zc-skill-alpha/SKILL.md",
       "/tmp/codex/agents/zc-code-reviewer.toml",
@@ -98,6 +103,7 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.equal(plan.scope, "project");
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
       "/tmp/project/AGENTS.md",
+      "/tmp/project/.codex/config.toml",
       "/tmp/project/.codex/skills/zc-start/SKILL.md",
       "/tmp/project/.codex/skills/zc-skill-alpha/SKILL.md",
       "/tmp/project/.codex/agents/zc-code-reviewer.toml",
@@ -106,6 +112,8 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.deepEqual(plan.capability.agents?.relativeDir, ".codex/agents");
     assert.ok(plan.artifacts[0]?.content.includes(".codex/skills/zc-<command>/SKILL.md"));
     assert.ok(plan.artifacts[0]?.content.includes(".codex/agents/zc-*.toml"));
+    assert.ok(plan.artifacts[0]?.content.includes(".codex/config.toml"));
+    assert.ok(plan.artifacts[1]?.content.includes('config_file = "agents/zc-code-reviewer.toml"'));
   });
 
   it("creates a Codex plugin generation plan with manifest and bundled skills", () => {
@@ -144,6 +152,7 @@ describe("@zmice/platform-codex scaffold", () => {
       "plugins/zc-toolkit/.codex-plugin/plugin.json",
       "plugins/zc-toolkit/skills/zc-start/SKILL.md",
       "plugins/zc-toolkit/skills/zc-skill-alpha/SKILL.md",
+      ".codex/config.toml",
       ".codex/agents/zc-code-reviewer.toml",
     ]);
     assert.deepEqual(plan.capability.surfaces, ["plugin-dir", "skills-dir", "agents-dir"]);
@@ -178,6 +187,7 @@ describe("@zmice/platform-codex scaffold", () => {
       ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json",
       ".codex/plugins/zc-toolkit/skills/zc-start/SKILL.md",
       ".codex/plugins/zc-toolkit/skills/zc-skill-alpha/SKILL.md",
+      ".codex/config.toml",
       ".codex/agents/zc-code-reviewer.toml",
     ]);
 

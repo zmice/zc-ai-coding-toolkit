@@ -33,6 +33,15 @@ pnpm upstream -- report all --format md
 pnpm upstream -- import agent-skills --dry-run
 ```
 
+需要把当前远端 HEAD 纳入审阅证据时，显式追加 `--with-remote`：
+
+```bash
+pnpm upstream -- report all --format md --with-remote
+pnpm upstream -- snapshot agent-skills --label remote-review --with-remote
+```
+
+默认不访问网络，以保证本地审阅、CI 和快照生成可重复。
+
 ## 规则
 
 - 先把变化记录到 `references`，再决定是否吸收到 `packages/toolkit`

@@ -244,7 +244,7 @@ npm install -g @qwen-code/qwen-code@latest
 
 | 平台 | 产物 |
 | --- | --- |
-| `codex` | `AGENTS.md`、`skills/zc-<command>/SKILL.md`、`skills/zc-<skill>/SKILL.md` |
+| `codex` | `AGENTS.md`、`config.toml`、`skills/zc-<command>/SKILL.md`、`skills/zc-<skill>/SKILL.md`、`agents/zc-<agent>.toml` |
 | `claude` | `CLAUDE.md`、`.claude/commands`、`.claude/agents` |
 | `opencode` | `AGENTS.md`、`.opencode/commands`、`.opencode/skills`、`.opencode/agents` |
 | `qwen` | 用户级优先通过官方 `qwen extensions` CLI 从 `https://github.com/zmice/zc-qwen-extension.git` 安装和更新 `zc-toolkit`；扩展目录位于 `.qwen/extensions/zc-toolkit/`，其中包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/`、`skills/`、`agents/` |
@@ -253,7 +253,7 @@ npm install -g @qwen-code/qwen-code@latest
 
 | 平台 | 项目级默认位置 | 全局级默认位置 | 说明 |
 | --- | --- | --- | --- |
-| `codex` | `<project-root>/AGENTS.md` + `<project-root>/.codex/skills/` | `~/.codex/AGENTS.md` | OpenAI 官方文档将 Codex home（默认 `~/.codex`）作为全局级 `AGENTS.md` 位置；项目级 skills 使用 `.codex/skills/` |
+| `codex` | `<project-root>/AGENTS.md` + `<project-root>/.codex/config.toml` + `<project-root>/.codex/skills/` + `<project-root>/.codex/agents/` | `~/.codex/AGENTS.md` + `~/.codex/config.toml` + `~/.codex/skills/` + `~/.codex/agents/` | OpenAI 官方文档将 Codex home（默认 `~/.codex`）作为全局级 `AGENTS.md` 位置；Codex custom agents 通过 `config.toml` 的 `[agents.*]` 注册 |
 | `claude` | `<project-root>/CLAUDE.md` | `~/.claude/CLAUDE.md` | Claude Code 官方文档明确给出 project/user memory 位置 |
 | `opencode` | `<project-root>/AGENTS.md` | `~/.config/opencode/AGENTS.md` | OpenCode 官方文档明确给出 project/global rules 位置 |
 | `qwen` | `<project-root>/QWEN.md` | `~/.qwen/QWEN.md` | 官方文档明确 `/init` 会在项目目录创建 `QWEN.md`，并明确用户级配置目录为 `~/.qwen`；阿里云官方帮助文档同时给出了 Qwen CLI 的用户级 `QWEN.md` 位置 |
@@ -289,8 +289,10 @@ zc platform install codex --project
 
 - `codex`
   - `<project>/AGENTS.md`
+  - `<project>/.codex/config.toml`
   - `<project>/.codex/skills/zc-<command>/SKILL.md`
   - `<project>/.codex/skills/zc-<skill>/SKILL.md`
+  - `<project>/.codex/agents/zc-<agent>.toml`
 - `claude`
   - `<project>/CLAUDE.md`
   - `<project>/.claude/commands/zc-<command>.md`
@@ -334,9 +336,11 @@ zc platform where qwen --global --json
   - 不传 selector 时默认解析最近项目根，生成 repo-local marketplace
   - 显式 `--global` 时生成 Codex personal marketplace 到 `~/.agents/plugins/marketplace.json`
   - 显式 `--global` 时生成插件到 `~/.codex/plugins/zc-toolkit/`，并生成 custom agents 到 `~/.codex/agents/`
+  - 生成 `.codex/config.toml` / `~/.codex/config.toml`，通过 `[agents.*]` 注册 custom agent role
   - 也可以显式使用 `--project` 或 `--dir <repo>`
 - `codex --global`
   - 默认安装到 `~/.codex/AGENTS.md`
+  - 同时安装 `~/.codex/config.toml` 注册 custom agent role
   - 同时安装 `~/.codex/skills/zc-<command>/SKILL.md`
   - 同时安装 `~/.codex/skills/zc-<skill>/SKILL.md`
 - `claude --global`
@@ -450,7 +454,49 @@ zc platform where codex --global
 - `platform uninstall` 只删除 receipt 跟踪的受管对象，不清理未受管文件
 - `platform where` 只解析目录和来源，不执行写入
 
-## 5. 冲突与覆盖
+## 5. 团队并行工作流
+
+`zc team` 是 tmux + git worktree 的多 CLI worker 编排入口。它默认采用保守并行策略：无法证明任务独立时，不盲目启动多个 worker。
+
+先 dry-run：
+
+```bash
+zc team plan -w 2 \
+  -t "API | files=src/api.ts,src/api.test.ts" \
+  -t "UI | files=src/ui.ts,src/ui.test.ts" \
+  --json
+```
+
+确认 `canStart=true` 后再启动：
+
+```bash
+zc team start -w "w1:codex,w2:codex" \
+  -t "API | files=src/api.ts,src/api.test.ts" \
+  -t "UI | files=src/ui.ts,src/ui.test.ts"
+```
+
+任务描述支持轻量元数据：
+
+- `files=a,b`：声明文件所有权；多 worker 并行时必填
+- `deps=task-1`：声明依赖；存在依赖时需要 cascade，不会盲目并行启动
+- `skills=zc-build,zc-verify`：给任务附加 skill 上下文
+- `mode=worktree`：显式要求 worktree 隔离
+
+worktree 目录选择规则：
+
+- 优先使用 `<repo>/.worktrees/`
+- 如果已有 `<repo>/worktrees/`，则作为兜底
+- 项目内 worktree 目录必须被 git ignore；否则 `zc team start` 会拒绝创建，避免误提交 worktree 内容
+
+关闭前先检查 fan-in 状态：
+
+```bash
+zc team shutdown <team-name> --plan
+```
+
+`--plan` 只输出每个 worker worktree 的 `clean/dirty/ahead/merged/unknown` 状态，不关闭 tmux、不删除 worktree。只有分支去向明确后，再运行不带 `--plan` 的 `shutdown`。
+
+## 6. 冲突与覆盖
 
 默认策略是安全模式：
 
@@ -464,7 +510,7 @@ zc platform where codex --global
 zc platform install codex --dir <target-dir> --force
 ```
 
-## 6. 上游治理入口
+## 7. 上游治理入口
 
 上游治理不是 `zc` 的公开产品能力，而是仓库级脚本入口：
 
@@ -474,13 +520,19 @@ pnpm upstream -- diff agent-skills
 pnpm upstream -- report all --format md
 ```
 
+如需核对远端当前 HEAD，显式追加 `--with-remote`：
+
+```bash
+pnpm upstream -- report all --format md --with-remote
+```
+
 如果脚本提示缺少 `dist`，先运行：
 
 ```bash
 pnpm build
 ```
 
-## 7. 常见验证
+## 8. 常见验证
 
 ### 验证 CLI 自身
 

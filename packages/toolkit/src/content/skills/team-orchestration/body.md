@@ -53,20 +53,29 @@ team-orchestration ✓（tmux + worktree 隔离）
 # 1. 检查环境（git、tmux、Node.js、CLI 是否就绪）
 zc doctor
 
-# 2. 启动一个 2 worker 团队
+# 2. 先 dry-run 分析并行边界
+zc team plan \
+  -w 2 \
+  -t "实现用户认证 API | files=src/auth.ts,src/auth.test.ts" \
+  -t "实现数据库模型 | files=src/schema.ts,src/schema.test.ts"
+
+# 3. 确认 canStart=true 后启动一个 2 worker 团队
 zc team start \
   -w "w1:codex,w2:qwen-code" \
-  -t "实现用户认证模块" \
-  -t "实现数据库模型"
+  -t "实现用户认证 API | files=src/auth.ts,src/auth.test.ts" \
+  -t "实现数据库模型 | files=src/schema.ts,src/schema.test.ts"
 
-# 3. 查看团队状态
+# 4. 查看团队状态
 zc team status <team-name>
 
-# 4. 查看 worker 输出日志
+# 5. 查看 worker 输出日志
 zc team log <team-name>
 zc team log <team-name> -w w1    # 只看 w1 的输出
 
-# 5. 关闭团队（清理 tmux session + worktree）
+# 6. 关闭前先看 fan-in 收尾状态
+zc team shutdown <team-name> --plan
+
+# 7. 确认分支去向后关闭团队（清理 tmux session + worktree）
 zc team shutdown <team-name>
 ```
 
@@ -204,7 +213,9 @@ zc run "修复 bug" -m o3 -w ./src             # 指定模型和工作目录
 ### `zc team start` — 启动团队
 
 ```bash
-zc team start -w "w1:codex,w2:qwen-code" -t "任务1" -t "任务2"
+zc team start -w "w1:codex,w2:qwen-code" \
+  -t "任务1 | files=src/a.ts" \
+  -t "任务2 | files=src/b.ts"
 ```
 
 | 参数 | 说明 | 默认值 |
@@ -213,6 +224,32 @@ zc team start -w "w1:codex,w2:qwen-code" -t "任务1" -t "任务2"
 | `-t, --tasks <task...>` | 任务描述（可重复，至少一个） | — |
 | `-n, --name <name>` | 团队名称 | `team-YYYYMMDD-HHmmss` |
 | `-m, --model <model>` | 模型名称 | — |
+
+多 worker 启动前会执行保守并行检查：
+
+- 多任务必须声明 `files=`，否则不能证明文件所有权
+- 两个任务声明同一文件会被判定为冲突
+- 声明了 `deps=` 的任务需要 cascade 计划，不能盲目并行启动
+- worktree 目录优先使用 `.worktrees/`，其次 `worktrees/`；项目内目录必须被 git ignore
+
+先用 `zc team plan` 查看这些判断。
+
+### `zc team plan` — 干跑并行计划
+
+```bash
+zc team plan -w 2 \
+  -t "任务1 | files=src/a.ts" \
+  -t "任务2 | files=src/b.ts" \
+  --json
+```
+
+输出包含：
+
+- `canStart`：是否可直接并行启动
+- `recommendedWorkers`：建议 worker 数
+- `conflicts`：文件所有权冲突
+- `batches`：按依赖分层后的执行批次
+- `blockers`：阻止并行启动的原因
 
 ### `zc team status` — 查看团队状态
 
@@ -235,6 +272,7 @@ zc team log <team-name> -w w1        # 指定 worker
 
 ```bash
 zc team shutdown <team-name>
+zc team shutdown <team-name> --plan   # 只查看 fan-in 状态，不删除
 ```
 
 终止 tmux session，清理 git worktree。
@@ -244,6 +282,8 @@ zc team shutdown <team-name>
 - 哪些 worker 分支已经可以合入或开 PR
 - 哪些任务失败，需要保留证据后再清理
 - 哪些 worktree 仍要继续使用，不应被误删
+
+`--plan` 会输出每个受管 worktree 的 `clean/dirty/ahead/merged/unknown` 状态，并且不会关闭 tmux 或删除 worktree。没有明确去向时，只运行 `--plan`，不要直接 shutdown。
 
 `shutdown` 是进程和环境层面的终止动作，不应代替 branch / worktree 去向决策。具体判定规则见 `branch-finish-and-cleanup`。
 
@@ -356,6 +396,7 @@ Codex app 的托管 worktree 通常是 detached HEAD，并且 Codex 会把它放
 | 任务执行失败 | 通过 `zc task fail <id> -r "原因"` 标记，分析原因后调整任务描述重试 |
 | 团队关闭时有运行中任务 | `shutdown()` 会将活跃任务释放回 `pending` 状态 |
 | Worktree 残留 | `zc team shutdown` 自动清理；手动清理用 `git worktree remove` |
+| `.worktrees` 未被 ignore | 添加 `.worktrees/` 到 `.gitignore` 并提交，再重新启动团队 |
 
 ### 团队收尾协议
 

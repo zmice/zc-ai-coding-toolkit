@@ -130,11 +130,28 @@ worktree 是隔离手段，不是长期存档机制。
 
 如果一个并行批次完成后还残留大量无主分支，说明收尾协议没有真正执行。
 
+使用 `zc team` 时，先运行 dry-run：
+
+```bash
+zc team shutdown <team-name> --plan
+```
+
+它只读取 fan-in 状态，不关闭 tmux、不删除 worktree。重点看每个 worker worktree：
+
+- `clean`：没有未提交变更，可以继续判断是否合入或删除
+- `dirty`：仍有未提交变更，必须先转移、提交或明确丢弃
+- `ahead`：分支领先目标引用，需要判断是否合入或开 PR
+- `merged`：已合入的分支可以进入删除流程
+- `unknown`：状态无法判断，必须人工检查后再清理
+
+只有每个 worktree 的去向明确后，才运行不带 `--plan` 的 `zc team shutdown <team-name>`。
+
 ## 最小收尾清单
 
 - [ ] branch 的最终去向已明确
 - [ ] 必要验证已完成，证据可追溯
 - [ ] 需要保留的信息已转移到 PR、任务系统或文档
+- [ ] `zc team shutdown <team-name> --plan` 没有暴露未解释的 `dirty` / `unknown`
 - [ ] 不再需要的 branch 已删除
 - [ ] 不再需要的 worktree 已移除
 - [ ] 没有遗留未解释的脏文件或临时产物

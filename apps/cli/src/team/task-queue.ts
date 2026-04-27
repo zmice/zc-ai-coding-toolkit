@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import type { TeamTaskMode } from "./planner.js";
 
 export type TaskStatus = "pending" | "claimed" | "in_progress" | "completed" | "failed";
 
@@ -13,6 +14,7 @@ export interface Task {
   assignee?: string;
   claimToken?: string;
   skills?: string[];
+  mode?: TeamTaskMode;
 }
 
 interface StoredTaskQueue {
@@ -35,7 +37,7 @@ export class TaskQueue {
       const raw = await readFile(this.path, "utf-8");
       const data = JSON.parse(raw) as StoredTaskQueue;
       this.tasks = data.tasks ?? [];
-      this.nextId = this.tasks.length + 1;
+      this.nextId = this.resolveNextId();
     } catch {
       this.tasks = [];
       this.nextId = 1;
@@ -66,7 +68,13 @@ export class TaskQueue {
   }
 
   getReady(): Task[] {
-    return this.tasks.filter((task) => task.status === "pending" || task.status === "claimed");
+    const completed = new Set(
+      this.tasks.filter((task) => task.status === "completed").map((task) => task.id),
+    );
+    return this.tasks.filter((task) => (
+      task.status === "pending" &&
+      task.dependencies.every((dependency) => completed.has(dependency))
+    ));
   }
 
   async claim(id: string, workerId: string): Promise<{ task: Task; token: string }> {
@@ -112,6 +120,14 @@ export class TaskQueue {
       throw new Error(`Task ${id} not found`);
     }
     return task;
+  }
+
+  private resolveNextId(): number {
+    const ids = this.tasks
+      .map((task) => /^task-(\d+)$/.exec(task.id)?.[1])
+      .filter((value): value is string => Boolean(value))
+      .map((value) => Number.parseInt(value, 10));
+    return ids.length === 0 ? 1 : Math.max(...ids) + 1;
   }
 
   private async persist(): Promise<void> {

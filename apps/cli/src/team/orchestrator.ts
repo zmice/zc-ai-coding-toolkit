@@ -7,13 +7,13 @@ import type { SessionManager } from "../runtime/session-manager.js";
 import type { WorktreeManager } from "../runtime/worktree-manager.js";
 import {
   discoverSkills,
-  matchSkills,
   KeywordSkillMatcher,
   AISkillMatcher,
   type SkillMeta,
   type SkillMatcher,
 } from "../utils/skill-loader.js";
 import { getAdapter } from "../adapters/types.js";
+import type { TeamTaskSpec } from "./planner.js";
 
 export interface TeamSpec {
   name: string;
@@ -21,7 +21,7 @@ export interface TeamSpec {
     id: string;
     cli: string;
   }>;
-  tasks: string[];
+  tasks: TeamTaskSpec[];
   model?: string;
   skills?: string[];
   skillMatchMode?: "keyword" | "ai";
@@ -85,13 +85,14 @@ export class Orchestrator {
     await this.sessionManager.createSession(`zc-${spec.name}`);
 
     // 4. Create tasks
-    for (const desc of spec.tasks) {
+    for (const task of spec.tasks) {
       await this.taskQueue.create({
-        title: desc,
-        description: desc,
-        dependencies: [],
-        files: [],
-        skills: spec.skills,
+        title: task.title,
+        description: task.description,
+        dependencies: task.dependencies,
+        files: task.files,
+        skills: task.skills && task.skills.length > 0 ? task.skills : spec.skills,
+        mode: task.mode,
       });
     }
 
@@ -265,12 +266,18 @@ export class Orchestrator {
   }
 
   private async enrichWithSkills(task: Task): Promise<string> {
-    const matched = await Promise.resolve(matchSkills(task.description, this.availableSkills));
-    if (matched.length === 0) {
+    const explicitSkills = task.skills ?? [];
+    const matched = await Promise.resolve(this.skillMatcher.match(task.description, this.availableSkills));
+    const skillNames = uniqueStrings([
+      ...explicitSkills,
+      ...matched.map((skill) => skill.name),
+    ]);
+
+    if (skillNames.length === 0) {
       return task.description;
     }
 
-    const skillBlock = matched.map((skill) => `# Skill: ${skill.name}`).join("\n");
+    const skillBlock = skillNames.map((skill) => `# Skill: ${skill}`).join("\n");
     return `${task.description}\n\n${skillBlock}`;
   }
 
@@ -282,4 +289,18 @@ export class Orchestrator {
   private async sleep(ms: number): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, ms));
   }
+}
+
+function uniqueStrings(values: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    const trimmed = value.trim();
+    if (!trimmed || seen.has(trimmed)) {
+      continue;
+    }
+    seen.add(trimmed);
+    result.push(trimmed);
+  }
+  return result;
 }
