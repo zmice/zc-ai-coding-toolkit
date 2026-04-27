@@ -312,6 +312,7 @@ zc platform install codex --project
 对于已在官方文档中明确给出默认位置的平台，可以直接这样装：
 
 ```bash
+zc platform plugin codex --global
 zc platform install codex --global
 zc platform install claude --global
 zc platform install opencode --global
@@ -329,6 +330,11 @@ zc platform where qwen --global --json
 
 当前行为：
 
+- `platform plugin codex`
+  - 不传 selector 时默认解析最近项目根，生成 repo-local marketplace
+  - 显式 `--global` 时生成 Codex personal marketplace 到 `~/.agents/plugins/marketplace.json`
+  - 显式 `--global` 时生成插件到 `~/.codex/plugins/zc-toolkit/`，并生成 custom agents 到 `~/.codex/agents/`
+  - 也可以显式使用 `--project` 或 `--dir <repo>`
 - `codex --global`
   - 默认安装到 `~/.codex/AGENTS.md`
   - 同时安装 `~/.codex/skills/zc-<command>/SKILL.md`
@@ -421,6 +427,17 @@ zc platform where codex --global
 
 - `--plan` 只输出计划，不写文件
 - `--json` 输出结构化结果，适合脚本消费
+- `--dir <path>`、`--project`、`--global` 是统一 target selector，三者互斥；不传时默认项目级
+- `generate --project/--global` 只用于带项目级或用户级布局语义的 bundle，目前是 `codex --bundle codex-marketplace`
+- 常用短入口：
+  - `platform p codex` 等价于 `platform plugin codex`
+  - `platform i <target>` 等价于 `platform install <target>`
+  - `platform s <target>` 等价于 `platform status <target>`
+  - `platform u <target>` 等价于 `platform update <target>`
+  - `platform w <target>` 等价于 `platform where <target>`
+  - `platform check <target>` 等价于 `platform doctor <target>`
+  - `platform fix <target>` 等价于 `platform repair <target>`
+  - `platform remove <target>` 等价于 `platform uninstall <target>`
 - install 成功后会在目标根目录写入 `.zc/platform-state/<platform>.install-receipt.json`
 - `platform status` 只读取 receipt 和当前 plan，不写盘
 - `platform update` 会基于 receipt 判断是否需要更新：

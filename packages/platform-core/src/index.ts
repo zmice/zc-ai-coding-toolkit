@@ -7,6 +7,7 @@ export type OverwriteMode = "error" | "force";
 export type InstallScope = "project" | "global" | "dir";
 export type PlatformCapabilitySurface =
   | "entry-file"
+  | "plugin-dir"
   | "skills-dir"
   | "commands-dir"
   | "agents-dir"
@@ -67,7 +68,7 @@ export interface PlatformCapability {
   };
   readonly agents?: {
     readonly relativeDir: string;
-    readonly fileExtension: ".md";
+    readonly fileExtension: ".md" | ".toml";
   };
   readonly extension?: {
     readonly relativeDir: string;

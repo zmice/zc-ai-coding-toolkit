@@ -18,15 +18,22 @@
 
 ```bash
 npm install -g @zmice/zc
-zc platform install codex --global
-zc platform status codex --global --json
+zc platform plugin codex
 ```
 
-如果你想装到别的平台，把 `codex` 换成：
+不传 `--dir` / `--project` / `--global` 时默认使用项目级目标；用户级 Codex plugin 使用：
 
-- `claude`
-- `opencode`
-- `qwen`
+```bash
+zc platform plugin codex --global
+```
+
+如果你想装到其他平台，使用 install 路线：
+
+```bash
+zc platform install claude
+zc platform install opencode
+zc platform install qwen
+```
 
 如果你只是想安装和更新平台内容，优先看：
 
@@ -130,6 +137,14 @@ zc --help
 最常见的是这条循环：
 
 ```bash
+zc platform plugin codex --plan
+zc platform plugin codex
+```
+
+如果使用用户级或传统平台安装模型，则是：
+
+```bash
+zc platform plugin codex --global
 zc platform where codex --global --json
 zc platform install codex --global
 zc platform status codex --global --json
@@ -172,6 +187,7 @@ pnpm verify
 ### Platform
 
 - `zc platform generate <qwen|codex|claude|opencode>`
+- `zc platform plugin codex`
 - `zc platform install <qwen|codex|claude|opencode>`
 - `zc platform status <qwen|codex|claude|opencode>`
 - `zc platform update <qwen|codex|claude|opencode>`
@@ -188,6 +204,26 @@ pnpm verify
 - `--plan`
 - `--json`
 - `--force`
+
+参数约定：
+
+- `--dir <path>`、`--project`、`--global` 在 platform 子命令中保持同一语义和展示顺序
+- 三者互斥；不传时按命令默认行为处理
+- `generate --project/--global` 只用于带项目级或用户级布局语义的 bundle，目前是 `codex --bundle codex-marketplace`
+
+常用别名：
+
+| 长命令 | 短入口 | 用途 |
+| --- | --- | --- |
+| `generate` | `g` | 导出高级 bundle |
+| `plugin` | `p` | 生成 Codex personal/repo marketplace |
+| `install` | `i` | 安装平台内容 |
+| `where` | `w` | 查看安装位置 |
+| `status` | `s` | 查看安装状态 |
+| `update` | `u` | 更新已安装内容 |
+| `uninstall` | `remove` | 卸载受管内容 |
+| `repair` | `fix` | 修复漂移或缺失 |
+| `doctor` | `check` | 诊断健康度 |
 
 ## 命名空间适配
 
@@ -278,6 +314,7 @@ zc toolkit recommend build
 # platform
 zc platform where codex --global --json
 zc platform install codex --global
+zc platform plugin codex
 zc platform status codex --global --json
 
 zc platform install claude --global
@@ -296,7 +333,11 @@ zc platform uninstall opencode --global --plan --json
 # 看平台默认安装位置
 zc platform where codex --global --json
 
-# 安装或更新平台内容
+# 安装或更新平台内容；Codex 插件路线使用 plugin，不传 selector 时默认项目级
+zc platform plugin codex
+zc platform plugin codex --global
+
+# 传统平台安装路线使用 install/update/status
 zc platform install codex --global
 zc platform update codex --global --plan --json
 

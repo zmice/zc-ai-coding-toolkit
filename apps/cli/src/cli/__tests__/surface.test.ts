@@ -18,6 +18,71 @@ describe("zc command surface", () => {
     expect(names).not.toContain("setup");
   });
 
+  it("keeps platform lifecycle aliases consistent", () => {
+    const program = createProgram();
+    const platform = program.commands.find((command) => command.name() === "platform");
+
+    expect(platform).toBeDefined();
+
+    const aliasesByCommand = Object.fromEntries(
+      platform!.commands.map((command) => [command.name(), command.aliases()]),
+    );
+
+    expect(aliasesByCommand).toMatchObject({
+      generate: ["g"],
+      plugin: ["p"],
+      install: ["i"],
+      where: ["w"],
+      status: ["s"],
+      update: ["u"],
+      uninstall: ["remove"],
+      repair: ["fix"],
+      doctor: ["check"],
+    });
+  });
+
+  it("keeps platform target selector options aligned", () => {
+    const program = createProgram();
+    const platform = program.commands.find((command) => command.name() === "platform");
+
+    expect(platform).toBeDefined();
+
+    const optionFlagsByCommand = Object.fromEntries(
+      platform!.commands.map((command) => [
+        command.name(),
+        command.options.map((option) => option.flags),
+      ]),
+    );
+
+    for (const commandName of [
+      "generate",
+      "plugin",
+      "install",
+      "where",
+      "status",
+      "update",
+      "uninstall",
+      "repair",
+      "doctor",
+    ]) {
+      expect(optionFlagsByCommand[commandName]?.slice(0, 3)).toEqual([
+        "-d, --dir <dir>",
+        "-p, --project",
+        "-g, --global",
+      ]);
+    }
+
+    expect(optionFlagsByCommand.generate).toEqual([
+      "-d, --dir <dir>",
+      "-p, --project",
+      "-g, --global",
+      "-b, --bundle <type>",
+      "--plan",
+      "-j, --json",
+      "-f, --force",
+    ]);
+  });
+
   it("treats a symlinked bin path as direct execution", () => {
     const tempRoot = mkdtempSync(join(tmpdir(), "zc-symlink-"));
     const target = join(tempRoot, "index.js");

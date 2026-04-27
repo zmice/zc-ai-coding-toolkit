@@ -15,10 +15,14 @@ export interface GenerationOptions {
   readonly packageName?: string;
   readonly manifestSource?: string;
   readonly scope?: InstallScope;
+  readonly pluginName?: string;
+  readonly pluginVersion?: string;
+  readonly marketplaceName?: string;
+  readonly marketplaceDisplayName?: string;
 }
 
 export type InstallScope = "project" | "global" | "dir";
-export type PlatformCapabilitySurface = "entry-file" | "skills-dir";
+export type PlatformCapabilitySurface = "entry-file" | "plugin-dir" | "skills-dir" | "agents-dir";
 
 export interface PlatformCapability {
   readonly platform: typeof platformName;
@@ -30,6 +34,10 @@ export interface PlatformCapability {
   readonly skills?: {
     readonly relativeDir: string;
     readonly fileName: "SKILL.md";
+  };
+  readonly agents?: {
+    readonly relativeDir: string;
+    readonly fileExtension: ".toml";
   };
 }
 
@@ -68,12 +76,14 @@ export type {
 
 export const templateFiles = {
   agents: "AGENTS.md",
+  pluginManifest: ".codex-plugin/plugin.json",
+  marketplace: ".agents/plugins/marketplace.json",
 } as const;
 
 export const capability: PlatformCapability = {
   platform: platformName,
   namespace: "zc",
-  surfaces: ["entry-file", "skills-dir"],
+  surfaces: ["entry-file", "skills-dir", "agents-dir"],
   entryFile: {
     fileName: templateFiles.agents,
   },
@@ -81,12 +91,18 @@ export const capability: PlatformCapability = {
     relativeDir: "skills",
     fileName: "SKILL.md",
   },
+  agents: {
+    relativeDir: "agents",
+    fileExtension: ".toml",
+  },
 };
 
 interface ScopeLayout {
   readonly entryFile: string;
   readonly skillsDir: string;
   readonly displaySkillsDir: string;
+  readonly agentsDir: string;
+  readonly displayAgentsDir: string;
 }
 
 function getScopeLayout(scope: InstallScope): ScopeLayout {
@@ -95,6 +111,8 @@ function getScopeLayout(scope: InstallScope): ScopeLayout {
       entryFile: templateFiles.agents,
       skillsDir: ".codex/skills",
       displaySkillsDir: ".codex/skills",
+      agentsDir: ".codex/agents",
+      displayAgentsDir: ".codex/agents",
     };
   }
 
@@ -103,6 +121,8 @@ function getScopeLayout(scope: InstallScope): ScopeLayout {
       entryFile: templateFiles.agents,
       skillsDir: "skills",
       displaySkillsDir: "~/.codex/skills",
+      agentsDir: "agents",
+      displayAgentsDir: "~/.codex/agents",
     };
   }
 
@@ -110,6 +130,8 @@ function getScopeLayout(scope: InstallScope): ScopeLayout {
     entryFile: templateFiles.agents,
     skillsDir: "skills",
     displaySkillsDir: "skills",
+    agentsDir: "agents",
+    displayAgentsDir: "agents",
   };
 }
 
@@ -123,6 +145,10 @@ function createCapability(layout: ScopeLayout): PlatformCapability {
     skills: {
       relativeDir: layout.skillsDir,
       fileName: capability.skills!.fileName,
+    },
+    agents: {
+      relativeDir: layout.agentsDir,
+      fileExtension: ".toml",
     },
   };
 }
@@ -151,6 +177,7 @@ function renderAgentsFile(
 ): string {
   const commandCount = assets.filter((asset) => asset.kind === "command").length;
   const skillCount = assets.filter((asset) => asset.kind === "skill").length;
+  const agentCount = assets.filter((asset) => asset.kind === "agent").length;
 
   return `# Codex 工作流入口
 
@@ -163,10 +190,12 @@ function renderAgentsFile(
 3. 把 \`zc:*\` 命令语义映射成 Codex 实际可调用的 \`$zc-*\` skill
 
 详细方法不写在这里，完整内容都在 \`${layout.displaySkillsDir}/zc-*/SKILL.md\`。
+角色化 custom agents 位于 \`${layout.displayAgentsDir}/zc-*.toml\`。
 其中：
 
 - \`$zc-start\`、\`$zc-spec\`、\`$zc-build\` 这类是 command-alias skill
 - \`$zc-sdd-tdd-workflow\`、\`$zc-debugging-and-error-recovery\` 这类是专题/流程 skill
+- \`zc_*\` 这类是 Codex custom agent，只在显式要求多 agent / 指定 agent 时使用
 
 ## 核心规则
 
@@ -284,17 +313,100 @@ function renderAgentsFile(
 - 匹配到的资产：${assets.length}
 - command-alias skills：${commandCount} 个
 - skills：${skillCount} 个
+- custom agents：${agentCount} 个
 
 ${renderAssetList(assets)}
 `;
 }
 
+function renderPluginManifest(options: {
+  readonly name: string;
+  readonly version: string;
+  readonly matchedAssets: readonly ToolkitAssetLike[];
+}): string {
+  const commandCount = options.matchedAssets.filter((asset) => asset.kind === "command").length;
+  const skillCount = options.matchedAssets.filter((asset) => asset.kind === "skill").length;
+
+  return `${JSON.stringify(
+    {
+      name: options.name,
+      version: options.version,
+      description: "Bundle zc AI coding workflows for Codex.",
+      author: {
+        name: "zc",
+      },
+      license: "MIT",
+      keywords: ["codex", "skills", "workflow", "multi-agent"],
+      skills: "./skills/",
+      interface: {
+        displayName: "zc AI Coding Toolkit",
+        shortDescription: "Reusable engineering workflows for Codex.",
+        longDescription:
+          "Installs zc workflow skills for planning, building, reviewing, verifying, and coordinating agentic coding work in Codex.",
+        developerName: "zc",
+        category: "Developer Tools",
+        capabilities: ["Read", "Write"],
+        defaultPrompt: [
+          "Use zc-start to choose the right workflow for this task.",
+          "Use zc-team-orchestration when multiple agents need coordinated worktree isolation.",
+        ],
+      },
+      zc: {
+        commands: commandCount,
+        skills: skillCount,
+      },
+    },
+    null,
+    2,
+  )}\n`;
+}
+
+function renderMarketplaceManifest(options: {
+  readonly marketplaceName: string;
+  readonly marketplaceDisplayName: string;
+  readonly pluginName: string;
+  readonly pluginPath: string;
+}): string {
+  return `${JSON.stringify(
+    {
+      name: options.marketplaceName,
+      interface: {
+        displayName: options.marketplaceDisplayName,
+      },
+      plugins: [
+        {
+          name: options.pluginName,
+          source: {
+            source: "local",
+            path: options.pluginPath,
+          },
+          policy: {
+            installation: "AVAILABLE",
+            authentication: "ON_INSTALL",
+          },
+          category: "Developer Tools",
+        },
+      ],
+    },
+    null,
+    2,
+  )}\n`;
+}
+
 function toCodexSkillSlug(asset: ToolkitAssetLike): string {
-  return asset.id.replace(/^(skill|command):/, "");
+  return asset.id.replace(/^(skill|command|agent):/, "");
 }
 
 function toCodexSkillDirectory(asset: ToolkitAssetLike, layout: ScopeLayout): string {
   return `${layout.skillsDir}/zc-${toCodexSkillSlug(asset)}`;
+}
+
+function toCodexAgentName(asset: ToolkitAssetLike): string {
+  return `zc_${toCodexSkillSlug(asset).replace(/[^A-Za-z0-9_]+/g, "_")}`;
+}
+
+function renderTomlScalar(value: string): string {
+  return JSON.stringify(value);
 }
 
 function renderYamlFrontmatter(fields: Record<string, string | undefined>): string {
@@ -355,6 +467,27 @@ function renderCodexSkillArtifacts(
   }));
 }
 
+function renderCodexAgentArtifacts(
+  assets: readonly ToolkitAssetLike[],
+  layout: ScopeLayout,
+): readonly PlatformArtifact[] {
+  return assets.map((asset) => {
+    const slug = toCodexSkillSlug(asset);
+
+    return {
+      path: `${layout.agentsDir}/zc-${slug}.toml`,
+      content: [
+        `name = ${renderTomlScalar(toCodexAgentName(asset))}`,
+        `description = ${renderTomlScalar(asset.summary ?? describeAsset(asset))}`,
+        `developer_instructions = ${renderTomlScalar(
+          asset.body ?? `# ${describeAsset(asset)}\n`,
+        )}`,
+        "",
+      ].join("\n"),
+    };
+  });
+}
+
 function renderCodexCommandAliasArtifacts(
   assets: readonly ToolkitAssetLike[],
   layout: ScopeLayout,
@@ -379,6 +512,7 @@ export function createCodexGenerationPlan(
   const matchedAssets = selectMatchedAssets(manifest, platformName);
   const commandAssets = selectMatchedAssetsByKind(manifest, "command");
   const skillAssets = selectMatchedAssetsByKind(manifest, "skill");
+  const agentAssets = selectMatchedAssetsByKind(manifest, "agent");
   const manifestSource = options.manifestSource ?? manifest.source ?? "toolkit-manifest";
   const resolvedPackageName = options.packageName ?? packageName;
 
@@ -395,6 +529,90 @@ export function createCodexGenerationPlan(
       },
       ...renderCodexCommandAliasArtifacts(commandAssets, layout),
       ...renderCodexSkillArtifacts(skillAssets, layout),
+      ...renderCodexAgentArtifacts(agentAssets, layout),
+    ],
+  }) as GenerationPlan;
+}
+
+export function createCodexPluginGenerationPlan(
+  manifest: ToolkitManifestLike,
+  options: GenerationOptions = {},
+): GenerationPlan {
+  const layout = getScopeLayout("dir");
+  const matchedAssets = selectMatchedAssets(manifest, platformName);
+  const commandAssets = selectMatchedAssetsByKind(manifest, "command");
+  const skillAssets = selectMatchedAssetsByKind(manifest, "skill");
+  const manifestSource = options.manifestSource ?? manifest.source ?? "toolkit-manifest";
+  const resolvedPackageName = options.packageName ?? packageName;
+  const pluginName = options.pluginName ?? "zc-toolkit";
+  const pluginVersion = options.pluginVersion ?? "0.0.0";
+
+  return attachPlanMetadata({
+    platform: platformName,
+    packageName: resolvedPackageName,
+    manifestSource,
+    matchedAssets,
+    capability: {
+      ...createCapability(layout),
+      surfaces: ["plugin-dir", "skills-dir"],
+      entryFile: undefined,
+    },
+    artifacts: [
+      {
+        path: templateFiles.pluginManifest,
+        content: renderPluginManifest({
+          name: pluginName,
+          version: pluginVersion,
+          matchedAssets,
+        }),
+      },
+      ...renderCodexCommandAliasArtifacts(commandAssets, layout),
+      ...renderCodexSkillArtifacts(skillAssets, layout),
+    ],
+  }) as GenerationPlan;
+}
+
+export function createCodexMarketplaceGenerationPlan(
+  manifest: ToolkitManifestLike,
+  options: GenerationOptions = {},
+): GenerationPlan {
+  const pluginName = options.pluginName ?? "zc-toolkit";
+  const marketplaceName = options.marketplaceName ?? "zc-toolkit";
+  const marketplaceDisplayName = options.marketplaceDisplayName ?? "zc AI Coding Toolkit";
+  const marketplaceScope = options.scope ?? "project";
+  const pluginRoot = marketplaceScope === "global"
+    ? `.codex/plugins/${pluginName}`
+    : `plugins/${pluginName}`;
+  const pluginPlan = createCodexPluginGenerationPlan(manifest, options);
+  const repoLayout = getScopeLayout("project");
+  const agentAssets = selectMatchedAssetsByKind(manifest, "agent");
+
+  return attachPlanMetadata({
+    ...pluginPlan,
+    capability: {
+      ...pluginPlan.capability,
+      surfaces: ["plugin-dir", "skills-dir", "agents-dir"],
+      entryFile: undefined,
+      agents: {
+        relativeDir: repoLayout.agentsDir,
+        fileExtension: ".toml",
+      },
+    },
+    artifacts: [
+      {
+        path: templateFiles.marketplace,
+        content: renderMarketplaceManifest({
+          marketplaceName,
+          marketplaceDisplayName,
+          pluginName,
+          pluginPath: `./${pluginRoot}`,
+        }),
+      },
+      ...pluginPlan.artifacts.map((artifact) => ({
+        path: `${pluginRoot}/${artifact.path}`,
+        content: artifact.content,
+      })),
+      ...renderCodexAgentArtifacts(agentAssets, repoLayout),
     ],
   }) as GenerationPlan;
 }

@@ -1,6 +1,7 @@
 import { Command, InvalidArgumentError } from "commander";
 import { readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { homedir } from "node:os";
+import { isAbsolute, join, resolve } from "node:path";
 import {
   attachPlanMetadata,
   type GenerationPlan,
@@ -43,12 +44,18 @@ import {
 type PlatformName = "qwen" | "codex" | "claude" | "opencode";
 type PlatformOutputFormat = "text" | "json";
 type PlatformInstallScope = "project" | "global" | "dir";
-type PlatformGenerateBundleType = "release-bundle";
+type PlatformGenerateBundleType = "release-bundle" | "codex-plugin" | "codex-marketplace";
 type PlatformAction = "generate" | "install" | "update" | "repair" | "uninstall";
 type PlatformTargetSelectorOpts = {
   dir?: string;
   project?: boolean;
   global?: boolean;
+};
+type PlatformGenerateOpts = PlatformTargetSelectorOpts & {
+  force?: boolean;
+  plan?: boolean;
+  json?: boolean;
+  bundle?: PlatformGenerateBundleType;
 };
 const platformNames: readonly PlatformName[] = ["qwen", "codex", "claude", "opencode"];
 
@@ -109,7 +116,7 @@ interface PlatformResultExtra {
   installMethod?: "filesystem" | "qwen-cli";
   installSource?: "github-repo" | "local-bundle" | null;
   sourceRef?: string | null;
-  bundleType?: "source-bundle" | "release-bundle" | null;
+  bundleType?: "source-bundle" | "release-bundle" | "codex-plugin" | "codex-marketplace" | null;
   bundlePath?: string | null;
 }
 
@@ -119,6 +126,14 @@ interface ToolkitModule {
 
 interface PlatformModule {
   createCodexGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string; extensionVersion?: string }) => GenerationPlan;
+  createCodexPluginGenerationPlan?: (
+    manifest: PlatformManifestLike,
+    opts?: { manifestSource?: string; pluginVersion?: string; extensionVersion?: string }
+  ) => GenerationPlan;
+  createCodexMarketplaceGenerationPlan?: (
+    manifest: PlatformManifestLike,
+    opts?: { manifestSource?: string; pluginVersion?: string; extensionVersion?: string; scope?: InstallScope }
+  ) => GenerationPlan;
   createCodexInstallPlan?: (
     manifest: PlatformManifestLike,
     opts: { manifestSource?: string; destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode; extensionVersion?: string }
@@ -218,6 +233,8 @@ function formatSurfaceLabel(surface: string): string {
       return "agents 目录";
     case "extension-dir":
       return "extension 目录";
+    case "plugin-dir":
+      return "plugin 目录";
     default:
       return surface;
   }
@@ -470,7 +487,15 @@ function formatInstallSourceLabel(source: "github-repo" | "local-bundle"): strin
   return source === "github-repo" ? "GitHub 扩展仓库" : "本地 bundle";
 }
 
-function formatBundleTypeLabel(type: "source-bundle" | "release-bundle"): string {
+function formatBundleTypeLabel(type: "source-bundle" | "release-bundle" | "codex-plugin" | "codex-marketplace"): string {
+  if (type === "codex-marketplace") {
+    return "Codex marketplace";
+  }
+
+  if (type === "codex-plugin") {
+    return "Codex plugin";
+  }
+
   return type === "release-bundle" ? "发布态扩展包" : "开发态源包";
 }
 
@@ -629,12 +654,84 @@ function buildPlanPayload(action: PlatformAction, target: PlatformName, root: st
   };
 }
 
+function resolveGenerateArtifact(outputRoot: string, artifact: { readonly path: string; readonly content: string }) {
+  return {
+    path: isAbsolute(artifact.path) ? artifact.path : join(outputRoot, artifact.path),
+    content: artifact.content,
+  };
+}
+
+function assertExclusiveTargetSelector(opts: PlatformTargetSelectorOpts): void {
+  if (opts.dir && (opts.project || opts.global)) {
+    throw new Error("显式目录 `--dir` 不能与 `--project` 或 `--global` 同时使用。");
+  }
+  if (opts.project && opts.global) {
+    throw new Error("`--project` 与 `--global` 不能同时使用。");
+  }
+}
+
+function assertGenerateTargetSelectorSupported(target: PlatformName, opts: PlatformGenerateOpts): void {
+  if ((opts.project || opts.global) && !(target === "codex" && opts.bundle === "codex-marketplace")) {
+    throw new Error("`platform generate --project/--global` 当前仅支持 `codex --bundle codex-marketplace`。");
+  }
+}
+
+async function resolveGenerateOutputRoot(
+  target: PlatformName,
+  opts: PlatformGenerateOpts,
+): Promise<{
+  root: string;
+  metadata: PlatformResolutionMetadata;
+}> {
+  assertExclusiveTargetSelector(opts);
+  assertGenerateTargetSelectorSupported(target, opts);
+
+  if (opts.project) {
+    const targetResolution = await resolveInstallTarget(target, { project: true });
+    return {
+      root: targetResolution.root,
+      metadata: {
+        scope: "project",
+        rootSource: targetResolution.source,
+        autoResolvedRoot: true,
+        hint: targetResolution.hint,
+      },
+    };
+  }
+
+  if (opts.global) {
+    return {
+      root: resolve(homedir()),
+      metadata: {
+        scope: "global",
+        rootSource: "official-global",
+      },
+    };
+  }
+
+  return {
+    root: opts.dir ? resolve(opts.dir) : resolveWorkspacePath(`.generated/${target}`),
+    metadata: {
+      scope: "dir",
+      rootSource: "explicit",
+    },
+  };
+}
+
 function parseGenerateBundleType(value: string): PlatformGenerateBundleType {
   if (value === "release-bundle" || value === "release") {
     return "release-bundle";
   }
 
-  throw new InvalidArgumentError(`不支持的 bundle 类型：${value}。当前仅支持：release-bundle`);
+  if (value === "codex-plugin" || value === "plugin") {
+    return "codex-plugin";
+  }
+
+  if (value === "codex-marketplace" || value === "marketplace") {
+    return "codex-marketplace";
+  }
+
+  throw new InvalidArgumentError(`不支持的 bundle 类型：${value}。当前支持：release-bundle | codex-plugin | codex-marketplace`);
 }
 
 function buildResultPayload(action: PlatformAction, target: PlatformName, root: string, result: {
@@ -1024,12 +1121,15 @@ function buildUninstallPayload(
 
 export async function runPlatformGenerate(
   target: PlatformName,
-  opts: { dir?: string; force?: boolean; plan?: boolean; json?: boolean; bundle?: PlatformGenerateBundleType }
+  opts: PlatformGenerateOpts
 ): Promise<void> {
   const format = resolveOutputFormat(opts.json);
-  const outputRoot = opts.dir ? resolve(opts.dir) : resolveWorkspacePath(`.generated/${target}`);
 
   try {
+    const outputTarget = await resolveGenerateOutputRoot(target, opts);
+    const outputRoot = outputTarget.root;
+    const outputMetadata = outputTarget.metadata;
+
     const manifest = await loadToolkitManifest();
     const platformModule = await loadPlatformModule(target);
     let plan: PlatformPlanLike = createGenerationPlan(target, platformModule, manifest);
@@ -1037,36 +1137,70 @@ export async function runPlatformGenerate(
     let bundlePath: string | undefined;
 
     if (opts.bundle) {
-      if (target !== "qwen") {
-        throw new Error(`${target} 暂不支持 bundle 导出。当前仅 qwen 支持 --bundle release-bundle。`);
+      if (opts.bundle === "release-bundle") {
+        if (target !== "qwen") {
+          throw new Error(`${target} 暂不支持 release-bundle 导出。当前仅 qwen 支持 --bundle release-bundle。`);
+        }
+
+        const installPlan = createInstallPlan(target, platformModule, manifest, outputRoot, "dir", resolveOverwriteMode(opts.force));
+        bundleType = opts.bundle;
+        bundlePath = outputRoot;
+        plan = {
+          ...installPlan,
+          artifacts: toQwenOfficialCliReleaseArtifacts(installPlan, outputRoot),
+        };
       }
 
-      const installPlan = createInstallPlan(target, platformModule, manifest, outputRoot, "dir", resolveOverwriteMode(opts.force));
-      bundleType = opts.bundle;
-      bundlePath = outputRoot;
-      plan = {
-        ...installPlan,
-        artifacts: toQwenOfficialCliReleaseArtifacts(installPlan, outputRoot),
-      };
+      if (opts.bundle === "codex-plugin") {
+        if (target !== "codex") {
+          throw new Error(`${target} 暂不支持 codex-plugin 导出。当前仅 codex 支持 --bundle codex-plugin。`);
+        }
+        if (!platformModule.createCodexPluginGenerationPlan) {
+          throw new Error("Codex 平台包未导出 createCodexPluginGenerationPlan()");
+        }
+
+        bundleType = opts.bundle;
+        bundlePath = outputRoot;
+        plan = finalizePlan(platformModule.createCodexPluginGenerationPlan(manifest, {
+          manifestSource: manifest.source,
+          pluginVersion: getCliVersion(),
+          extensionVersion: getCliVersion(),
+        }));
+      }
+
+      if (opts.bundle === "codex-marketplace") {
+        if (target !== "codex") {
+          throw new Error(`${target} 暂不支持 codex-marketplace 导出。当前仅 codex 支持 --bundle codex-marketplace。`);
+        }
+        if (!platformModule.createCodexMarketplaceGenerationPlan) {
+          throw new Error("Codex 平台包未导出 createCodexMarketplaceGenerationPlan()");
+        }
+
+        bundleType = opts.bundle;
+        bundlePath = outputRoot;
+        plan = finalizePlan(platformModule.createCodexMarketplaceGenerationPlan(manifest, {
+          manifestSource: manifest.source,
+          pluginVersion: getCliVersion(),
+          extensionVersion: getCliVersion(),
+          scope: outputMetadata.scope === "global" ? "global" : "project",
+        }));
+      }
     }
 
     if (opts.plan) {
-      const outputPlan = bundleType
-        ? plan
-        : {
-            ...plan,
-            artifacts: plan.artifacts.map((artifact) => ({
-              path: join(outputRoot, artifact.path),
-              content: artifact.content,
-            })),
-          };
+      const outputPlan = {
+        ...plan,
+        artifacts: plan.artifacts.map((artifact) => resolveGenerateArtifact(outputRoot, artifact)),
+      };
       emitOutput(
         format,
         buildPlanPayload("generate", target, outputRoot, outputPlan, {
+          ...outputMetadata,
           bundleType,
           bundlePath,
         }),
         summarizePlan("generate", target, outputRoot, outputPlan, {
+          ...outputMetadata,
           bundleType,
           bundlePath,
         }),
@@ -1075,12 +1209,7 @@ export async function runPlatformGenerate(
     }
 
     const result = await writeArtifacts(
-      (bundleType
-        ? plan.artifacts
-        : plan.artifacts.map((artifact) => ({
-            path: join(outputRoot, artifact.path),
-            content: artifact.content,
-          }))),
+      plan.artifacts.map((artifact) => resolveGenerateArtifact(outputRoot, artifact)),
       {
         dryRun: false,
         overwrite: resolveOverwriteMode(opts.force)
@@ -1090,10 +1219,12 @@ export async function runPlatformGenerate(
     emitOutput(
       format,
       buildResultPayload("generate", target, outputRoot, result, {
+        ...outputMetadata,
         bundleType,
         bundlePath,
       }),
       summarizeResult("generate", target, outputRoot, result, {
+        ...outputMetadata,
         bundleType,
         bundlePath,
       }),
@@ -1104,6 +1235,40 @@ export async function runPlatformGenerate(
       target,
       "generate",
       error instanceof Error ? `${target} 生成失败：${error.message}` : `${target} 生成失败。`,
+    );
+    process.exitCode = 1;
+  }
+}
+
+export async function runPlatformPlugin(
+  target: PlatformName,
+  opts: { dir?: string; project?: boolean; global?: boolean; force?: boolean; plan?: boolean; json?: boolean }
+): Promise<void> {
+  const format = resolveOutputFormat(opts.json);
+
+  try {
+    if (target !== "codex") {
+      throw new Error("当前仅 Codex 支持插件 marketplace 快捷安装。");
+    }
+    assertExclusiveTargetSelector(opts);
+
+    const useProject = opts.project || (!opts.dir && !opts.global);
+
+    await runPlatformGenerate(target, {
+      dir: opts.dir,
+      project: useProject,
+      global: opts.global,
+      bundle: "codex-marketplace",
+      force: opts.force,
+      plan: opts.plan,
+      json: opts.json,
+    });
+  } catch (error) {
+    emitPlatformError(
+      format,
+      target,
+      "generate",
+      error instanceof Error ? `${target} 插件生成失败：${error.message}` : `${target} 插件生成失败。`,
     );
     process.exitCode = 1;
   }
@@ -2278,20 +2443,35 @@ export function registerPlatformCommand(program: Command): void {
     .description("导出平台内容或 Qwen 发布 bundle")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
     .option("-d, --dir <dir>", "输出目录")
-    .option("-b, --bundle <type>", "导出指定 bundle 布局（当前仅 qwen: release-bundle）", parseGenerateBundleType)
+    .option("-p, --project", "输出到当前目录向上解析出的最近项目根（当前仅 codex marketplace）")
+    .option("-g, --global", "输出到用户级默认位置（当前仅 codex marketplace）")
+    .option("-b, --bundle <type>", "导出指定 bundle 布局（qwen: release-bundle；codex: codex-plugin/codex-marketplace）", parseGenerateBundleType)
     .option("--plan", "只查看生成计划，不写文件")
     .option("-j, --json", "输出 JSON")
     .option("-f, --force", "覆盖目标目录中已有但内容不同的产物")
     .action(runPlatformGenerate);
 
   platform
+    .command("plugin")
+    .alias("p")
+    .description("生成 Codex 插件 marketplace")
+    .argument("<target>", "目标平台（当前支持 codex）", parsePlatformName)
+    .option("-d, --dir <dir>", "使用指定 marketplace root")
+    .option("-p, --project", "使用当前目录向上解析出的最近项目根")
+    .option("-g, --global", "使用用户级 personal marketplace")
+    .option("--plan", "只查看生成计划，不写文件")
+    .option("-j, --json", "输出 JSON")
+    .option("-f, --force", "覆盖目标目录中已有但内容不同的产物")
+    .action(runPlatformPlugin);
+
+  platform
     .command("install")
     .alias("i")
     .description("把平台内容安装到项目、用户级或指定目录")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
-    .option("-d, --dir <dir>", "安装到指定目录")
-    .option("-p, --project", "安装到当前目录向上解析出的最近项目根")
-    .option("-g, --global", "安装到官方文档定义的用户级默认位置")
+    .option("-d, --dir <dir>", "使用指定目录")
+    .option("-p, --project", "使用当前目录向上解析出的最近项目根")
+    .option("-g, --global", "使用平台定义的用户级默认位置")
     .option("--plan", "只查看安装计划，不写文件")
     .option("-j, --json", "输出 JSON")
     .option("-f, --force", "覆盖目标目录中已有但内容不同的产物")
@@ -2302,29 +2482,31 @@ export function registerPlatformCommand(program: Command): void {
     .alias("w")
     .description("查看平台内容会安装到哪里")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
-    .option("-d, --dir <dir>", "指定目录")
-    .option("-p, --project", "解析最近项目根")
-    .option("-g, --global", "解析官方文档定义的默认全局位置")
+    .option("-d, --dir <dir>", "使用指定目录")
+    .option("-p, --project", "使用当前目录向上解析出的最近项目根")
+    .option("-g, --global", "使用平台定义的用户级默认位置")
     .option("-j, --json", "输出 JSON")
     .action(runPlatformWhere);
 
   platform
     .command("status")
+    .alias("s")
     .description("查看是否已安装、是否可更新、是否漂移")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
-    .option("-d, --dir <dir>", "指定目录")
-    .option("-p, --project", "解析最近项目根")
-    .option("-g, --global", "解析官方文档定义的默认全局位置")
+    .option("-d, --dir <dir>", "使用指定目录")
+    .option("-p, --project", "使用当前目录向上解析出的最近项目根")
+    .option("-g, --global", "使用平台定义的用户级默认位置")
     .option("-j, --json", "输出 JSON")
     .action(runPlatformStatus);
 
   platform
     .command("update")
+    .alias("u")
     .description("更新已安装的平台内容")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
-    .option("-d, --dir <dir>", "指定目录")
-    .option("-p, --project", "解析最近项目根")
-    .option("-g, --global", "解析官方文档定义的默认全局位置")
+    .option("-d, --dir <dir>", "使用指定目录")
+    .option("-p, --project", "使用当前目录向上解析出的最近项目根")
+    .option("-g, --global", "使用平台定义的用户级默认位置")
     .option("--plan", "只查看更新计划，不写文件")
     .option("-j, --json", "输出 JSON")
     .option("-f, --force", "覆盖已漂移的已安装产物")
@@ -2332,11 +2514,12 @@ export function registerPlatformCommand(program: Command): void {
 
   platform
     .command("uninstall")
+    .alias("remove")
     .description("卸载受管平台内容并删除安装记录")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
-    .option("-d, --dir <dir>", "指定目录")
-    .option("-p, --project", "解析最近项目根")
-    .option("-g, --global", "解析官方文档定义的默认全局位置")
+    .option("-d, --dir <dir>", "使用指定目录")
+    .option("-p, --project", "使用当前目录向上解析出的最近项目根")
+    .option("-g, --global", "使用平台定义的用户级默认位置")
     .option("--plan", "只查看卸载计划，不写文件")
     .option("-j, --json", "输出 JSON")
     .option("-f, --force", "允许卸载已漂移的受管内容")
@@ -2344,22 +2527,24 @@ export function registerPlatformCommand(program: Command): void {
 
   platform
     .command("repair")
+    .alias("fix")
     .description("修复漂移、缺失或官方 CLI 失配的安装")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
-    .option("-d, --dir <dir>", "指定目录")
-    .option("-p, --project", "解析最近项目根")
-    .option("-g, --global", "解析官方文档定义的默认全局位置")
+    .option("-d, --dir <dir>", "使用指定目录")
+    .option("-p, --project", "使用当前目录向上解析出的最近项目根")
+    .option("-g, --global", "使用平台定义的用户级默认位置")
     .option("--plan", "只查看修复计划，不写文件")
     .option("-j, --json", "输出 JSON")
     .action(runPlatformRepair);
 
   platform
     .command("doctor")
+    .alias("check")
     .description("诊断当前平台安装的健康度和下一步建议")
     .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
-    .option("-d, --dir <dir>", "指定目录")
-    .option("-p, --project", "解析最近项目根")
-    .option("-g, --global", "解析官方文档定义的默认全局位置")
+    .option("-d, --dir <dir>", "使用指定目录")
+    .option("-p, --project", "使用当前目录向上解析出的最近项目根")
+    .option("-g, --global", "使用平台定义的用户级默认位置")
     .option("-j, --json", "输出 JSON")
     .action(runPlatformDoctor);
 }

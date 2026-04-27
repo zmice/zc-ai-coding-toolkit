@@ -298,6 +298,32 @@ zc CLI 入口 (commander)
 
 ## 最佳实践
 
+### 与 Codex 内置并行能力的关系
+
+优先级按隔离需求分流：
+
+| 场景 | 优先选择 | 原因 |
+|------|----------|------|
+| 只需要多个 Codex 子代理做分析或分片实现 | Codex subagents | Codex 会负责 spawn、等待、汇总和关闭子线程 |
+| 需要在 Codex app 后台跑一个任务、不干扰本地 checkout | Codex app Worktree | Codex 托管 worktree，适合单线程后台推进 |
+| 需要多个 CLI worker 长时间并行、跨 Codex/Qwen、共享任务队列和消息 | `zc team` | 需要 tmux、claim-safe 队列、Mailbox 和显式 worktree 生命周期 |
+| 需要把 workflow 分发成 Codex 可安装能力 | Codex plugin | 用 `zc platform generate codex --bundle codex-plugin` 生成 plugin root，或用 `--bundle codex-marketplace` 生成 repo marketplace |
+
+Codex subagents 不是默认自动 fan-out，只有用户明确要求多代理时才使用。`zc team` 也不要把“能并行”当作默认：先拆任务和文件所有权，再给出并行建议，让用户确认是否开启。
+
+Codex app 的托管 worktree 通常是 detached HEAD，并且 Codex 会把它放在 `$CODEX_HOME/worktrees` 下管理；如果在 worktree 上创建了分支，同一个分支不能同时在本地 checkout。需要本地验证时优先使用 Codex 的 Handoff，而不是手动在两个 worktree 间切同一分支。
+
+### 并行启动前确认
+
+当计划满足并行条件时，先输出：
+
+- 推荐模式：Codex subagents、Codex app Worktree、`zc team` 或 Cascade
+- worker 数量和每个 worker 的文件/模块所有权
+- 是否需要独立 worktree、是否会触发额外依赖安装或测试
+- fan-in 后的验证命令和分支收尾方式
+
+只有用户确认后，才启动 subagents 或 `zc team start`。如果用户不确认，继续按串行 workflow 推进。
+
 ### 任务粒度建议
 
 | 粒度 | 建议 | 示例 |

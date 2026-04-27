@@ -11,6 +11,23 @@
 
 ## When to Use
 
+并行调度分两步：
+
+1. 自动判定：读取任务计划后，主动判断是否存在可并行批次，并给出推荐模式、预计 worker 数、文件所有权和验证成本。
+2. 显式授权：除非用户已经明确要求“并行 / spawn agents / team 模式”，否则不要直接启动子代理或 `zc team`；先提示用户是否开启，并说明不开启时会改为串行执行。
+
+推荐提示格式：
+
+```text
+我判断这批任务可以并行：
+- 模式：Context Fan-Out / Worktree Parallel / Cascade
+- 建议 worker：N 个
+- 隔离边界：每个 worker 负责的文件或模块
+- 代价：更多 token / 更高资源占用 / 需要 fan-in 集成验证
+
+是否开启并行？确认后我再启动；不确认则按串行推进。
+```
+
 ```
 有多个待执行任务？ ─── 否 ──→ 不需要此技能
     │
@@ -280,7 +297,7 @@ Cascade 是批次策略的精确版——基于依赖图自动计算批次，而
 |------|---------|--------|
 | 批次划分 | 手动 | 依赖图自动计算 |
 | 层间关系 | 隔离 | 明确的依赖传递 |
-| 失败影响 | 本层失败才停 | 层失败阵止下游 |
+| 失败影响 | 本层失败才停 | 层失败阻止下游 |
 | 适用场景 | 简单独立任务 | 有层次依赖的复杂计划 |
 
 ## 并行模式选择指南
@@ -293,6 +310,20 @@ Cascade 是批次策略的精确版——基于依赖图自动计算批次，而
 | 任务紧耦合，有严格串行依赖 | **不使用并行** | 用 subagent-driven-development 串行执行 |
 | 探索性实验，不确定哪个方案最优 | **Worktree Parallel** | 失败时直接删除 worktree，零成本 |
 | 大型计划（10+ 任务） | **Cascade** | 自动优化执行顺序，可控资源使用 |
+
+### Codex 适配规则
+
+Codex 当前有三类相关能力，调度时不要混用概念：
+
+| 能力 | 用法边界 |
+|------|----------|
+| Codex subagents | 适合显式要求“spawn 多个 agent”的分析、审查或分片实现；子代理继承当前 sandbox/approval 策略，会增加 token、延迟和资源消耗 |
+| Codex app Worktree | 适合把单个线程放到后台工作；Codex 托管 worktree，默认 detached HEAD，适合用 Handoff 在 Local 与 Worktree 间安全移动 |
+| Codex plugin | 适合把稳定 workflow、skills 和外部 app/MCP 集成打包分发；不是任务调度器本身 |
+
+在 Codex 中执行并行任务时，优先用内置 subagents 做上下文级 fan-out；只有任务需要独立文件系统、不同 CLI 或长时间队列化调度时，才升级到 `team-orchestration` 的 tmux + git worktree 模式。
+
+Worktree 模式下每个分支只能被一个 worktree checkout。若 Codex app 的某个 worktree 已经“Create branch here”，不要在 Local 或另一个 worker worktree 上 checkout 同名分支；先 Handoff 或合并后释放该分支。
 
 ## 批次策略
 

@@ -9,6 +9,9 @@
 - `AGENTS.md`
 - `skills/zc-<command>/SKILL.md`
 - `skills/zc-<skill>/SKILL.md`
+- `agents/zc-<agent>.toml`
+- 可选 Codex plugin bundle：`.codex-plugin/plugin.json` + `skills/`
+- 可选 Codex repo marketplace bundle：`.agents/plugins/marketplace.json` + `plugins/zc-toolkit/` + `.codex/agents/`
 
 ## 边界
 
@@ -22,6 +25,13 @@
 zc platform install codex --dir /tmp/codex-out
 zc platform install codex
 zc platform install codex --global
+zc platform plugin codex
+zc platform plugin codex --global
+zc platform p codex
+zc platform generate codex --bundle codex-plugin --dir /tmp/zc-codex-plugin
+zc platform generate codex --bundle codex-marketplace --project
+zc platform generate codex --bundle codex-marketplace --dir /tmp/zc-codex-marketplace
+zc platform generate codex --bundle codex-marketplace --global
 zc platform where codex --global --json
 zc platform install codex --plan --json
 ```
@@ -34,14 +44,46 @@ zc platform install codex --plan --json
   - 安装 `<project>/AGENTS.md`
   - 同时安装 `<project>/.codex/skills/zc-<command>/SKILL.md`
   - 同时安装 `<project>/.codex/skills/zc-<skill>/SKILL.md`
+  - 同时安装 `<project>/.codex/agents/zc-<agent>.toml`
 - `--global`
   - 安装 `~/.codex/AGENTS.md`
   - 同时安装 `~/.codex/skills/zc-<command>/SKILL.md`
   - 同时安装 `~/.codex/skills/zc-<skill>/SKILL.md`
+  - 同时安装 `~/.codex/agents/zc-<agent>.toml`
 - `--dir <path>`
   - 安装 `<path>/AGENTS.md`
   - 同时安装 `<path>/skills/zc-<command>/SKILL.md`
   - 同时安装 `<path>/skills/zc-<skill>/SKILL.md`
+  - 同时安装 `<path>/agents/zc-<agent>.toml`
+- `generate --bundle codex-plugin --dir <path>`
+  - 生成 `<path>/.codex-plugin/plugin.json`
+  - 生成 `<path>/skills/zc-<command>/SKILL.md`
+  - 生成 `<path>/skills/zc-<skill>/SKILL.md`
+  - 用于 Codex plugin marketplace / 本地 plugin 打包场景，不替代项目级 `AGENTS.md`
+  - Codex plugin manifest 当前只声明 skills / apps / MCP，不直接打包 custom agents
+- `plugin codex`
+  - `generate codex --bundle codex-marketplace --project` 的短入口
+  - 不传 selector 时默认解析最近项目根，生成 repo-local marketplace
+  - `plugin codex --global` 生成 personal marketplace 到 `~/.agents/plugins/marketplace.json`
+  - `plugin codex --global` 生成插件到 `~/.codex/plugins/zc-toolkit/`，并生成 custom agents 到 `~/.codex/agents/`
+  - 也可以显式使用 `plugin codex --project` 或 `plugin codex --dir <repo>`
+  - 常用别名是 `p codex`
+- `generate --bundle codex-marketplace --dir <path>`
+  - 生成 `<path>/.agents/plugins/marketplace.json`
+  - 生成 `<path>/plugins/zc-toolkit/.codex-plugin/plugin.json`
+  - 生成 `<path>/plugins/zc-toolkit/skills/zc-<command>/SKILL.md`
+  - 生成 `<path>/plugins/zc-toolkit/skills/zc-<skill>/SKILL.md`
+  - 生成 `<path>/.codex/agents/zc-<agent>.toml`
+  - 用于 repo-local marketplace 或后续 git-subdir marketplace 分发；custom agents 作为项目级 Codex 配置随仓库安装
+- `generate --bundle codex-marketplace --project`
+  - 与 `--dir <project-root>` 布局一致，但目录由当前 cwd 向上解析最近项目根得到
+- `generate --bundle codex-marketplace --global`
+  - 生成 `~/.agents/plugins/marketplace.json`
+  - 生成 `~/.codex/plugins/zc-toolkit/.codex-plugin/plugin.json`
+  - 生成 `~/.codex/plugins/zc-toolkit/skills/zc-<command>/SKILL.md`
+  - 生成 `~/.codex/plugins/zc-toolkit/skills/zc-<skill>/SKILL.md`
+  - 生成 `~/.codex/agents/zc-<agent>.toml`
+  - 用于个人级 Codex marketplace，避免把插件目录散落到 `~/plugins`
 
 在 Codex 中：
 
@@ -64,6 +106,17 @@ zc platform install codex --plan --json
 项目安装 / 全局安装的详细步骤见：
 
 - `docs/usage-guide.md`
+
+## Codex plugin 分发策略
+
+Codex 不要求像 Qwen 一样先拆独立发布仓库。推荐按阶段推进：
+
+1. 本地验证：`--bundle codex-plugin` 生成单个 plugin root，用个人 marketplace 指向它。
+2. 个人级使用：`platform plugin codex --global` 生成 personal marketplace，Codex 可从 `~/.agents/plugins/marketplace.json` 发现插件，并从 `~/.codex/agents/*.toml` 加载 custom agents。
+3. 仓库内分发：`--bundle codex-marketplace --dir <repo>` 生成 repo-local marketplace，Codex 可从 `$REPO_ROOT/.agents/plugins/marketplace.json` 发现插件，并从 `$REPO_ROOT/.codex/agents/*.toml` 加载 custom agents。
+4. 跨仓库/跨团队发布：把 `plugins/zc-toolkit/` 放在独立仓库根目录，或把本仓库作为 `git-subdir` source 暴露给 marketplace。
+
+只有当需要稳定版本、独立权限、独立 README/LICENSE、自动同步和跨项目安装时，才需要像 Qwen 的 `zc-qwen-extension` 一样新建独立仓库。
 
 ## 验证
 

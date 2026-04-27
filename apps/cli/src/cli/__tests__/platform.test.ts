@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { homedir } from "node:os";
 
 const platformMocks = vi.hoisted(() => ({
   ArtifactConflictError: class ArtifactConflictError extends Error {
@@ -11,6 +12,8 @@ const platformMocks = vi.hoisted(() => ({
   },
   createQwenGenerationPlan: vi.fn(),
   createQwenInstallPlan: vi.fn(),
+  createCodexGenerationPlan: vi.fn(),
+  createCodexMarketplaceGenerationPlan: vi.fn(),
   createCodexInstallPlan: vi.fn(),
   createClaudeInstallPlan: vi.fn(),
   createOpenCodeInstallPlan: vi.fn(),
@@ -85,6 +88,7 @@ vi.mock("../../utils/qwen-extension-cli.js", () => ({
 
 import {
   runPlatformGenerate,
+  runPlatformPlugin,
   runPlatformInstall,
   runPlatformDoctor,
   runPlatformRepair,
@@ -182,6 +186,8 @@ describe("platform CLI", () => {
     process.exitCode = undefined;
     platformMocks.createQwenGenerationPlan.mockReset();
     platformMocks.createQwenInstallPlan.mockReset();
+    platformMocks.createCodexGenerationPlan.mockReset();
+    platformMocks.createCodexMarketplaceGenerationPlan.mockReset();
     platformMocks.createCodexInstallPlan.mockReset();
     platformMocks.createClaudeInstallPlan.mockReset();
     platformMocks.createOpenCodeInstallPlan.mockReset();
@@ -237,7 +243,11 @@ describe("platform CLI", () => {
       }
 
       if (relativePath === "packages/platform-codex/dist/index.js") {
-        return { createCodexInstallPlan: platformMocks.createCodexInstallPlan };
+        return {
+          createCodexGenerationPlan: platformMocks.createCodexGenerationPlan,
+          createCodexMarketplaceGenerationPlan: platformMocks.createCodexMarketplaceGenerationPlan,
+          createCodexInstallPlan: platformMocks.createCodexInstallPlan,
+        };
       }
 
       if (relativePath === "packages/platform-claude/dist/index.js") {
@@ -443,6 +453,200 @@ describe("platform CLI", () => {
     }));
 
     logSpy.mockRestore();
+  });
+
+  it("exports codex marketplace to the personal marketplace layout with --global", async () => {
+    platformMocks.createCodexGenerationPlan.mockReturnValue({
+      platform: "codex",
+      packageName: "@zmice/platform-codex",
+      manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
+      matchedAssets: [],
+      artifacts: [],
+    });
+    platformMocks.createCodexMarketplaceGenerationPlan.mockReturnValue({
+      platform: "codex",
+      packageName: "@zmice/platform-codex",
+      manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
+      matchedAssets: [],
+      capability: {
+        namespace: "zc",
+        surfaces: ["plugin-dir", "skills-dir", "agents-dir"],
+        entryFile: null,
+        commandsDir: null,
+        skillsDir: "skills",
+        agentsDir: ".codex/agents",
+        extensionDir: null,
+      },
+      artifacts: [
+        { path: ".agents/plugins/marketplace.json", content: "{}" },
+        { path: ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
+        { path: ".codex/agents/zc-code-reviewer.toml", content: "name = \"zc_code_reviewer\"\n" },
+      ],
+    });
+    platformMocks.writeArtifacts.mockResolvedValue({
+      created: 3,
+      overwritten: 0,
+      unchanged: 0,
+      skipped: 0,
+      dryRun: false,
+    });
+
+    await runPlatformGenerate("codex", {
+      bundle: "codex-marketplace",
+      global: true,
+    });
+
+    expect(platformMocks.createCodexMarketplaceGenerationPlan).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ scope: "global" }),
+    );
+    expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
+      [
+        { path: `${homedir()}/.agents/plugins/marketplace.json`, content: "{}" },
+        { path: `${homedir()}/.codex/plugins/zc-toolkit/.codex-plugin/plugin.json`, content: "{}" },
+        { path: `${homedir()}/.codex/agents/zc-code-reviewer.toml`, content: "name = \"zc_code_reviewer\"\n" },
+      ],
+      { dryRun: false, overwrite: "error" },
+    );
+  });
+
+  it("exports codex marketplace to the resolved project root with --project", async () => {
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: "/repo/project",
+      source: "project-root",
+      marker: "pnpm-workspace.yaml",
+    });
+    platformMocks.createCodexGenerationPlan.mockReturnValue({
+      platform: "codex",
+      packageName: "@zmice/platform-codex",
+      manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
+      matchedAssets: [],
+      artifacts: [],
+    });
+    platformMocks.createCodexMarketplaceGenerationPlan.mockReturnValue({
+      platform: "codex",
+      packageName: "@zmice/platform-codex",
+      manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
+      matchedAssets: [],
+      artifacts: [
+        { path: ".agents/plugins/marketplace.json", content: "{}" },
+        { path: ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
+      ],
+    });
+    platformMocks.writeArtifacts.mockResolvedValue({
+      created: 2,
+      overwritten: 0,
+      unchanged: 0,
+      skipped: 0,
+      dryRun: false,
+    });
+
+    await runPlatformGenerate("codex", {
+      bundle: "codex-marketplace",
+      project: true,
+    });
+
+    expect(platformMocks.resolveInstallTarget).toHaveBeenCalledWith("codex", { project: true });
+    expect(platformMocks.createCodexMarketplaceGenerationPlan).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ scope: "project" }),
+    );
+    expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
+      [
+        { path: "/repo/project/.agents/plugins/marketplace.json", content: "{}" },
+        { path: "/repo/project/.codex/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
+      ],
+      { dryRun: false, overwrite: "error" },
+    );
+  });
+
+  it("uses a short codex plugin command for the project marketplace by default", async () => {
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: "/repo/project",
+      source: "project-root",
+      marker: "pnpm-workspace.yaml",
+    });
+    platformMocks.createCodexGenerationPlan.mockReturnValue({
+      platform: "codex",
+      packageName: "@zmice/platform-codex",
+      manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
+      matchedAssets: [],
+      artifacts: [],
+    });
+    platformMocks.createCodexMarketplaceGenerationPlan.mockReturnValue({
+      platform: "codex",
+      packageName: "@zmice/platform-codex",
+      manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
+      matchedAssets: [],
+      artifacts: [
+        { path: ".agents/plugins/marketplace.json", content: "{}" },
+        { path: ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
+      ],
+    });
+    platformMocks.writeArtifacts.mockResolvedValue({
+      created: 2,
+      overwritten: 0,
+      unchanged: 0,
+      skipped: 0,
+      dryRun: false,
+    });
+
+    await runPlatformPlugin("codex", {});
+
+    expect(platformMocks.resolveInstallTarget).toHaveBeenCalledWith("codex", { project: true });
+    expect(platformMocks.createCodexMarketplaceGenerationPlan).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ scope: "project" }),
+    );
+    expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
+      [
+        { path: "/repo/project/.agents/plugins/marketplace.json", content: "{}" },
+        { path: "/repo/project/.codex/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
+      ],
+      { dryRun: false, overwrite: "error" },
+    );
+  });
+
+  it("uses the personal marketplace for codex plugin when --global is explicit", async () => {
+    platformMocks.createCodexGenerationPlan.mockReturnValue({
+      platform: "codex",
+      packageName: "@zmice/platform-codex",
+      manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
+      matchedAssets: [],
+      artifacts: [],
+    });
+    platformMocks.createCodexMarketplaceGenerationPlan.mockReturnValue({
+      platform: "codex",
+      packageName: "@zmice/platform-codex",
+      manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
+      matchedAssets: [],
+      artifacts: [
+        { path: ".agents/plugins/marketplace.json", content: "{}" },
+        { path: ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
+      ],
+    });
+    platformMocks.writeArtifacts.mockResolvedValue({
+      created: 2,
+      overwritten: 0,
+      unchanged: 0,
+      skipped: 0,
+      dryRun: false,
+    });
+
+    await runPlatformPlugin("codex", { global: true });
+
+    expect(platformMocks.resolveInstallTarget).not.toHaveBeenCalled();
+    expect(platformMocks.createCodexMarketplaceGenerationPlan).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ scope: "global" }),
+    );
+    expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
+      [
+        { path: `${homedir()}/.agents/plugins/marketplace.json`, content: "{}" },
+        { path: `${homedir()}/.codex/plugins/zc-toolkit/.codex-plugin/plugin.json`, content: "{}" },
+      ],
+      { dryRun: false, overwrite: "error" },
+    );
   });
 
   it("uses safe overwrite defaults for platform install and writes a receipt", async () => {

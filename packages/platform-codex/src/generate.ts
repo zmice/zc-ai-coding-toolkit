@@ -1,5 +1,7 @@
 export {
   createCodexGenerationPlan,
+  createCodexMarketplaceGenerationPlan,
+  createCodexPluginGenerationPlan,
   packageName,
   platformName,
   templateFiles,

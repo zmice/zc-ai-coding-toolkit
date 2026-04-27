@@ -5,6 +5,8 @@ import {
   capability,
   createCodexGenerationPlan,
   createCodexInstallPlan,
+  createCodexMarketplaceGenerationPlan,
+  createCodexPluginGenerationPlan,
   packageName,
   platformName,
   templateFiles,
@@ -29,6 +31,14 @@ const manifest: ToolkitManifestLike = {
       summary: "统一任务开始入口",
       body: "# 开始\n\n先判断工作流类型，再选择入口。\n",
     },
+    {
+      id: "agent:code-reviewer",
+      kind: "agent",
+      platforms: ["codex"],
+      title: "Code reviewer",
+      summary: "Review code changes for correctness and risk.",
+      body: "Review code like an owner. Prioritize correctness, security, behavior regressions, and missing tests.",
+    },
   ],
 };
 
@@ -39,12 +49,17 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.equal(plan.platform, platformName);
     assert.equal(plan.packageName, packageName);
     assert.equal(plan.manifestSource, "toolkit-manifest");
-    assert.deepEqual(plan.matchedAssets.map((asset) => asset.id), ["skill-alpha", "command:start"]);
+    assert.deepEqual(plan.matchedAssets.map((asset) => asset.id), [
+      "skill-alpha",
+      "command:start",
+      "agent:code-reviewer",
+    ]);
     assert.deepEqual(plan.capability, capability);
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
       templateFiles.agents,
       "skills/zc-start/SKILL.md",
       "skills/zc-skill-alpha/SKILL.md",
+      "agents/zc-code-reviewer.toml",
     ]);
     assert.ok(plan.artifacts[0]?.content.includes("Codex 工作流入口"));
     assert.ok(plan.artifacts[0]?.content.includes("$zc-sdd-tdd"));
@@ -53,6 +68,8 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.ok(plan.artifacts[1]?.content.includes("command-alias skill"));
     assert.ok(plan.artifacts[1]?.content.includes("$zc-start"));
     assert.ok(plan.artifacts[2]?.content.includes("Alpha skill"));
+    assert.ok(plan.artifacts[3]?.content.includes('name = "zc_code_reviewer"'));
+    assert.ok(plan.artifacts[3]?.content.includes("developer_instructions"));
   });
 
   it("creates a global install plan with AGENTS and skills", () => {
@@ -68,6 +85,7 @@ describe("@zmice/platform-codex scaffold", () => {
       "/tmp/codex/AGENTS.md",
       "/tmp/codex/skills/zc-start/SKILL.md",
       "/tmp/codex/skills/zc-skill-alpha/SKILL.md",
+      "/tmp/codex/agents/zc-code-reviewer.toml",
     ]);
   });
 
@@ -82,8 +100,93 @@ describe("@zmice/platform-codex scaffold", () => {
       "/tmp/project/AGENTS.md",
       "/tmp/project/.codex/skills/zc-start/SKILL.md",
       "/tmp/project/.codex/skills/zc-skill-alpha/SKILL.md",
+      "/tmp/project/.codex/agents/zc-code-reviewer.toml",
     ]);
     assert.deepEqual(plan.capability.skills?.relativeDir, ".codex/skills");
+    assert.deepEqual(plan.capability.agents?.relativeDir, ".codex/agents");
     assert.ok(plan.artifacts[0]?.content.includes(".codex/skills/zc-<command>/SKILL.md"));
+    assert.ok(plan.artifacts[0]?.content.includes(".codex/agents/zc-*.toml"));
+  });
+
+  it("creates a Codex plugin generation plan with manifest and bundled skills", () => {
+    const plan = createCodexPluginGenerationPlan(manifest, {
+      pluginVersion: "0.2.5",
+    });
+
+    assert.equal(plan.platform, platformName);
+    assert.deepEqual(plan.capability.surfaces, ["plugin-dir", "skills-dir"]);
+    assert.equal(plan.capability.entryFile, undefined);
+    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
+      templateFiles.pluginManifest,
+      "skills/zc-start/SKILL.md",
+      "skills/zc-skill-alpha/SKILL.md",
+    ]);
+
+    const pluginManifest = JSON.parse(plan.artifacts[0]!.content) as {
+      name: string;
+      version: string;
+      skills: string;
+      zc: { commands: number; skills: number };
+    };
+    assert.equal(pluginManifest.name, "zc-toolkit");
+    assert.equal(pluginManifest.version, "0.2.5");
+    assert.equal(pluginManifest.skills, "./skills/");
+    assert.deepEqual(pluginManifest.zc, { commands: 1, skills: 1 });
+  });
+
+  it("creates a Codex repo marketplace generation plan", () => {
+    const plan = createCodexMarketplaceGenerationPlan(manifest, {
+      pluginVersion: "0.2.5",
+    });
+
+    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
+      templateFiles.marketplace,
+      "plugins/zc-toolkit/.codex-plugin/plugin.json",
+      "plugins/zc-toolkit/skills/zc-start/SKILL.md",
+      "plugins/zc-toolkit/skills/zc-skill-alpha/SKILL.md",
+      ".codex/agents/zc-code-reviewer.toml",
+    ]);
+    assert.deepEqual(plan.capability.surfaces, ["plugin-dir", "skills-dir", "agents-dir"]);
+    assert.equal(plan.capability.agents?.relativeDir, ".codex/agents");
+
+    const marketplace = JSON.parse(plan.artifacts[0]!.content) as {
+      plugins: Array<{
+        name: string;
+        source: { source: string; path: string };
+        policy: { installation: string; authentication: string };
+      }>;
+    };
+    assert.equal(marketplace.plugins[0]?.name, "zc-toolkit");
+    assert.deepEqual(marketplace.plugins[0]?.source, {
+      source: "local",
+      path: "./plugins/zc-toolkit",
+    });
+    assert.deepEqual(marketplace.plugins[0]?.policy, {
+      installation: "AVAILABLE",
+      authentication: "ON_INSTALL",
+    });
+  });
+
+  it("creates a Codex personal marketplace generation plan", () => {
+    const plan = createCodexMarketplaceGenerationPlan(manifest, {
+      pluginVersion: "0.2.5",
+      scope: "global",
+    });
+
+    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
+      templateFiles.marketplace,
+      ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json",
+      ".codex/plugins/zc-toolkit/skills/zc-start/SKILL.md",
+      ".codex/plugins/zc-toolkit/skills/zc-skill-alpha/SKILL.md",
+      ".codex/agents/zc-code-reviewer.toml",
+    ]);
+
+    const marketplace = JSON.parse(plan.artifacts[0]!.content) as {
+      plugins: Array<{ source: { source: string; path: string } }>;
+    };
+    assert.deepEqual(marketplace.plugins[0]?.source, {
+      source: "local",
+      path: "./.codex/plugins/zc-toolkit",
+    });
   });
 });
