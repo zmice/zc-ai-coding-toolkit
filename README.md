@@ -57,7 +57,7 @@ zc platform status codex --global --json
 
 | 平台 | 入口文件 | Commands | Skills | Agents | Extension / Plugin | 统一入口适配 |
 | --- | --- | --- | --- | --- | --- | --- |
-| Codex | `AGENTS.md` | - | Yes | - | - | `zc:start -> $zc-start` |
+| Codex | `AGENTS.md` | Skill alias | Yes | zc-managed custom agents | zc-managed plugin / marketplace bundle | `zc:start -> $zc-start` |
 | Claude Code | `CLAUDE.md` | Yes | - | Yes | - | `zc:start -> /zc-start` |
 | OpenCode | `AGENTS.md` | Yes | Yes | Yes | - | `zc:start -> /zc-start` |
 | Qwen | `QWEN.md` | Yes | Yes | Yes | Yes | `zc:start -> zc:start` |
@@ -65,6 +65,7 @@ zc platform status codex --global --json
 补充说明：
 
 - Codex 通过 `$zc-*` skill 别名承接统一语义
+- Codex 的 agents / plugin / marketplace 是 `zc` 当前实现的打包与配置路径，不等同于给 Codex 发明通用 slash command 面
 - Claude Code 和 OpenCode 通过 `/zc-*` 命令承接统一语义
 - Qwen 通过 `zc:*` namespaced command 承接统一语义
 - 这样做是为了避免和平台内置命令、社区插件或未来扩展冲突
@@ -155,6 +156,8 @@ zc toolkit recommend build
 ```bash
 pnpm install
 pnpm build
+pnpm audit:context
+pnpm verify:mvp
 pnpm verify
 pnpm --dir apps/cli test
 pnpm --dir packages/toolkit test
@@ -222,6 +225,13 @@ CLI 和安装语义还参考：
 - 文档改动：`git diff --check`
 - toolkit 内容改动：`zc toolkit lint --json` + 对应测试
 - CLI 或平台逻辑改动：对应包测试 + `pnpm verify`
+- 生成内容体量审计：`pnpm audit:context`
+
+验证门禁分层：
+
+- `pnpm verify:mvp`：发布态 smoke，覆盖构建、核心平台生成/安装和发布包可用性
+- `pnpm verify`：全量本地门禁，覆盖 workspace 包 lint/test/build/generate
+- `pnpm release:check`：发布门禁，叠加 changeset、全量验证和允许的 dirty path 检查
 
 ## 中文化
 

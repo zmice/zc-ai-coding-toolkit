@@ -14,8 +14,9 @@
 ## 高频命令
 
 - 安装依赖：`pnpm install`
+- 生成内容体量审计：`pnpm audit:context`
+- 发布态 smoke：`pnpm verify:mvp`（等价于 `node scripts/verify-workspace.mjs`）
 - 全量验证：`pnpm verify`
-- workspace 最小验证：`node scripts/verify-workspace.mjs`
 - CLI 定向测试：`pnpm --dir apps/cli test`
 - toolkit 定向测试：`pnpm --dir packages/toolkit test`
 
@@ -75,6 +76,7 @@
 - 文档/上下文改动：`git diff --check`
 - toolkit 内容改动：`toolkit lint` + 相关测试
 - CLI 或平台逻辑改动：对应包测试 + `pnpm verify`
+- 发布前门禁：`pnpm release:check`
 
 ## 任务路由
 

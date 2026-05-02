@@ -29,8 +29,8 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 ## Latest Reviewed Upstream
 
 - remote head: `4e66b2882da9afb9747468b08a253ca2f09c85f3`
-- observed date: 2026-04-27
-- notable upstream change: Codex reference config, custom agent role registration, add-only config merge scripts, and Codex sync tooling
+- observed date: 2026-04-29
+- notable upstream change: no HEAD change since the 2026-04-27 review; Codex reference config, custom agent role registration, add-only config merge scripts, and Codex sync tooling remain the current absorbable delta
 
 ## Extractable Upgrades
 

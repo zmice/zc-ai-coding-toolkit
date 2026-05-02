@@ -15,7 +15,7 @@
 
 | 平台 | Entry / Memory | Commands | Skills | Agents | Extension / Plugin | 用户级 | 项目级 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Codex | `AGENTS.md` | 未见官方目录模型 | `~/.codex/skills` | 未见官方目录模型 | 未见官方 plugin 安装模型 | Yes | Yes |
+| Codex | `AGENTS.md` | 未见官方目录模型 | `~/.codex/skills` | 本轮未重新确认官方目录模型 | 本轮未重新确认官方 plugin 安装模型 | Yes | Yes |
 | Claude Code | `CLAUDE.md` | `~/.claude/commands` / `.claude/commands` | 未见官方 skills 目录模型 | `~/.claude/agents` / `.claude/agents` | 未见官方 plugin 安装模型 | Yes | Yes |
 | Qwen | `QWEN.md` | extension 内支持 | `~/.qwen/skills` / `.qwen/skills` | extension 内支持 | `~/.qwen/extensions` / `.qwen/extensions` + 官方 `qwen extensions` CLI | Yes | Yes |
 | OpenCode | `AGENTS.md` | `~/.config/opencode/commands` / `.opencode/commands` | `~/.config/opencode/skills` / `.opencode/skills` | `~/.config/opencode/agents` / `.opencode/agents` | 未见独立 plugin 安装模型 | Yes | Yes |
@@ -29,7 +29,8 @@
   - `AGENTS.md`
   - `skills/`
 - 处理原则：
-  - 不发明没有官方依据的 `commands/` / `agents/` 目录
+  - 不发明没有官方依据的 `commands/` 目录
+  - `zc` 可以生成 custom agent 配置和 plugin / marketplace bundle，但必须在文档中标注为 `zc` 的打包路径，而不是官方通用命令面
 
 ### 2. Entry File + Native Directories
 
@@ -59,7 +60,8 @@
 - 全局级 / 项目级说明入口：`AGENTS.md`
 - 全局级默认位置：`~/.codex/AGENTS.md`
 - Skills 目录：`~/.codex/skills`
-- 当前没有可靠官方依据表明 Codex 支持 `commands/` 或 `agents/` 目录模型
+- 当前没有可靠官方依据表明 Codex 支持 `commands/` 目录模型
+- 本轮只把 custom agents / plugin marketplace 作为当前 `zc` 实现事实记录，不把它们写入官方能力矩阵的 commands 面
 
 来源：
 
@@ -142,7 +144,7 @@
 
 | 平台 | 目标实现 | 覆盖评价 |
 | --- | --- | --- |
-| Codex | 项目级安装 `AGENTS.md` + `.codex/skills/zc-<command>/SKILL.md` + `.codex/skills/zc-<skill>/SKILL.md`；用户级 / 自定义目录安装 `AGENTS.md` + `skills/zc-<command>/SKILL.md` + `skills/zc-<skill>/SKILL.md` | 保守适配，覆盖官方明确能力 |
+| Codex | 项目级安装 `AGENTS.md` + `.codex/config.toml` + `.codex/skills/zc-<command>/SKILL.md` + `.codex/skills/zc-<skill>/SKILL.md` + `.codex/agents/zc-<agent>.toml`；用户级 / 自定义目录安装对应的 `AGENTS.md` + `config.toml` + `skills/` + `agents/`；另支持 `zc platform plugin codex` 生成 personal/repo marketplace bundle | 官方面保持保守，`agents` 和 plugin / marketplace 明确标注为 `zc` 的打包与配置实现 |
 | Claude Code | `CLAUDE.md` + `commands/zc-*.md` + `agents/zc-*.md`；不覆盖 `enterprise policy`、`CLAUDE.local.md`、`@imports` 目标文件 | 目录化原生安装 |
 | Qwen | 优先通过官方 `qwen extensions` CLI 管理 `zc-toolkit` 的发布态 extension bundle；扩展内容为 `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md` + `qwen-extension.json` + `commands` + `skills` + `agents` | extension 原生安装 |
 | OpenCode | `AGENTS.md` + `.opencode/commands/zc-*.md` + `.opencode/skills/zc-*/SKILL.md` + `.opencode/agents/zc-*.md` + 全局对应目录 | 目录化原生安装 |
@@ -151,7 +153,7 @@
 
 当前阶段结论：
 
-- `Codex`：继续保守，只做 `AGENTS.md` + 官方 skills
+- `Codex`：官方 commands 面继续保守；当前 `zc` 已额外提供 custom agent 配置和 plugin / marketplace bundle
 - `Claude Code`：走官方目录结构，不做插件抽象
 - `Qwen`：走官方 extension 生命周期
 - `OpenCode`：走官方目录结构，覆盖 `AGENTS.md + commands + skills + agents`
@@ -170,10 +172,15 @@
 - 写到子目录的结构化内容
 - 写到 extension 目录的封装内容
 
+## 当前已完成
+
+- `platform-core` 已提供 plan / artifact / fingerprint / install plan 的共享 contract
+- `platform-claude` 和 `platform-opencode` 已纳入平台集合
+- `OpenCode` agents 已覆盖
+- `platform uninstall / repair / doctor` 已在 CLI 层落地，并基于 receipt / status 工作
+
 ## 建议的下一步
 
-1. 收口新的 `platform capability` 数据模型
-2. 收口旧平台集合并切到新目标集（已完成）
-3. 新增 `platform-claude`
-4. 新增 `platform-opencode`
-5. 最后统一收 CLI、文档与 verify
+1. 用 `pnpm audit:context` 定期检查各平台生成内容体量
+2. 如果上下文预算继续增长，按 `tier / audience / platform_exposure` 收紧默认安装集
+3. 若要扩大 Codex custom agents 或 marketplace 叙述，先重新核对官方文档，再更新官方能力矩阵

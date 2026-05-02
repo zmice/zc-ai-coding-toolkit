@@ -51,8 +51,8 @@ Current repo surface observed at registration time:
 ## Latest Reviewed Upstream
 
 - remote head: `2c606141936f1eeef17fa3043a72095b4765b9c2`
-- observed date: 2026-04-27
-- notable upstream change: Chinese README sync and continued cross-editor packaging guidance
+- observed date: 2026-04-29
+- notable upstream change: no HEAD change since the 2026-04-27 review; Chinese README sync and continued cross-editor packaging guidance remain the current absorbable delta
 
 ## Extractable Upgrades
 

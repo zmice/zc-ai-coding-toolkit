@@ -5,7 +5,7 @@
 把当前分散的 workflow / command 入口收敛为“统一任务开始入口 + 显式路由元数据”，并保持：
 
 - `toolkit` 继续作为唯一内容事实源
-- Codex / Qwen / Qoder 不共享错误的命令触发语义
+- Codex / Qwen / Claude / OpenCode 不共享错误的命令触发语义
 - 先稳定内容模型，再决定 CLI / 平台如何消费
 
 ## 总体策略
@@ -119,7 +119,7 @@
 
 - 把 canonical command 与 platform exposure 的两层规则写进长期文档
 - 明确 Codex 是自然语言入口 / prompt-entry，不是 slash command
-- 明确 Qwen / Qoder 当前只是 `command-style` 入口文案，不承诺真实触发器或原生命令
+- 明确 Qwen / Claude / OpenCode 各自使用不同的 command-style 入口，不承诺完全相同的触发机制
 
 涉及：
 

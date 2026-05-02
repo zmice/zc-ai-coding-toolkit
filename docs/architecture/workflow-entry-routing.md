@@ -135,7 +135,7 @@
 这点对 Codex 特别重要：
 
 - Codex 依赖 `AGENTS.md` 与自然语言指令
-- 它没有与 Qwen / Qoder 对等的自定义 slash command 机制
+- 它没有与 Qwen / Claude / OpenCode 对等的 command 目录心智
 
 因此后续设计必须区分两层：
 
@@ -418,19 +418,20 @@
 
 ## 平台适配约束
 
-### Qwen / Qoder
+### Qwen / Claude / OpenCode
 
-这两个平台可以更接近“命令入口”心智，但当前仍应按“命令式入口文案”处理：
+这些平台可以更接近“命令入口”心智，但具体触发方式仍按平台能力拆开：
 
-- 可以把 `command:*` 组织成用户可见入口能力
-- 文案里可以用接近命令的表达
+- Qwen 使用 `zc:*` namespaced command
+- Claude Code 使用 `/zc-*` command
+- OpenCode 使用 `/zc-*` command
 - 平台产物可以强调“输入该入口后会进入什么 workflow”
 
 但不要提前承诺：
 
 - 存在同名平台原生命令
-- 已经存在统一的 `zc:*` 触发器
-- 已经存在真正的 slash command 或内置命令机制
+- 不同平台存在完全相同的触发器
+- Codex 也具备同一套 command 目录机制
 
 ### Codex
 
@@ -464,19 +465,19 @@ Codex 不能直接套用 slash command 心智。
 
 推荐映射矩阵：
 
-| canonical command | Codex exposure | Qwen exposure | Qoder exposure |
+| canonical command | Codex exposure | Qwen exposure | Claude / OpenCode exposure |
 | --- | --- | --- | --- |
-| `start` | `AGENTS.md` 中的统一任务开始方式与自然语言模板 | `QWEN.md` 中的命令式入口文案 | `AGENTS.md` 中的命令式入口文案 |
-| `spec` | 路由说明 + 自然语言示例 | 命令式入口文案 | 命令式入口文案 |
-| `task-plan` | 路由说明 + 自然语言示例 | 命令式入口文案 | 命令式入口文案 |
-| `build` | 路由说明 + 自然语言示例 | 命令式入口文案 | 命令式入口文案 |
-| `quality-review` | 路由说明 + 自然语言示例 | 命令式入口文案 | 命令式入口文案 |
-| `verify` | 路由说明 + 自然语言示例 | 命令式入口文案 | 命令式入口文案 |
+| `start` | `$zc-start` skill alias + `AGENTS.md` 路由说明 | `zc:start` | `/zc-start` |
+| `spec` | `$zc-spec` skill alias + 路由说明 | `zc:spec` | `/zc-spec` |
+| `task-plan` | `$zc-task-plan` skill alias + 路由说明 | `zc:task-plan` | `/zc-task-plan` |
+| `build` | `$zc-build` skill alias + 路由说明 | `zc:build` | `/zc-build` |
+| `quality-review` | `$zc-quality-review` skill alias + 路由说明 | `zc:quality-review` | `/zc-quality-review` |
+| `verify` | `$zc-verify` skill alias + 路由说明 | `zc:verify` | `/zc-verify` |
 
 其中：
 
-- Codex 保持自然语言入口，不把 command 等同于 slash/skill trigger
-- Qwen / Claude / OpenCode 可以使用更接近命令或目录化入口的呈现方式，但不提前承诺完全相同的触发机制
+- Codex 通过 `$zc-*` skill alias 承接统一语义，不暴露伪 slash command
+- Qwen / Claude / OpenCode 使用各自平台支持的 command-style 入口，但不承诺触发机制完全相同
 
 ## 元数据优化建议
 

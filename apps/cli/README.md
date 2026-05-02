@@ -163,8 +163,16 @@ zc platform update codex --global --plan --json
 pnpm install
 pnpm --dir apps/cli build
 pnpm --dir apps/cli test
+pnpm audit:context
+pnpm verify:mvp
 pnpm verify
 ```
+
+验证门禁语义：
+
+- `pnpm verify:mvp` 是发布态 smoke，等价于 `node scripts/verify-workspace.mjs`
+- `pnpm verify` 是全量本地门禁
+- `pnpm release:check` 是发布门禁
 
 ## 命令分层
 
@@ -289,7 +297,7 @@ zc team start -w "w1:codex,w2:codex" \
   - `skills/zc-<skill>/SKILL.md`
   - `agents/zc-<agent>.toml`
 
-`config.toml` 只负责注册 Codex custom agent role，避免生成了 `.toml` agent 文件但 Codex 无法通过 `[agents.*]` 找到对应角色。
+`config.toml` 是 `zc` 管理的 Codex custom agent role 注册配置，避免生成了 `.toml` agent 文件但入口无法找到对应角色；不要把它写成通用平台 command surface。
 
 ### Claude Code
 
@@ -402,6 +410,9 @@ zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit
 pnpm --dir apps/cli test
 pnpm --dir apps/cli build
 pnpm --dir apps/cli verify
+pnpm audit:context
+pnpm verify:mvp
+pnpm verify
 ```
 
 更完整的使用说明见：

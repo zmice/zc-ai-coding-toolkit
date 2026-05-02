@@ -1,7 +1,7 @@
 kind: command
 name: start
 title: 开始
-description: 统一任务开始入口，先评估任务，再在 6 条固定 workflow 中选择合适的路线和默认入口。
+description: 统一任务开始入口。用于先评估任务类型、清晰度、阶段与风险，再在 6 条固定 workflow 中选择默认入口；适用于不确定该先分析、实现、调试、审查、补文档还是调查摸底的请求。
 tier: core
 audience: default
 stability: stable
@@ -52,4 +52,4 @@ platform_exposure:
 source:
   upstream: toolkit-original
   strategy: curated
-  notes: 本仓库新增的统一任务入口，用于 intake、任务判型，并在 product-analysis、full-delivery、bugfix、review-closure、docs-release、investigation 六条固定 workflow 中选路；其中 product-analysis 由独立 workflow-entry 承接。
+  notes: 本仓库新增的统一任务入口，用于 intake、任务判型，并在 product-analysis、full-delivery、bugfix、review-closure、docs-release、investigation 六条固定 workflow 中选路；其中 product-analysis 由独立 workflow-entry 承接。2026-04-29 根据 agent-skills 的 trigger/description 经验和 gstack 的 outcome-framed question / stop-gate 经验补强路由纪律。

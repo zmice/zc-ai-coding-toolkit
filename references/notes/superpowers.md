@@ -29,8 +29,8 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 ## Latest Reviewed Upstream
 
 - remote head: `6efe32c9e2dd002d0c394e861e0529675d1ab32e`
-- observed date: 2026-04-27
-- notable upstream change: committed Codex plugin sync files and explicit worktree / parallel-agent workflow guidance
+- observed date: 2026-04-29
+- notable upstream change: no HEAD change since the 2026-04-27 review; committed Codex plugin sync files and explicit worktree / parallel-agent workflow guidance remain the current absorbable delta
 
 ## Extractable Upgrades
 

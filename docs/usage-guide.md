@@ -253,7 +253,7 @@ npm install -g @qwen-code/qwen-code@latest
 
 | 平台 | 项目级默认位置 | 全局级默认位置 | 说明 |
 | --- | --- | --- | --- |
-| `codex` | `<project-root>/AGENTS.md` + `<project-root>/.codex/config.toml` + `<project-root>/.codex/skills/` + `<project-root>/.codex/agents/` | `~/.codex/AGENTS.md` + `~/.codex/config.toml` + `~/.codex/skills/` + `~/.codex/agents/` | OpenAI 官方文档将 Codex home（默认 `~/.codex`）作为全局级 `AGENTS.md` 位置；Codex custom agents 通过 `config.toml` 的 `[agents.*]` 注册 |
+| `codex` | `<project-root>/AGENTS.md` + `<project-root>/.codex/config.toml` + `<project-root>/.codex/skills/` + `<project-root>/.codex/agents/` | `~/.codex/AGENTS.md` + `~/.codex/config.toml` + `~/.codex/skills/` + `~/.codex/agents/` | OpenAI 官方文档将 Codex home（默认 `~/.codex`）作为全局级 `AGENTS.md` 位置；`.codex/config.toml`、`.codex/agents/` 和 plugin / marketplace bundle 是 `zc` 当前安装模型，按 zc-managed 配置维护 |
 | `claude` | `<project-root>/CLAUDE.md` | `~/.claude/CLAUDE.md` | Claude Code 官方文档明确给出 project/user memory 位置 |
 | `opencode` | `<project-root>/AGENTS.md` | `~/.config/opencode/AGENTS.md` | OpenCode 官方文档明确给出 project/global rules 位置 |
 | `qwen` | `<project-root>/QWEN.md` | `~/.qwen/QWEN.md` | 官方文档明确 `/init` 会在项目目录创建 `QWEN.md`，并明确用户级配置目录为 `~/.qwen`；阿里云官方帮助文档同时给出了 Qwen CLI 的用户级 `QWEN.md` 位置 |
@@ -336,11 +336,11 @@ zc platform where qwen --global --json
   - 不传 selector 时默认解析最近项目根，生成 repo-local marketplace
   - 显式 `--global` 时生成 Codex personal marketplace 到 `~/.agents/plugins/marketplace.json`
   - 显式 `--global` 时生成插件到 `~/.codex/plugins/zc-toolkit/`，并生成 custom agents 到 `~/.codex/agents/`
-  - 生成 `.codex/config.toml` / `~/.codex/config.toml`，通过 `[agents.*]` 注册 custom agent role
+  - 生成 `.codex/config.toml` / `~/.codex/config.toml`，作为 `zc` 管理的 custom agent role 注册配置
   - 也可以显式使用 `--project` 或 `--dir <repo>`
 - `codex --global`
   - 默认安装到 `~/.codex/AGENTS.md`
-  - 同时安装 `~/.codex/config.toml` 注册 custom agent role
+  - 同时安装 `~/.codex/config.toml` 作为 `zc` 管理的 custom agent role 注册配置
   - 同时安装 `~/.codex/skills/zc-<command>/SKILL.md`
   - 同时安装 `~/.codex/skills/zc-<skill>/SKILL.md`
 - `claude --global`
@@ -544,8 +544,25 @@ pnpm --dir apps/cli build
 ### 验证 workspace
 
 ```bash
+pnpm verify:mvp
 pnpm verify
+pnpm release:check
 ```
+
+语义分层：
+
+- `pnpm verify:mvp` 是发布态 smoke，等价于 `node scripts/verify-workspace.mjs`
+- `pnpm verify` 是全量本地门禁，覆盖 workspace 包 lint/test/build/generate
+- `pnpm release:check` 是发布门禁，叠加 changeset、全量验证和允许的 dirty path 检查
+
+### 审计生成内容体量
+
+```bash
+pnpm audit:context
+pnpm audit:context -- --json
+```
+
+体量增长时优先按 `tier`、`audience`、`platform_exposure` 调整默认暴露策略，不盲目删除 `packages/toolkit` 中的源内容。
 
 ### 验证平台安装计划
 

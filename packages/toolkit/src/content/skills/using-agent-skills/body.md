@@ -31,6 +31,26 @@ Task arrives
     └── Deploying/launching? ─────────→ shipping-and-launch
 ```
 
+## Routing Metadata and Context Loading
+
+Skill discovery depends on short metadata before the full skill is loaded. Treat each
+skill description as an activation contract:
+
+- It must say what capability the skill provides.
+- It must say when to activate it.
+- It should include exclusions when a nearby skill would be a better fit.
+- It should not summarize the entire workflow; the agent should read the full skill
+  only after the skill is selected.
+
+Prefer on-demand skill loading over always-on context. Persistent files such as
+`AGENTS.md`, `GEMINI.md`, `CLAUDE.md`, or platform rules should contain stable project
+conventions and canonical routing only. Do not load every skill into every session;
+that wastes context and makes phase-specific rules compete with each other.
+
+When a platform has native skill discovery, use its native directory or metadata model.
+When it does not, use agent-driven routing through the project entry file. Do not imply
+native plugin or slash-command behavior that the platform does not actually support.
+
 ## Core Operating Behaviors
 
 These behaviors apply at all times, across all skills. They are non-negotiable.
@@ -121,9 +141,13 @@ These are the subtle errors that look like productivity but create problems:
 
 2. **Skills are workflows, not suggestions.** Follow the steps in order. Don't skip verification steps.
 
-3. **Multiple skills can apply.** A feature implementation might involve `idea-refine` → `spec-driven-development` → `planning-and-task-breakdown` → `incremental-implementation` → `test-driven-development` → `code-review-and-quality` → `shipping-and-launch` in sequence.
+3. **Load only the skills needed for the current phase.** If a task moves from planning to implementation, switch skills instead of carrying the entire planning context forward.
 
-4. **When in doubt, start with a spec.** If the task is non-trivial and there's no spec, begin with `spec-driven-development`.
+4. **Multiple skills can apply in sequence.** A feature implementation might involve `idea-refine` → `spec-driven-development` → `planning-and-task-breakdown` → `incremental-implementation` → `test-driven-development` → `code-review-and-quality` → `shipping-and-launch`.
+
+5. **When in doubt, start with a spec.** If the task is non-trivial and there's no spec, begin with `spec-driven-development`.
+
+6. **Ask only when it changes the route.** If the correct skill can be inferred from evidence, select it and state the assumption. Ask only for high-stakes ambiguity, conflicting goals, or missing context that would change the workflow.
 
 ## Lifecycle Sequence
 
