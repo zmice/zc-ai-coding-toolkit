@@ -13,6 +13,8 @@
 - 可选 Codex plugin bundle：`.codex-plugin/plugin.json` + `skills/`
 - 可选 Codex repo marketplace bundle：`.agents/plugins/marketplace.json` + `plugins/zc-toolkit/` + `.codex/agents/`
 
+这里的 `.codex/config.toml`、`.codex/agents/`、plugin 和 marketplace bundle 都是 `zc` 当前安装模型的一部分；文档中不要把它们描述成 Codex 的通用 command surface。
+
 ## 边界
 
 - 提示资产内容不在本包维护
@@ -74,7 +76,7 @@ zc platform install codex --plan --json
   - 生成 `<path>/plugins/zc-toolkit/skills/zc-<command>/SKILL.md`
   - 生成 `<path>/plugins/zc-toolkit/skills/zc-<skill>/SKILL.md`
   - 生成 `<path>/.codex/agents/zc-<agent>.toml`
-  - 用于 repo-local marketplace 或后续 git-subdir marketplace 分发；custom agents 作为项目级 Codex 配置随仓库安装
+  - 用于 repo-local marketplace 或后续 git-subdir marketplace 分发；custom agents 作为 `zc` 管理的 Codex 配置随仓库安装
 - `generate --bundle codex-marketplace --project`
   - 与 `--dir <project-root>` 布局一致，但目录由当前 cwd 向上解析最近项目根得到
 - `generate --bundle codex-marketplace --global`

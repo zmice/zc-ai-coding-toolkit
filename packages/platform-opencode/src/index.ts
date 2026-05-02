@@ -1,7 +1,12 @@
 import {
   attachPlanMetadata,
+  createMarkdownAgentArtifact,
+  createMarkdownCommandArtifact,
+  createNamespacedAssetSlug,
+  createSkillArtifact,
   describeAsset,
   prefixArtifacts,
+  renderPlatformAssetList,
   selectMatchedAssets,
   type GenerationPlan as BaseGenerationPlan,
   type InstallPlan as BaseInstallPlan,
@@ -168,16 +173,6 @@ function selectMatchedAssetsByKind(
   );
 }
 
-function renderAssetList(assets: readonly ToolkitAssetLike[]): string {
-  if (assets.length === 0) {
-    return "- 尚未匹配到任何工具包资产。";
-  }
-
-  return assets
-    .map((asset) => `- \`${asset.kind}\` \`${asset.id}\`: ${describeAsset(asset)}`)
-    .join("\n");
-}
-
 function renderAgentsFile(
   manifestSource: string,
   assets: readonly ToolkitAssetLike[],
@@ -261,85 +256,12 @@ function renderAgentsFile(
 - skills：${skillCount} 个
 - agents：${agentCount} 个
 
-${renderAssetList(assets)}
+${renderPlatformAssetList(assets)}
 `;
 }
 
-function renderYamlFrontmatter(fields: Record<string, string | readonly string[] | undefined>): string {
-  const lines = ["---"];
-
-  for (const [key, value] of Object.entries(fields)) {
-    if (value === undefined) {
-      continue;
-    }
-
-    if (Array.isArray(value)) {
-      if (value.length === 0) {
-        continue;
-      }
-
-      lines.push(`${key}:`);
-      for (const entry of value) {
-        lines.push(`  - ${JSON.stringify(entry)}`);
-      }
-      continue;
-    }
-
-    lines.push(`${key}: ${JSON.stringify(value)}`);
-  }
-
-  lines.push("---");
-
-  return `${lines.join("\n")}\n`;
-}
-
-function renderMarkdownCommandFile(options: {
-  readonly description: string;
-  readonly body: string;
-}): string {
-  return `${renderYamlFrontmatter({
-    description: options.description,
-  })}\n${options.body.trim()}\n`;
-}
-
-function renderSkillFile(options: {
-  readonly name: string;
-  readonly description: string;
-  readonly body: string;
-}): string {
-  return `${renderYamlFrontmatter({
-    name: options.name,
-    description: options.description,
-  })}\n${options.body.trim()}\n`;
-}
-
-function renderMarkdownAgentFile(options: {
-  readonly name: string;
-  readonly description: string;
-  readonly body: string;
-  readonly tools?: readonly string[];
-}): string {
-  return `${renderYamlFrontmatter({
-    name: options.name,
-    description: options.description,
-    tools: options.tools,
-  })}\n${options.body.trim()}\n`;
-}
-
-function stripKindPrefix(value: string): string {
-  return value.replace(/^(command|skill|agent):/, "");
-}
-
 function toNamespacedSlug(asset: ToolkitAssetLike): string {
-  const assetName = "name" in asset && typeof asset.name === "string" ? asset.name : undefined;
-  const base = (assetName ?? stripKindPrefix(asset.id))
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9-]+/g, "-")
-    .replace(/-{2,}/g, "-")
-    .replace(/^-|-$/g, "");
-
-  return `zc-${base || stripKindPrefix(asset.id)}`;
+  return createNamespacedAssetSlug(asset);
 }
 
 function renderCommandArtifacts(
@@ -351,13 +273,10 @@ function renderCommandArtifacts(
   return assets.map((asset) => {
     const slug = toNamespacedSlug(asset);
 
-    return {
+    return createMarkdownCommandArtifact({
       path: `${layout.commandsDir}/${slug}.md`,
-      content: renderMarkdownCommandFile({
-        description: asset.summary ?? describeAsset(asset),
-        body: asset.body ?? `# ${describeAsset(asset)}\n`,
-      }),
-    };
+      asset,
+    });
   });
 }
 
@@ -370,14 +289,11 @@ function renderSkillArtifacts(
   return assets.map((asset) => {
     const slug = toNamespacedSlug(asset);
 
-    return {
+    return createSkillArtifact({
       path: `${layout.skillsDir}/${slug}/SKILL.md`,
-      content: renderSkillFile({
-        name: slug,
-        description: asset.summary ?? describeAsset(asset),
-        body: asset.body ?? `# ${describeAsset(asset)}\n`,
-      }),
-    };
+      asset,
+      name: slug,
+    });
   });
 }
 
@@ -392,15 +308,12 @@ function renderAgentArtifacts(
     const assetTools =
       "tools" in asset && Array.isArray(asset.tools) ? (asset.tools as readonly string[]) : undefined;
 
-    return {
+    return createMarkdownAgentArtifact({
       path: `${layout.agentsDir}/${slug}.md`,
-      content: renderMarkdownAgentFile({
-        name: slug,
-        description: asset.summary ?? describeAsset(asset),
-        body: asset.body ?? `# ${describeAsset(asset)}\n`,
-        tools: assetTools,
-      }),
-    };
+      asset,
+      name: slug,
+      tools: assetTools,
+    });
   });
 }
 

@@ -3,11 +3,17 @@ import assert from "node:assert/strict";
 
 import {
   attachPlanMetadata,
+  createMarkdownAgentArtifact,
+  createMarkdownCommandArtifact,
   createArtifactMetadata,
+  createNamespacedAssetSlug,
   createStableFingerprint,
   createInstallPlan,
+  createSkillArtifact,
   prependGeneratedHeader,
+  renderPlatformAssetList,
   selectMatchedAssets,
+  stripAssetKindPrefix,
   type PlatformArtifact,
   type ToolkitManifestLike,
 } from "./index.js";
@@ -128,6 +134,62 @@ describe("@zmice/platform-core", () => {
     assert.equal(
       content,
       "// Generated file\n// Do not edit manually\n\n{\n  \"name\": \"demo\"\n}\n",
+    );
+  });
+
+  it("normalizes asset names and renders shared platform snippets", () => {
+    const asset = {
+      id: "command:start",
+      kind: "command",
+      platforms: ["qwen"],
+      title: "Start",
+      summary: "Start a task",
+      body: "Body",
+    } as const;
+
+    assert.equal(stripAssetKindPrefix(asset.id), "start");
+    assert.equal(stripAssetKindPrefix("skill-alpha", { separators: [":"] }), "skill-alpha");
+    assert.equal(stripAssetKindPrefix("skill-alpha", { separators: [":", "-"] }), "alpha");
+    assert.equal(createNamespacedAssetSlug(asset), "zc-start");
+    assert.equal(renderPlatformAssetList([asset]), "- `command` `command:start`: Start");
+    assert.equal(renderPlatformAssetList([]), "- 尚未匹配到任何工具包资产。");
+  });
+
+  it("creates markdown artifacts with stable frontmatter", () => {
+    const asset = {
+      id: "skill:alpha",
+      kind: "skill",
+      platforms: ["qwen"],
+      title: "Alpha",
+      summary: "Alpha summary",
+      body: "Alpha body",
+      tools: ["read"],
+    } as const;
+
+    assert.equal(
+      createMarkdownCommandArtifact({
+        path: "commands/zc-alpha.md",
+        asset,
+        name: "zc:alpha",
+      }).content,
+      '---\nname: "zc:alpha"\ndescription: "Alpha summary"\n---\n\nAlpha body\n',
+    );
+    assert.equal(
+      createSkillArtifact({
+        path: "skills/zc-alpha/SKILL.md",
+        asset,
+        name: "zc-alpha",
+      }).content,
+      '---\nname: "zc-alpha"\ndescription: "Alpha summary"\n---\n\nAlpha body\n',
+    );
+    assert.equal(
+      createMarkdownAgentArtifact({
+        path: "agents/zc-alpha.md",
+        asset,
+        name: "zc-alpha",
+        tools: asset.tools,
+      }).content,
+      '---\nname: "zc-alpha"\ndescription: "Alpha summary"\ntools:\n  - "read"\n---\n\nAlpha body\n',
     );
   });
 });

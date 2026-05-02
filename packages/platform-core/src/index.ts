@@ -109,6 +109,66 @@ export function describeAsset(asset: ToolkitAssetLike): string {
   return asset.title ?? asset.summary ?? asset.id;
 }
 
+export function stripAssetKindPrefix(
+  value: string,
+  options: {
+    readonly separators?: readonly string[];
+  } = {},
+): string {
+  const separators = options.separators ?? [":"];
+
+  for (const separator of separators) {
+    for (const kind of ["command", "skill", "agent"] as const) {
+      const prefix = `${kind}${separator}`;
+      if (value.startsWith(prefix)) {
+        return value.slice(prefix.length);
+      }
+    }
+  }
+
+  return value;
+}
+
+export function slugifyAssetName(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+export function createNamespacedAssetSlug(
+  asset: ToolkitAssetLike,
+  options: {
+    readonly namespace?: string;
+    readonly separators?: readonly string[];
+  } = {},
+): string {
+  const namespace = options.namespace ?? "zc";
+  const name = asset.name ?? stripAssetKindPrefix(asset.id, {
+    separators: options.separators,
+  });
+  const slug = slugifyAssetName(name);
+
+  return `${namespace}-${slug || stripAssetKindPrefix(asset.id, { separators: options.separators })}`;
+}
+
+export function renderPlatformAssetList(
+  assets: readonly ToolkitAssetLike[],
+  options: {
+    readonly emptyText?: string;
+  } = {},
+): string {
+  if (assets.length === 0) {
+    return options.emptyText ?? "- 尚未匹配到任何工具包资产。";
+  }
+
+  return assets
+    .map((asset) => `- \`${asset.kind}\` \`${asset.id}\`: ${describeAsset(asset)}`)
+    .join("\n");
+}
+
 function toYamlScalar(value: string): string {
   return JSON.stringify(value);
 }
@@ -142,7 +202,7 @@ export function renderYamlFrontmatter(fields: Record<string, unknown>): string {
 }
 
 export function renderMarkdownCommandFile(options: {
-  readonly name: string;
+  readonly name?: string;
   readonly description: string;
   readonly body: string;
 }): string {
@@ -150,6 +210,23 @@ export function renderMarkdownCommandFile(options: {
     name: options.name,
     description: options.description,
   })}\n${options.body.trim()}\n`;
+}
+
+export function createMarkdownCommandArtifact(options: {
+  readonly path: string;
+  readonly asset: ToolkitAssetLike;
+  readonly name?: string;
+  readonly description?: string;
+  readonly body?: string;
+}): PlatformArtifact {
+  return {
+    path: options.path,
+    content: renderMarkdownCommandFile({
+      name: options.name,
+      description: options.description ?? options.asset.summary ?? describeAsset(options.asset),
+      body: options.body ?? options.asset.body ?? `# ${describeAsset(options.asset)}\n`,
+    }),
+  };
 }
 
 export function renderSkillFile(options: {
@@ -161,6 +238,23 @@ export function renderSkillFile(options: {
     name: options.name,
     description: options.description,
   })}\n${options.body.trim()}\n`;
+}
+
+export function createSkillArtifact(options: {
+  readonly path: string;
+  readonly asset: ToolkitAssetLike;
+  readonly name: string;
+  readonly description?: string;
+  readonly body?: string;
+}): PlatformArtifact {
+  return {
+    path: options.path,
+    content: renderSkillFile({
+      name: options.name,
+      description: options.description ?? options.asset.summary ?? describeAsset(options.asset),
+      body: options.body ?? options.asset.body ?? `# ${describeAsset(options.asset)}\n`,
+    }),
+  };
 }
 
 export function renderMarkdownAgentFile(options: {
@@ -176,6 +270,27 @@ export function renderMarkdownAgentFile(options: {
     tools: options.tools,
     skills: options.skills,
   })}\n${options.body.trim()}\n`;
+}
+
+export function createMarkdownAgentArtifact(options: {
+  readonly path: string;
+  readonly asset: ToolkitAssetLike;
+  readonly name: string;
+  readonly description?: string;
+  readonly body?: string;
+  readonly tools?: readonly string[];
+  readonly skills?: readonly string[];
+}): PlatformArtifact {
+  return {
+    path: options.path,
+    content: renderMarkdownAgentFile({
+      name: options.name,
+      description: options.description ?? options.asset.summary ?? describeAsset(options.asset),
+      body: options.body ?? options.asset.body ?? `# ${describeAsset(options.asset)}\n`,
+      tools: options.tools,
+      skills: options.skills,
+    }),
+  };
 }
 
 function normalizeFingerprintValue(value: unknown): unknown {

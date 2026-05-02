@@ -1,8 +1,11 @@
 import {
   attachPlanMetadata,
+  createSkillArtifact,
   createInstallPlan,
   describeAsset,
+  renderPlatformAssetList,
   selectMatchedAssets,
+  stripAssetKindPrefix,
   type GenerationPlan as BaseGenerationPlan,
   type InstallPlan as BaseInstallPlan,
   type InstallPlanOptions as BaseInstallPlanOptions,
@@ -174,16 +177,6 @@ function selectMatchedAssetsByKind(
   return selectMatchedAssets(manifest, platformName).filter((asset) => asset.kind === kind);
 }
 
-function renderAssetList(assets: readonly ToolkitAssetLike[]): string {
-  if (assets.length === 0) {
-    return "- 尚未匹配到任何工具包资产。";
-  }
-
-  return assets
-    .map((asset) => `- \`${asset.kind}\` \`${asset.id}\`: ${describeAsset(asset)}`)
-    .join("\n");
-}
-
 function renderAgentsFile(
   manifestSource: string,
   assets: readonly ToolkitAssetLike[],
@@ -330,7 +323,7 @@ Codex agent role 注册位于 \`${layout.displayConfigFile}\` 的 \`[agents.*]\`
 - skills：${skillCount} 个
 - custom agents：${agentCount} 个
 
-${renderAssetList(assets)}
+${renderPlatformAssetList(assets)}
 `;
 }
 
@@ -409,7 +402,7 @@ function renderMarketplaceManifest(options: {
 }
 
 function toCodexSkillSlug(asset: ToolkitAssetLike): string {
-  return asset.id.replace(/^(skill|command|agent):/, "");
+  return stripAssetKindPrefix(asset.id);
 }
 
 function toCodexSkillDirectory(asset: ToolkitAssetLike, layout: ScopeLayout): string {
@@ -422,33 +415,6 @@ function toCodexAgentName(asset: ToolkitAssetLike): string {
 
 function renderTomlScalar(value: string): string {
   return JSON.stringify(value);
-}
-
-function renderYamlFrontmatter(fields: Record<string, string | undefined>): string {
-  const lines = ["---"];
-
-  for (const [key, value] of Object.entries(fields)) {
-    if (!value) {
-      continue;
-    }
-
-    lines.push(`${key}: ${JSON.stringify(value)}`);
-  }
-
-  lines.push("---");
-
-  return `${lines.join("\n")}\n`;
-}
-
-function renderSkillFile(options: {
-  readonly name: string;
-  readonly description: string;
-  readonly body: string;
-}): string {
-  return `${renderYamlFrontmatter({
-    name: options.name,
-    description: options.description,
-  })}\n${options.body.trim()}\n`;
 }
 
 function renderCodexCommandAliasBody(asset: ToolkitAssetLike): string {
@@ -472,14 +438,15 @@ function renderCodexSkillArtifacts(
   assets: readonly ToolkitAssetLike[],
   layout: ScopeLayout,
 ): readonly PlatformArtifact[] {
-  return assets.map((asset) => ({
-    path: `${toCodexSkillDirectory(asset, layout)}/SKILL.md`,
-    content: renderSkillFile({
+  return assets.map((asset) =>
+    createSkillArtifact({
+      path: `${toCodexSkillDirectory(asset, layout)}/SKILL.md`,
+      asset,
       name: `zc-${asset.name ?? toCodexSkillSlug(asset)}`,
       description: asset.summary ?? describeAsset(asset),
       body: asset.body ?? `# ${describeAsset(asset)}\n`,
     }),
-  }));
+  );
 }
 
 function renderCodexAgentArtifacts(
@@ -541,14 +508,15 @@ function renderCodexCommandAliasArtifacts(
   assets: readonly ToolkitAssetLike[],
   layout: ScopeLayout,
 ): readonly PlatformArtifact[] {
-  return assets.map((asset) => ({
-    path: `${toCodexSkillDirectory(asset, layout)}/SKILL.md`,
-    content: renderSkillFile({
+  return assets.map((asset) =>
+    createSkillArtifact({
+      path: `${toCodexSkillDirectory(asset, layout)}/SKILL.md`,
+      asset,
       name: `zc-${asset.name ?? toCodexSkillSlug(asset)}`,
       description: asset.summary ?? describeAsset(asset),
       body: renderCodexCommandAliasBody(asset),
     }),
-  }));
+  );
 }
 
 export function createCodexGenerationPlan(

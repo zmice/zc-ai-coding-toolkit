@@ -1,7 +1,11 @@
 import {
   attachPlanMetadata,
+  createMarkdownAgentArtifact,
+  createMarkdownCommandArtifact,
+  createNamespacedAssetSlug,
   describeAsset,
   prefixArtifacts,
+  renderPlatformAssetList,
   type InstallPlanOptions,
   type PlatformArtifact,
   type PlatformPlanMetadata,
@@ -117,16 +121,6 @@ function selectMatchedAssets(
   return manifest.assets.filter((asset) => asset.platforms.includes(platformName));
 }
 
-function renderAssetList(assets: readonly ToolkitAssetLike[]): string {
-  if (assets.length === 0) {
-    return "- 尚未匹配到任何工具包资产。";
-  }
-
-  return assets
-    .map((asset) => `- \`${asset.kind}\` \`${asset.id}\`: ${describeAsset(asset)}`)
-    .join("\n");
-}
-
 function renderClaudeFile(
   manifestSource: string,
   assets: readonly ToolkitAssetLike[],
@@ -209,76 +203,12 @@ function renderClaudeFile(
 - agents：${agentCount} 个
 - 未生成的 skill 资产：${skippedSkills.length} 个
 
-${renderAssetList(assets)}
+${renderPlatformAssetList(assets)}
 `;
 }
 
-function renderYamlFrontmatter(fields: Record<string, string | readonly string[] | undefined>): string {
-  const lines = ["---"];
-
-  for (const [key, value] of Object.entries(fields)) {
-    if (value === undefined) {
-      continue;
-    }
-
-    if (Array.isArray(value)) {
-      if (value.length === 0) {
-        continue;
-      }
-
-      lines.push(`${key}:`);
-      for (const entry of value) {
-        lines.push(`  - ${JSON.stringify(entry)}`);
-      }
-      continue;
-    }
-
-    lines.push(`${key}: ${JSON.stringify(value)}`);
-  }
-
-  lines.push("---");
-
-  return `${lines.join("\n")}\n`;
-}
-
-function renderMarkdownCommandFile(options: {
-  readonly name: string;
-  readonly description: string;
-  readonly body: string;
-}): string {
-  return `${renderYamlFrontmatter({
-    name: options.name,
-    description: options.description,
-  })}\n${options.body.trim()}\n`;
-}
-
-function renderMarkdownAgentFile(options: {
-  readonly name: string;
-  readonly description: string;
-  readonly body: string;
-  readonly tools?: readonly string[];
-}): string {
-  return `${renderYamlFrontmatter({
-    name: options.name,
-    description: options.description,
-    tools: options.tools,
-  })}\n${options.body.trim()}\n`;
-}
-
-function stripKindPrefix(value: string): string {
-  return value.replace(/^(command|skill|agent)[:-]/, "");
-}
-
 function toNamespacedSlug(asset: ToolkitAssetLike): string {
-  const assetName = "name" in asset && typeof asset.name === "string" ? asset.name : undefined;
-  const base = (assetName ?? stripKindPrefix(asset.id))
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9-]+/g, "-")
-    .replace(/-{2,}/g, "-")
-    .replace(/^-|-$/g, "");
-
-  return `zc-${base || stripKindPrefix(asset.id)}`;
+  return createNamespacedAssetSlug(asset, { separators: [":", "-"] });
 }
 
 function toScopedRelativeDir(scope: InstallScope, relativeDir: string): string {
@@ -294,14 +224,11 @@ function renderCommandArtifacts(
   return assets.map((asset) => {
     const slug = toNamespacedSlug(asset);
 
-    return {
+    return createMarkdownCommandArtifact({
       path: `${relativeDir}/${slug}.md`,
-      content: renderMarkdownCommandFile({
-        name: slug,
-        description: asset.summary ?? describeAsset(asset),
-        body: asset.body ?? `# ${describeAsset(asset)}\n`,
-      }),
-    };
+      asset,
+      name: slug,
+    });
   });
 }
 
@@ -316,15 +243,12 @@ function renderAgentArtifacts(
     const assetTools =
       "tools" in asset && Array.isArray(asset.tools) ? (asset.tools as readonly string[]) : undefined;
 
-    return {
+    return createMarkdownAgentArtifact({
       path: `${relativeDir}/${slug}.md`,
-      content: renderMarkdownAgentFile({
-        name: slug,
-        description: asset.summary ?? describeAsset(asset),
-        body: asset.body ?? `# ${describeAsset(asset)}\n`,
-        tools: assetTools,
-      }),
-    };
+      asset,
+      name: slug,
+      tools: assetTools,
+    });
   });
 }
 

@@ -2,7 +2,7 @@
 
 `@zmice/platform-opencode` 把 `@zmice/toolkit` 的结构化内容渲染成 OpenCode 所需产物。
 
-第一版保守适配面：
+当前适配面：
 
 - `AGENTS.md`
 - `.opencode/commands/zc-*.md`

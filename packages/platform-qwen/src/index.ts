@@ -1,7 +1,12 @@
 import {
+  createMarkdownAgentArtifact,
+  createMarkdownCommandArtifact,
   createInstallPlan,
+  createSkillArtifact,
   describeAsset,
+  renderPlatformAssetList,
   selectMatchedAssets,
+  stripAssetKindPrefix,
   type GenerationPlan as BaseGenerationPlan,
   type InstallPlan as BaseInstallPlan,
   type InstallPlanOptions as BaseInstallPlanOptions,
@@ -120,81 +125,11 @@ export const capability: PlatformCapability = {
   },
 };
 
-function stripKindPrefix(asset: ToolkitAssetLike): string {
-  const prefix = `${asset.kind}:`;
-  return asset.id.startsWith(prefix) ? asset.id.slice(prefix.length) : asset.id;
-}
-
 function selectMatchedAssetsByKind(
   manifest: ToolkitManifestLike,
   kind: ToolkitAssetLike["kind"],
 ): readonly ToolkitAssetLike[] {
   return selectMatchedAssets(manifest, platformName).filter((asset) => asset.kind === kind);
-}
-
-function renderYamlFrontmatter(fields: Record<string, unknown>): string {
-  const lines: string[] = ["---"];
-
-  for (const [key, value] of Object.entries(fields)) {
-    if (value === undefined || value === null) {
-      continue;
-    }
-
-    if (Array.isArray(value)) {
-      if (value.length === 0) {
-        continue;
-      }
-
-      lines.push(`${key}:`);
-      for (const entry of value) {
-        lines.push(`  - ${JSON.stringify(String(entry))}`);
-      }
-      continue;
-    }
-
-    lines.push(`${key}: ${JSON.stringify(String(value))}`);
-  }
-
-  lines.push("---");
-
-  return `${lines.join("\n")}\n`;
-}
-
-function renderMarkdownCommandFile(options: {
-  readonly name: string;
-  readonly description: string;
-  readonly body: string;
-}): string {
-  return `${renderYamlFrontmatter({
-    name: options.name,
-    description: options.description,
-  })}\n${options.body.trim()}\n`;
-}
-
-function renderSkillFile(options: {
-  readonly name: string;
-  readonly description: string;
-  readonly body: string;
-}): string {
-  return `${renderYamlFrontmatter({
-    name: options.name,
-    description: options.description,
-  })}\n${options.body.trim()}\n`;
-}
-
-function renderMarkdownAgentFile(options: {
-  readonly name: string;
-  readonly description: string;
-  readonly body: string;
-  readonly tools?: readonly string[];
-  readonly skills?: readonly string[];
-}): string {
-  return `${renderYamlFrontmatter({
-    name: options.name,
-    description: options.description,
-    tools: options.tools,
-    skills: options.skills,
-  })}\n${options.body.trim()}\n`;
 }
 
 function getExtensionRoot(scope: InstallScope = "project"): string {
@@ -203,16 +138,6 @@ function getExtensionRoot(scope: InstallScope = "project"): string {
   }
 
   return `extensions/${templateFiles.extensionName}`;
-}
-
-function renderAssetList(assets: readonly ToolkitAssetLike[]): string {
-  if (assets.length === 0) {
-    return "- 尚未匹配到任何工具包资产。";
-  }
-
-  return assets
-    .map((asset) => `- \`${asset.kind}\` \`${asset.id}\`: ${describeAsset(asset)}`)
-    .join("\n");
 }
 
 function renderContextFile(
@@ -296,7 +221,7 @@ function renderContextFile(
 - skills：${skills.length} 个
 - agents：${agents.length} 个
 
-${renderAssetList(assets)}
+${renderPlatformAssetList(assets)}
 `;
 }
 
@@ -336,59 +261,56 @@ function renderCommandArtifact(
   extensionRoot: string,
   asset: ToolkitAssetLike,
 ): PlatformArtifact {
-  const slug = stripKindPrefix(asset);
+  const slug = stripAssetKindPrefix(asset.id);
 
-  return {
+  return createMarkdownCommandArtifact({
     path: `${extensionRoot}/commands/zc/${slug}.md`,
-    content: renderMarkdownCommandFile({
-      name: `zc:${slug}`,
-      description: describeAsset(asset),
-      body:
-        asset.body ??
-        `这是由工具包资产 \`${asset.id}\` 生成的 Qwen 命令入口，用于触发 \`zc:${slug}\`。`,
-    }),
-  };
+    asset,
+    name: `zc:${slug}`,
+    description: describeAsset(asset),
+    body:
+      asset.body ??
+      `这是由工具包资产 \`${asset.id}\` 生成的 Qwen 命令入口，用于触发 \`zc:${slug}\`。`,
+  });
 }
 
 function renderSkillArtifact(
   extensionRoot: string,
   asset: ToolkitAssetLike,
 ): PlatformArtifact {
-  const slug = stripKindPrefix(asset);
+  const slug = stripAssetKindPrefix(asset.id);
 
-  return {
+  return createSkillArtifact({
     path: `${extensionRoot}/skills/zc-${slug}/SKILL.md`,
-    content: renderSkillFile({
-      name: `zc-${slug}`,
-      description: describeAsset(asset),
-      body:
-        asset.body ??
-        `这是由工具包资产 \`${asset.id}\` 生成的 Qwen skill，供 extension 目录直接加载。`,
-    }),
-  };
+    asset,
+    name: `zc-${slug}`,
+    description: describeAsset(asset),
+    body:
+      asset.body ??
+      `这是由工具包资产 \`${asset.id}\` 生成的 Qwen skill，供 extension 目录直接加载。`,
+  });
 }
 
 function renderAgentArtifact(
   extensionRoot: string,
   asset: ToolkitAssetLike,
 ): PlatformArtifact {
-  const slug = stripKindPrefix(asset);
+  const slug = stripAssetKindPrefix(asset.id);
   const skillRefs = asset.requires
     ?.filter((entry) => entry.startsWith("skill:"))
     .map((entry) => `zc-${entry.slice("skill:".length)}`);
 
-  return {
+  return createMarkdownAgentArtifact({
     path: `${extensionRoot}/agents/zc-${slug}.md`,
-    content: renderMarkdownAgentFile({
-      name: `zc-${slug}`,
-      description: describeAsset(asset),
-      body:
-        asset.body ??
-        `这是由工具包资产 \`${asset.id}\` 生成的 Qwen agent，用于承接 \`zc-${slug}\` 角色能力。`,
-      tools: asset.tools,
-      skills: skillRefs,
-    }),
-  };
+    asset,
+    name: `zc-${slug}`,
+    description: describeAsset(asset),
+    body:
+      asset.body ??
+      `这是由工具包资产 \`${asset.id}\` 生成的 Qwen agent，用于承接 \`zc-${slug}\` 角色能力。`,
+    tools: asset.tools,
+    skills: skillRefs,
+  });
 }
 
 export function createQwenGenerationPlan(
