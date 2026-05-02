@@ -126,19 +126,27 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.equal(plan.capability.entryFile, undefined);
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
       templateFiles.pluginManifest,
-      "skills/zc-start/SKILL.md",
-      "skills/zc-skill-alpha/SKILL.md",
+      "skills/start/SKILL.md",
+      "skills/skill-alpha/SKILL.md",
     ]);
+    assert.ok(plan.artifacts[1]?.content.includes('name: "start"'));
+    assert.ok(plan.artifacts[1]?.content.includes("$start"));
+    assert.ok(!plan.artifacts[1]?.content.includes("$zc-start"));
 
     const pluginManifest = JSON.parse(plan.artifacts[0]!.content) as {
       name: string;
       version: string;
       skills: string;
+      interface: { defaultPrompt: string[] };
       zc: { commands: number; skills: number };
     };
     assert.equal(pluginManifest.name, "zc-toolkit");
     assert.equal(pluginManifest.version, "0.2.5");
     assert.equal(pluginManifest.skills, "./skills/");
+    assert.deepEqual(pluginManifest.interface.defaultPrompt, [
+      "Use start to choose the right workflow for this task.",
+      "Use team-orchestration when multiple agents need coordinated worktree isolation.",
+    ]);
     assert.deepEqual(pluginManifest.zc, { commands: 1, skills: 1 });
   });
 
@@ -149,14 +157,21 @@ describe("@zmice/platform-codex scaffold", () => {
 
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
       templateFiles.marketplace,
+      templateFiles.agents,
       "plugins/zc-toolkit/.codex-plugin/plugin.json",
-      "plugins/zc-toolkit/skills/zc-start/SKILL.md",
-      "plugins/zc-toolkit/skills/zc-skill-alpha/SKILL.md",
+      "plugins/zc-toolkit/skills/start/SKILL.md",
+      "plugins/zc-toolkit/skills/skill-alpha/SKILL.md",
       ".codex/config.toml",
       ".codex/agents/zc-code-reviewer.toml",
     ]);
-    assert.deepEqual(plan.capability.surfaces, ["plugin-dir", "skills-dir", "agents-dir"]);
+    assert.deepEqual(plan.capability.surfaces, ["entry-file", "plugin-dir", "skills-dir", "agents-dir"]);
+    assert.equal(plan.capability.entryFile?.fileName, templateFiles.agents);
+    assert.equal(plan.capability.skills?.relativeDir, "plugins/zc-toolkit/skills");
     assert.equal(plan.capability.agents?.relativeDir, ".codex/agents");
+    assert.ok(plan.artifacts[1]?.content.includes("Codex zc-toolkit 插件入口"));
+    assert.ok(plan.artifacts[1]?.content.includes("zc:start` -> `$start"));
+    assert.ok(!plan.artifacts[1]?.content.includes("$zc-start"));
+    assert.ok(plan.artifacts[1]?.content.includes("plugins/zc-toolkit/skills/<command-or-skill>/SKILL.md"));
 
     const marketplace = JSON.parse(plan.artifacts[0]!.content) as {
       plugins: Array<{
@@ -184,12 +199,17 @@ describe("@zmice/platform-codex scaffold", () => {
 
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
       templateFiles.marketplace,
+      ".codex/AGENTS.md",
       ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json",
-      ".codex/plugins/zc-toolkit/skills/zc-start/SKILL.md",
-      ".codex/plugins/zc-toolkit/skills/zc-skill-alpha/SKILL.md",
+      ".codex/plugins/zc-toolkit/skills/start/SKILL.md",
+      ".codex/plugins/zc-toolkit/skills/skill-alpha/SKILL.md",
       ".codex/config.toml",
       ".codex/agents/zc-code-reviewer.toml",
     ]);
+    assert.equal(plan.capability.entryFile?.fileName, ".codex/AGENTS.md");
+    assert.equal(plan.capability.skills?.relativeDir, ".codex/plugins/zc-toolkit/skills");
+    assert.ok(plan.artifacts[1]?.content.includes("~/.codex/plugins/zc-toolkit/skills/<command-or-skill>/SKILL.md"));
+    assert.ok(plan.artifacts[1]?.content.includes("zc:start` -> `$start"));
 
     const marketplace = JSON.parse(plan.artifacts[0]!.content) as {
       plugins: Array<{ source: { source: string; path: string } }>;

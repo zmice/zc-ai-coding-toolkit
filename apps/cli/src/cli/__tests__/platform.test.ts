@@ -470,21 +470,22 @@ describe("platform CLI", () => {
       matchedAssets: [],
       capability: {
         namespace: "zc",
-        surfaces: ["plugin-dir", "skills-dir", "agents-dir"],
-        entryFile: null,
+        surfaces: ["entry-file", "plugin-dir", "skills-dir", "agents-dir"],
+        entryFile: ".codex/AGENTS.md",
         commandsDir: null,
-        skillsDir: "skills",
+        skillsDir: ".codex/plugins/zc-toolkit/skills",
         agentsDir: ".codex/agents",
         extensionDir: null,
       },
       artifacts: [
         { path: ".agents/plugins/marketplace.json", content: "{}" },
+        { path: ".codex/AGENTS.md", content: "# plugin entry" },
         { path: ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
         { path: ".codex/agents/zc-code-reviewer.toml", content: "name = \"zc_code_reviewer\"\n" },
       ],
     });
     platformMocks.writeArtifacts.mockResolvedValue({
-      created: 3,
+      created: 4,
       overwritten: 0,
       unchanged: 0,
       skipped: 0,
@@ -503,6 +504,7 @@ describe("platform CLI", () => {
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
       [
         { path: `${homedir()}/.agents/plugins/marketplace.json`, content: "{}" },
+        { path: `${homedir()}/.codex/AGENTS.md`, content: "# plugin entry" },
         { path: `${homedir()}/.codex/plugins/zc-toolkit/.codex-plugin/plugin.json`, content: "{}" },
         { path: `${homedir()}/.codex/agents/zc-code-reviewer.toml`, content: "name = \"zc_code_reviewer\"\n" },
       ],
@@ -530,11 +532,12 @@ describe("platform CLI", () => {
       matchedAssets: [],
       artifacts: [
         { path: ".agents/plugins/marketplace.json", content: "{}" },
-        { path: ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
+        { path: "AGENTS.md", content: "# plugin entry" },
+        { path: "plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
       ],
     });
     platformMocks.writeArtifacts.mockResolvedValue({
-      created: 2,
+      created: 3,
       overwritten: 0,
       unchanged: 0,
       skipped: 0,
@@ -554,7 +557,8 @@ describe("platform CLI", () => {
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
       [
         { path: "/repo/project/.agents/plugins/marketplace.json", content: "{}" },
-        { path: "/repo/project/.codex/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
+        { path: "/repo/project/AGENTS.md", content: "# plugin entry" },
+        { path: "/repo/project/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
       ],
       { dryRun: false, overwrite: "error" },
     );
@@ -580,11 +584,12 @@ describe("platform CLI", () => {
       matchedAssets: [],
       artifacts: [
         { path: ".agents/plugins/marketplace.json", content: "{}" },
-        { path: ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
+        { path: "AGENTS.md", content: "# plugin entry" },
+        { path: "plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
       ],
     });
     platformMocks.writeArtifacts.mockResolvedValue({
-      created: 2,
+      created: 3,
       overwritten: 0,
       unchanged: 0,
       skipped: 0,
@@ -601,7 +606,8 @@ describe("platform CLI", () => {
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
       [
         { path: "/repo/project/.agents/plugins/marketplace.json", content: "{}" },
-        { path: "/repo/project/.codex/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
+        { path: "/repo/project/AGENTS.md", content: "# plugin entry" },
+        { path: "/repo/project/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
       ],
       { dryRun: false, overwrite: "error" },
     );
@@ -622,11 +628,12 @@ describe("platform CLI", () => {
       matchedAssets: [],
       artifacts: [
         { path: ".agents/plugins/marketplace.json", content: "{}" },
+        { path: ".codex/AGENTS.md", content: "# plugin entry" },
         { path: ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
       ],
     });
     platformMocks.writeArtifacts.mockResolvedValue({
-      created: 2,
+      created: 3,
       overwritten: 0,
       unchanged: 0,
       skipped: 0,
@@ -643,9 +650,54 @@ describe("platform CLI", () => {
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
       [
         { path: `${homedir()}/.agents/plugins/marketplace.json`, content: "{}" },
+        { path: `${homedir()}/.codex/AGENTS.md`, content: "# plugin entry" },
         { path: `${homedir()}/.codex/plugins/zc-toolkit/.codex-plugin/plugin.json`, content: "{}" },
       ],
       { dryRun: false, overwrite: "error" },
+    );
+  });
+
+  it("cleans the generated Codex plugin skills directory on force writes", async () => {
+    platformMocks.createCodexGenerationPlan.mockReturnValue({
+      platform: "codex",
+      packageName: "@zmice/platform-codex",
+      manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
+      matchedAssets: [],
+      artifacts: [],
+    });
+    platformMocks.createCodexMarketplaceGenerationPlan.mockReturnValue({
+      platform: "codex",
+      packageName: "@zmice/platform-codex",
+      manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
+      matchedAssets: [],
+      artifacts: [
+        { path: ".agents/plugins/marketplace.json", content: "{}" },
+        { path: ".codex/AGENTS.md", content: "# plugin entry" },
+        { path: ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
+        { path: ".codex/plugins/zc-toolkit/skills/start/SKILL.md", content: "# start" },
+      ],
+    });
+    platformMocks.writeArtifacts.mockResolvedValue({
+      created: 4,
+      overwritten: 0,
+      unchanged: 0,
+      skipped: 0,
+      dryRun: false,
+    });
+
+    await runPlatformPlugin("codex", { global: true, force: true });
+
+    expect(platformMocks.removeManagedPaths).toHaveBeenCalledWith([
+      `${homedir()}/.codex/plugins/zc-toolkit/skills`,
+    ]);
+    expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
+      [
+        { path: `${homedir()}/.agents/plugins/marketplace.json`, content: "{}" },
+        { path: `${homedir()}/.codex/AGENTS.md`, content: "# plugin entry" },
+        { path: `${homedir()}/.codex/plugins/zc-toolkit/.codex-plugin/plugin.json`, content: "{}" },
+        { path: `${homedir()}/.codex/plugins/zc-toolkit/skills/start/SKILL.md`, content: "# start" },
+      ],
+      { dryRun: false, overwrite: "force" },
     );
   });
 

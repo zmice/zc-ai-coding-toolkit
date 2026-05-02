@@ -113,6 +113,13 @@ interface ScopeLayout {
   readonly agentConfigPrefix: string;
 }
 
+interface SkillNaming {
+  readonly prefix: string;
+}
+
+const namespacedSkillNaming: SkillNaming = { prefix: "zc-" };
+const pluginSkillNaming: SkillNaming = { prefix: "" };
+
 function getScopeLayout(scope: InstallScope): ScopeLayout {
   if (scope === "project") {
     return {
@@ -327,6 +334,75 @@ ${renderPlatformAssetList(assets)}
 `;
 }
 
+function renderPluginCompanionAgentsFile(options: {
+  readonly manifestSource: string;
+  readonly assets: readonly ToolkitAssetLike[];
+  readonly pluginName: string;
+  readonly displayEntryFile: string;
+  readonly displayPluginSkillsDir: string;
+  readonly displayAgentsDir: string;
+  readonly displayConfigFile: string;
+}): string {
+  const commandAssets = options.assets.filter((asset) => asset.kind === "command");
+  const skillCount = options.assets.filter((asset) => asset.kind === "skill").length;
+  const agentCount = options.assets.filter((asset) => asset.kind === "agent").length;
+  const commandMappings = commandAssets.length > 0
+    ? commandAssets
+      .map((asset) => {
+        const commandName = toCodexSkillSlug(asset);
+        return `- \`zc:${commandName}\` -> \`$${toCodexSkillName(asset, pluginSkillNaming)}\``;
+      })
+      .join("\n")
+    : "- 当前清单未匹配 command-alias skill";
+
+  return `# Codex zc-toolkit 插件入口
+
+这是 \`${options.pluginName}\` Codex 插件的薄入口文件。
+
+它负责保留插件安装后的全局 / 项目级默认规则，并把统一 \`zc:*\` 语义映射到插件内 skill。详细方法不写在这里，完整内容都在 \`${options.displayPluginSkillsDir}/<skill>/SKILL.md\`。
+
+## 全局规则
+
+- 默认先判断任务属于哪条 workflow，再决定入口
+- 不确定入口时，先用 \`$start\`
+- 中文优先，命令名、参数名、文件名、JSON 键和平台产物名保持原样
+- 证据先于断言，完成前必须给出实际验证结果
+- 不做超出任务边界的顺手修改
+- 需要多 agent 或指定角色时，再使用 Codex custom agents
+
+## 统一命令语义到插件 skill 的映射
+
+${commandMappings}
+
+## 推荐开始方式
+
+- 不确定从哪开始：\`$start\`
+- 需求还模糊：\`$product-analysis\`
+- 完整交付主流程：\`$sdd-tdd\`
+- 修 bug：\`$debug\`
+- 代码审查和反馈收敛：\`$quality-review\`
+- 文档或发布说明：\`$doc\`
+- 陌生项目先摸底：\`$onboard\` 或 \`$ctx-health\`
+
+## 详细内容在哪里
+
+- 插件 skills：\`${options.displayPluginSkillsDir}/<command-or-skill>/SKILL.md\`
+- custom agents：\`${options.displayAgentsDir}/zc-<agent>.toml\`
+- Codex agent role 注册：\`${options.displayConfigFile}\` 的 \`[agents.*]\` 配置
+- 当前入口文件：\`${options.displayEntryFile}\`
+
+## 已安装能力
+
+此安装当前包含：
+
+- 清单来源：\`${options.manifestSource}\`
+- 匹配到的资产：${options.assets.length}
+- command-alias skills：${commandAssets.length} 个
+- skills：${skillCount} 个
+- custom agents：${agentCount} 个
+`;
+}
+
 function renderPluginManifest(options: {
   readonly name: string;
   readonly version: string;
@@ -355,8 +431,8 @@ function renderPluginManifest(options: {
         category: "Developer Tools",
         capabilities: ["Read", "Write"],
         defaultPrompt: [
-          "Use zc-start to choose the right workflow for this task.",
-          "Use zc-team-orchestration when multiple agents need coordinated worktree isolation.",
+          "Use start to choose the right workflow for this task.",
+          "Use team-orchestration when multiple agents need coordinated worktree isolation.",
         ],
       },
       zc: {
@@ -405,8 +481,16 @@ function toCodexSkillSlug(asset: ToolkitAssetLike): string {
   return stripAssetKindPrefix(asset.id);
 }
 
-function toCodexSkillDirectory(asset: ToolkitAssetLike, layout: ScopeLayout): string {
-  return `${layout.skillsDir}/zc-${toCodexSkillSlug(asset)}`;
+function toCodexSkillName(asset: ToolkitAssetLike, naming: SkillNaming): string {
+  return `${naming.prefix}${asset.name ?? toCodexSkillSlug(asset)}`;
+}
+
+function toCodexSkillDirectory(
+  asset: ToolkitAssetLike,
+  layout: ScopeLayout,
+  naming: SkillNaming,
+): string {
+  return `${layout.skillsDir}/${naming.prefix}${toCodexSkillSlug(asset)}`;
 }
 
 function toCodexAgentName(asset: ToolkitAssetLike): string {
@@ -417,8 +501,9 @@ function renderTomlScalar(value: string): string {
   return JSON.stringify(value);
 }
 
-function renderCodexCommandAliasBody(asset: ToolkitAssetLike): string {
+function renderCodexCommandAliasBody(asset: ToolkitAssetLike, naming: SkillNaming): string {
   const commandName = toCodexSkillSlug(asset);
+  const invocationName = `${naming.prefix}${commandName}`;
 
   return `# zc:${commandName}
 
@@ -426,7 +511,7 @@ function renderCodexCommandAliasBody(asset: ToolkitAssetLike): string {
 
 使用方式：
 
-- 在 Codex 中直接调用 \`$zc-${commandName}\`
+- 在 Codex 中直接调用 \`$${invocationName}\`
 - 它对应统一命令语义 \`zc:${commandName}\`
 - 如果需要更深的方法细节，再继续调用相关专题 skill
 
@@ -437,12 +522,13 @@ ${(asset.body ?? `# ${describeAsset(asset)}\n`).trim()}
 function renderCodexSkillArtifacts(
   assets: readonly ToolkitAssetLike[],
   layout: ScopeLayout,
+  naming: SkillNaming = namespacedSkillNaming,
 ): readonly PlatformArtifact[] {
   return assets.map((asset) =>
     createSkillArtifact({
-      path: `${toCodexSkillDirectory(asset, layout)}/SKILL.md`,
+      path: `${toCodexSkillDirectory(asset, layout, naming)}/SKILL.md`,
       asset,
-      name: `zc-${asset.name ?? toCodexSkillSlug(asset)}`,
+      name: toCodexSkillName(asset, naming),
       description: asset.summary ?? describeAsset(asset),
       body: asset.body ?? `# ${describeAsset(asset)}\n`,
     }),
@@ -507,14 +593,15 @@ function renderCodexAgentConfigArtifacts(
 function renderCodexCommandAliasArtifacts(
   assets: readonly ToolkitAssetLike[],
   layout: ScopeLayout,
+  naming: SkillNaming = namespacedSkillNaming,
 ): readonly PlatformArtifact[] {
   return assets.map((asset) =>
     createSkillArtifact({
-      path: `${toCodexSkillDirectory(asset, layout)}/SKILL.md`,
+      path: `${toCodexSkillDirectory(asset, layout, naming)}/SKILL.md`,
       asset,
-      name: `zc-${asset.name ?? toCodexSkillSlug(asset)}`,
+      name: toCodexSkillName(asset, naming),
       description: asset.summary ?? describeAsset(asset),
-      body: renderCodexCommandAliasBody(asset),
+      body: renderCodexCommandAliasBody(asset, naming),
     }),
   );
 }
@@ -584,8 +671,8 @@ export function createCodexPluginGenerationPlan(
           matchedAssets,
         }),
       },
-      ...renderCodexCommandAliasArtifacts(commandAssets, layout),
-      ...renderCodexSkillArtifacts(skillAssets, layout),
+      ...renderCodexCommandAliasArtifacts(commandAssets, layout, pluginSkillNaming),
+      ...renderCodexSkillArtifacts(skillAssets, layout, pluginSkillNaming),
     ],
   }) as GenerationPlan;
 }
@@ -604,13 +691,29 @@ export function createCodexMarketplaceGenerationPlan(
   const pluginPlan = createCodexPluginGenerationPlan(manifest, options);
   const repoLayout = getScopeLayout("project");
   const agentAssets = selectMatchedAssetsByKind(manifest, "agent");
+  const manifestSource = options.manifestSource ?? manifest.source ?? "toolkit-manifest";
+  const entryFile = marketplaceScope === "global"
+    ? ".codex/AGENTS.md"
+    : templateFiles.agents;
+  const displayEntryFile = marketplaceScope === "global"
+    ? "~/.codex/AGENTS.md"
+    : templateFiles.agents;
+  const displayPluginSkillsDir = marketplaceScope === "global"
+    ? `~/.codex/plugins/${pluginName}/skills`
+    : `${pluginRoot}/skills`;
 
   return attachPlanMetadata({
     ...pluginPlan,
     capability: {
       ...pluginPlan.capability,
-      surfaces: ["plugin-dir", "skills-dir", "agents-dir"],
-      entryFile: undefined,
+      surfaces: ["entry-file", "plugin-dir", "skills-dir", "agents-dir"],
+      entryFile: {
+        fileName: entryFile,
+      },
+      skills: {
+        relativeDir: `${pluginRoot}/skills`,
+        fileName: capability.skills!.fileName,
+      },
       agents: {
         relativeDir: repoLayout.agentsDir,
         fileExtension: ".toml",
@@ -624,6 +727,22 @@ export function createCodexMarketplaceGenerationPlan(
           marketplaceDisplayName,
           pluginName,
           pluginPath: `./${pluginRoot}`,
+        }),
+      },
+      {
+        path: entryFile,
+        content: renderPluginCompanionAgentsFile({
+          manifestSource,
+          assets: pluginPlan.matchedAssets,
+          pluginName,
+          displayEntryFile,
+          displayPluginSkillsDir,
+          displayAgentsDir: marketplaceScope === "global"
+            ? "~/.codex/agents"
+            : repoLayout.displayAgentsDir,
+          displayConfigFile: marketplaceScope === "global"
+            ? "~/.codex/config.toml"
+            : repoLayout.displayConfigFile,
         }),
       },
       ...pluginPlan.artifacts.map((artifact) => ({

@@ -144,7 +144,7 @@
 
 | 平台 | 目标实现 | 覆盖评价 |
 | --- | --- | --- |
-| Codex | 项目级安装 `AGENTS.md` + `.codex/config.toml` + `.codex/skills/zc-<command>/SKILL.md` + `.codex/skills/zc-<skill>/SKILL.md` + `.codex/agents/zc-<agent>.toml`；用户级 / 自定义目录安装对应的 `AGENTS.md` + `config.toml` + `skills/` + `agents/`；另支持 `zc platform plugin codex` 生成 personal/repo marketplace bundle | 官方面保持保守，`agents` 和 plugin / marketplace 明确标注为 `zc` 的打包与配置实现 |
+| Codex | 项目级安装 `AGENTS.md` + `.codex/config.toml` + `.codex/skills/zc-<command>/SKILL.md` + `.codex/skills/zc-<skill>/SKILL.md` + `.codex/agents/zc-<agent>.toml`；用户级 / 自定义目录安装对应的 `AGENTS.md` + `config.toml` + `skills/` + `agents/`；另支持 `zc platform plugin codex` 生成 personal/repo marketplace bundle，插件路线生成薄 `AGENTS.md` / `.codex/AGENTS.md` 入口，插件内 skills 使用无前缀 `<command-or-skill>/SKILL.md` | 官方面保持保守，`agents` 和 plugin / marketplace 明确标注为 `zc` 的打包与配置实现；传统直装入口指向 `$zc-*`，插件入口指向 `$*` |
 | Claude Code | `CLAUDE.md` + `commands/zc-*.md` + `agents/zc-*.md`；不覆盖 `enterprise policy`、`CLAUDE.local.md`、`@imports` 目标文件 | 目录化原生安装 |
 | Qwen | 优先通过官方 `qwen extensions` CLI 管理 `zc-toolkit` 的发布态 extension bundle；扩展内容为 `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md` + `qwen-extension.json` + `commands` + `skills` + `agents` | extension 原生安装 |
 | OpenCode | `AGENTS.md` + `.opencode/commands/zc-*.md` + `.opencode/skills/zc-*/SKILL.md` + `.opencode/agents/zc-*.md` + 全局对应目录 | 目录化原生安装 |

@@ -67,7 +67,7 @@ pnpm upstream -- report all --format md --with-remote
 
 | 平台 | 当前安装形态 | 统一入口适配 |
 | --- | --- | --- |
-| Codex | `AGENTS.md` + `config.toml` + `skills/` + `agents/` | `zc:start -> $zc-start` |
+| Codex | 传统：`AGENTS.md` + `config.toml` + `skills/` + `agents/`；插件：薄 `AGENTS.md` 入口 + `zc-toolkit` marketplace plugin + `agents/` | 传统 `zc:start -> $zc-start`；插件 `zc:start -> $start` |
 | Claude Code | `CLAUDE.md` + `commands/` + `agents/` | `zc:start -> /zc-start` |
 | OpenCode | `AGENTS.md` + `commands/` + `skills/` + `agents/` | `zc:start -> /zc-start` |
 | Qwen | `QWEN.md` + extension 目录 | `zc:start -> zc:start` |
@@ -264,8 +264,9 @@ zc team start -w "w1:codex,w2:codex" \
 安装到不同平台后，不会强行保留同一种触发形式，而是按平台能力做适配：
 
 - Codex
-  - 统一语义通过 `$zc-*` skill 承接
-  - 例如：`zc:start -> $zc-start`
+  - 传统安装通过 `$zc-*` skill 承接
+  - 插件安装通过 `zc-toolkit` 插件命名空间下的无前缀 skill 承接
+  - 例如：`zc:start -> $zc-start` / `zc:start -> $start`
 - Claude Code
   - 统一语义通过 `/zc-*` command 承接
   - 例如：`zc:start -> /zc-start`
@@ -278,7 +279,8 @@ zc team start -w "w1:codex,w2:codex" \
 
 这样做的目的只有一个：
 
-- 避免和平台内置命令、社区插件或未来扩展发生冲突
+- 传统直装需要避免和平台内置命令、社区插件或未来扩展发生冲突
+- 插件安装已经有 `zc-toolkit` 命名空间，因此不再给每个 skill 重复加 `zc-` 前缀
 
 ## 平台安装模型
 
@@ -296,6 +298,14 @@ zc team start -w "w1:codex,w2:codex" \
   - `skills/zc-<command>/SKILL.md`
   - `skills/zc-<skill>/SKILL.md`
   - `agents/zc-<agent>.toml`
+- 插件 / marketplace：
+  - `.agents/plugins/marketplace.json`
+  - `AGENTS.md` 或 `.codex/AGENTS.md`
+  - `plugins/zc-toolkit/.codex-plugin/plugin.json` 或 `.codex/plugins/zc-toolkit/.codex-plugin/plugin.json`
+  - `plugins/zc-toolkit/skills/<command-or-skill>/SKILL.md` 或 `.codex/plugins/zc-toolkit/skills/<command-or-skill>/SKILL.md`
+  - `.codex/agents/zc-<agent>.toml`
+
+插件路线和传统直装都会生成 `AGENTS.md`，但语义不同：传统直装入口指向 `$zc-*` 和 `skills/zc-*`；插件路线入口只保留全局规则、入口映射和文件索引，指向 `$*` 和 `zc-toolkit` 插件内 skills。
 
 `config.toml` 是 `zc` 管理的 Codex custom agent role 注册配置，避免生成了 `.toml` agent 文件但入口无法找到对应角色；不要把它写成通用平台 command surface。
 

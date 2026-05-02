@@ -229,22 +229,22 @@ npm install -g @qwen-code/qwen-code@latest
 
 | 平台 | 安装后的入口形式 | 示例 |
 | --- | --- | --- |
-| `codex` | `$zc-*` skill | `zc:start -> $zc-start` |
+| `codex` | 传统安装为 `$zc-*` skill；插件安装为插件命名空间下的无前缀 skill | `zc:start -> $zc-start` / `zc:start -> $start` |
 | `claude` | `/zc-*` command | `zc:start -> /zc-start` |
 | `opencode` | `/zc-*` command | `zc:start -> /zc-start` |
 | `qwen` | `zc:*` namespaced command | `zc:start -> zc:start` |
 
 同时：
 
-- workflow / 专项 skill 也会带 `zc-` 前缀
-- 不会直接把裸名字如 `start`、`spec`、`build` 安装到平台里
-- 这样可以减少和平台内置命令、社区插件或后续扩展发生冲突的风险
+- 传统文件系统安装的 workflow / 专项 skill 会带 `zc-` 前缀
+- Codex 插件安装不再给 skill 额外加 `zc-` 前缀，因为插件自身已经提供 `zc-toolkit` 命名空间
+- custom agents 仍保留 `zc-` / `zc_` 前缀，因为它们写入 `.codex/agents` 和 `config.toml`，不属于 plugin skills 命名空间
 
 ### 产物矩阵
 
 | 平台 | 产物 |
 | --- | --- |
-| `codex` | `AGENTS.md`、`config.toml`、`skills/zc-<command>/SKILL.md`、`skills/zc-<skill>/SKILL.md`、`agents/zc-<agent>.toml` |
+| `codex` | 传统安装：`AGENTS.md`、`config.toml`、`skills/zc-<command>/SKILL.md`、`skills/zc-<skill>/SKILL.md`、`agents/zc-<agent>.toml`；插件安装：薄入口 `AGENTS.md` / `.codex/AGENTS.md` + `plugins/zc-toolkit/skills/<command-or-skill>/SKILL.md` / `.codex/plugins/zc-toolkit/skills/<command-or-skill>/SKILL.md` + `.codex/agents/zc-<agent>.toml` |
 | `claude` | `CLAUDE.md`、`.claude/commands`、`.claude/agents` |
 | `opencode` | `AGENTS.md`、`.opencode/commands`、`.opencode/skills`、`.opencode/agents` |
 | `qwen` | 用户级优先通过官方 `qwen extensions` CLI 从 `https://github.com/zmice/zc-qwen-extension.git` 安装和更新 `zc-toolkit`；扩展目录位于 `.qwen/extensions/zc-toolkit/`，其中包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/`、`skills/`、`agents/` |
@@ -334,8 +334,13 @@ zc platform where qwen --global --json
 
 - `platform plugin codex`
   - 不传 selector 时默认解析最近项目根，生成 repo-local marketplace
+  - 项目级插件路线生成薄入口到 `<project>/AGENTS.md`
   - 显式 `--global` 时生成 Codex personal marketplace 到 `~/.agents/plugins/marketplace.json`
+  - 显式 `--global` 时生成薄入口到 `~/.codex/AGENTS.md`
   - 显式 `--global` 时生成插件到 `~/.codex/plugins/zc-toolkit/`，并生成 custom agents 到 `~/.codex/agents/`
+  - 插件内 skill 使用无前缀目录和 frontmatter，例如 `skills/start/SKILL.md`、`skills/sdd-tdd-workflow/SKILL.md`
+  - 插件路线的 `AGENTS.md` 只保留全局规则、入口映射和文件索引，入口写成 `$start` / `$sdd-tdd`；传统直装的 `AGENTS.md` 继续写成 `$zc-start` / `$zc-sdd-tdd`
+  - 追加 `--force` 时会先清理目标插件的 `skills/` 目录，再写入当前版本，避免旧命名残留
   - 生成 `.codex/config.toml` / `~/.codex/config.toml`，作为 `zc` 管理的 custom agent role 注册配置
   - 也可以显式使用 `--project` 或 `--dir <repo>`
 - `codex --global`

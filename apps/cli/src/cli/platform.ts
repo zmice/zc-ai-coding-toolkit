@@ -1,7 +1,7 @@
 import { Command, InvalidArgumentError } from "commander";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { isAbsolute, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import {
   attachPlanMetadata,
   type GenerationPlan,
@@ -58,6 +58,7 @@ type PlatformGenerateOpts = PlatformTargetSelectorOpts & {
   bundle?: PlatformGenerateBundleType;
 };
 const platformNames: readonly PlatformName[] = ["qwen", "codex", "claude", "opencode"];
+const codexPluginManifestPath = ".codex-plugin/plugin.json";
 
 interface ToolkitAssetMetaLike {
   kind: "skill" | "command" | "agent";
@@ -155,7 +156,10 @@ interface PlatformModule {
   ) => InstallPlan;
 }
 
-function getPlanCapabilitySummary(plan: PlatformPlanLike) {
+function getPlanCapabilitySummary(
+  plan: PlatformPlanLike,
+  metadata?: Pick<PlatformResultExtra, "bundleType">,
+) {
   const capability = plan.capability;
 
   if (!capability) {
@@ -165,6 +169,18 @@ function getPlanCapabilitySummary(plan: PlatformPlanLike) {
   const exposure = (() => {
     switch (plan.platform) {
       case "codex":
+        if (metadata?.bundleType === "codex-plugin" || metadata?.bundleType === "codex-marketplace") {
+          return {
+            style: "plugin-skill",
+            entryPattern: "$<skill>",
+            examples: [
+              "zc:start -> $start",
+              "zc:product-analysis -> $product-analysis",
+              "zc:sdd-tdd -> $sdd-tdd",
+            ],
+          };
+        }
+
         return {
           style: "skill-alias",
           entryPattern: "$zc-*",
@@ -240,8 +256,11 @@ function formatSurfaceLabel(surface: string): string {
   }
 }
 
-function summarizeCapability(plan: PlatformPlanLike): string[] {
-  const capability = getPlanCapabilitySummary(plan);
+function summarizeCapability(
+  plan: PlatformPlanLike,
+  metadata?: Pick<PlatformResultExtra, "bundleType">,
+): string[] {
+  const capability = getPlanCapabilitySummary(plan, metadata);
 
   if (!capability) {
     return [];
@@ -615,7 +634,7 @@ function summarizePlan(action: PlatformAction, target: PlatformName, root: strin
     ...(metadata?.bundleType ? [`Bundle 类型：${formatBundleTypeLabel(metadata.bundleType)}`] : []),
     ...(metadata?.bundlePath ? [`Bundle 目录：${metadata.bundlePath}`] : []),
     ...(metadata?.hint ? [`提示：${metadata.hint}`] : []),
-    ...summarizeCapability(plan),
+    ...summarizeCapability(plan, metadata),
     `产物数量：${plan.artifacts.length}`,
     ...plan.artifacts.map((artifact) => `- ${artifact.path}`),
   ];
@@ -646,7 +665,7 @@ function buildPlanPayload(action: PlatformAction, target: PlatformName, root: st
     sourceRef: metadata?.sourceRef ?? null,
     bundleType: metadata?.bundleType ?? null,
     bundlePath: metadata?.bundlePath ?? null,
-    capability: getPlanCapabilitySummary(plan),
+    capability: getPlanCapabilitySummary(plan, metadata),
     artifactCount: plan.artifacts.length,
     contentFingerprint: plan.metadata?.fingerprint.value ?? null,
     overwrite: "overwrite" in plan ? plan.overwrite : null,
@@ -659,6 +678,24 @@ function resolveGenerateArtifact(outputRoot: string, artifact: { readonly path: 
     path: isAbsolute(artifact.path) ? artifact.path : join(outputRoot, artifact.path),
     content: artifact.content,
   };
+}
+
+async function cleanupCodexPluginSkillsForForce(
+  bundleType: PlatformGenerateBundleType | undefined,
+  artifacts: readonly { readonly path: string }[],
+  force?: boolean,
+): Promise<void> {
+  if (!force || (bundleType !== "codex-plugin" && bundleType !== "codex-marketplace")) {
+    return;
+  }
+
+  const pluginSkillRoots = artifacts
+    .filter((artifact) => artifact.path.endsWith(codexPluginManifestPath))
+    .map((artifact) => join(dirname(dirname(artifact.path)), "skills"));
+
+  if (pluginSkillRoots.length > 0) {
+    await removeManagedPaths(pluginSkillRoots);
+  }
 }
 
 function assertExclusiveTargetSelector(opts: PlatformTargetSelectorOpts): void {
@@ -1208,8 +1245,11 @@ export async function runPlatformGenerate(
       return;
     }
 
+    const resolvedArtifacts = plan.artifacts.map((artifact) => resolveGenerateArtifact(outputRoot, artifact));
+    await cleanupCodexPluginSkillsForForce(bundleType, resolvedArtifacts, opts.force);
+
     const result = await writeArtifacts(
-      plan.artifacts.map((artifact) => resolveGenerateArtifact(outputRoot, artifact)),
+      resolvedArtifacts,
       {
         dryRun: false,
         overwrite: resolveOverwriteMode(opts.force)
