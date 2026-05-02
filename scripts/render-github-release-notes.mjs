@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
 import { writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const releaseTagPattern = /^@zmice\/zc@(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)$/;
+const scriptPath = fileURLToPath(import.meta.url);
+const repoRoot = resolve(dirname(scriptPath), "..");
 
 const commitTypeLabels = {
   feat: "新增能力",
@@ -59,8 +61,9 @@ function parseArgs(argv) {
   return { tag, version, out };
 }
 
-function runGit(args) {
+export function runGit(args) {
   const result = spawnSync("git", args, {
+    cwd: repoRoot,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "ignore"]
   });
