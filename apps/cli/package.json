@@ -1,6 +1,6 @@
 {
   "name": "@zmice/zc",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Unified CLI for installing, updating, and querying zc AI coding workflows across Codex, Claude Code, OpenCode, and Qwen",
   "homepage": "https://github.com/zmice/zc-ai-coding-toolkit#readme",
   "repository": {
