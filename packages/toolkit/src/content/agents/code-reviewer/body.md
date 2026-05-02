@@ -24,6 +24,16 @@
 - 必要时给出替代方案或重构方向
 - 对验证证据的可信度判断
 
+## 输出纪律
+
+审查最后必须给出可执行结论：
+
+```text
+Recommendation: <Approve / Request changes / Defer> because <证据、风险和取舍>。
+```
+
+发现问题时先列问题，再给总结；不要用 “LGTM” 代替证据。
+
 ## 不负责什么
 
 - 不替代专项安全审计或性能 profiling

@@ -1,554 +1,111 @@
 # Browser QA Testing
 
-## Overview
+## 角色定位
 
-Unit tests verify functions. API tests verify endpoints. Neither tells you whether a user can actually log in, fill a form, or navigate your app without hitting a blank screen or a cryptic error. Browser-level QA testing fills this gap by driving a real browser through the same flows your users follow — clicking buttons, filling inputs, waiting for network responses, and validating what appears on screen.
+用真实浏览器验证用户是否真的能完成关键路径。单元测试和 API 测试不能证明页面可用、交互可达、网络错误可见或视觉没有严重错位；浏览器 QA 用运行中的应用和可复查证据补上这层门禁。
 
-**Why this matters:** The most common production incidents aren't logic bugs caught by unit tests — they're broken builds that render blank pages, API integrations that fail silently, modals that can't be dismissed, or forms that submit empty data. These only surface when a real browser renders real DOM, executes real JavaScript, and makes real network requests.
+本文只给执行骨架。项目已有 Playwright/Cypress/Puppeteer 时优先沿用；没有既有选择时默认 Playwright。
 
-## When to Use
+## 何时使用
 
-- After frontend component development is complete and you need to verify the integrated experience
-- After user flow changes (new pages, modified navigation, updated forms)
-- Before any release or deployment — as the final quality gate
-- When visual regression is suspected (CSS changes, dependency upgrades, design system updates)
-- When accessibility compliance needs verification (WCAG audits)
-- After backend API changes that affect frontend behavior
-- When a bug report describes browser-specific behavior you can't reproduce with unit tests
+- 前端页面、组件、导航、表单或状态流改动后。
+- 后端 API 改动会影响前端体验时。
+- 发布前需要最终用户路径证据时。
+- bug 报告来自浏览器行为、视觉错位或交互失败时。
+- 单元/API 测试通过，但仍需要确认真实页面没有空白、控制台错误或不可操作状态时。
 
-## 方法原则
+不适用：纯后端逻辑、纯文档、无需浏览器渲染的配置改动。
 
-- 先验证最小关键路径，再扩展到次要路径；不要一上来铺满低价值场景
-- 浏览器 QA 的输出必须可作为证据使用，失败时要留下截图、trace、控制台或网络记录
-- 对复杂改动谨慎推进，先锁定一条可复现路径，再扩大覆盖面
-- 视觉、交互、网络、可访问性检查都应服务当前目标，而不是机械堆清单
+## 快速路径
 
-## 最小关键路径
+1. 明确 1-3 条失败就不能放行的关键路径。
+2. 启动应用或确认目标 URL 可访问。
+3. 准备稳定测试数据，避免依赖生产数据。
+4. 驱动真实浏览器执行关键路径。
+5. 同时检查 DOM 可见结果、控制台错误、网络失败和基本响应式。
+6. 失败时保留截图、trace、控制台或网络证据。
+7. 修复后重跑原始失败路径，证明不再复发。
 
-每轮浏览器 QA 至少先选 1-3 条“失败就不能放行”的路径，通常包括：
+## 工具选择
 
-1. 进入应用或核心页面
-2. 完成一次主要业务动作
-3. 看到可验证的成功结果或明确错误反馈
-
-如果这是一个 bug 修复，最小关键路径必须先覆盖“原始失败如何复现”和“修复后如何证明不再复发”。
-
-## Tool Selection
-
-### Playwright (Recommended)
-
-Best overall choice for AI-driven QA workflows:
-
-```
-Strengths:
-  - Multi-browser (Chromium, Firefox, WebKit) with one API
-  - Auto-wait for elements (no manual sleep/waitFor)
-  - Built-in screenshot, video, and trace capture
-  - Network interception and mocking
-  - Native accessibility testing via @axe-core/playwright
-
-Install: npm init playwright@latest
-```
-
-### Cypress
-
-Better for teams already invested in the Cypress ecosystem:
-
-```
-Strengths:
-  - Excellent interactive test runner with time-travel debugging
-  - Rich plugin ecosystem
-  - Good for component testing in isolation
-
-Limitations:
-  - Chromium-family only (no Safari/WebKit)
-  - Cannot test multiple browser tabs or origins in one test
-```
-
-### Puppeteer
-
-Use only when you need raw Chrome DevTools Protocol access:
-
-```
-Strengths:
-  - Direct CDP access for advanced scenarios (performance profiling, coverage)
-  - Lightweight if you only need Chrome
-
-Limitations:
-  - Chrome/Chromium only
-  - No built-in test runner — you must bring your own
-  - More boilerplate than Playwright for common tasks
-```
-
-**Decision rule:** Default to Playwright unless the project already uses Cypress. Use Puppeteer only for Chrome-specific DevTools scenarios.
-
-### Browser Configuration
-
-```typescript
-// playwright.config.ts — recommended baseline
-import { defineConfig, devices } from '@playwright/test';
-
-export default defineConfig({
-  testDir: './e2e',
-  timeout: 30_000,
-  retries: process.env.CI ? 2 : 0,
-  use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:3000',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-    trace: 'retain-on-failure',
-  },
-  projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-    { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
-    { name: 'mobile-safari', use: { ...devices['iPhone 13'] } },
-  ],
-  webServer: {
-    command: 'npm run dev',
-    port: 3000,
-    reuseExistingServer: !process.env.CI,
-  },
-});
-```
-
-## QA Testing Workflow
-
-### Step 1: Environment Preparation
-
-Before any browser test can run, the application must be running and data must be in a known state.
-
-```
-Pre-flight checklist:
-  □ Application builds without errors
-  □ Dev server or preview server is running and responding
-  □ Test database is seeded with known data (or API mocks are configured)
-  □ Environment variables are set (API URLs, feature flags)
-  □ No port conflicts on the target URL
-```
-
-**Seed data strategy:** Either use a test database with fixtures, or intercept network requests and return mock responses. Never rely on production data for QA tests.
-
-```typescript
-// Example: API mocking with Playwright
-test.beforeEach(async ({ page }) => {
-  await page.route('**/api/tasks', route =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([
-        { id: 1, title: 'Test task', done: false },
-        { id: 2, title: 'Completed task', done: true },
-      ]),
-    })
-  );
-});
-```
-
-### Step 2: Core User Flow Testing
-
-Test the critical paths a real user follows. Prioritize by business impact:
-
-```
-Priority 1 (Must pass — blocks release):
-  - Authentication (login, logout, session persistence)
-  - Primary CRUD operations (create, read, update, delete core entities)
-  - Payment/checkout flows (if applicable)
-  - Navigation between main sections
-
-Priority 2 (Should pass — file bugs if broken):
-  - Search and filtering
-  - Settings and preferences
-  - Notification flows
-  - Export/import operations
-
-Priority 3 (Nice to have):
-  - Edge case interactions
-  - Rarely used features
-  - Admin-only flows
-```
-
-先把 Priority 1 做成稳定、可重复、可留证据的路径；在它们还不稳定时，不要把精力优先花在长尾流程上。
-
-```typescript
-// Example: Complete login → dashboard → action flow
-test('user can log in and create a task', async ({ page }) => {
-  await page.goto('/login');
-
-  await page.getByLabel('Email').fill('user@test.com');
-  await page.getByLabel('Password').fill('testpass123');
-  await page.getByRole('button', { name: 'Sign in' }).click();
-
-  // Verify redirect to dashboard
-  await expect(page).toHaveURL('/dashboard');
-  await expect(page.getByRole('heading', { name: 'My Tasks' })).toBeVisible();
-
-  // Create a new task
-  await page.getByRole('button', { name: 'New Task' }).click();
-  await page.getByLabel('Task title').fill('Write QA tests');
-  await page.getByRole('button', { name: 'Save' }).click();
-
-  // Verify task appears in list
-  await expect(page.getByText('Write QA tests')).toBeVisible();
-});
-```
-
-### Step 3: Interaction Testing
-
-Test form submissions, navigation, and state changes that go beyond happy-path flows:
-
-```typescript
-// Form validation testing
-test('form shows validation errors for invalid input', async ({ page }) => {
-  await page.goto('/register');
-
-  // Submit empty form
-  await page.getByRole('button', { name: 'Create account' }).click();
-
-  // Check validation messages appear
-  await expect(page.getByText('Email is required')).toBeVisible();
-  await expect(page.getByText('Password must be at least 8 characters')).toBeVisible();
-
-  // Check invalid email
-  await page.getByLabel('Email').fill('not-an-email');
-  await page.getByRole('button', { name: 'Create account' }).click();
-  await expect(page.getByText('Enter a valid email address')).toBeVisible();
-});
-
-// Navigation and back-button behavior
-test('browser back button returns to previous page', async ({ page }) => {
-  await page.goto('/tasks');
-  await page.getByText('Task 1').click();
-  await expect(page).toHaveURL(/\/tasks\/\d+/);
-
-  await page.goBack();
-  await expect(page).toHaveURL('/tasks');
-});
-```
-
-### Step 4: Visual Verification
-
-Use screenshots to detect visual regressions:
-
-```typescript
-// Full-page screenshot comparison
-test('dashboard matches visual baseline', async ({ page }) => {
-  await page.goto('/dashboard');
-  await page.waitForLoadState('networkidle');
-
-  await expect(page).toHaveScreenshot('dashboard.png', {
-    maxDiffPixelRatio: 0.01,  // Allow 1% pixel difference
-    fullPage: true,
-  });
-});
-
-// Component-level screenshot
-test('task card renders correctly', async ({ page }) => {
-  await page.goto('/tasks');
-  const card = page.getByTestId('task-card').first();
-
-  await expect(card).toHaveScreenshot('task-card.png');
-});
-```
-
-**Update baselines** when intentional visual changes are made: `npx playwright test --update-snapshots`
-
-### Step 4.5: Failure Regression Evidence
-
-当测试失败时，至少保留一类可以复盘的证据：
-
-- 截图，证明页面状态与预期不符
-- trace 或录像，证明交互链路在哪里中断
-- console error / network failure，证明是前端异常、接口失败还是环境问题
-
-没有证据的“浏览器测过了”不构成可审查的结论。
-
-### Step 5: Accessibility Audit
-
-Integrate axe-core for automated WCAG compliance checking:
-
-```typescript
-import AxeBuilder from '@axe-core/playwright';
-
-test('home page has no accessibility violations', async ({ page }) => {
-  await page.goto('/');
-
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    .analyze();
-
-  expect(results.violations).toEqual([]);
-});
-
-// Targeted audit on specific component
-test('modal dialog meets accessibility standards', async ({ page }) => {
-  await page.goto('/tasks');
-  await page.getByRole('button', { name: 'New Task' }).click();
-
-  const modal = page.getByRole('dialog');
-  const results = await new AxeBuilder({ page })
-    .include(await modal.elementHandle())
-    .analyze();
-
-  expect(results.violations).toEqual([]);
-});
-```
-
-**Manual keyboard checks to include:**
-
-```
-□ Tab order follows visual order
-□ Focus is visible on all interactive elements
-□ Escape closes modals and dropdowns
-□ Enter/Space activates buttons and links
-□ Arrow keys work in menus and listboxes
-```
-
-### Step 6: Console and Network Monitoring
-
-Enforce a zero-error policy in the browser console and verify network behavior:
-
-```typescript
-// Collect console errors during test
-test('page loads without console errors', async ({ page }) => {
-  const errors: string[] = [];
-  page.on('console', msg => {
-    if (msg.type() === 'error') errors.push(msg.text());
-  });
-
-  await page.goto('/dashboard');
-  await page.waitForLoadState('networkidle');
-
-  // Filter out known third-party noise if needed
-  const realErrors = errors.filter(e => !e.includes('third-party-sdk'));
-  expect(realErrors).toHaveLength(0);
-});
-
-// Verify no failed network requests
-test('all API requests succeed', async ({ page }) => {
-  const failedRequests: string[] = [];
-  page.on('response', response => {
-    if (response.status() >= 400) {
-      failedRequests.push(`${response.status()} ${response.url()}`);
-    }
-  });
-
-  await page.goto('/dashboard');
-  await page.waitForLoadState('networkidle');
-
-  expect(failedRequests).toHaveLength(0);
-});
-
-// Verify specific API calls are made
-test('dashboard fetches tasks on load', async ({ page }) => {
-  const apiCalls: string[] = [];
-  page.on('request', req => {
-    if (req.url().includes('/api/')) apiCalls.push(req.url());
-  });
-
-  await page.goto('/dashboard');
-  await page.waitForLoadState('networkidle');
-
-  expect(apiCalls.some(url => url.includes('/api/tasks'))).toBe(true);
-});
-```
-
-### Step 7: Regression Test Generation
-
-When a bug is found during QA, immediately convert it into an automated test:
-
-```typescript
-// Bug found: clicking "Delete" on last task causes blank screen
-// → Convert to regression test:
-
-test('deleting the last task shows empty state instead of blank screen', async ({ page }) => {
-  // Setup: single task
-  await page.route('**/api/tasks', route =>
-    route.fulfill({ body: JSON.stringify([{ id: 1, title: 'Only task', done: false }]) })
-  );
-
-  await page.goto('/tasks');
-  await page.getByRole('button', { name: 'Delete' }).click();
-  await page.getByRole('button', { name: 'Confirm' }).click();
-
-  // Should show empty state, not blank screen
-  await expect(page.getByText('No tasks yet')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Create Task' })).toBeVisible();
-});
-```
-
-## Common Test Scenario Templates
-
-### Login/Registration
-
-```typescript
-test.describe('Authentication', () => {
-  test('successful login redirects to dashboard', async ({ page }) => { /* ... */ });
-  test('wrong password shows error message', async ({ page }) => { /* ... */ });
-  test('session persists across page reload', async ({ page }) => { /* ... */ });
-  test('logout clears session and redirects to login', async ({ page }) => { /* ... */ });
-  test('registration with valid data creates account', async ({ page }) => { /* ... */ });
-  test('registration with duplicate email shows error', async ({ page }) => { /* ... */ });
-});
-```
-
-### CRUD Operations
-
-```typescript
-test.describe('Task CRUD', () => {
-  test('create: new task appears in list', async ({ page }) => { /* ... */ });
-  test('read: task detail page shows all fields', async ({ page }) => { /* ... */ });
-  test('update: edited task saves and reflects changes', async ({ page }) => { /* ... */ });
-  test('delete: removed task disappears with confirmation', async ({ page }) => { /* ... */ });
-  test('bulk: select-all and batch delete works', async ({ page }) => { /* ... */ });
-});
-```
-
-### Responsive Layout
-
-```typescript
-const viewports = [
-  { name: 'mobile', width: 375, height: 812 },
-  { name: 'tablet', width: 768, height: 1024 },
-  { name: 'desktop', width: 1440, height: 900 },
-];
-
-for (const vp of viewports) {
-  test(`dashboard layout is correct at ${vp.name}`, async ({ page }) => {
-    await page.setViewportSize({ width: vp.width, height: vp.height });
-    await page.goto('/dashboard');
-    await expect(page).toHaveScreenshot(`dashboard-${vp.name}.png`);
-  });
-}
-```
-
-### Error State Display
-
-```typescript
-test.describe('Error handling', () => {
-  test('API failure shows error message with retry button', async ({ page }) => {
-    await page.route('**/api/tasks', route => route.fulfill({ status: 500 }));
-    await page.goto('/tasks');
-
-    await expect(page.getByText('Something went wrong')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Retry' })).toBeVisible();
-  });
-
-  test('404 page shows helpful navigation', async ({ page }) => {
-    await page.goto('/nonexistent-page');
-    await expect(page.getByText('Page not found')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Go home' })).toBeVisible();
-  });
-});
-```
-
-## QA Report Format
-
-After a QA run, produce a structured report:
-
-```markdown
-## QA Report — [Feature/Page Name] — [Date]
-
-### Environment
-- URL: http://localhost:3000
-- Browser: Chromium 120, Firefox 121, WebKit 17.4
-- Viewport: 1440×900 (desktop), 375×812 (mobile)
-
-### Summary
-- Total tests: 24
-- ✅ Passed: 21
-- ❌ Failed: 2
-- ⚠️ Flaky: 1
-
-### Failed Tests
-| Test | Browser | Error | Screenshot |
-|------|---------|-------|------------|
-| Login form validation | WebKit | "Email required" message not visible | ![](/screenshots/login-webkit-001.png) |
-| Task delete on mobile | Mobile Chrome | Confirm button outside viewport | ![](/screenshots/delete-mobile-001.png) |
-
-### Accessibility Audit
-- Violations found: 3
-  1. Missing alt text on user avatar (img element) — Critical
-  2. Color contrast ratio 3.8:1 on secondary text — Moderate
-  3. Missing aria-label on icon-only button — Moderate
-
-### Console Errors
-- None (clean)
-
-### Network Issues
-- None (all requests 2xx)
-
-### Recommendations
-1. [Critical] Fix WebKit form validation display — blocks release
-2. [Critical] Fix mobile viewport overflow on delete confirmation
-3. [Moderate] Add missing alt text and aria-labels
-4. [Low] Improve secondary text contrast ratio
-```
-
-## Integration with Other Skills
-
-### With `frontend-ui-engineering`
-
-Development → QA feedback loop:
-
-```
-Build component → Run QA → Fix issues → Re-run QA → Approve
-```
-
-QA tests validate everything the frontend skill specifies: accessibility, responsive behavior, loading/error/empty states.
-
-### With `test-driven-development`
-
-TDD covers unit and integration layers. Browser QA adds the E2E layer:
-
-```
-Unit tests (TDD)    → Function-level correctness
-Integration tests   → Module interaction
-Browser QA tests    → User-facing experience (this skill)
-```
-
-### With `verification-before-completion`
-
-QA test results serve as concrete verification evidence:
-
-```
-Verification evidence:
-  - 24/24 browser tests passing
-  - Zero console errors
-  - Zero accessibility violations
-  - Screenshots attached for visual confirmation
-```
-
-## Common Rationalizations
-
-| Rationalization | Reality |
+| 工具 | 默认判断 |
 |---|---|
-| "Unit tests are enough" | Unit tests can't catch a broken layout, a missing button, or a form that submits empty data. |
-| "Manual QA is faster" | Manual QA is faster once. Automated QA is faster every time after that — and it doesn't forget edge cases. |
-| "E2E tests are too slow" | A focused suite of 20-30 critical-path tests runs in under 2 minutes. That's faster than debugging a production incident. |
-| "We'll add browser tests later" | Later never comes. The cost of writing tests increases as the app grows. Start with the critical paths now. |
-| "It works on my machine" | Browser tests run in consistent environments. They catch the cross-browser and viewport issues you won't see on your dev setup. |
+| Playwright | 默认推荐，适合跨浏览器、trace、截图、自动等待和 CI |
+| Cypress | 项目已经使用 Cypress 时沿用 |
+| Puppeteer | 只在需要 Chrome DevTools Protocol 细节时使用 |
+| Browser plugin / in-app browser | 适合快速人工式走查和本地交互验证 |
 
-## Red Flags
+不要为了浏览器 QA 引入第二套 E2E 框架，除非现有工具无法覆盖目标。
 
-- No browser tests exist for user-facing features
-- QA is only done manually before releases (no automation)
-- Tests use arbitrary `sleep()` / `waitForTimeout()` instead of proper element assertions
-- Screenshot baselines haven't been updated in months (everything is ignored)
-- Accessibility audits have never been run
-- Console errors are ignored ("it's just a warning")
-- Tests only run in one browser (skipping Firefox/WebKit/mobile)
-- No test data seeding — tests depend on production data or shared environments
+## 关键路径选择
 
-## Verification
+优先级：
 
-After QA testing is complete:
+- P0：应用能打开，核心页面不是空白。
+- P1：主要业务动作能完成，并看到可验证结果。
+- P2：错误路径有明确反馈，不是静默失败。
+- P3：关键移动端/桌面布局没有阻塞性重叠。
 
-- [ ] All Priority 1 (critical path) tests pass across target browsers
-- [ ] Zero unhandled console errors in the browser
-- [ ] Accessibility audit shows zero critical violations
-- [ ] Visual screenshots are captured and reviewed
-- [ ] Failed tests have filed bugs with reproduction steps
-- [ ] Regression tests are written for any bugs discovered
-- [ ] QA report is generated with pass/fail summary and evidence
+bug 修复场景必须先覆盖：
+
+- 原始失败如何复现。
+- 修复后如何证明失败不再发生。
+
+## 验收记录格式
+
+浏览器 QA 的结果必须能被复查：
+
+```text
+Browser QA transcript:
+- Target:
+- Build/server:
+- Paths tested:
+- Data setup:
+- Evidence:
+- Console/network:
+- Screenshots/traces:
+- Result:
+- Follow-up:
+```
+
+没有证据的“我点过了”不算完成。
+
+## 最小检查清单
+
+- 页面加载成功，没有白屏或阻塞性错误。
+- 关键按钮、输入框、菜单、弹窗可访问。
+- 主流程成功结果可见。
+- 失败路径有用户可理解的错误反馈。
+- 控制台没有与本次改动相关的新错误。
+- 网络请求状态和错误处理符合预期。
+- 关键视口下文本和控件不重叠。
+
+## 与自动化测试的关系
+
+- 已有稳定 E2E：优先运行并补充必要断言。
+- 没有 E2E：先做最小浏览器走查，再决定是否把路径沉淀为 Playwright 测试。
+- 一次性验证：可以只保留 transcript 和截图。
+- 高风险回归：应补自动化测试，避免下次靠人工记忆。
+
+## 常见失败处理
+
+- 白屏：先看控制台、构建输出和入口资源 404。
+- 点击无效：检查元素是否被遮挡、disabled、事件未绑定或异步状态未完成。
+- 表单失败：检查校验、提交 payload、接口响应和错误反馈。
+- 布局错位：截 desktop/mobile 两个视口，定位固定宽度、溢出和层级遮挡。
+- 间歇失败：避免 `sleep`，使用明确的可见性、URL、网络或状态等待条件。
+
+## 边界
+
+- 不把浏览器 QA 当成完整可访问性审计；需要深挖时转专项工具。
+- 不把视觉主观偏好当成阻塞问题，除非它影响可用性或验收标准。
+- 不连接生产数据做破坏性动作。
+- 不在没有目标路径的情况下机械铺满长尾场景。
+
+## 推荐输出
+
+```text
+Recommendation: <放行 / 修复后重测 / 补自动化测试> because <浏览器证据、失败影响和替代方案 trade-off>。
+```
+
+推荐必须说明证据来自哪条路径，以及未覆盖风险是什么。

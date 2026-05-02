@@ -26,6 +26,22 @@
 - `source`
 - `requires / suggests / conflicts_with / supersedes`
 
+## 渐进式披露规则
+
+内容默认按三层组织：
+
+- `meta.yaml.description`：只负责自动发现和触发条件，说明什么时候用，不复述完整流程。
+- `body.md`：只保留当前阶段的 quick path、决策门、输出格式和验证要求。
+- `assets/` 或专项 skill：承载长 checklist、模板、示例和平台细节，只有进入深挖阶段才读取。
+
+`agents` 保持角色卡定位：说明职责、介入时机、关注点和交付物，不承载完整教程。决策型 skill / agent 的推荐结论应写成：
+
+```text
+Recommendation: <action> because <specific evidence, trade-off, and rejected alternative>.
+```
+
+不要用“更稳”“更好”“建议继续”替代可审查的依据。
+
 ## 内容清单
 
 ### Commands
