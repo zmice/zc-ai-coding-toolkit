@@ -1,5 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { join } from "node:path";
 
 import {
   attachPlanMetadata,
@@ -104,6 +105,7 @@ describe("@zmice/platform-core", () => {
   });
 
   it("creates install plans rooted at the destination with safe overwrite defaults", () => {
+    const destinationRoot = join("tmp", "qwen");
     const generationPlan = attachPlanMetadata({
       platform: "qwen",
       packageName: "@zmice/platform-qwen",
@@ -114,13 +116,13 @@ describe("@zmice/platform-core", () => {
     const plan = createInstallPlan(
       generationPlan,
       {
-        destinationRoot: "/tmp/qwen",
+        destinationRoot,
       },
     );
 
-    assert.equal(plan.destinationRoot, "/tmp/qwen");
+    assert.equal(plan.destinationRoot, destinationRoot);
     assert.equal(plan.overwrite, "error");
-    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), ["/tmp/qwen/QWEN.md"]);
+    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [join(destinationRoot, "QWEN.md")]);
     assert.deepEqual(plan.artifacts[0]?.metadata, generationPlan.artifacts[0]?.metadata);
     assert.notEqual(plan.metadata?.fingerprint.value, generationPlan.metadata?.fingerprint.value);
   });
