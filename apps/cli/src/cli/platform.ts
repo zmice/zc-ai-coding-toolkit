@@ -697,7 +697,7 @@ async function cleanupCodexPluginSkillsForForce(
   }
 
   const pluginSkillRoots = artifacts
-    .filter((artifact) => artifact.path.endsWith(codexPluginManifestPath))
+    .filter((artifact) => artifact.path.replace(/\\/g, "/").endsWith(codexPluginManifestPath))
     .map((artifact) => join(dirname(dirname(artifact.path)), "skills"));
 
   if (pluginSkillRoots.length > 0) {

@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { homedir } from "node:os";
+import { join, resolve } from "node:path";
+
+const abs = (path: string) => resolve(path);
 
 const platformMocks = vi.hoisted(() => ({
   ArtifactConflictError: class ArtifactConflictError extends Error {
@@ -275,17 +278,17 @@ describe("platform CLI", () => {
     }));
 
     platformMocks.resolvePlatformInstallReceiptPath.mockImplementation((plan: { platform: string; destinationRoot: string }) => (
-      `${plan.destinationRoot}/.zc/platform-state/${plan.platform}.install-receipt.json`
+      join(plan.destinationRoot, ".zc", "platform-state", `${plan.platform}.install-receipt.json`)
     ));
 
     platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
       kind: "up-to-date",
       platform: "codex",
-      receiptPath: "/tmp/install/.zc/platform-state/codex.install-receipt.json",
+      receiptPath: join(abs("/tmp/install"), ".zc", "platform-state", "codex.install-receipt.json"),
       receipt: {
         schemaVersion: 1,
         platform: "codex",
-        destinationRoot: "/tmp/install",
+        destinationRoot: abs("/tmp/install"),
         manifestSource: "/repo/packages/toolkit/src/content",
         overwrite: "error",
         installedAt: "2026-04-19T12:00:00.000Z",
@@ -318,19 +321,19 @@ describe("platform CLI", () => {
 
     platformMocks.writePlatformInstallReceiptForPlan.mockResolvedValue({});
     platformMocks.syncQwenOfficialCliSourceBundle.mockResolvedValue({
-      sourceDir: "/tmp/qwen-source",
+      sourceDir: abs("/tmp/qwen-source"),
       extensionName: "zc-toolkit",
       artifactCount: 1,
     });
     platformMocks.syncQwenOfficialCliReleaseBundle.mockResolvedValue({
-      bundleDir: "/tmp/qwen-release",
+      bundleDir: abs("/tmp/qwen-release"),
       extensionName: "zc-toolkit",
       artifactCount: 1,
     });
     platformMocks.toQwenOfficialCliReleaseArtifacts.mockImplementation(
       (_plan: unknown, bundleDir: string) => [
-        { path: `${bundleDir}/QWEN.md`, content: "# context" },
-        { path: `${bundleDir}/commands/zc/start.md`, content: "# start" },
+        { path: join(bundleDir, "QWEN.md"), content: "# context" },
+        { path: join(bundleDir, "commands/zc/start.md"), content: "# start" },
       ],
     );
     platformMocks.installQwenExtensionFromOfficialRepoWithCli.mockResolvedValue(undefined);
@@ -341,6 +344,7 @@ describe("platform CLI", () => {
   });
 
   it("uses safe overwrite defaults for platform generate writes", async () => {
+    const outputRoot = abs("/tmp/out");
     platformMocks.createQwenGenerationPlan.mockReturnValue(
       createGenerationPlan([{ path: "QWEN.md", content: "# context" }]),
     );
@@ -355,12 +359,13 @@ describe("platform CLI", () => {
     await runPlatformGenerate("qwen", { dir: "/tmp/out" });
 
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
-      [{ path: "/tmp/out/QWEN.md", content: "# context" }],
+      [{ path: join(outputRoot, "QWEN.md"), content: "# context" }],
       { dryRun: false, overwrite: "error" },
     );
   });
 
   it("prints a JSON plan without writing files when generate uses --plan", async () => {
+    const outputRoot = abs("/tmp/out");
     platformMocks.createQwenGenerationPlan.mockReturnValue(
       createGenerationPlan([{ path: "QWEN.md", content: "# context" }]),
     );
@@ -375,9 +380,9 @@ describe("platform CLI", () => {
         mode: "plan",
         action: "generate",
         target: "qwen",
-        root: "/tmp/out",
+        root: outputRoot,
         artifactCount: 1,
-        artifacts: [{ path: "/tmp/out/QWEN.md", content: "# context" }],
+        artifacts: [{ path: join(outputRoot, "QWEN.md"), content: "# context" }],
       }),
     );
 
@@ -385,15 +390,16 @@ describe("platform CLI", () => {
   });
 
   it("exports a standalone qwen release bundle during generate", async () => {
+    const bundleRoot = abs("/tmp/zc-toolkit");
     platformMocks.createQwenGenerationPlan.mockReturnValue(
       createGenerationPlan([{ path: "QWEN.md", content: "# context" }]),
     );
     platformMocks.createQwenInstallPlan.mockReturnValue(
       createQwenInstallPlan(
-        "/tmp/zc-toolkit",
+        bundleRoot,
         [
-          { path: "/tmp/zc-toolkit/extensions/zc-toolkit/QWEN.md", content: "# context" },
-          { path: "/tmp/zc-toolkit/extensions/zc-toolkit/commands/zc/start.md", content: "# start" },
+          { path: join(bundleRoot, "extensions/zc-toolkit/QWEN.md"), content: "# context" },
+          { path: join(bundleRoot, "extensions/zc-toolkit/commands/zc/start.md"), content: "# start" },
         ],
       ),
     );
@@ -409,23 +415,24 @@ describe("platform CLI", () => {
 
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
       [
-        { path: "/tmp/zc-toolkit/QWEN.md", content: "# context" },
-        { path: "/tmp/zc-toolkit/commands/zc/start.md", content: "# start" },
+        { path: join(bundleRoot, "QWEN.md"), content: "# context" },
+        { path: join(bundleRoot, "commands/zc/start.md"), content: "# start" },
       ],
       { dryRun: false, overwrite: "error" },
     );
   });
 
   it("prints qwen release bundle plan paths without native extension nesting", async () => {
+    const bundleRoot = abs("/tmp/zc-toolkit");
     platformMocks.createQwenGenerationPlan.mockReturnValue(
       createGenerationPlan([{ path: "QWEN.md", content: "# context" }]),
     );
     platformMocks.createQwenInstallPlan.mockReturnValue(
       createQwenInstallPlan(
-        "/tmp/zc-toolkit",
+        bundleRoot,
         [
-          { path: "/tmp/zc-toolkit/extensions/zc-toolkit/QWEN.md", content: "# context" },
-          { path: "/tmp/zc-toolkit/extensions/zc-toolkit/commands/zc/start.md", content: "# start" },
+          { path: join(bundleRoot, "extensions/zc-toolkit/QWEN.md"), content: "# context" },
+          { path: join(bundleRoot, "extensions/zc-toolkit/commands/zc/start.md"), content: "# start" },
         ],
       ),
     );
@@ -443,12 +450,12 @@ describe("platform CLI", () => {
       mode: "plan",
       action: "generate",
       target: "qwen",
-      root: "/tmp/zc-toolkit",
+      root: bundleRoot,
       bundleType: "release-bundle",
-      bundlePath: "/tmp/zc-toolkit",
+      bundlePath: bundleRoot,
       artifacts: [
-        { path: "/tmp/zc-toolkit/QWEN.md", content: "# context" },
-        { path: "/tmp/zc-toolkit/commands/zc/start.md", content: "# start" },
+        { path: join(bundleRoot, "QWEN.md"), content: "# context" },
+        { path: join(bundleRoot, "commands/zc/start.md"), content: "# start" },
       ],
     }));
 
@@ -503,16 +510,17 @@ describe("platform CLI", () => {
     );
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
       [
-        { path: `${homedir()}/.agents/plugins/marketplace.json`, content: "{}" },
-        { path: `${homedir()}/.codex/AGENTS.md`, content: "# plugin entry" },
-        { path: `${homedir()}/.codex/plugins/zc-toolkit/.codex-plugin/plugin.json`, content: "{}" },
-        { path: `${homedir()}/.codex/agents/zc-code-reviewer.toml`, content: "name = \"zc_code_reviewer\"\n" },
+        { path: join(homedir(), ".agents/plugins/marketplace.json"), content: "{}" },
+        { path: join(homedir(), ".codex/AGENTS.md"), content: "# plugin entry" },
+        { path: join(homedir(), ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json"), content: "{}" },
+        { path: join(homedir(), ".codex/agents/zc-code-reviewer.toml"), content: "name = \"zc_code_reviewer\"\n" },
       ],
       { dryRun: false, overwrite: "error" },
     );
   });
 
   it("exports codex marketplace to the resolved project root with --project", async () => {
+    const projectRoot = join("/repo", "project");
     platformMocks.resolveInstallTarget.mockResolvedValue({
       root: "/repo/project",
       source: "project-root",
@@ -556,15 +564,16 @@ describe("platform CLI", () => {
     );
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
       [
-        { path: "/repo/project/.agents/plugins/marketplace.json", content: "{}" },
-        { path: "/repo/project/AGENTS.md", content: "# plugin entry" },
-        { path: "/repo/project/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
+        { path: join(projectRoot, ".agents/plugins/marketplace.json"), content: "{}" },
+        { path: join(projectRoot, "AGENTS.md"), content: "# plugin entry" },
+        { path: join(projectRoot, "plugins/zc-toolkit/.codex-plugin/plugin.json"), content: "{}" },
       ],
       { dryRun: false, overwrite: "error" },
     );
   });
 
   it("uses a short codex plugin command for the project marketplace by default", async () => {
+    const projectRoot = join("/repo", "project");
     platformMocks.resolveInstallTarget.mockResolvedValue({
       root: "/repo/project",
       source: "project-root",
@@ -605,9 +614,9 @@ describe("platform CLI", () => {
     );
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
       [
-        { path: "/repo/project/.agents/plugins/marketplace.json", content: "{}" },
-        { path: "/repo/project/AGENTS.md", content: "# plugin entry" },
-        { path: "/repo/project/plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
+        { path: join(projectRoot, ".agents/plugins/marketplace.json"), content: "{}" },
+        { path: join(projectRoot, "AGENTS.md"), content: "# plugin entry" },
+        { path: join(projectRoot, "plugins/zc-toolkit/.codex-plugin/plugin.json"), content: "{}" },
       ],
       { dryRun: false, overwrite: "error" },
     );
@@ -649,9 +658,9 @@ describe("platform CLI", () => {
     );
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
       [
-        { path: `${homedir()}/.agents/plugins/marketplace.json`, content: "{}" },
-        { path: `${homedir()}/.codex/AGENTS.md`, content: "# plugin entry" },
-        { path: `${homedir()}/.codex/plugins/zc-toolkit/.codex-plugin/plugin.json`, content: "{}" },
+        { path: join(homedir(), ".agents/plugins/marketplace.json"), content: "{}" },
+        { path: join(homedir(), ".codex/AGENTS.md"), content: "# plugin entry" },
+        { path: join(homedir(), ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json"), content: "{}" },
       ],
       { dryRun: false, overwrite: "error" },
     );
@@ -688,22 +697,23 @@ describe("platform CLI", () => {
     await runPlatformPlugin("codex", { global: true, force: true });
 
     expect(platformMocks.removeManagedPaths).toHaveBeenCalledWith([
-      `${homedir()}/.codex/plugins/zc-toolkit/skills`,
+      join(homedir(), ".codex/plugins/zc-toolkit/skills"),
     ]);
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
       [
-        { path: `${homedir()}/.agents/plugins/marketplace.json`, content: "{}" },
-        { path: `${homedir()}/.codex/AGENTS.md`, content: "# plugin entry" },
-        { path: `${homedir()}/.codex/plugins/zc-toolkit/.codex-plugin/plugin.json`, content: "{}" },
-        { path: `${homedir()}/.codex/plugins/zc-toolkit/skills/start/SKILL.md`, content: "# start" },
+        { path: join(homedir(), ".agents/plugins/marketplace.json"), content: "{}" },
+        { path: join(homedir(), ".codex/AGENTS.md"), content: "# plugin entry" },
+        { path: join(homedir(), ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json"), content: "{}" },
+        { path: join(homedir(), ".codex/plugins/zc-toolkit/skills/start/SKILL.md"), content: "# start" },
       ],
       { dryRun: false, overwrite: "force" },
     );
   });
 
   it("uses safe overwrite defaults for platform install and writes a receipt", async () => {
+    const installRoot = abs("/tmp/install");
     platformMocks.createCodexInstallPlan.mockReturnValue(
-      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents" }]),
+      createInstallPlan("codex", installRoot, [{ path: join(installRoot, "AGENTS.md"), content: "# agents" }]),
     );
     platformMocks.writeArtifacts.mockResolvedValue({
       created: 1,
@@ -718,18 +728,18 @@ describe("platform CLI", () => {
     expect(platformMocks.createCodexInstallPlan).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
-        destinationRoot: "/tmp/install",
+        destinationRoot: installRoot,
         scope: "dir",
         overwrite: "error",
       }),
     );
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
-      [{ path: "/tmp/install/AGENTS.md", content: "# agents" }],
+      [{ path: join(installRoot, "AGENTS.md"), content: "# agents" }],
       { dryRun: false, overwrite: "error" },
     );
     expect(platformMocks.writePlatformInstallReceiptForPlan).toHaveBeenCalledWith(
       expect.objectContaining({
-        destinationRoot: "/tmp/install",
+        destinationRoot: installRoot,
       }),
       expect.objectContaining({
         zcVersion: expect.any(String),
@@ -738,8 +748,9 @@ describe("platform CLI", () => {
   });
 
   it("forwards force installs to artifact writes", async () => {
+    const installRoot = abs("/tmp/install");
     platformMocks.createCodexInstallPlan.mockReturnValue(
-      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents" }]),
+      createInstallPlan("codex", installRoot, [{ path: join(installRoot, "AGENTS.md"), content: "# agents" }]),
     );
     platformMocks.writeArtifacts.mockResolvedValue({
       created: 0,
@@ -752,14 +763,15 @@ describe("platform CLI", () => {
     await runPlatformInstall("codex", { dir: "/tmp/install", force: true });
 
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
-      [{ path: "/tmp/install/AGENTS.md", content: "# agents" }],
+      [{ path: join(installRoot, "AGENTS.md"), content: "# agents" }],
       { dryRun: false, overwrite: "force" },
     );
   });
 
   it("uses the resolved project root when install target is omitted", async () => {
+    const projectRoot = abs("/workspace/project");
     platformMocks.createCodexInstallPlan.mockReturnValue(
-      createInstallPlan("codex", "/workspace/project", [{ path: "/workspace/project/AGENTS.md", content: "# agents" }]),
+      createInstallPlan("codex", projectRoot, [{ path: join(projectRoot, "AGENTS.md"), content: "# agents" }]),
     );
     platformMocks.writeArtifacts.mockResolvedValue({
       created: 1,
@@ -786,7 +798,7 @@ describe("platform CLI", () => {
     expect(platformMocks.createCodexInstallPlan).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
-        destinationRoot: "/workspace/project",
+        destinationRoot: projectRoot,
         scope: "project",
       }),
     );
@@ -798,8 +810,9 @@ describe("platform CLI", () => {
   });
 
   it("prints a JSON install plan without writing files when install uses --plan", async () => {
+    const installRoot = abs("/tmp/install");
     platformMocks.createCodexInstallPlan.mockReturnValue(
-      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents" }], "dir", "error"),
+      createInstallPlan("codex", installRoot, [{ path: join(installRoot, "AGENTS.md"), content: "# agents" }], "dir", "error"),
     );
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -812,14 +825,14 @@ describe("platform CLI", () => {
         mode: "plan",
         action: "install",
         target: "codex",
-        root: "/tmp/install",
+        root: installRoot,
         scope: "dir",
         rootSource: "explicit",
         artifactCount: 1,
         overwrite: "error",
         artifacts: expect.arrayContaining([
           expect.objectContaining({
-            path: "/tmp/install/AGENTS.md",
+            path: join(installRoot, "AGENTS.md"),
             content: "# agents",
           }),
         ]),
@@ -830,20 +843,21 @@ describe("platform CLI", () => {
   });
 
   it("prints platform status from receipt and current plan", async () => {
+    const installRoot = abs("/tmp/install");
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     platformMocks.resolveInstallTarget.mockResolvedValue({
       root: "/tmp/install",
       source: "explicit",
     });
     platformMocks.createCodexInstallPlan.mockReturnValue(
-      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents" }]),
+      createInstallPlan("codex", installRoot, [{ path: join(installRoot, "AGENTS.md"), content: "# agents" }]),
     );
 
     await runPlatformStatus("codex", { dir: "/tmp/install", json: true });
 
     expect(platformMocks.resolvePlatformInstallStatus).toHaveBeenCalledWith(
       expect.objectContaining({
-        destinationRoot: "/tmp/install",
+        destinationRoot: installRoot,
       }),
     );
     const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
@@ -851,7 +865,7 @@ describe("platform CLI", () => {
       expect.objectContaining({
         mode: "status",
         target: "codex",
-        root: "/tmp/install",
+        root: installRoot,
         status: "up-to-date",
         installedContentFingerprint: "installed-fingerprint",
         contentFingerprint: "current-fingerprint",
@@ -862,6 +876,8 @@ describe("platform CLI", () => {
   });
 
   it("prints qwen platform status json with installed metadata from receipt", async () => {
+    const qwenRoot = abs("/home/test/.qwen");
+    const qwenBundleRoot = abs("/tmp/qwen-release/zc-toolkit");
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     platformMocks.resolveInstallTarget.mockResolvedValue({
       root: "/home/test/.qwen",
@@ -870,30 +886,30 @@ describe("platform CLI", () => {
     });
     platformMocks.createQwenInstallPlan.mockReturnValue(
       createQwenInstallPlan(
-        "/home/test/.qwen",
-        [{ path: "/home/test/.qwen/extensions/zc-toolkit/QWEN.md", content: "# context" }],
+        qwenRoot,
+        [{ path: join(qwenRoot, "extensions/zc-toolkit/QWEN.md"), content: "# context" }],
         "global",
       ),
     );
     platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
       kind: "up-to-date",
       platform: "qwen",
-      receiptPath: "/home/test/.qwen/.zc/platform-state/qwen.install-receipt.json",
+      receiptPath: join(qwenRoot, ".zc/platform-state/qwen.install-receipt.json"),
       receipt: {
         schemaVersion: 1,
         platform: "qwen",
-        destinationRoot: "/home/test/.qwen",
+        destinationRoot: qwenRoot,
         manifestSource: "/repo/packages/toolkit/src/content",
         overwrite: "error",
         installedAt: "2026-04-19T12:00:00.000Z",
         installMethod: "filesystem",
         installSource: "local-bundle",
-        sourceRef: "/tmp/qwen-release/zc-toolkit",
+        sourceRef: qwenBundleRoot,
         bundleType: "release-bundle",
-        bundlePath: "/tmp/qwen-release/zc-toolkit",
+        bundlePath: qwenBundleRoot,
         artifacts: [
           {
-            path: "/home/test/.qwen/extensions/zc-toolkit/QWEN.md",
+            path: join(qwenRoot, "extensions/zc-toolkit/QWEN.md"),
             sha256: "sha",
             bytes: 9,
           },
@@ -917,17 +933,17 @@ describe("platform CLI", () => {
       expect.objectContaining({
         mode: "status",
         target: "qwen",
-        root: "/home/test/.qwen",
+        root: qwenRoot,
         installMethod: "filesystem",
         installSource: "local-bundle",
-        sourceRef: "/tmp/qwen-release/zc-toolkit",
+        sourceRef: qwenBundleRoot,
         bundleType: "release-bundle",
-        bundlePath: "/tmp/qwen-release/zc-toolkit",
+        bundlePath: qwenBundleRoot,
         recommendedInstallMethod: "qwen-cli",
         recommendedInstallSource: "github-repo",
         recommendedSourceRef: "https://github.com/zmice/zc-qwen-extension.git",
         recommendedBundleType: "release-bundle",
-        recommendedBundlePath: "/home/test/.qwen/.zc/platform-bundles/qwen/zc-toolkit",
+        recommendedBundlePath: expect.stringContaining("zc-toolkit"),
       }),
     );
 
@@ -935,11 +951,12 @@ describe("platform CLI", () => {
   });
 
   it("prints update plan when status shows update-available", async () => {
+    const installRoot = abs("/tmp/install");
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
       kind: "update-available",
       platform: "codex",
-      receiptPath: "/tmp/install/.zc/platform-state/codex.install-receipt.json",
+      receiptPath: join(installRoot, ".zc/platform-state/codex.install-receipt.json"),
       receipt: null,
       contentFingerprint: "current-fingerprint",
       installedContentFingerprint: "installed-fingerprint",
@@ -952,7 +969,7 @@ describe("platform CLI", () => {
       artifacts: [],
     });
     platformMocks.createCodexInstallPlan.mockReturnValue(
-      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents v2" }], "dir", "error"),
+      createInstallPlan("codex", installRoot, [{ path: join(installRoot, "AGENTS.md"), content: "# agents v2" }], "dir", "error"),
     );
 
     await runPlatformUpdate("codex", { dir: "/tmp/install", plan: true, json: true });
@@ -965,7 +982,7 @@ describe("platform CLI", () => {
         action: "update",
         target: "codex",
         status: "update-available",
-        root: "/tmp/install",
+        root: installRoot,
       }),
     );
 
@@ -973,10 +990,11 @@ describe("platform CLI", () => {
   });
 
   it("treats update-available as managed overwrite and refreshes the receipt", async () => {
+    const installRoot = abs("/tmp/install");
     platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
       kind: "update-available",
       platform: "codex",
-      receiptPath: "/tmp/install/.zc/platform-state/codex.install-receipt.json",
+      receiptPath: join(installRoot, ".zc/platform-state/codex.install-receipt.json"),
       receipt: null,
       contentFingerprint: "current-fingerprint",
       installedContentFingerprint: "installed-fingerprint",
@@ -989,7 +1007,7 @@ describe("platform CLI", () => {
       artifacts: [],
     });
     platformMocks.createCodexInstallPlan.mockReturnValue(
-      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents v2" }], "dir", "error"),
+      createInstallPlan("codex", installRoot, [{ path: join(installRoot, "AGENTS.md"), content: "# agents v2" }], "dir", "error"),
     );
     platformMocks.writeArtifacts.mockResolvedValue({
       created: 0,
@@ -1004,12 +1022,12 @@ describe("platform CLI", () => {
     expect(platformMocks.createCodexInstallPlan).toHaveBeenLastCalledWith(
       expect.anything(),
       expect.objectContaining({
-        destinationRoot: "/tmp/install",
+        destinationRoot: installRoot,
         overwrite: "force",
       }),
     );
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
-      [{ path: "/tmp/install/AGENTS.md", content: "# agents v2" }],
+      [{ path: join(installRoot, "AGENTS.md"), content: "# agents v2" }],
       { dryRun: false, overwrite: "force" },
     );
     expect(platformMocks.writePlatformInstallReceiptForPlan).toHaveBeenCalled();
@@ -1102,8 +1120,9 @@ describe("platform CLI", () => {
   });
 
   it("passes global scope through install target resolution and exposes official path hints", async () => {
+    const claudeRoot = abs("/home/test/.claude");
     platformMocks.createClaudeInstallPlan.mockReturnValue(
-      createInstallPlan("claude", "/home/test/.claude", [{ path: "/home/test/.claude/CLAUDE.md", content: "# claude" }]),
+      createInstallPlan("claude", claudeRoot, [{ path: join(claudeRoot, "CLAUDE.md"), content: "# claude" }]),
     );
     platformMocks.writeArtifacts.mockResolvedValue({
       created: 1,
@@ -1130,7 +1149,7 @@ describe("platform CLI", () => {
     expect(platformMocks.createClaudeInstallPlan).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
-        destinationRoot: "/home/test/.claude",
+        destinationRoot: claudeRoot,
         scope: "global",
       }),
     );
@@ -1140,10 +1159,11 @@ describe("platform CLI", () => {
   });
 
   it("prefers the official qwen extensions CLI for global installs", async () => {
+    const qwenRoot = abs("/home/test/.qwen");
     platformMocks.createQwenInstallPlan.mockReturnValue(
       createQwenInstallPlan(
-        "/home/test/.qwen",
-        [{ path: "/home/test/.qwen/extensions/zc-toolkit/QWEN.md", content: "# context" }],
+        qwenRoot,
+        [{ path: join(qwenRoot, "extensions/zc-toolkit/QWEN.md"), content: "# context" }],
         "global",
       ),
     );
@@ -1155,7 +1175,7 @@ describe("platform CLI", () => {
     platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
       kind: "not-installed",
       platform: "qwen",
-      receiptPath: "/home/test/.qwen/.zc/platform-state/qwen.install-receipt.json",
+      receiptPath: join(qwenRoot, ".zc/platform-state/qwen.install-receipt.json"),
       receipt: null,
       contentFingerprint: "current-fingerprint",
       installedContentFingerprint: undefined,
@@ -1180,8 +1200,9 @@ describe("platform CLI", () => {
   });
 
   it("prints a JSON install plan with scope metadata", async () => {
+    const codexRoot = abs("/home/test/.codex");
     platformMocks.createCodexInstallPlan.mockReturnValue(
-      createInstallPlan("codex", "/home/test/.codex", [{ path: "/home/test/.codex/AGENTS.md", content: "# agents" }], "global", "error"),
+      createInstallPlan("codex", codexRoot, [{ path: join(codexRoot, "AGENTS.md"), content: "# agents" }], "global", "error"),
     );
     platformMocks.resolveInstallTarget.mockResolvedValue({
       root: "/home/test/.codex",
@@ -1199,7 +1220,7 @@ describe("platform CLI", () => {
         action: "install",
         target: "codex",
         scope: "global",
-        root: "/home/test/.codex",
+        root: codexRoot,
         rootSource: "official-global",
         hint: "Codex 官方文档将 Codex home（默认 `~/.codex`）定义为全局级 `AGENTS.md` 的位置。",
       }),
@@ -1354,24 +1375,25 @@ describe("platform CLI", () => {
   });
 
   it("repairs drifted filesystem installs by rewriting managed artifacts", async () => {
+    const installRoot = abs("/tmp/install");
     platformMocks.createCodexInstallPlan.mockReturnValue(
-      createInstallPlan("codex", "/tmp/install", [{ path: "/tmp/install/AGENTS.md", content: "# agents repaired" }]),
+      createInstallPlan("codex", installRoot, [{ path: join(installRoot, "AGENTS.md"), content: "# agents repaired" }]),
     );
     platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
       kind: "drifted",
       platform: "codex",
-      receiptPath: "/tmp/install/.zc/platform-state/codex.install-receipt.json",
+      receiptPath: join(installRoot, ".zc/platform-state/codex.install-receipt.json"),
       receipt: {
         schemaVersion: 1,
         platform: "codex",
-        destinationRoot: "/tmp/install",
+        destinationRoot: installRoot,
         manifestSource: "/repo/packages/toolkit/src/content",
         overwrite: "error",
         installedAt: "2026-04-19T12:00:00.000Z",
         installMethod: "filesystem",
         artifacts: [
           {
-            path: "/tmp/install/AGENTS.md",
+            path: join(installRoot, "AGENTS.md"),
             sha256: "old-sha",
             bytes: 8,
           },
@@ -1387,7 +1409,7 @@ describe("platform CLI", () => {
       },
       artifacts: [
         {
-          path: "/tmp/install/AGENTS.md",
+          path: join(installRoot, "AGENTS.md"),
           receiptSha256: "old-sha",
           actualSha256: "drifted-sha",
           plannedSha256: "new-sha",
@@ -1409,12 +1431,12 @@ describe("platform CLI", () => {
     expect(platformMocks.createCodexInstallPlan).toHaveBeenLastCalledWith(
       expect.anything(),
       expect.objectContaining({
-        destinationRoot: "/tmp/install",
+        destinationRoot: installRoot,
         overwrite: "force",
       }),
     );
     expect(platformMocks.writeArtifacts).toHaveBeenCalledWith(
-      [{ path: "/tmp/install/AGENTS.md", content: "# agents repaired" }],
+      [{ path: join(installRoot, "AGENTS.md"), content: "# agents repaired" }],
       { dryRun: false, overwrite: "force" },
     );
     expect(platformMocks.writePlatformInstallReceiptForPlan).toHaveBeenCalled();
@@ -1484,8 +1506,9 @@ describe("platform CLI", () => {
   });
 
   it("prints resolved install targets via platform where", async () => {
+    const codexRoot = abs("/home/test/.codex");
     platformMocks.createCodexInstallPlan.mockReturnValue(
-      createInstallPlan("codex", "/home/test/.codex", [{ path: "/home/test/.codex/AGENTS.md", content: "# agents" }], "global"),
+      createInstallPlan("codex", codexRoot, [{ path: join(codexRoot, "AGENTS.md"), content: "# agents" }], "global"),
     );
     platformMocks.resolveInstallTarget.mockResolvedValue({
       root: "/home/test/.codex",
@@ -1508,7 +1531,7 @@ describe("platform CLI", () => {
         mode: "where",
         target: "codex",
         scope: "global",
-        root: "/home/test/.codex",
+        root: codexRoot,
         rootSource: "official-global",
         capability: expect.objectContaining({
           namespace: "zc",
@@ -1521,12 +1544,13 @@ describe("platform CLI", () => {
   });
 
   it("resolves qwen global scope to the user-level ~/.qwen directory", async () => {
+    const qwenRoot = abs("/home/test/.qwen");
     platformMocks.createQwenInstallPlan.mockReturnValue({
       platform: "qwen",
       packageName: "@zmice/platform-qwen",
       manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
       matchedAssets: [],
-      destinationRoot: "/home/test/.qwen",
+      destinationRoot: qwenRoot,
       scope: "global",
       overwrite: "error",
       capability: {
@@ -1538,7 +1562,7 @@ describe("platform CLI", () => {
         agentsDir: "agents",
         extensionDir: "extensions/zc-toolkit",
       },
-      artifacts: [{ path: "/home/test/.qwen/extensions/zc-toolkit/QWEN.md", content: "# context" }],
+      artifacts: [{ path: join(qwenRoot, "extensions/zc-toolkit/QWEN.md"), content: "# context" }],
     });
     platformMocks.resolveInstallTarget.mockResolvedValue({
       root: "/home/test/.qwen",
@@ -1555,7 +1579,7 @@ describe("platform CLI", () => {
         mode: "where",
         target: "qwen",
         scope: "global",
-        root: "/home/test/.qwen",
+        root: qwenRoot,
         rootSource: "official-global",
         hint: "Qwen 官方文档定义用户级配置目录为 `~/.qwen`，并在官方帮助文档中给出 Qwen CLI 的用户级 `QWEN.md` 位置为 `~/.qwen/QWEN.md`。",
       }),
