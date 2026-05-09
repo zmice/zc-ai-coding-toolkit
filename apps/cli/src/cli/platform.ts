@@ -1,5 +1,6 @@
 import { Command, InvalidArgumentError } from "commander";
 import { readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import {
@@ -24,10 +25,16 @@ import {
 import { pathExists, removeManagedPaths } from "../utils/platform-install-cleanup.js";
 import {
   ArtifactConflictError,
+  type GeneratedArtifact,
+  type WriteArtifactsResult,
   importWorkspaceDistModule,
   resolveWorkspacePath,
   writeArtifacts,
 } from "../utils/workspace.js";
+import {
+  isCodexAgentConfigContent,
+  mergeCodexAgentConfig,
+} from "../utils/codex-config-merge.js";
 import {
   QwenOfficialCliUnavailableError,
   installQwenExtensionFromOfficialRepoWithCli,
@@ -698,6 +705,86 @@ async function cleanupCodexPluginSkillsForForce(
   }
 }
 
+function isCodexAgentConfigArtifact(target: PlatformName, artifact: GeneratedArtifact): boolean {
+  const normalizedPath = artifact.path.replace(/\\/g, "/");
+
+  return (
+    target === "codex" &&
+    (normalizedPath === "config.toml" || normalizedPath.endsWith("/config.toml")) &&
+    isCodexAgentConfigContent(artifact.content)
+  );
+}
+
+async function mergeCodexAgentConfigArtifact(artifact: GeneratedArtifact): Promise<GeneratedArtifact> {
+  let existingContent: string | undefined;
+
+  try {
+    existingContent = await readFile(artifact.path, "utf8");
+  } catch {
+    existingContent = undefined;
+  }
+
+  return {
+    ...artifact,
+    content: mergeCodexAgentConfig(existingContent, artifact.content),
+  };
+}
+
+function mergeWriteResults(
+  left: WriteArtifactsResult,
+  right: WriteArtifactsResult,
+): WriteArtifactsResult {
+  return {
+    created: left.created + right.created,
+    overwritten: left.overwritten + right.overwritten,
+    unchanged: left.unchanged + right.unchanged,
+    skipped: left.skipped + right.skipped,
+    dryRun: left.dryRun && right.dryRun,
+  };
+}
+
+async function writePlatformArtifacts(
+  target: PlatformName,
+  artifacts: readonly GeneratedArtifact[],
+  options: {
+    readonly dryRun: boolean;
+    readonly overwrite: OverwriteMode;
+  },
+): Promise<WriteArtifactsResult> {
+  const configArtifacts = artifacts.filter((artifact) => isCodexAgentConfigArtifact(target, artifact));
+
+  if (configArtifacts.length === 0) {
+    return writeArtifacts(artifacts, options);
+  }
+
+  const configPaths = new Set(configArtifacts.map((artifact) => artifact.path));
+  const regularArtifacts = artifacts.filter((artifact) => !configPaths.has(artifact.path));
+  const mergedConfigArtifacts = await Promise.all(configArtifacts.map(mergeCodexAgentConfigArtifact));
+
+  if (options.dryRun) {
+    const regularResult = await writeArtifacts(regularArtifacts, options);
+    const configResult = await writeArtifacts(mergedConfigArtifacts, {
+      ...options,
+      overwrite: "force",
+    });
+
+    return mergeWriteResults(regularResult, configResult);
+  }
+
+  await writeArtifacts(regularArtifacts, {
+    ...options,
+    dryRun: true,
+  });
+
+  const regularResult = await writeArtifacts(regularArtifacts, options);
+  const configResult = await writeArtifacts(mergedConfigArtifacts, {
+    ...options,
+    overwrite: "force",
+  });
+
+  return mergeWriteResults(regularResult, configResult);
+}
+
 function assertExclusiveTargetSelector(opts: PlatformTargetSelectorOpts): void {
   if (opts.dir && (opts.project || opts.global)) {
     throw new Error("显式目录 `--dir` 不能与 `--project` 或 `--global` 同时使用。");
@@ -1248,7 +1335,8 @@ export async function runPlatformGenerate(
     const resolvedArtifacts = plan.artifacts.map((artifact) => resolveGenerateArtifact(outputRoot, artifact));
     await cleanupCodexPluginSkillsForForce(bundleType, resolvedArtifacts, opts.force);
 
-    const result = await writeArtifacts(
+    const result = await writePlatformArtifacts(
+      target,
       resolvedArtifacts,
       {
         dryRun: false,
@@ -1518,7 +1606,8 @@ export async function runPlatformInstall(
       }
     }
 
-    const result = await writeArtifacts(
+    const result = await writePlatformArtifacts(
+      target,
       plan.artifacts.map((artifact) => ({
         path: artifact.path,
         content: artifact.content
@@ -1874,7 +1963,8 @@ export async function runPlatformUpdate(
       }
     }
 
-    const result = await writeArtifacts(
+    const result = await writePlatformArtifacts(
+      target,
       plan.artifacts.map((artifact) => ({
         path: artifact.path,
         content: artifact.content,
@@ -2309,7 +2399,8 @@ export async function runPlatformRepair(
       return;
     }
 
-    const result = await writeArtifacts(
+    const result = await writePlatformArtifacts(
+      target,
       plan.artifacts.map((artifact) => ({
         path: artifact.path,
         content: artifact.content,
