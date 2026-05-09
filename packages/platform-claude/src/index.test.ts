@@ -1,5 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { join } from "node:path";
 
 import {
   capability,
@@ -69,28 +70,30 @@ describe("@zmice/platform-claude scaffold", () => {
   });
 
   it("creates a project-scoped install plan with .claude directories", () => {
+    const destinationRoot = join("tmp", "claude-project");
     const plan = createClaudeInstallPlan(manifest, {
-      destinationRoot: "/tmp/claude-project",
+      destinationRoot,
       scope: "project",
     });
 
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
-      "/tmp/claude-project/CLAUDE.md",
-      "/tmp/claude-project/.claude/commands/zc-start.md",
-      "/tmp/claude-project/.claude/agents/zc-architect.md",
+      join(destinationRoot, "CLAUDE.md"),
+      join(destinationRoot, ".claude/commands/zc-start.md"),
+      join(destinationRoot, ".claude/agents/zc-architect.md"),
     ]);
   });
 
   it("creates a global-scoped install plan with root commands/agents directories", () => {
+    const destinationRoot = join("tmp", "claude-home");
     const plan = createClaudeInstallPlan(manifest, {
-      destinationRoot: "/tmp/claude-home",
+      destinationRoot,
       scope: "global",
     });
 
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
-      "/tmp/claude-home/CLAUDE.md",
-      "/tmp/claude-home/commands/zc-start.md",
-      "/tmp/claude-home/agents/zc-architect.md",
+      join(destinationRoot, "CLAUDE.md"),
+      join(destinationRoot, "commands/zc-start.md"),
+      join(destinationRoot, "agents/zc-architect.md"),
     ]);
   });
 });
