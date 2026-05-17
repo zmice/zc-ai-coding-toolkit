@@ -49,6 +49,7 @@ const nonAssetReferenceAllowlist = new Set<string>([
   "bg-surface",
   "border-default",
   "chore",
+  "context-fanout",
   "doc-verified",
   "docs",
   "feat",
@@ -60,9 +61,12 @@ const nonAssetReferenceAllowlist = new Set<string>([
   "official-global",
   "project-local",
   "refactor",
+  "readonly-consult",
+  "serial-subagent",
   "test",
   "text-primary",
-  "update-available"
+  "update-available",
+  "zc-team"
 ]);
 
 function checkMissingGovernanceFields(assetId: string, meta: ToolkitAssetMeta): ToolkitLintIssue[] {

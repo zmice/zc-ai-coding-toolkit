@@ -158,4 +158,33 @@ describe("loadToolkitManifest", () => {
       ["qwen", "codex", "claude", "opencode"]
     );
   });
+
+  it("keeps the multi-agent control protocol discoverable in canonical content", async () => {
+    const manifest = await loadToolkitManifest();
+
+    assert.match(
+      manifest.byId["command:start"]?.body ?? "",
+      /agent_opportunity:[\s\S]*readonly-consult[\s\S]*已授权[\s\S]*zc-team/
+    );
+    assert.match(
+      manifest.byId["skill:sdd-tdd-workflow"]?.body ?? "",
+      /producer owns fix[\s\S]*reviewer owns regression[\s\S]*controller owns fan-in/
+    );
+    assert.match(
+      manifest.byId["skill:planning-and-task-breakdown"]?.body ?? "",
+      /Agent Opportunity[\s\S]*fan-in gate/
+    );
+    assert.match(
+      manifest.byId["skill:parallel-agent-dispatch"]?.body ?? "",
+      /只读 fan-out[\s\S]*写入型 fan-out/
+    );
+    assert.match(
+      manifest.byId["skill:subagent-driven-development"]?.body ?? "",
+      /Regression:[\s\S]*controller decision/
+    );
+    assert.match(
+      manifest.byId["skill:team-orchestration"]?.body ?? "",
+      /agent_opportunity\.mode=zc-team[\s\S]*用户明确确认/
+    );
+  });
 });

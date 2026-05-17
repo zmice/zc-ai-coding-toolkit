@@ -314,6 +314,7 @@ describe("lintToolkitManifest", () => {
             "",
             "Use `full-delivery` for the workflow and `workflow-entry` as metadata.",
             "Use `high-risk` as a risk label and `localize` as a task label.",
+            "Use `readonly-consult`, `serial-subagent`, `context-fanout`, and `zc-team` as multi-agent mode labels.",
             "Use `feat`, `fix`, `refactor`, `test`, `docs`, and `chore` as commit types.",
             "Use `text-primary`, `bg-surface`, and `border-default` as design tokens."
           ].join("\n"),

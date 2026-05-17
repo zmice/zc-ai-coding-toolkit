@@ -38,22 +38,56 @@
 
 ## 构建模式选择
 
-- **Manual（默认）**：你自己按任务串行实现。适合大多数改动。
-- **Subagent-Driven**：任务彼此独立，但用户没有要求并行时，可作为串行委派建议。
-- **Parallel**：用户明确要求多 agent / 并行 / team 模式，且任务有清晰文件所有权时，使用 `parallel-agent-dispatch`。
-- **Team Orchestration**：需要 tmux + git worktree 文件系统隔离或多 CLI worker 时，使用 `team-orchestration`。
+进入 Build 前先选择执行模式，而不是直接默认手动实现：
 
-除非用户已经明确要求并行，否则只给并行建议，不直接启动子代理或 `zc team`。
+- **Manual**：简单任务、小修复或同一文件内紧耦合改动，主线程直接实现。
+- **Readonly Consult**：复杂任务需要架构、测试、安全、性能、产品或审查侧评；只有用户已授权本会话或项目默认启用只读 agent 时，才可通知式启动，不改文件。
+- **Serial Subagent**：已有计划，任务彼此独立但有依赖顺序；使用 `subagent-driven-development` 串行委派。
+- **Context Fan-Out**：任务可以按文件、模块或证据问题并行，且有清晰 fan-in gate；使用 `parallel-agent-dispatch`。
+- **Team Orchestration**：需要 tmux + git worktree 文件系统隔离、长时间多 worker 或 Codex / Qwen 多 CLI 协作；使用 `team-orchestration`，必须用户明确要求或确认。
+
+主线程是 controller / integrator：
+
+- 主线程负责目标、计划、分派、文件所有权、stop gate、fan-in 和最终验证。
+- 只读 agent 只汇报结构化结论，不改文件。
+- 写入 agent 只处理被分配的任务和文件，并返回修改文件、验证结果、风险和待 fan-in 项。
+- 审查 agent 默认只读；提出 finding 后负责回归确认。
+- 主线程可以处理小任务、集成冲突、最终修补和验证失败分析，但在已经选择多 agent 模式后，不抢占已分配给 worker 的任务。
 
 推荐提示格式：
 
 ```text
-Recommendation: 按 Manual / Parallel / Team 模式推进 because <证据与 trade-off>。
-- 并行收益：
-- 并行代价：
-- 文件所有权：
-- fan-in 验证：
+Recommendation: 按 Manual / Readonly Consult / Serial Subagent / Context Fan-Out / Team 模式推进 because <证据与 trade-off>。
+- agent_opportunity:
+- 只读协助:
+- 写入边界:
+- fan-in 验证:
+- 是否需要确认:
 ```
+
+## 审查与回归闭环
+
+多 agent 任务必须遵循闭环所有权：
+
+```text
+producer owns fix
+reviewer owns regression
+controller owns fan-in
+```
+
+- 实现方或产生方负责优先修复自己引入的问题。
+- 审查方或提出方负责给出复现条件、断言、期望行为、风险等级，并在修复后复验原 finding。
+- 主线程负责判断 finding 是否成立、优先级是否阻塞、是否转派、是否接受结果。
+- 实现方两次修不好时，主线程可以缩小问题后转给更合适的 agent 或自己接手。
+- 审查方默认不直接修；机械小修或用户明确要求时，主线程可以把 finding 转成修复任务。
+
+审查等级：
+
+- `light review`：实现方自审 + 主线程检查。
+- `standard review`：实现方自审 + 独立 reviewer + 提出方回归。
+- `strict review`：规格审查 + 代码质量审查 + 测试 / 安全 / 性能按风险加入。
+
+中等以上任务默认 `standard review`，高风险任务默认 `strict review`。
 
 ## 阶段切换纪律
 
@@ -72,6 +106,7 @@ Recommendation: 按 Manual / Parallel / Team 模式推进 because <证据与 tra
 - 计划要求修改的文件和实际代码结构明显不一致。
 - 出现破坏性操作、凭据、生产数据或不可逆迁移风险。
 - 需要并行但没有文件所有权、隔离策略和 fan-in 验证。
+- review finding 未闭环，或提出方尚未完成回归确认。
 
 ## 输出契约
 

@@ -15,6 +15,7 @@
 - `workflow`：六条固定 workflow 之一
 - `entry`：下一步应该调用的 command / skill，必须是实际可执行入口
 - `agent`：可选协作角色；只有平台支持且用户授权时才建议，不作为默认入口
+- `agent_opportunity`：`standard` / `high-risk` 或命中复杂度信号时必须输出，说明是否需要只读协助、串行子代理、上下文级并行或 `zc team`
 - `reason`：用 1-3 条证据说明为什么这样判型
 - `assumption`：如果有未确认前提，明确写出
 - `question`：只有无法安全推进时才问，最多 1-3 个关键问题
@@ -157,12 +158,50 @@
 
 ## 并行与 agent 判断
 
-`start` 可以评估是否适合并行，但不能把并行当默认：
+`start` 采用 Agent Opportunity First：复杂任务默认评估多 agent 机会，但启动方式受风险边界控制。
 
-- 任务能按文件、模块或证据问题拆开，且没有强依赖：可以建议 `parallel-agent-dispatch` 或 `zc team plan`
-- 无法证明独立、存在同文件冲突、存在依赖链：默认串行或先计划
-- 用户没有明确授权时，不自动启动子代理或 `zc team start`
-- 如果进入 `zc team`，先 dry-run：`zc team plan ... --json`
+必须输出 `agent_opportunity` 的信号：
+
+- 涉及 3 个以上文件或 2 个以上模块。
+- 同时包含方案、实现和验证。
+- 用户使用“深入、整体、优化、审查、排查、对齐、联动”等词。
+- 涉及安全、性能、数据恢复、生产配置或敏感配置。
+- 需要前后端、后端与部署、文档与实现同步。
+- 当前上下文不足，需要并行摸底。
+
+`agent_opportunity` 格式：
+
+```text
+agent_opportunity:
+- mode: none | readonly-consult | serial-subagent | context-fanout | zc-team
+- reason:
+- agents:
+- ownership:
+- fan-in:
+- needs_confirmation:
+```
+
+模式规则：
+
+- `none`：简单任务或无法证明 agent 有收益。
+- `readonly-consult`：架构、审查、测试、安全、性能、产品等只读协助；只有用户已授权本会话或项目默认启用只读 agent 时，才可通知式启动，不改文件。
+- `serial-subagent`：已有任务计划、任务彼此独立，但不需要并行执行。
+- `context-fanout`：多个独立问题或互不重叠文件可以并行处理；写入型 fan-out 必须先确认文件所有权和 fan-in 验证。
+- `zc-team`：需要 tmux + git worktree 或 Codex / Qwen 多 CLI worker 时才建议；必须用户明确要求或确认。
+
+数量上限：
+
+- 普通复杂任务最多 1 个只读 agent。
+- 跨模块或高风险任务最多 2 个只读 agent。
+- 写入型并行默认最多 2 个 worker，超过 2 个必须说明收益和 fan-in 成本。
+- `zc team` 不能因“可能更快”自动启动，必须用户明确。
+
+确认边界：
+
+- 只读 agent：用户已授权时通知式启用，必须说明 agent、目标和“不改文件”；未授权时只输出 `agent_opportunity` 和 `Agent assist` 预告，等待确认。
+- 写入型 agent：确认式启用，必须说明文件所有权、验证命令和 fan-in gate。
+- 无法证明独立、存在同文件冲突、存在依赖链：默认先 `task-plan`，不直接并行。
+- 如果进入 `zc team`，先 dry-run：`zc team plan ... --json`。
 
 ## 上下文与持久化边界
 
