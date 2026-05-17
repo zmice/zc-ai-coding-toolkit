@@ -1,6 +1,6 @@
 import { mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 import { createProgram, isDirectExecution } from "../index.js";
@@ -83,7 +83,7 @@ describe("zc command surface", () => {
     ]);
   });
 
-  it("treats a symlinked bin path as direct execution", () => {
+  it.skipIf(process.platform === "win32")("treats a symlinked bin path as direct execution", () => {
     const tempRoot = mkdtempSync(join(tmpdir(), "zc-symlink-"));
     const target = join(tempRoot, "index.js");
     const linkPath = join(tempRoot, "zc");

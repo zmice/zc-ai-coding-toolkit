@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
+import { join, resolve } from "node:path";
 import { PassThrough } from "node:stream";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -71,10 +72,12 @@ const modPromise = import("./qwen-extension-cli.js");
 describe("qwen official CLI wrapper", () => {
   it("maps install plan artifacts into a standalone release bundle", async () => {
     const mod = await modPromise;
+    const qwenRoot = resolve("/home/test/.qwen");
+    const bundleRoot = resolve("/tmp/zc-toolkit");
 
     const artifacts = mod.toQwenOfficialCliReleaseArtifacts(
       {
-        destinationRoot: "/home/test/.qwen",
+        destinationRoot: qwenRoot,
         capability: {
           extension: {
             relativeDir: "extensions",
@@ -83,25 +86,25 @@ describe("qwen official CLI wrapper", () => {
         },
         artifacts: [
           {
-            path: "/home/test/.qwen/extensions/zc-toolkit/QWEN.md",
+            path: join(qwenRoot, "extensions/zc-toolkit/QWEN.md"),
             content: "# context\n",
           },
           {
-            path: "/home/test/.qwen/extensions/zc-toolkit/commands/zc/start.md",
+            path: join(qwenRoot, "extensions/zc-toolkit/commands/zc/start.md"),
             content: "# start\n",
           },
         ],
       },
-      "/tmp/zc-toolkit",
+      bundleRoot,
     );
 
     assert.deepEqual(artifacts, [
       {
-        path: "/tmp/zc-toolkit/QWEN.md",
+        path: join(bundleRoot, "QWEN.md"),
         content: "# context\n",
       },
       {
-        path: "/tmp/zc-toolkit/commands/zc/start.md",
+        path: join(bundleRoot, "commands/zc/start.md"),
         content: "# start\n",
       },
     ]);

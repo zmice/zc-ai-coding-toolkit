@@ -129,7 +129,7 @@ export async function writeArtifacts(
       continue;
     }
 
-    if (existingContent !== undefined && overwrite === "error") {
+    if (existingContent !== undefined && existingContent.length > 0 && overwrite === "error") {
       conflicts.push({ path: artifact.path });
       continue;
     }

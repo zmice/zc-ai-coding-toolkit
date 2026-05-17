@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { rm } from "node:fs/promises";
-import { join, relative, resolve } from "node:path";
+import { isAbsolute, join, relative, resolve } from "node:path";
 import type { ChildProcessWithoutNullStreams } from "node:child_process";
 
 import { writeArtifacts, type GeneratedArtifact } from "./workspace.js";
@@ -94,18 +94,19 @@ export function resolveQwenOfficialCliReleaseBundleDir(plan: QwenInstallPlanLike
 
 export function toQwenOfficialCliSourceArtifacts(plan: QwenInstallPlanLike): readonly GeneratedArtifact[] {
   const installedExtensionRoot = resolveInstalledExtensionRoot(plan);
-  const normalizedRoot = `${installedExtensionRoot}/`;
   const sourceDir = resolveQwenOfficialCliSourceDir(plan);
 
   return plan.artifacts.map((artifact) => {
     const artifactPath = resolve(artifact.path);
-    const insideExtensionRoot = artifactPath === installedExtensionRoot || artifactPath.startsWith(normalizedRoot);
+    const relativePath = relative(installedExtensionRoot, artifactPath);
+    const insideExtensionRoot =
+      relativePath === "" ||
+      (!relativePath.startsWith("..") && !isAbsolute(relativePath));
 
     if (!insideExtensionRoot) {
       throw new Error(`Qwen 安装计划产物不在 extension 根目录内：${artifact.path}`);
     }
 
-    const relativePath = relative(installedExtensionRoot, artifactPath);
     return {
       path: join(sourceDir, relativePath),
       content: artifact.content,

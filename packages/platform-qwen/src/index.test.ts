@@ -1,5 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { join } from "node:path";
 
 import {
   capability,
@@ -75,21 +76,22 @@ describe("@zmice/platform-qwen scaffold", () => {
   });
 
   it("creates a global install plan rooted at the caller destination", () => {
+    const destinationRoot = join("tmp", "qwen");
     const plan = createQwenInstallPlan(manifest, {
-      destinationRoot: "/tmp/qwen",
+      destinationRoot,
       scope: "global",
     });
 
-    assert.equal(plan.destinationRoot, "/tmp/qwen");
+    assert.equal(plan.destinationRoot, destinationRoot);
     assert.equal(plan.scope, "global");
     assert.equal(plan.overwrite, "error");
     assert.equal(plan.capability?.namespace, "zc");
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
-      "/tmp/qwen/extensions/zc-toolkit/QWEN.md",
-      "/tmp/qwen/extensions/zc-toolkit/qwen-extension.json",
-      "/tmp/qwen/extensions/zc-toolkit/commands/zc/start.md",
-      "/tmp/qwen/extensions/zc-toolkit/skills/zc-alpha/SKILL.md",
-      "/tmp/qwen/extensions/zc-toolkit/agents/zc-reviewer.md",
+      join(destinationRoot, "extensions/zc-toolkit/QWEN.md"),
+      join(destinationRoot, "extensions/zc-toolkit/qwen-extension.json"),
+      join(destinationRoot, "extensions/zc-toolkit/commands/zc/start.md"),
+      join(destinationRoot, "extensions/zc-toolkit/skills/zc-alpha/SKILL.md"),
+      join(destinationRoot, "extensions/zc-toolkit/agents/zc-reviewer.md"),
     ]);
     assert.ok(plan.artifacts[0]?.content.includes("Qwen 工作流入口"));
     assert.ok(plan.artifacts[2]?.content.includes("Start command body"));

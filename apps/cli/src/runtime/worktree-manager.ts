@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import { access, mkdir } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { basename, join, relative } from "node:path";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
@@ -76,7 +76,7 @@ export class WorktreeManager {
         continue;
       }
       const path = line.replace(/^worktree /, "");
-      const name = path.split("/").pop() ?? path;
+      const name = basename(path);
       worktrees.push({ name, path });
     }
     return worktrees;

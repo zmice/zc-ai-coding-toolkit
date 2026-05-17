@@ -25,6 +25,27 @@ afterEach(async () => {
 });
 
 describe("writeArtifacts", () => {
+  it("overwrites empty placeholder files without requiring force", async () => {
+    const root = await createTempDir();
+    const placeholderPath = join(root, "AGENTS.md");
+
+    await writeFile(placeholderPath, "", "utf8");
+
+    const result = await writeArtifacts(
+      [{ path: placeholderPath, content: "generated-content" }],
+      { overwrite: "error" },
+    );
+
+    assert.deepEqual(result, {
+      created: 0,
+      overwritten: 1,
+      unchanged: 0,
+      skipped: 0,
+      dryRun: false,
+    });
+    assert.equal(await readFile(placeholderPath, "utf8"), "generated-content");
+  });
+
   it("fails before writing any files when overwrite mode is error and conflicts exist", async () => {
     const root = await createTempDir();
     const conflictPath = join(root, "AGENTS.md");

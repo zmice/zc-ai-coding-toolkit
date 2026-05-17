@@ -1,5 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { join } from "node:path";
 
 import {
   capability,
@@ -79,44 +80,47 @@ describe("@zmice/platform-opencode scaffold", () => {
   });
 
   it("creates a project-scoped install plan with .opencode directories", () => {
+    const destinationRoot = join("tmp", "opencode-project");
     const plan = createOpenCodeInstallPlan(manifest, {
-      destinationRoot: "/tmp/opencode-project",
+      destinationRoot,
       scope: "project",
     });
 
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
-      "/tmp/opencode-project/AGENTS.md",
-      "/tmp/opencode-project/.opencode/commands/zc-start.md",
-      "/tmp/opencode-project/.opencode/skills/zc-sdd-tdd-workflow/SKILL.md",
-      "/tmp/opencode-project/.opencode/agents/zc-reviewer.md",
+      join(destinationRoot, "AGENTS.md"),
+      join(destinationRoot, ".opencode/commands/zc-start.md"),
+      join(destinationRoot, ".opencode/skills/zc-sdd-tdd-workflow/SKILL.md"),
+      join(destinationRoot, ".opencode/agents/zc-reviewer.md"),
     ]);
   });
 
   it("creates a global-scoped install plan using ~/.config/opencode paths", () => {
+    const destinationRoot = join("tmp", "home");
     const plan = createOpenCodeInstallPlan(manifest, {
-      destinationRoot: "/tmp/home",
+      destinationRoot,
       scope: "global",
     });
 
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
-      "/tmp/home/AGENTS.md",
-      "/tmp/home/commands/zc-start.md",
-      "/tmp/home/skills/zc-sdd-tdd-workflow/SKILL.md",
-      "/tmp/home/agents/zc-reviewer.md",
+      join(destinationRoot, "AGENTS.md"),
+      join(destinationRoot, "commands/zc-start.md"),
+      join(destinationRoot, "skills/zc-sdd-tdd-workflow/SKILL.md"),
+      join(destinationRoot, "agents/zc-reviewer.md"),
     ]);
   });
 
   it("creates a portable dir-scoped install plan without .config or .opencode prefixes", () => {
+    const destinationRoot = join("tmp", "opencode-bundle");
     const plan = createOpenCodeInstallPlan(manifest, {
-      destinationRoot: "/tmp/opencode-bundle",
+      destinationRoot,
       scope: "dir",
     });
 
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
-      "/tmp/opencode-bundle/AGENTS.md",
-      "/tmp/opencode-bundle/commands/zc-start.md",
-      "/tmp/opencode-bundle/skills/zc-sdd-tdd-workflow/SKILL.md",
-      "/tmp/opencode-bundle/agents/zc-reviewer.md",
+      join(destinationRoot, "AGENTS.md"),
+      join(destinationRoot, "commands/zc-start.md"),
+      join(destinationRoot, "skills/zc-sdd-tdd-workflow/SKILL.md"),
+      join(destinationRoot, "agents/zc-reviewer.md"),
     ]);
   });
 });

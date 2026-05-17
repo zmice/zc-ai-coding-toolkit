@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, it } from "vitest";
 
@@ -46,12 +46,13 @@ describe("resolveInstallTarget", () => {
   });
 
   it("prefers the explicit output directory when provided", async () => {
+    const root = resolve("/tmp/codex-out");
     const result = await resolveInstallTarget("codex", {
       dir: "/tmp/codex-out",
       cwd: "/tmp/ignored",
     });
 
-    assert.equal(result.root, "/tmp/codex-out");
+    assert.equal(result.root, root);
     assert.equal(result.source, "explicit");
   });
 

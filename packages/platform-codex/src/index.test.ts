@@ -1,5 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { join } from "node:path";
 
 import {
   capability,
@@ -77,36 +78,38 @@ describe("@zmice/platform-codex scaffold", () => {
   });
 
   it("creates a global install plan with AGENTS and skills", () => {
+    const destinationRoot = join("tmp", "codex");
     const plan = createCodexInstallPlan(manifest, {
-      destinationRoot: "/tmp/codex",
+      destinationRoot,
       scope: "global",
     });
 
-    assert.equal(plan.destinationRoot, "/tmp/codex");
+    assert.equal(plan.destinationRoot, destinationRoot);
     assert.equal(plan.scope, "global");
     assert.equal(plan.overwrite, "error");
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
-      "/tmp/codex/AGENTS.md",
-      "/tmp/codex/config.toml",
-      "/tmp/codex/skills/zc-start/SKILL.md",
-      "/tmp/codex/skills/zc-skill-alpha/SKILL.md",
-      "/tmp/codex/agents/zc-code-reviewer.toml",
+      join(destinationRoot, "AGENTS.md"),
+      join(destinationRoot, "config.toml"),
+      join(destinationRoot, "skills/zc-start/SKILL.md"),
+      join(destinationRoot, "skills/zc-skill-alpha/SKILL.md"),
+      join(destinationRoot, "agents/zc-code-reviewer.toml"),
     ]);
   });
 
   it("installs project AGENTS.md and project-local .codex skills", () => {
+    const destinationRoot = join("tmp", "project");
     const plan = createCodexInstallPlan(manifest, {
-      destinationRoot: "/tmp/project",
+      destinationRoot,
       scope: "project",
     });
 
     assert.equal(plan.scope, "project");
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
-      "/tmp/project/AGENTS.md",
-      "/tmp/project/.codex/config.toml",
-      "/tmp/project/.codex/skills/zc-start/SKILL.md",
-      "/tmp/project/.codex/skills/zc-skill-alpha/SKILL.md",
-      "/tmp/project/.codex/agents/zc-code-reviewer.toml",
+      join(destinationRoot, "AGENTS.md"),
+      join(destinationRoot, ".codex/config.toml"),
+      join(destinationRoot, ".codex/skills/zc-start/SKILL.md"),
+      join(destinationRoot, ".codex/skills/zc-skill-alpha/SKILL.md"),
+      join(destinationRoot, ".codex/agents/zc-code-reviewer.toml"),
     ]);
     assert.deepEqual(plan.capability.skills?.relativeDir, ".codex/skills");
     assert.deepEqual(plan.capability.agents?.relativeDir, ".codex/agents");
