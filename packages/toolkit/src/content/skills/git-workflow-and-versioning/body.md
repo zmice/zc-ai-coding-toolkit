@@ -140,29 +140,29 @@ refactor/<简短描述>  → refactor/auth-module
 
 ## Git Worktree 并行开发
 
-当多个 AI Agent 需要并行工作时，使用 git worktree 同时运行多个分支：
+当多个 AI Agent 需要并行工作时，使用 git worktree 同时运行多个分支。优先使用已被 `.gitignore` 覆盖的项目内 `.worktrees/`；如果无法证明项目内目录会被忽略，就使用仓库外的兄弟目录。
 
 ```bash
 # 为 feature 分支创建 worktree
-git worktree add ../project-feature-a feature/task-creation
-git worktree add ../project-feature-b feature/user-settings
+git worktree add .worktrees/project-feature-a feature/task-creation
+git worktree add .worktrees/project-feature-b feature/user-settings
 
 # 每个 worktree 是独立目录，各自有自己的分支
 # Agent 可以并行工作互不干扰
-ls ../
-  project/              ← main 分支
+ls .worktrees/
   project-feature-a/    ← task-creation 分支
   project-feature-b/    ← user-settings 分支
 
-# 完成后合并并清理
-git worktree remove ../project-feature-a
+# 完成后先确认状态，再合并或清理
+git -C .worktrees/project-feature-a status --short --branch
+git worktree remove .worktrees/project-feature-a
 ```
 
 优势：
 - 多个 Agent 可以同时工作在不同功能上
 - 无需切换分支（每个目录有自己的分支）
-- 实验失败时直接删除 worktree — 不会丢失任何东西
 - 变更相互隔离，直到显式合并
+- 实验失败时也先记录结论并检查 diff，再决定合入、保留或丢弃
 
 ## 存档点模式
 
@@ -180,7 +180,7 @@ Agent 开始工作
     └── 功能完成 → 所有提交形成干净的历史
 ```
 
-这个模式意味着你永远不会丢失超过一个增量的工作。如果 Agent 走偏了，`git reset --hard HEAD` 就能回到上一个成功状态。
+这个模式意味着你不会把多个未验证增量混成一团。如果 Agent 走偏了，先读 `git status` 和 `git diff`，确认哪些文件属于本次增量，再按团队规则回退或丢弃；不要在未确认范围时使用破坏性回退命令。
 
 ## 变更摘要
 

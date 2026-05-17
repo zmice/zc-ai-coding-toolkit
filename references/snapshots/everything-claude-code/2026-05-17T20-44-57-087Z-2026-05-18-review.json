@@ -1,0 +1,27 @@
+{
+  "upstream": "everything-claude-code",
+  "captured_at": "2026-05-17T20:44:57.087Z",
+  "label": "2026-05-18-review",
+  "metadata": {
+    "title": "Everything Claude Code",
+    "kind": "github-public-repo",
+    "status": "active",
+    "owner": "codex",
+    "source_url": "https://github.com/affaan-m/everything-claude-code.git",
+    "source_paths": [
+      "CLAUDE.md",
+      "docs",
+      "commands"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/affaan-m/everything-claude-code.git",
+    "checked_at": "2026-05-17T20:44:57.087Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "3539bdbef682ab3884146a6f52aa6eab712b0626"
+  },
+  "notes": {
+    "path": "references/notes/everything-claude-code.md",
+    "content": "# Everything Claude Code\n\nSource: `https://github.com/affaan-m/everything-claude-code`\n\n## Status\n\nRegistered from historical upstream tracking. Initial baseline snapshot captured in the new governance layer.\n\n## Historical Role\n\n- Commit history previously tracked it as an architecture and cautionary reference.\n- It informed instinct architecture ideas and also highlighted agent sprawl risks.\n\n## Expected Downstream Value\n\n- Context / instinct design references\n- Governance lessons about prompt and agent bloat\n- Command and instruction organization ideas\n\n## Boundaries\n\n- Prefer extracting principles and anti-patterns rather than importing structure wholesale.\n\n## Snapshot Baseline\n\n- baseline: `references/snapshots/everything-claude-code/2026-04-18T18-02-14-443Z-2026-04-19-baseline.json`\n- current governance status: `active`\n\n## Latest Reviewed Upstream\n\n- remote head: `3539bdbef682ab3884146a6f52aa6eab712b0626`\n- observed date: 2026-05-18\n- notable upstream change: upstream added Zed install support, preview-pack smoke/readiness gates, supply-chain watch/advisory refresh work, operator readiness dashboards, continued command registry / hook hardening, and a late rc1 launch-readiness copy refresh.\n\n## Extractable Upgrades\n\n- Codex custom agents should be registered through `[agents.*] config_file` rather than only writing agent TOML files.\n- User-level `config.toml` updates should use add-only merge semantics and preserve existing user choices.\n- Dry-run / backup / sanity-check patterns are useful for global Codex setup.\n- Command registry coverage is a useful future validation idea for `toolkit lint`, but should be designed against this repo's manifest model rather than copied.\n- Supply-chain IOC scanning belongs in release/security automation only after threat model and maintenance ownership are clear.\n- Preview-pack smoke gates and operator readiness dashboards are useful references for a later `release:check` / platform install readiness phase, not for the current content-only sync.\n\n## Non-Adoption Boundary\n\n- Do not import ECC's large prompt catalog, hooks runtime, MCP defaults, telemetry, or broad language rule packs by default.\n- Keep `zc` user-level config writes conflict-safe until add-only merge is implemented.\n- Do not import Ruby/Rails or Copilot prompt packs unless this toolkit adds explicit platform/rule-pack scope for them.\n- Do not add Zed as a platform target until `packages/platform-*` has a scoped adapter design and tests.\n\n## Recommended Phase\n\n- Phase 1: generate agent registration config and document conflict-safe behavior.\n- Phase 2: implement add-only Codex config merge for global installs.\n- Phase 3: evaluate Zed/platform readiness and release smoke dashboards after manifest-aware lint coverage has settled.\n"
+  }
+}

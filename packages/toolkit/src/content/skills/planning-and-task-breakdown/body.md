@@ -27,6 +27,7 @@
    - Dependencies
    - Files likely touched
 5. 排出顺序，并设置阶段性检查点
+6. 如果发现会改变计划路线的阻塞问题，先进入 `stop gate`，不要把问题静默写进计划后继续推进
 
 ## 提问纪律
 
@@ -42,8 +43,10 @@
 - `decision log`：关键取舍和采用原因
 - `evidence`：读取过的规格、代码、配置、测试或上游证据
 - `open risks`：尚未证明的风险和验证方式
+- `stop gates`：会改变架构、数据模型、破坏性边界、并行边界或验收口径的阻塞决策
 - `fan-out eligibility`：是否能并行、按哪些文件或模块拆、是否需要 `zc team plan`
 - `fan-in gate`：实现后如何合流、审查、验证和清理
+- `implementation tasks`：从计划或评审发现转化来的可执行任务列表
 
 ## 决策日志格式
 
@@ -60,6 +63,49 @@ Recommendation: <chosen action> because <evidence and trade-off>.
 
 理由必须说明被放弃的替代方案，以及当前选择为什么更适合本任务。不能只写“更稳”“更简单”“更符合最佳实践”。
 
+## Stop Gate
+
+以下发现必须先停下来收敛，不允许直接写进计划然后继续：
+
+- 现有证据推翻了原始目标或核心假设
+- 任务顺序、数据模型、权限边界、破坏性操作或并行边界需要重新选择
+- 评审发现如果不处理会导致后续实现返工
+- 缺少验证方式，导致任务无法判断完成
+
+Stop gate 输出格式：
+
+```text
+STOP: <阻塞发现>
+- Evidence:
+- Impact:
+- Options:
+- Recommendation:
+- Required decision:
+```
+
+只有用户已经给出明确偏好，或仓库证据能支持保守路线时，才把 `Required decision` 写成显式假设并继续；否则先问。
+
+## Implementation Tasks
+
+从计划或评审发现生成任务时，统一使用这个可执行格式：
+
+```text
+- [ ] T1 (P1) — <component> — <imperative title>
+  - Source finding:
+  - Files likely touched:
+  - Acceptance criteria:
+  - Verification:
+  - Dependencies:
+```
+
+规则：
+
+- `P1`：阻塞当前交付，必须本轮处理
+- `P2`：应在同一分支处理，否则会留下明显质量缺口
+- `P3`：可延后的跟进项，必须说明为什么不阻塞当前目标
+- 每个任务必须来自具体发现、需求或证据；不能为了填表新增空任务
+- 任务标题用动作开头，能直接交给实现阶段
+
 ## 成功标准
 
 - 每个任务都能独立实现、测试和验证
@@ -68,6 +114,7 @@ Recommendation: <chosen action> because <evidence and trade-off>.
 - 人类看完计划后能明确判断“方案对不对”
 - 计划中的问题和风险都能落到后续验证命令或审查项
 - 并行任务必须有明确文件所有权或隔离理由
+- 阻塞发现已经进入 stop gate 或被转成 P1 implementation task
 
 ## 相关原则
 

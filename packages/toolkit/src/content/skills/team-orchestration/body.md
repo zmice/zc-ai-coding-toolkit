@@ -25,11 +25,12 @@
 ## 快速路径
 
 1. 先用 `zc doctor` 检查环境。
-2. 用 `zc team plan` 做 dry-run，任务必须带 `files=` 边界。
-3. 只有 `canStart=true` 且用户确认后，才运行 `zc team start`。
-4. 用 `zc team status` 和 `zc team log` 监控 worker。
-5. fan-in 前运行 `zc team shutdown <team> --plan` 查看 clean/dirty/ahead/merged 状态。
-6. 明确每个分支去向后再 `zc team shutdown`。
+2. 确认 project-local worktree root 已被忽略；如果没有，把 `.worktrees/` 加入 `.gitignore` 或改用仓库外目录。
+3. 用 `zc team plan` 做 dry-run，任务必须带 `files=` 边界。
+4. 只有 `canStart=true` 且用户确认后，才运行 `zc team start`。
+5. 用 `zc team status` 和 `zc team log` 监控 worker。
+6. fan-in 前运行 `zc team shutdown <team> --plan` 查看 clean/dirty/ahead/merged 状态。
+7. 明确每个分支去向后再 `zc team shutdown`。
 
 ```bash
 zc doctor
@@ -115,6 +116,7 @@ Team acceptance transcript:
 - 不把 `zc team` 当成默认实现方式。
 - 不为了形式统一创建多个 worker。
 - 不在未验证 `canStart=true` 时启动。
+- 不在项目内创建未被 `.gitignore` 覆盖的 worktree root。
 - 不直接清理 dirty worktree。
 - 不混入破坏性 git 操作；需要删除或重置时必须先确认。
 

@@ -21,7 +21,9 @@
 3. 用 **设计视角** 检查交互、可用性、响应式和无障碍
 4. 用 **DevEx 视角** 检查计划中的集成成本、配置复杂度、文档前提、学习曲线和维护负担
 5. 把四个视角发现的问题改写成可执行的修订项、约束或验收标准
-6. 汇总结论，明确需要修订的点，再决定是否进入实现
+6. 对会改变路线的发现触发 `stop gate`，先收敛决策，不把问题静默写进计划后继续
+7. 输出 `Implementation Tasks`，把需要修订的发现转成可执行任务
+8. 汇总结论，明确需要修订的点，再决定是否进入实现
 
 ## 评审产物
 
@@ -31,6 +33,8 @@
 - 分级发现：`Critical / Warning / Suggestion`
 - 每条发现对应的证据、影响和修订动作
 - 对应的验收标准或验证命令
+- 会改变路线的 stop gate 决策及当前状态
+- `Implementation Tasks`：每条待修问题对应的 P1/P2/P3 任务
 - 如果需要提问，最多 1-3 个会改变方案的关键问题
 
 ## 推荐结论格式
@@ -50,6 +54,49 @@ Recommendation: <GO / REVISE / NO-GO + next action> because <specific cross-pers
 
 如果需要提问，每个问题都要说明它会解锁哪个决策，避免只收集背景信息。
 
+## Stop Gate
+
+以下情况不能直接给 `GO`：
+
+- Critical 发现会改变架构、数据模型、权限、破坏性操作或用户可见承诺
+- 不同视角的结论互相冲突，且会改变任务顺序或验收标准
+- 计划缺少关键验证方式，导致实现完成后无法判定是否通过
+- 发现明显过度设计，但当前计划仍按高复杂度方案推进
+
+Stop gate 输出：
+
+```text
+STOP: <route-changing finding>
+- Perspective:
+- Evidence:
+- Impact:
+- Options:
+- Recommendation:
+- Required decision or assumption:
+```
+
+如果用户已给出偏好，写成 `Assumption` 并继续；否则先提问。不要把 stop gate 伪装成普通 Suggestion。
+
+## Implementation Tasks
+
+评审发现必须能转成 plan 可吸收的任务：
+
+```text
+### Implementation Tasks
+- [ ] T1 (P1) — <component> — <imperative title>
+  - Surfaced by: <perspective> — <specific finding>
+  - Files likely touched:
+  - Acceptance criteria:
+  - Verification:
+```
+
+规则：
+
+- P1 阻塞进入实现或合并
+- P2 应进入当前计划
+- P3 可以作为 follow-up，但要说明不阻塞的理由
+- 没有 actionable task 的发现，要明确写 `_No implementation task; informational only._`
+
 ## 边界说明
 
 - 这里的 DevEx 只评估“实现前是否想清楚”，不替代实现后的真实安装和上手走查
@@ -65,6 +112,7 @@ Recommendation: <GO / REVISE / NO-GO + next action> because <specific cross-pers
 - DevEx 问题被表达为计划假设、约束或验收条件，而不是模糊感受
 - 最终结论可以明确是 `GO / REVISE / NO-GO`
 - 评审输出能直接变成 plan 修订、任务依赖或验证门禁
+- Critical 或 route-changing 发现没有被跳过；要么进入 stop gate，要么转成 P1 任务
 
 ## 相关原则
 

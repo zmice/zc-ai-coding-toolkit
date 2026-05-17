@@ -1,4 +1,9 @@
-import type { ToolkitAssetMeta, ToolkitManifest } from "../types.js";
+import {
+  toolkitPlatformExposureModes,
+  toolkitWorkflowRoles,
+  toolkitWorkflowRoutes
+} from "../types.js";
+import type { ToolkitAssetMeta, ToolkitAssetUnit, ToolkitManifest } from "../types.js";
 
 export type ToolkitLintLevel = "warning" | "error";
 
@@ -24,6 +29,41 @@ export interface ToolkitLintOptions {
 
 const chineseCharacterPattern = /[\u3400-\u9fff]/u;
 const longEnglishFragmentPattern = /\b[A-Za-z]+(?:\s+[A-Za-z]+){3,}\b/u;
+const maxDescriptionLength = 1024;
+const markdownSectionHeadingPattern = /^##\s+\S/mu;
+const skillActivationHeadingPattern =
+  /^##\s+(?:Overview|何时使用|When to Use|使用条件|角色定位|Skill Discovery)(?:\s|$)/mu;
+const assetReferenceTokenPattern =
+  /^(?:(?:skill|command|agent):)?[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
+const kindPrefixedAssetReferencePattern =
+  /^(?:skill|command|agent):[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
+const inlineCodeSpanPattern = /`([^`\n]+)`/gu;
+const contextualAssetReferencePattern =
+  /`((?:(?:skill|command|agent):)?[a-z][a-z0-9]*(?:-[a-z0-9]+)*)`\s+(?:skill|command|agent|技能|命令|代理)|(?:skill|command|agent|技能|命令|代理)\s+`((?:(?:skill|command|agent):)?[a-z][a-z0-9]*(?:-[a-z0-9]+)*)`/gu;
+const routeArrowReferencePattern =
+  /→\s*((?:(?:skill|command|agent):)?[a-z][a-z0-9]*(?:-[a-z0-9]+)*)(?=$|[^a-zA-Z0-9_-])/gu;
+const nonAssetReferenceAllowlist = new Set<string>([
+  ...toolkitWorkflowRoutes,
+  ...toolkitWorkflowRoles,
+  ...toolkitPlatformExposureModes,
+  "bg-surface",
+  "border-default",
+  "chore",
+  "doc-verified",
+  "docs",
+  "feat",
+  "feature",
+  "fix",
+  "high-risk",
+  "localize",
+  "needs-follow-up",
+  "official-global",
+  "project-local",
+  "refactor",
+  "test",
+  "text-primary",
+  "update-available"
+]);
 
 function checkMissingGovernanceFields(assetId: string, meta: ToolkitAssetMeta): ToolkitLintIssue[] {
   const issues: ToolkitLintIssue[] = [];
@@ -106,6 +146,56 @@ function checkLocalizedSummary(assetId: string, meta: ToolkitAssetMeta): Toolkit
       assetId,
       rule: "mixed-language-summary",
       message: "description 中包含较长英文片段，建议改成中文优先、英文术语点到为止。"
+    });
+  }
+
+  return issues;
+}
+
+function checkDescriptionLength(assetId: string, meta: ToolkitAssetMeta): ToolkitLintIssue[] {
+  if (meta.description.length <= maxDescriptionLength) {
+    return [];
+  }
+
+  return [
+    {
+      level: "error",
+      assetId,
+      rule: "description-too-long",
+      message: `description 长度为 ${meta.description.length}，超过 ${maxDescriptionLength} 字符；平台通常会把 description 注入发现上下文，应保持短而准。`
+    }
+  ];
+}
+
+function checkBodyStructure(asset: ToolkitAssetUnit): ToolkitLintIssue[] {
+  const issues: ToolkitLintIssue[] = [];
+  const body = asset.body.trim();
+
+  if (!body) {
+    issues.push({
+      level: "error",
+      assetId: asset.id,
+      rule: "empty-body",
+      message: "body.md 为空，平台产物无法提供可执行流程。"
+    });
+    return issues;
+  }
+
+  if (asset.meta.kind === "skill" && !markdownSectionHeadingPattern.test(body)) {
+    issues.push({
+      level: "warning",
+      assetId: asset.id,
+      rule: "missing-body-sections",
+      message: "skill body.md 缺少二级标题，难以按渐进式披露加载。"
+    });
+  }
+
+  if (asset.meta.kind === "skill" && !skillActivationHeadingPattern.test(body)) {
+    issues.push({
+      level: "warning",
+      assetId: asset.id,
+      rule: "missing-activation-section",
+      message: "skill body.md 应说明何时使用或角色定位，避免自动路由只能依赖标题。"
     });
   }
 
@@ -252,6 +342,147 @@ function checkRelationshipTargets(manifest: ToolkitManifest): ToolkitLintIssue[]
   return issues;
 }
 
+function stripAssetKindPrefix(assetId: string): string {
+  const separatorIndex = assetId.indexOf(":");
+  return separatorIndex >= 0 ? assetId.slice(separatorIndex + 1) : assetId;
+}
+
+function isReferenceToken(text: string): boolean {
+  return assetReferenceTokenPattern.test(text);
+}
+
+function shouldCollectAssetReference(ref: string, knownReferences: ReadonlySet<string>): boolean {
+  if (!isReferenceToken(ref)) {
+    return false;
+  }
+
+  if (knownReferences.has(ref) || kindPrefixedAssetReferencePattern.test(ref)) {
+    return true;
+  }
+
+  return ref.includes("-");
+}
+
+function collectInlineCodeReferences(
+  text: string,
+  knownReferences: ReadonlySet<string>
+): readonly string[] {
+  const refs = new Set<string>();
+
+  inlineCodeSpanPattern.lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = inlineCodeSpanPattern.exec(text)) !== null) {
+    const ref = match[1]?.trim();
+    if (ref && shouldCollectAssetReference(ref, knownReferences)) {
+      refs.add(ref);
+    }
+  }
+
+  return [...refs];
+}
+
+function collectContextualReferences(text: string): readonly string[] {
+  const refs = new Set<string>();
+
+  contextualAssetReferencePattern.lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = contextualAssetReferencePattern.exec(text)) !== null) {
+    const ref = match[1] ?? match[2];
+    if (ref) {
+      refs.add(ref);
+    }
+  }
+
+  return [...refs];
+}
+
+function collectRouteArrowReferences(text: string): readonly string[] {
+  const refs = new Set<string>();
+
+  routeArrowReferencePattern.lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = routeArrowReferencePattern.exec(text)) !== null) {
+    refs.add(match[1]);
+  }
+
+  return [...refs];
+}
+
+function collectTableCellReferences(
+  text: string,
+  knownReferences: ReadonlySet<string>
+): readonly string[] {
+  const refs = new Set<string>();
+
+  for (const line of text.split("\n")) {
+    if (!line.includes("|")) {
+      continue;
+    }
+
+    for (const rawCell of line.split("|")) {
+      const cell = rawCell.trim();
+      if (shouldCollectAssetReference(cell, knownReferences)) {
+        refs.add(cell);
+      }
+    }
+  }
+
+  return [...refs];
+}
+
+function collectExplicitAssetReferences(
+  text: string,
+  knownReferences: ReadonlySet<string>
+): readonly string[] {
+  return [
+    ...new Set([
+      ...collectInlineCodeReferences(text, knownReferences),
+      ...collectContextualReferences(text),
+      ...collectRouteArrowReferences(text),
+      ...collectTableCellReferences(text, knownReferences)
+    ])
+  ];
+}
+
+function checkExplicitAssetReferences(manifest: ToolkitManifest): ToolkitLintIssue[] {
+  const knownReferences = new Set<string>();
+  const issues: ToolkitLintIssue[] = [];
+
+  for (const asset of manifest.assets) {
+    knownReferences.add(asset.id);
+    knownReferences.add(stripAssetKindPrefix(asset.id));
+    knownReferences.add(asset.meta.name);
+    for (const alias of asset.meta.aliases ?? []) {
+      knownReferences.add(alias);
+    }
+  }
+
+  for (const asset of manifest.assets) {
+    const refs = collectExplicitAssetReferences(
+      `${asset.meta.description}\n${asset.body}`,
+      knownReferences
+    );
+
+    for (const ref of refs) {
+      if (knownReferences.has(ref) || nonAssetReferenceAllowlist.has(ref)) {
+        continue;
+      }
+
+      issues.push({
+        level: "warning",
+        assetId: asset.id,
+        rule: "unknown-explicit-asset-reference",
+        message: `显式引用了不存在的 toolkit 资产：${ref}`
+      });
+    }
+  }
+
+  return issues;
+}
+
 function checkRelationshipCycles(
   manifest: ToolkitManifest,
   relationName: "requires" | "suggests"
@@ -321,11 +552,14 @@ export function lintToolkitManifest(
   const issues = manifest.assets.flatMap((asset) => [
     ...checkMissingGovernanceFields(asset.id, asset.meta),
     ...checkGovernanceConsistency(asset.id, asset.meta),
+    ...checkDescriptionLength(asset.id, asset.meta),
     ...checkLocalizedSummary(asset.id, asset.meta),
     ...checkUpstreamRegistryConsistency(asset.id, asset.meta, options.knownUpstreams),
-    ...checkSourceTraceability(asset.id, asset.meta)
+    ...checkSourceTraceability(asset.id, asset.meta),
+    ...checkBodyStructure(asset)
   ]).concat(
     checkDuplicateSummaries(manifest),
+    checkExplicitAssetReferences(manifest),
     checkRelationshipTargets(manifest),
     checkRelationshipCycles(manifest, "requires"),
     checkRelationshipCycles(manifest, "suggests")

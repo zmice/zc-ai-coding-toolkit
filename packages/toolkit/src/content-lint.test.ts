@@ -44,7 +44,7 @@ function makeManifestWithAssets(
         description: "test asset",
         ...asset.meta
       },
-      body: asset.body ?? "body",
+      body: asset.body ?? "## 何时使用\n\n- 测试场景\n",
       attachments: [],
       source: {
         directory: `/tmp/toolkit/${assetId}`,
@@ -139,6 +139,197 @@ describe("lintToolkitManifest", () => {
 
     assert.equal(result.summary.warnings, 1);
     assert.equal(result.issues[0]?.rule, "missing-chinese-summary");
+  });
+
+  it("errors when descriptions exceed the platform discovery budget", () => {
+    const result = lintToolkitManifest(
+      makeManifest({
+        tier: "core",
+        audience: "default",
+        stability: "stable",
+        description: "中".repeat(1025),
+        source: adaptedAgentSkillsSourceWithOrigin
+      })
+    );
+
+    assert.equal(result.summary.errors, 1);
+    assert.equal(result.issues[0]?.rule, "description-too-long");
+  });
+
+  it("errors when a content body is empty", () => {
+    const result = lintToolkitManifest(
+      makeManifestWithAssets([
+        {
+          body: "",
+          meta: {
+            tier: "core",
+            audience: "default",
+            stability: "stable",
+            description: "中文摘要",
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        }
+      ])
+    );
+
+    assert.equal(result.summary.errors, 1);
+    assert.equal(result.issues[0]?.rule, "empty-body");
+  });
+
+  it("warns when a skill body lacks activation guidance", () => {
+    const result = lintToolkitManifest(
+      makeManifestWithAssets([
+        {
+          body: "## 执行步骤\n\n1. 做事\n",
+          meta: {
+            tier: "core",
+            audience: "default",
+            stability: "stable",
+            description: "中文摘要",
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        }
+      ])
+    );
+
+    assert.equal(result.summary.warnings, 1);
+    assert.equal(result.issues[0]?.rule, "missing-activation-section");
+  });
+
+  it("warns when explicit cross-asset references point nowhere", () => {
+    const result = lintToolkitManifest(
+      makeManifestWithAssets([
+        {
+          id: "skill:router",
+          body: "## 何时使用\n\nUse `missing-skill` skill when routing.\n",
+          meta: {
+            tier: "core",
+            audience: "default",
+            stability: "stable",
+            description: "中文摘要",
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        }
+      ])
+    );
+
+    assert.equal(result.summary.warnings, 1);
+    assert.equal(result.issues[0]?.rule, "unknown-explicit-asset-reference");
+  });
+
+  it("warns when route graph targets point nowhere", () => {
+    const result = lintToolkitManifest(
+      makeManifestWithAssets([
+        {
+          id: "skill:router",
+          body: [
+            "## 何时使用",
+            "",
+            "```",
+            "Task arrives",
+            "  └── Browser-based? ───────────→ missing-skill",
+            "```"
+          ].join("\n"),
+          meta: {
+            tier: "core",
+            audience: "default",
+            stability: "stable",
+            description: "中文摘要",
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        }
+      ])
+    );
+
+    assert.equal(result.summary.warnings, 1);
+    assert.equal(result.issues[0]?.rule, "unknown-explicit-asset-reference");
+  });
+
+  it("warns when table cells point to missing assets", () => {
+    const result = lintToolkitManifest(
+      makeManifestWithAssets([
+        {
+          id: "skill:router",
+          body: "## 何时使用\n\n| Phase | Skill |\n| --- | --- |\n| Verify | missing-skill |\n",
+          meta: {
+            tier: "core",
+            audience: "default",
+            stability: "stable",
+            description: "中文摘要",
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        }
+      ])
+    );
+
+    assert.equal(result.summary.warnings, 1);
+    assert.equal(result.issues[0]?.rule, "unknown-explicit-asset-reference");
+  });
+
+  it("accepts known bare asset references in route graphs and tables", () => {
+    const result = lintToolkitManifest(
+      makeManifestWithAssets([
+        {
+          id: "skill:router",
+          body: [
+            "## 何时使用",
+            "",
+            "Task arrives ───────────→ browser-qa-testing",
+            "",
+            "| Phase | Skill |",
+            "| --- | --- |",
+            "| Verify | browser-qa-testing |"
+          ].join("\n"),
+          meta: {
+            tier: "core",
+            audience: "default",
+            stability: "stable",
+            description: "中文摘要 A",
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        },
+        {
+          id: "skill:browser-qa-testing",
+          meta: {
+            tier: "core",
+            audience: "default",
+            stability: "stable",
+            description: "中文摘要 B",
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        }
+      ])
+    );
+
+    assert.equal(result.summary.warnings, 0);
+    assert.equal(result.summary.errors, 0);
+  });
+
+  it("ignores workflow labels and non-asset design tokens", () => {
+    const result = lintToolkitManifest(
+      makeManifestWithAssets([
+        {
+          body: [
+            "## 何时使用",
+            "",
+            "Use `full-delivery` for the workflow and `workflow-entry` as metadata.",
+            "Use `high-risk` as a risk label and `localize` as a task label.",
+            "Use `feat`, `fix`, `refactor`, `test`, `docs`, and `chore` as commit types.",
+            "Use `text-primary`, `bg-surface`, and `border-default` as design tokens."
+          ].join("\n"),
+          meta: {
+            tier: "core",
+            audience: "default",
+            stability: "stable",
+            description: "中文摘要",
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        }
+      ])
+    );
+
+    assert.equal(result.summary.warnings, 0);
+    assert.equal(result.summary.errors, 0);
   });
 
   it("warns when summaries mix long English fragments into Chinese text", () => {

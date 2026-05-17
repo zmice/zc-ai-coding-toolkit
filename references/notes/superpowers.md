@@ -28,15 +28,17 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 
 ## Latest Reviewed Upstream
 
-- remote head: `6efe32c9e2dd002d0c394e861e0529675d1ab32e`
-- observed date: 2026-04-29
-- notable upstream change: no HEAD change since the 2026-04-27 review; committed Codex plugin sync files and explicit worktree / parallel-agent workflow guidance remain the current absorbable delta
+- remote head: `f2cbfbefebbfef77321e4c9abc9e949826bea9d7`
+- observed date: 2026-05-15
+- notable upstream change: v5.1.0 refreshes worktree guidance, code-reviewer prompt material, Codex / OpenCode plugin sync surfaces, and release notes. The most relevant delta is still worktree lifecycle clarity and explicit transcript-style verification.
 
 ## Extractable Upgrades
 
 - Worktree setup should select `.worktrees/` before `worktrees/`, then verify project-local directories are ignored.
 - Parallel dispatch should require explicit task independence, file ownership, and fan-in verification.
 - Shutdown is not branch closure; branch/worktree ownership must be resolved separately.
+- Worktree cleanup text must not imply that deleting a worktree is always lossless; inspect status and decide merge / keep / discard first.
+- New-harness or multi-worker work should leave an acceptance transcript: task ownership, changed files, evidence, conflicts, and cleanup state.
 
 ## Non-Adoption Boundary
 
@@ -45,5 +47,5 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 
 ## Recommended Phase
 
-- Phase 1: `zc team plan`, worktree safety checks, and fan-in status output.
+- Phase 1: `zc team plan`, worktree safety checks, fan-in status output, and safer worktree cleanup wording in toolkit content.
 - Phase 2: richer subagent review prompts after the team runtime is stable.
