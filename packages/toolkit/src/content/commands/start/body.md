@@ -15,7 +15,7 @@
 - `workflow`：六条固定 workflow 之一
 - `entry`：下一步应该调用的 command / skill，必须是实际可执行入口
 - `agent`：可选协作角色；只有平台支持且用户授权时才建议，不作为默认入口
-- `agent_opportunity`：`standard` / `high-risk` 或命中复杂度信号时必须输出，说明是否需要只读协助、串行子代理、上下文级并行或 `zc team`
+- `agent_opportunity`：`standard` / `high-risk`、跨面验证或命中复杂度信号时必须输出，说明是否需要只读协助、串行子代理、上下文级并行或 `zc team`
 - `reason`：用 1-3 条证据说明为什么这样判型
 - `assumption`：如果有未确认前提，明确写出
 - `question`：只有无法安全推进时才问，最多 1-3 个关键问题
@@ -165,6 +165,7 @@
 - 涉及 3 个以上文件或 2 个以上模块。
 - 同时包含方案、实现和验证。
 - 用户使用“深入、整体、优化、审查、排查、对齐、联动”等词。
+- 涉及 review、优化、上游吸收、Codex 适配、安装/更新、跨平台或跨 surface 验证。
 - 涉及安全、性能、数据恢复、生产配置或敏感配置。
 - 需要前后端、后端与部署、文档与实现同步。
 - 当前上下文不足，需要并行摸底。
@@ -184,9 +185,9 @@ agent_opportunity:
 模式规则：
 
 - `none`：简单任务或无法证明 agent 有收益。
-- `readonly-consult`：架构、审查、测试、安全、性能、产品等只读协助；只有用户已授权本会话或项目默认启用只读 agent 时，才可通知式启动，不改文件。
+- `readonly-consult`：架构、审查、测试、安全、性能、产品、上游吸收、Codex 适配、安装/更新或跨 surface 验证等只读协助；它是复杂任务进入写入前优先考虑的低风险帮助。只有用户已授权本会话或项目默认启用只读 agent 时，才可通知式启动，不改文件。
 - `serial-subagent`：已有任务计划、任务彼此独立，但不需要并行执行。
-- `context-fanout`：多个独立问题或互不重叠文件可以并行处理；写入型 fan-out 必须先确认文件所有权和 fan-in 验证。
+- `context-fanout`：多个独立问题或互不重叠文件可以并行处理；写入型 fan-out 默认确认文件所有权和 fan-in 验证。若用户已在本轮接受包含这些边界的计划，且任务低风险、文件不重叠、worker 不超过 2 个，可通知式启动。
 - `zc-team`：需要 tmux + git worktree 或 Codex / Qwen 多 CLI worker 时才建议；必须用户明确要求或确认。
 
 数量上限：
@@ -199,9 +200,14 @@ agent_opportunity:
 确认边界：
 
 - 只读 agent：用户已授权时通知式启用，必须说明 agent、目标和“不改文件”；未授权时只输出 `agent_opportunity` 和 `Agent assist` 预告，等待确认。
-- 写入型 agent：确认式启用，必须说明文件所有权、验证命令和 fan-in gate。
+- 写入型 agent：默认确认式启用，必须说明文件所有权、验证命令和 fan-in gate。低风险写入并行如果已经在本轮计划中获得授权，可以通知式启用，但要重复列出 worker、文件边界和 fan-in gate。
 - 无法证明独立、存在同文件冲突、存在依赖链：默认先 `task-plan`，不直接并行。
 - 如果进入 `zc team`，先 dry-run：`zc team plan ... --json`。
+
+Codex 优先规则：
+
+- Codex 是默认主路径时，`agents` 优先列 Codex custom agents 或本地可用 reviewer / tester / security / performance / product 角色。
+- Qwen / Claude / OpenCode 只作为平台能力存在时的替代说明，不把 Codex-only 能力写成全平台默认。
 
 ## 上下文与持久化边界
 

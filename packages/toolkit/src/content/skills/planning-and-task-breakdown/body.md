@@ -28,6 +28,7 @@
    - Files likely touched
 5. 排出顺序，并设置阶段性检查点
 6. 如果发现会改变计划路线的阻塞问题，先进入 `stop gate`，不要把问题静默写进计划后继续推进
+7. 把 multi-agent 模式作为执行决策写入计划：先评估只读协助，再判断是否需要串行子代理、context fan-out 或 `zc team`
 
 ## 提问纪律
 
@@ -44,7 +45,7 @@
 - `evidence`：读取过的规格、代码、配置、测试或上游证据
 - `open risks`：尚未证明的风险和验证方式
 - `stop gates`：会改变架构、数据模型、破坏性边界、并行边界或验收口径的阻塞决策
-- `agent_opportunity`：本计划是否需要只读协助、串行子代理、上下文级并行或 `zc team`
+- `agent_opportunity`：本计划是否需要只读协助、串行子代理、上下文级并行或 `zc team`，并列出匹配的 Codex agents / workers、确认边界和 fan-in gate
 - `fan-out eligibility`：是否能并行、按哪些文件或模块拆、是否有确认边界、是否需要 `zc team plan`
 - `fan-in gate`：实现后如何合流、审查、回归、验证和清理
 - `implementation tasks`：从计划或评审发现转化来的可执行任务列表
@@ -71,6 +72,7 @@ Recommendation: <chosen action> because <evidence and trade-off>.
 - 现有证据推翻了原始目标或核心假设
 - 任务顺序、数据模型、权限边界、破坏性操作或并行边界需要重新选择
 - 评审发现如果不处理会导致后续实现返工
+- route-changing finding、agent mode 变化或 fan-out 边界变化会改变后续任务顺序
 - 缺少验证方式，导致任务无法判断完成
 
 Stop gate 输出格式：
@@ -115,7 +117,7 @@ STOP: <阻塞发现>
 agent_opportunity:
 - mode: none | readonly-consult | serial-subagent | context-fanout | zc-team
 - trigger:
-- recommended agents/workers:
+- recommended Codex agents/workers:
 - ownership:
 - confirmation:
 - fan-in gate:
@@ -123,11 +125,13 @@ agent_opportunity:
 
 判断规则：
 
-- `readonly-consult`：适合架构、测试、安全、性能、产品或审查侧评；用户已授权只读 agent 默认启用时通知式启动，否则先预告并等待确认，不能改文件。
+- `readonly-consult`：适合架构、测试、安全、性能、产品、上游吸收、Codex 适配、安装/更新或审查侧评；复杂计划应先考虑它，再考虑更重的并行。用户已授权只读 agent 默认启用时通知式启动，否则先预告并等待确认，不能改文件。
 - `serial-subagent`：任务独立但存在依赖顺序，主线程逐个委派并 fan-in。
-- `context-fanout`：任务可按文件、模块或证据问题拆开，写入前必须确认文件所有权。
+- `context-fanout`：任务可按文件、模块或证据问题拆开，写入前必须明确文件所有权、验证命令和 fan-in gate。若计划已被用户接受，低风险写入并行可视为本轮预授权，不必再次逐项确认。
 - `zc-team`：只有用户明确要求或确认，且 `zc team plan` 返回可启动时才进入。
 - `none`：任务简单、强耦合、同文件冲突或缺少验证方式。
+
+Codex agents / workers 必须写成可执行角色或本地已知 agent 名；如果当前平台没有对应 agent，就写 `none` 或“主线程只读复核”，不要凭空造角色。
 
 fan-in gate 必须说明：
 
@@ -136,6 +140,8 @@ fan-in gate 必须说明：
 - 谁负责回归确认：`reviewer owns regression`。
 - 哪些命令或人工检查作为最终验证。
 - 是否需要保留、合并或清理分支 / worktree / 临时文件。
+
+低风险写入并行预授权只适用于非生产、非敏感、非破坏性任务，且文件所有权不重叠、worker 不超过 2 个；否则 `confirmation` 必须写成 explicit。
 
 ## 成功标准
 

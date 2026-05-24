@@ -20,6 +20,7 @@ controller owns fan-in
 - 实现方或产生方负责优先修复自己引入的问题。
 - 审查方或提出方负责给出复现条件、断言、期望行为和风险等级，并在修复后回归确认。
 - 主线程判断 finding 是否成立、是否阻塞、是否需要转派或降级。
+- 在 Codex 上，只有本地已有 custom agent 或角色匹配时才使用对应 agent；没有匹配角色时由主线程构造一次性子代理指令，不把不存在的 agent 名写进计划。
 
 ## When to Use
 
@@ -142,6 +143,13 @@ parallel-agent-dispatch
 ```
 
 审查方默认不直接修复。只有用户明确要求“修复 review findings”，或 finding 是机械小修且主线程确认后，才把审查结论转成修复任务。
+
+### Findings 回流
+
+- 规格或质量 finding 先回到 producer，由 producer 优先修复。
+- reviewer 必须给出 regression evidence，说明原 finding 的触发条件、修复后检查方式和结论。
+- controller 负责 fan-in：判断 finding 是否成立、是否阻塞当前任务、是否接受修复、是否需要重新分派。
+- producer 两次无法关闭同一 finding 时，controller 可以缩小任务或改派，但必须保留 reviewer 的回归标准。
 
 ## 子代理状态处理
 

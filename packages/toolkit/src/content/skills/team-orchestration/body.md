@@ -25,11 +25,11 @@
 ## 快速路径
 
 1. 先用 `zc doctor` 检查环境。
-2. 确认 project-local worktree root 已被忽略；如果没有，把 `.worktrees/` 加入 `.gitignore` 或改用仓库外目录。
+2. 确认 project-local worktree root 已被忽略；如果没有，把 `.worktrees/` 加入 `.gitignore` 或改用仓库外目录。这是启动前必过项，不是建议项。
 3. 用 `zc team plan` 做 dry-run，任务必须带 `files=` 边界。
 4. 只有 `canStart=true` 且用户确认后，才运行 `zc team start`。
 5. 用 `zc team status` 和 `zc team log` 监控 worker。
-6. fan-in 前运行 `zc team shutdown <team> --plan` 查看 clean/dirty/ahead/merged 状态。
+6. fan-in 前运行 `zc team shutdown <team> --plan` 查看 clean/dirty/ahead/merged 状态；这个 plan 是 fan-in evidence，不是删除或丢弃 worktree 的授权。
 7. 明确每个分支去向后再 `zc team shutdown`。
 
 ```bash
@@ -83,6 +83,8 @@ Recommendation: 使用 zc team because <文件系统隔离收益> outweighs <tmu
 
 即使 `start` 或 `task-plan` 输出 `agent_opportunity.mode=zc-team`，也只能作为建议。没有用户明确确认时，不运行 `zc team start`。
 
+确认 `zc team` 前，应先说明为什么 `readonly-consult`、`serial-subagent` 或 `context-fanout` 不足以覆盖目标，避免把 team 当成默认实现模式。
+
 ## Worker 协作纪律
 
 - 每个 worker 只修改自己的 `files=` 范围。
@@ -111,7 +113,7 @@ Team acceptance transcript:
 收尾判断：
 
 - clean 且已合入：可删除 worktree/branch。
-- dirty：先读 diff，决定合入、保留或放弃。
+- dirty：先读 status 和 diff，决定合入、保留或放弃；不能因为 shutdown plan 已生成就直接删除。
 - ahead 但未合入：明确是否提交、PR 或丢弃。
 - unknown：不要直接删除，先人工确认状态。
 

@@ -38,12 +38,12 @@
 
 ## 构建模式选择
 
-进入 Build 前先选择执行模式，而不是直接默认手动实现：
+进入 Build 前先选择执行模式，而不是直接默认手动实现。复杂任务先评估 `Readonly Consult`，用低风险只读审查发现路线、测试、安全、性能或平台适配问题，再决定是否需要更重的写入型并行：
 
 - **Manual**：简单任务、小修复或同一文件内紧耦合改动，主线程直接实现。
-- **Readonly Consult**：复杂任务需要架构、测试、安全、性能、产品或审查侧评；只有用户已授权本会话或项目默认启用只读 agent 时，才可通知式启动，不改文件。
+- **Readonly Consult**：复杂任务需要架构、测试、安全、性能、产品、上游吸收、Codex 适配、安装/更新或审查侧评；只有用户已授权本会话或项目默认启用只读 agent 时，才可通知式启动，不改文件。
 - **Serial Subagent**：已有计划，任务彼此独立但有依赖顺序；使用 `subagent-driven-development` 串行委派。
-- **Context Fan-Out**：任务可以按文件、模块或证据问题并行，且有清晰 fan-in gate；使用 `parallel-agent-dispatch`。
+- **Context Fan-Out**：任务可以按文件、模块或证据问题并行，且有清晰文件所有权和 fan-in gate；使用 `parallel-agent-dispatch`。低风险写入 fan-out 在计划已接受时可通知式启动，高风险或边界不清时仍必须确认。
 - **Team Orchestration**：需要 tmux + git worktree 文件系统隔离、长时间多 worker 或 Codex / Qwen 多 CLI 协作；使用 `team-orchestration`，必须用户明确要求或确认。
 
 主线程是 controller / integrator：
@@ -51,6 +51,8 @@
 - 主线程负责目标、计划、分派、文件所有权、stop gate、fan-in 和最终验证。
 - 只读 agent 只汇报结构化结论，不改文件。
 - 写入 agent 只处理被分配的任务和文件，并返回修改文件、验证结果、风险和待 fan-in 项。
+- 写入型 agent 不共享文件所有权；无法划清所有权时降级为 Manual 或 Serial Subagent。
+- 写入型并行的放松只适用于已接受计划中的低风险切片；涉及生产、敏感数据、破坏性操作、同文件修改或超过 2 个 worker 时仍走显式确认。
 - 审查 agent 默认只读；提出 finding 后负责回归确认。
 - 主线程可以处理小任务、集成冲突、最终修补和验证失败分析，但在已经选择多 agent 模式后，不抢占已分配给 worker 的任务。
 
