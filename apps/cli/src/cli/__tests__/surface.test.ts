@@ -12,6 +12,7 @@ describe("zc command surface", () => {
 
     expect(names).toContain("run");
     expect(names).toContain("team");
+    expect(names).toContain("context");
     expect(names).toContain("toolkit");
     expect(names).toContain("platform");
     expect(names).not.toContain("runtime");

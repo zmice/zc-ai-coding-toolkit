@@ -13,6 +13,17 @@ import {
   type ToolkitAssetLike as BaseToolkitAssetLike,
   type ToolkitManifestLike as BaseToolkitManifestLike,
 } from "@zmice/platform-core";
+export {
+  codexContextManagedMarker,
+  createCodexContextInitPlan,
+  type CodexContextArtifactAction,
+  type CodexContextArtifact,
+  type CodexContextArtifactPlan,
+  type CodexContextExistingFile,
+  type CodexContextInitOptions,
+  type CodexContextInitPlan,
+  type CodexContextInitSnapshot,
+} from "./context.js";
 
 export interface GenerationOptions {
   readonly packageName?: string;
@@ -189,9 +200,18 @@ function renderAgentsFile(
   assets: readonly ToolkitAssetLike[],
   layout: ScopeLayout,
 ): string {
+  const commandAssets = assets.filter((asset) => asset.kind === "command");
   const commandCount = assets.filter((asset) => asset.kind === "command").length;
   const skillCount = assets.filter((asset) => asset.kind === "skill").length;
   const agentCount = assets.filter((asset) => asset.kind === "agent").length;
+  const commandMappings = commandAssets.length > 0
+    ? commandAssets
+      .map((asset) => {
+        const commandName = toCodexSkillSlug(asset);
+        return `- \`zc:${commandName}\` -> \`$${toCodexSkillName(asset, namespacedSkillNaming)}\``;
+      })
+      .join("\n")
+    : "- 当前清单未匹配 command-alias skill";
 
   return `# Codex 工作流入口
 
@@ -220,22 +240,12 @@ Codex agent role 注册位于 \`${layout.displayConfigFile}\` 的 \`[agents.*]\`
 - 中文优先，技术契约保持原样
 - 证据先于断言，完成前必须验证
 - 不做超出任务边界的顺手修改
+- 多 agent 触发以 \`agent_opportunity.dispatch_now\` 为准；为 \`yes\` 时必须真实派发可用 Codex agent，或说明平台能力不足并降级
+- 写入型 agent 必须有文件所有权、loop budget 和 fan-in 验证
 
 ## 统一命令语义到 Codex skill 的映射
 
-- \`zc:start\` -> \`$zc-start\`
-- \`zc:product-analysis\` -> \`$zc-product-analysis\`
-- \`zc:sdd-tdd\` -> \`$zc-sdd-tdd\`
-- \`zc:spec\` -> \`$zc-spec\`
-- \`zc:task-plan\` -> \`$zc-task-plan\`
-- \`zc:build\` -> \`$zc-build\`
-- \`zc:quality-review\` -> \`$zc-quality-review\`
-- \`zc:verify\` -> \`$zc-verify\`
-- \`zc:debug\` -> \`$zc-debug\`
-- \`zc:doc\` -> \`$zc-doc\`
-- \`zc:ship\` -> \`$zc-ship\`
-- \`zc:onboard\` -> \`$zc-onboard\`
-- \`zc:ctx-health\` -> \`$zc-ctx-health\`
+${commandMappings}
 
 ## 固定 workflow
 
@@ -368,7 +378,8 @@ function renderPluginCompanionAgentsFile(options: {
 - 中文优先，命令名、参数名、文件名、JSON 键和平台产物名保持原样
 - 证据先于断言，完成前必须给出实际验证结果
 - 不做超出任务边界的顺手修改
-- 需要多 agent 或指定角色时，再使用 Codex custom agents
+- 多 agent 触发以 \`agent_opportunity.dispatch_now\` 为准；为 \`yes\` 时必须真实派发可用 Codex custom agents，或说明平台能力不足并降级
+- 写入型 agent 必须有文件所有权、loop budget 和 fan-in 验证
 
 ## 统一命令语义到插件 skill 的映射
 
@@ -501,6 +512,10 @@ function renderTomlScalar(value: string): string {
   return JSON.stringify(value);
 }
 
+function renderTomlStringArray(values: readonly string[]): string {
+  return `[${values.map(renderTomlScalar).join(", ")}]`;
+}
+
 function renderCodexCommandAliasBody(asset: ToolkitAssetLike, naming: SkillNaming): string {
   const commandName = toCodexSkillSlug(asset);
   const invocationName = `${naming.prefix}${commandName}`;
@@ -547,6 +562,9 @@ function renderCodexAgentArtifacts(
       content: [
         `name = ${renderTomlScalar(toCodexAgentName(asset))}`,
         `description = ${renderTomlScalar(asset.summary ?? describeAsset(asset))}`,
+        ...(asset.tools && asset.tools.length > 0
+          ? [`tools = ${renderTomlStringArray(asset.tools)}`]
+          : []),
         `developer_instructions = ${renderTomlScalar(
           asset.body ?? `# ${describeAsset(asset)}\n`,
         )}`,

@@ -333,6 +333,58 @@ describe("lintToolkitManifest", () => {
     assert.equal(result.summary.errors, 0);
   });
 
+  it("warns when multi-agent control assets omit loop boundaries", () => {
+    const result = lintToolkitManifest(
+      makeManifestWithAssets([
+        {
+          id: "skill:parallel-agent-dispatch",
+          body: [
+            "## 角色定位",
+            "",
+            "Use fan-out with worker agents for independent tasks."
+          ].join("\n"),
+          meta: {
+            tier: "recommended",
+            audience: "advanced",
+            stability: "stable",
+            description: "并行调度多个 agent 完成任务。",
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        }
+      ])
+    );
+
+    assert.equal(result.summary.warnings, 1);
+    assert.equal(result.issues[0]?.rule, "missing-agent-loop-boundary");
+  });
+
+  it("accepts multi-agent control assets with explicit loop budget", () => {
+    const result = lintToolkitManifest(
+      makeManifestWithAssets([
+        {
+          id: "skill:parallel-agent-dispatch",
+          body: [
+            "## 角色定位",
+            "",
+            "Use fan-out with worker agents for independent tasks.",
+            "",
+            "Loop budget: each worker can retry at most 2 rounds before stop gate."
+          ].join("\n"),
+          meta: {
+            tier: "recommended",
+            audience: "advanced",
+            stability: "stable",
+            description: "并行调度多个 agent 完成任务。",
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        }
+      ])
+    );
+
+    assert.equal(result.summary.warnings, 0);
+    assert.equal(result.summary.errors, 0);
+  });
+
   it("warns when summaries mix long English fragments into Chinese text", () => {
     const result = lintToolkitManifest(
       makeManifest({

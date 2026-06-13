@@ -29,8 +29,9 @@
 3. 用 `zc team plan` 做 dry-run，任务必须带 `files=` 边界。
 4. 只有 `canStart=true` 且用户确认后，才运行 `zc team start`。
 5. 用 `zc team status` 和 `zc team log` 监控 worker。
-6. fan-in 前运行 `zc team shutdown <team> --plan` 查看 clean/dirty/ahead/merged 状态；这个 plan 是 fan-in evidence，不是删除或丢弃 worktree 的授权。
-7. 明确每个分支去向后再 `zc team shutdown`。
+6. 按 loop budget 判断 worker 是否 stuck；状态不明、重复失败或超过等待预算时停止派新任务，先 fan-in 已有结果。
+7. fan-in 前运行 `zc team shutdown <team> --plan` 查看 clean/dirty/ahead/merged 状态；这个 plan 是 fan-in evidence，不是删除或丢弃 worktree 的授权。
+8. 明确每个分支去向后再 `zc team shutdown`。
 
 ```bash
 zc doctor
@@ -85,6 +86,30 @@ Recommendation: 使用 zc team because <文件系统隔离收益> outweighs <tmu
 
 确认 `zc team` 前，应先说明为什么 `readonly-consult`、`serial-subagent` 或 `context-fanout` 不足以覆盖目标，避免把 team 当成默认实现模式。
 
+Codex 是默认主路径时，worker 优先选择 Codex。Qwen / Claude / OpenCode 只在任务明确需要对应平台能力、用户指定或 Codex 无法覆盖时加入，不把跨 CLI 当成默认加速手段。
+
+## Bounded Team Loop
+
+启动前必须写明：
+
+```text
+team_loop_budget:
+- poll interval:
+- max wait:
+- stuck condition:
+- retry limit:
+- degraded path:
+- shutdown evidence:
+```
+
+默认边界：
+
+- `zc team plan` 必须先通过，且 `canStart=true`。
+- 监控默认每 30-60 秒读取一次状态；没有新日志、任务状态不变或重复同类失败超过 2 次，判定为 stuck。
+- 单个 worker 同一任务最多重派 1 次；重派必须改变上下文、任务范围、模型或验证方式。
+- 超过等待预算、状态文件缺失、worktree dirty 且归属不清时，不继续扩大 team，先做 shutdown plan 和人工 fan-in。
+- 部分 worker 成功时保留成功结果，失败任务缩小范围后改串行或回到 `parallel-agent-dispatch` / `planning-and-task-breakdown`。
+
 ## Worker 协作纪律
 
 - 每个 worker 只修改自己的 `files=` 范围。
@@ -105,6 +130,7 @@ Team acceptance transcript:
 - Branch/worktree status:
 - Worker results:
 - Findings/fixes/regression:
+- Loop budget:
 - Integrated diff:
 - Verification:
 - Cleanup:

@@ -10,6 +10,7 @@
 - `skills/zc-<command>/SKILL.md`
 - `skills/zc-<skill>/SKILL.md`
 - `agents/zc-<agent>.toml`
+- Codex 项目上下文初始化计划：`AGENTS.md` managed block + `.codex/context/*`
 - 可选 Codex plugin bundle：`.codex-plugin/plugin.json` + `skills/<command-or-skill>/`
 - 可选 Codex marketplace bundle：`.agents/plugins/marketplace.json` + `AGENTS.md` / `.codex/AGENTS.md` + `plugins/zc-toolkit/` / `.codex/plugins/zc-toolkit/` + `.codex/agents/`
 
@@ -20,6 +21,8 @@
 - 提示资产内容不在本包维护
 - 本包只关心 Codex 平台模板、安装计划和产物布局
 - 不承担仓库治理能力
+
+`zc context init` 的 CLI 入口位于 `apps/cli`，但 Codex 上下文产物的模板和 action plan 由本包的 `createCodexContextInitPlan` 提供。
 
 ## 常用用法
 

@@ -1,0 +1,30 @@
+kind: command
+name: context-init
+title: 上下文初始化
+description: 初始化 Codex 项目上下文索引。用于在项目根生成薄入口和渐进式披露的 .codex/context 资料，让 AI 能快速理解项目并主动维护上下文。
+tier: recommended
+audience: default
+stability: evolving
+requires:
+  - skill:context-engineering
+suggests:
+  - skill:context-budget-audit
+  - agent:context-steward
+platforms:
+  - codex
+workflow_family: support
+workflow_role: specialized-entry
+routing_workflows:
+  - investigation
+  - docs-release
+  - full-delivery
+task_types:
+  - investigation
+  - docs
+  - feature
+platform_exposure:
+  codex: command-style
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: Codex-only 项目上下文初始化入口，吸收上游 progressive disclosure、context map、context-save/restore 的经验，但不复制 Claude hooks、无限循环或跨会话记忆写入。

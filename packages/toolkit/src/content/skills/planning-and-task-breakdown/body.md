@@ -48,6 +48,7 @@
 - `agent_opportunity`：本计划是否需要只读协助、串行子代理、上下文级并行或 `zc team`，并列出匹配的 Codex agents / workers、确认边界和 fan-in gate
 - `fan-out eligibility`：是否能并行、按哪些文件或模块拆、是否有确认边界、是否需要 `zc team plan`
 - `fan-in gate`：实现后如何合流、审查、回归、验证和清理
+- `loop_budget`：多 agent、review finding、worker 补交或验证失败最多允许几轮，何时停线回到计划或调试
 - `implementation tasks`：从计划或评审发现转化来的可执行任务列表
 
 ## 决策日志格式
@@ -116,22 +117,35 @@ STOP: <阻塞发现>
 ```text
 agent_opportunity:
 - mode: none | readonly-consult | serial-subagent | context-fanout | zc-team
+- dispatch_now: yes | no
 - trigger:
+- dispatch_evidence:
 - recommended Codex agents/workers:
+- context_maintenance:
 - ownership:
 - confirmation:
 - fan-in gate:
+- loop_budget:
 ```
 
 判断规则：
 
 - `readonly-consult`：适合架构、测试、安全、性能、产品、上游吸收、Codex 适配、安装/更新或审查侧评；复杂计划应先考虑它，再考虑更重的并行。用户已授权只读 agent 默认启用时通知式启动，否则先预告并等待确认，不能改文件。
+- `agent:context-steward`：当计划会改变模块结构、验证命令、上下文索引或长期项目约定时，以 sidecar 形式加入 `context_maintenance`。它默认 scoped_write，不占用主实现任务；写入只能触碰 `.codex/context/**` 和 `AGENTS.md` managed block，冲突或越界时才降级 fan-in。
 - `serial-subagent`：任务独立但存在依赖顺序，主线程逐个委派并 fan-in。
 - `context-fanout`：任务可按文件、模块或证据问题拆开，写入前必须明确文件所有权、验证命令和 fan-in gate。若计划已被用户接受，低风险写入并行可视为本轮预授权，不必再次逐项确认。
 - `zc-team`：只有用户明确要求或确认，且 `zc team plan` 返回可启动时才进入。
 - `none`：任务简单、强耦合、同文件冲突或缺少验证方式。
 
 Codex agents / workers 必须写成可执行角色或本地已知 agent 名；如果当前平台没有对应 agent，就写 `none` 或“主线程只读复核”，不要凭空造角色。
+
+`context_maintenance` 必须写清：
+
+- `needed: yes | no`
+- `agent: zc_context_steward | main-thread`
+- `mode: readonly_audit | scoped_write | fan_in_write`
+- `owned files: .codex/context/**, AGENTS.md managed block`
+- `fan-in: 主线程读取报告和写入证据；只有冲突、越界或来源不明时才决定是否运行 zc context init --write`
 
 fan-in gate 必须说明：
 
@@ -143,6 +157,14 @@ fan-in gate 必须说明：
 
 低风险写入并行预授权只适用于非生产、非敏感、非破坏性任务，且文件所有权不重叠、worker 不超过 2 个；否则 `confirmation` 必须写成 explicit。
 
+loop_budget 必须说明：
+
+- 只读 consult 默认 1 轮；如果发现互相冲突的结论，主线程先做 fan-in 判断，不继续加派同类 agent。
+- 串行子代理每个 task 最多 2 轮 rework；同一 finding 两次无法关闭，进入 stop gate。
+- Context fan-out 每个 worker 最多 2 次补交；补交必须改变上下文、任务范围或验证方式，不能原样重试。
+- `zc team` 必须有监控间隔、最长等待、stuck 判定和 shutdown plan；缺少这些字段时不能把计划视为已确认。
+- 出现同文件冲突、重复失败、验证方式缺失或 agent 状态不明时，回到 `planning-and-task-breakdown` 或 `debugging-and-error-recovery`。
+
 ## 成功标准
 
 - 每个任务都能独立实现、测试和验证
@@ -151,6 +173,7 @@ fan-in gate 必须说明：
 - 人类看完计划后能明确判断“方案对不对”
 - 计划中的问题和风险都能落到后续验证命令或审查项
 - `agent_opportunity` 已给出 mode、触发原因、确认边界和 fan-in gate
+- `loop_budget` 已给出最大轮次、停线条件和降级入口
 - 并行任务必须有明确文件所有权或隔离理由
 - 阻塞发现已经进入 stop gate 或被转成 P1 implementation task
 

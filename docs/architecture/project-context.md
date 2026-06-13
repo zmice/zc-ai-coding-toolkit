@@ -2,6 +2,8 @@
 
 这份文档是项目级上下文索引，用于在开始任务时快速装载相关上下文，而不是把整个仓库一次性塞进会话。
 
+Codex 项目可通过 `zc context init` 生成同类索引到 `.codex/context/`。根 `AGENTS.md` 仍保持薄入口，只追加受管上下文索引块；详细项目事实、命令和模块入口放在 `.codex/context/project.md`、`.codex/context/commands.md` 和 `.codex/context/modules/README.md`。
+
 ## 推荐读取顺序
 
 1. 先读根目录 `AGENTS.md`
@@ -119,6 +121,8 @@
 只读：
 
 - `AGENTS.md`
+- `.codex/context/project.md`（如果已运行 `zc context init`）
+- `.codex/context/commands.md`（如果已运行 `zc context init`）
 - `apps/cli/README.md`
 - 目标命令文件
 - 对应测试文件
@@ -128,6 +132,7 @@
 只读：
 
 - `AGENTS.md`
+- `.codex/context/project.md`（如果已运行 `zc context init`）
 - `packages/toolkit/README.md`
 - 目标资产目录下的 `meta.yaml` 和 `body.md`
 - `packages/toolkit/src/content-lint.ts`
@@ -148,3 +153,4 @@
 - 不要一次性展开整个 `packages/toolkit/src/content`
 - 不要把 `references/snapshots` 全量塞进会话
 - 不要把 generated/dist 文件当作源码真相
+- 不要把临时 agent transcript 或未验证探索结论写进 `.codex/context/`

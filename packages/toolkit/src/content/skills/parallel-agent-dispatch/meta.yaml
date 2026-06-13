@@ -7,7 +7,6 @@ audience: advanced
 stability: stable
 suggests:
   - skill:branch-finish-and-cleanup
-  - skill:planning-and-task-breakdown
   - skill:verification-before-completion
 platforms:
   - qwen

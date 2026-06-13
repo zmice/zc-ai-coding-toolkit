@@ -1,0 +1,26 @@
+{
+  "upstream": "agent-skills",
+  "captured_at": "2026-06-12T05:03:41.482Z",
+  "label": "2026-06-12-review",
+  "metadata": {
+    "title": "Agent Skills",
+    "kind": "github-public-repo",
+    "status": "active",
+    "owner": "codex",
+    "source_url": "https://github.com/addyosmani/agent-skills.git",
+    "source_paths": [
+      "skills",
+      "commands"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/addyosmani/agent-skills.git",
+    "checked_at": "2026-06-12T05:03:41.484Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "d187883b7d761265309cdcc0f202cc76b4b3fb06"
+  },
+  "notes": {
+    "path": "references/notes/agent-skills.md",
+    "content": "# Agent Skills\n\nSource: `https://github.com/addyosmani/agent-skills`\n\n## Status\n\nRegistered from historical upstream tracking. Initial baseline snapshot captured in the new governance layer.\n\n## Historical Role\n\n- This was the primary external base for the early skill and command system.\n- Commit history previously marked it as the core upstream for the toolkit skill architecture.\n\n## Expected Downstream Value\n\n- Skill workflow structure\n- Command naming and routing patterns\n- Reusable agent-skill composition ideas\n\n## Boundaries\n\n- Do not mirror the upstream layout directly into `packages/toolkit`.\n- Prefer absorbing durable workflow patterns over copying prompt wording verbatim.\n\n## Snapshot Baseline\n\n- baseline: `references/snapshots/agent-skills/2026-04-14-baseline.json`\n- current governance status: `active`\n\n## Latest Reviewed Upstream\n\n- remote head: `f17c6e88c904dc747381c374312c2d58e10647ae`\n- observed date: 2026-05-18\n- notable upstream change: upstream added `scripts/validate-skills.js` and a plugin-install CI workflow that validates skill `SKILL.md` presence, frontmatter shape, description budget, required sections, and dead cross-skill references.\n\n## Extractable Upgrades\n\n- Adopt the skill anatomy checklist as a governance heuristic: trigger clarity, workflow steps, anti-rationalization, red flags, verification evidence.\n- Reuse the OpenCode idea of agent-driven skill routing through `AGENTS.md` rather than forcing slash-command parity on platforms that do not natively support it.\n- Keep reference checklists as optional supporting material, not always-loaded context.\n- Strengthen `command:start` routing language: descriptions and trigger conditions must say both what a workflow does and when to activate it, because platforms increasingly auto-discover skills from short metadata.\n- Prefer on-demand skill loading over persistent always-on context; reserve persistent files such as `AGENTS.md` / `GEMINI.md` for project conventions and canonical routing.\n- Extend the same discovery/context rule into `using-agent-skills` and `context-engineering`, not only the `start` command.\n- Fold doubt-driven behavior into existing engineering principles: route-changing doubts should become explicit questions or assumptions before implementation.\n- Keep local skill discovery names accurate; upstream references to a browser testing skill should map to this repo's `browser-qa-testing`.\n- Treat interview-style clarification as already covered by `idea-refine` / `product-analysis`; no separate interview skill is needed yet.\n- Absorb validator intent into `toolkit lint`: check description length, empty body, skill activation sections, and explicit skill / command / agent references without copying upstream's file layout.\n\n## Non-Adoption Boundary\n\n- Do not mirror upstream skill names or prose directly into `packages/toolkit`.\n- Do not add platform setup instructions that imply unsupported native plugin behavior.\n- Do not add Gemini as a supported `zc platform` target until the CLI install model, generated layout, and tests are designed in `packages/platform-*`.\n- Do not import the upstream GitHub workflow directly; this repo should keep validation centered on manifest-aware `toolkit lint` and package tests.\n\n## Recommended Phase\n\n- Phase 1: start/workflow routing wording plus meta-skill/context-engineering documentation heuristics and local skill-name consistency.\n- Phase 2: manifest-aware toolkit lint coverage for discovery budgets, activation sections, body presence, and explicit asset references.\n- Phase 3: evaluate a dedicated Gemini platform adapter if there is user demand.\n"
+  }
+}

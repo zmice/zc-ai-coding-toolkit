@@ -7,6 +7,10 @@ audience: default
 stability: stable
 suggests:
   - skill:engineering-principles
+  - skill:parallel-agent-dispatch
+  - skill:subagent-driven-development
+  - skill:team-orchestration
+  - skill:verification-before-completion
 platforms:
   - qwen
   - codex

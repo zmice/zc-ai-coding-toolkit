@@ -68,6 +68,18 @@ const nonAssetReferenceAllowlist = new Set<string>([
   "update-available",
   "zc-team"
 ]);
+const agentLoopBoundaryAssetIds = new Set<string>([
+  "command:start",
+  "skill:planning-and-task-breakdown",
+  "skill:sdd-tdd-workflow",
+  "skill:parallel-agent-dispatch",
+  "skill:subagent-driven-development",
+  "skill:team-orchestration"
+]);
+const agentDispatchSignalPattern =
+  /(?:agent_opportunity|dispatch_now|fan-out|Context Fan-Out|zc team|worker|子代理|多 agent|multi-agent|subagent)/iu;
+const agentLoopBoundaryPattern =
+  /(?:loop_budget|Loop budget|Bounded Loop|Bounded Team Loop|stop gate|停线|最多\s*\d+\s*轮|fan-in gate)/iu;
 
 function checkMissingGovernanceFields(assetId: string, meta: ToolkitAssetMeta): ToolkitLintIssue[] {
   const issues: ToolkitLintIssue[] = [];
@@ -204,6 +216,29 @@ function checkBodyStructure(asset: ToolkitAssetUnit): ToolkitLintIssue[] {
   }
 
   return issues;
+}
+
+function checkAgentLoopBoundary(asset: ToolkitAssetUnit): ToolkitLintIssue[] {
+  if (!agentLoopBoundaryAssetIds.has(asset.id)) {
+    return [];
+  }
+
+  if (!agentDispatchSignalPattern.test(asset.body)) {
+    return [];
+  }
+
+  if (agentLoopBoundaryPattern.test(asset.body)) {
+    return [];
+  }
+
+  return [
+    {
+      level: "warning",
+      assetId: asset.id,
+      rule: "missing-agent-loop-boundary",
+      message: "多 agent 调度内容必须声明 loop budget、stop gate 或 fan-in gate，避免无边界重试。"
+    }
+  ];
 }
 
 function checkUpstreamRegistryConsistency(
@@ -560,7 +595,8 @@ export function lintToolkitManifest(
     ...checkLocalizedSummary(asset.id, asset.meta),
     ...checkUpstreamRegistryConsistency(asset.id, asset.meta, options.knownUpstreams),
     ...checkSourceTraceability(asset.id, asset.meta),
-    ...checkBodyStructure(asset)
+    ...checkBodyStructure(asset),
+    ...checkAgentLoopBoundary(asset)
   ]).concat(
     checkDuplicateSummaries(manifest),
     checkExplicitAssetReferences(manifest),

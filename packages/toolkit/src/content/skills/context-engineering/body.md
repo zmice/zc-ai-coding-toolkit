@@ -38,6 +38,18 @@
    - references / checklists：需要深入验证时再加载
    - 用户级配置或记忆：只在明确授权后写入
 
+Codex 项目可以用 `context-init` 初始化 `.codex/context/` 索引。该命令只维护项目级上下文骨架，不写用户级配置，不替代当前任务的源码阅读。
+
+## Context Steward Sidecar
+
+当上下文维护会打断主流程时，优先把它拆给 `agent:context-steward`：
+
+- 主线程继续处理当前需求，保留 controller / integrator 角色。
+- context steward 默认 scoped_write，负责审计并维护 `.codex/context/**`、`AGENTS.md` managed block、package scripts、README 和模块入口的一致性。
+- context steward 先运行 `zc context init --plan --json`，候选变更只涉及自有边界时继续执行 `zc context init --write --json` 或等价最小编辑。
+- 写入只限 `.codex/context/**` 和 `AGENTS.md` 的 `zc-context:init` managed block；涉及用户手写规则、业务源码、用户级配置或跨项目记忆时必须降级 fan-in。
+- 如果上下文维护和主任务都要改 `AGENTS.md`，先停在 fan-in，由主线程合并，不让两个 worker 同时写。
+
 ## 成功标准
 
 - 开始执行前，代理已经知道目标、边界和验证方式
@@ -47,7 +59,8 @@
 - 遇到冲突时能清楚指出需要人类决策的点
 - 不会因为上下文膨胀而偏离当前任务
 - 没有为了“方便”把所有 skill、所有上游文档或所有历史记忆一次性塞入当前会话
-- 任何持久化写入都有明确授权、可解释影响和回滚路径
+- 任何越过项目上下文自有边界的持久化写入都有明确授权、可解释影响和回滚路径
+- 上下文维护没有挤占主流程；sidecar 报告清楚说明 stale / missing / conflict / updated、写入证据和 fan-in 结果。
 
 ## 相关原则
 
@@ -65,3 +78,4 @@
 - 需求仍模糊：回到 `spec-driven-development`
 - 任务已经明确、准备实现：回到 `incremental-implementation`
 - 会话健康恶化明显：结合 `context-budget-audit`
+- 项目缺少稳定上下文索引：先运行 `context-init` 生成 Codex 项目上下文骨架

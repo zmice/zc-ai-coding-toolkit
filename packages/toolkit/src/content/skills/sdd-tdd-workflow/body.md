@@ -45,6 +45,7 @@
 - **Serial Subagent**：已有计划，任务彼此独立但有依赖顺序；使用 `subagent-driven-development` 串行委派。
 - **Context Fan-Out**：任务可以按文件、模块或证据问题并行，且有清晰文件所有权和 fan-in gate；使用 `parallel-agent-dispatch`。低风险写入 fan-out 在计划已接受时可通知式启动，高风险或边界不清时仍必须确认。
 - **Team Orchestration**：需要 tmux + git worktree 文件系统隔离、长时间多 worker 或 Codex / Qwen 多 CLI 协作；使用 `team-orchestration`，必须用户明确要求或确认。
+- **Context Steward Sidecar**：如果本轮会改变模块结构、验证命令、上下文索引或长期项目约定，派 `agent:context-steward` 维护上下文；主线程继续实现，它在自有边界内 scoped_write，fan-in 时交付写入证据。
 
 主线程是 controller / integrator：
 
@@ -54,7 +55,15 @@
 - 写入型 agent 不共享文件所有权；无法划清所有权时降级为 Manual 或 Serial Subagent。
 - 写入型并行的放松只适用于已接受计划中的低风险切片；涉及生产、敏感数据、破坏性操作、同文件修改或超过 2 个 worker 时仍走显式确认。
 - 审查 agent 默认只读；提出 finding 后负责回归确认。
+- context steward 默认 scoped_write；只要写入限制在 `.codex/context/**` 和 `AGENTS.md` managed block，就可以直接维护项目上下文。发生同文件冲突、需要改用户手写规则或越过项目上下文边界时，必须停在 fan-in。
 - 主线程可以处理小任务、集成冲突、最终修补和验证失败分析，但在已经选择多 agent 模式后，不抢占已分配给 worker 的任务。
+
+进入任一多 agent 模式前，必须有 bounded loop contract：
+
+- `loop_budget`：每个 task、worker、review finding 或验证失败最多几轮。
+- `stop condition`：同类失败重复、两轮无法关闭同一 finding、同文件冲突、agent 状态不明或验证方式缺失时停止。
+- `degraded path`：只读 agent 不可用时主线程复核；写入 worker 失败时缩小任务或改串行；`zc team` 不满足启动条件时回到 Context Fan-Out 或 Manual。
+- `fan-in evidence`：所有 agent 状态、修改文件、验证结果、finding fingerprint、回归结论、context stewardship 报告和最终验证命令。
 
 推荐提示格式：
 
@@ -64,6 +73,7 @@ Recommendation: 按 Manual / Readonly Consult / Serial Subagent / Context Fan-Ou
 - 只读协助:
 - 写入边界:
 - fan-in 验证:
+- loop_budget:
 - 是否需要确认:
 ```
 

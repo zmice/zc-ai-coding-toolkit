@@ -43,6 +43,7 @@ zc platform install <claude|opencode|qwen> [--global]
 它负责：
 
 - runtime：启动单工人或团队协作运行时
+- context：初始化 Codex 项目上下文索引
 - toolkit：查询 skills / commands / agents
 - platform：生成、安装、更新和检查平台产物
 
@@ -198,6 +199,20 @@ zc team start -w "w1:codex,w2:codex" \
 ```
 
 `zc team start` 会保守检查并行安全：多 worker 任务必须声明 `files=`，文件冲突或 `deps=` 依赖会阻止盲目并行。worktree 默认使用 `.worktrees/`，该目录必须被 git ignore；关闭前先用 `zc team shutdown <name> --plan` 查看 fan-in 状态。
+
+### Context
+
+- `zc context init`
+
+`context init` 是 Codex-only 的项目上下文初始化入口，默认只输出计划，不写文件：
+
+```bash
+zc context init --json
+zc context init --write
+zc context init --dir /path/to/project --write
+```
+
+它会维护项目根 `AGENTS.md` 的受管上下文块，并生成 `.codex/context/project.md`、`.codex/context/commands.md`、`.codex/context/modules/README.md` 和 `.codex/context/manifest.json`。这些文件用于渐进式披露项目上下文，不替代当前任务的源码阅读，也不写用户级 `~/.codex` 配置。
 
 ### Toolkit
 

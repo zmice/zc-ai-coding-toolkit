@@ -1,0 +1,26 @@
+kind: agent
+name: context-steward
+title: 上下文维护员
+description: 负责以 sidecar 方式审计和维护项目上下文索引；在明确拥有的项目上下文边界内可直接刷新 .codex/context 与 AGENTS.md managed block，不打断主实现流程。
+tier: recommended
+audience: advanced
+stability: evolving
+requires:
+  - skill:context-engineering
+  - command:context-init
+suggests:
+  - skill:context-budget-audit
+  - skill:parallel-agent-dispatch
+tools:
+  - Read
+  - Edit
+  - MultiEdit
+  - Grep
+  - Glob
+  - Bash
+platforms:
+  - codex
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 本仓库新增的 Codex 上下文维护 sidecar 角色，用于把上下文刷新与主实现流程隔离。

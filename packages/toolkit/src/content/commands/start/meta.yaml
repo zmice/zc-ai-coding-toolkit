@@ -20,9 +20,16 @@ suggests:
   - command:doc
   - command:ship
   - command:onboard
+  - command:context-init
   - command:ctx-health
   - command:idea
   - command:guard
+  - skill:parallel-agent-dispatch
+  - skill:subagent-driven-development
+  - skill:team-orchestration
+  - agent:context-steward
+  - agent:code-reviewer
+  - agent:test-engineer
 platforms:
   - qwen
   - codex

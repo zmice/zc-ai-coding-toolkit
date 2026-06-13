@@ -12,6 +12,9 @@ suggests:
   - skill:test-driven-development
   - skill:code-review-and-quality
   - skill:verification-before-completion
+  - skill:parallel-agent-dispatch
+  - skill:subagent-driven-development
+  - skill:team-orchestration
 platforms:
   - qwen
   - codex

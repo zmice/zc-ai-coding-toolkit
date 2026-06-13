@@ -160,6 +160,7 @@ describe("toolkit query helpers", () => {
         "command:doc",
         "command:ship",
         "command:onboard",
+        "command:context-init",
         "command:ctx-health",
         "command:idea",
         "command:guard"

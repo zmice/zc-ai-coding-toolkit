@@ -15,7 +15,7 @@
 - `workflow`：六条固定 workflow 之一
 - `entry`：下一步应该调用的 command / skill，必须是实际可执行入口
 - `agent`：可选协作角色；只有平台支持且用户授权时才建议，不作为默认入口
-- `agent_opportunity`：`standard` / `high-risk`、跨面验证或命中复杂度信号时必须输出，说明是否需要只读协助、串行子代理、上下文级并行或 `zc team`
+- `agent_opportunity`：`standard` / `high-risk`、跨面验证或命中复杂度信号时必须输出，说明是否需要只读协助、串行子代理、上下文级并行或 `zc team`，并给出是否应立即派发的执行契约
 - `reason`：用 1-3 条证据说明为什么这样判型
 - `assumption`：如果有未确认前提，明确写出
 - `question`：只有无法安全推进时才问，最多 1-3 个关键问题
@@ -169,16 +169,21 @@
 - 涉及安全、性能、数据恢复、生产配置或敏感配置。
 - 需要前后端、后端与部署、文档与实现同步。
 - 当前上下文不足，需要并行摸底。
+- 项目结构、验证命令、上下文索引或根入口规则可能过期，需要独立维护上下文。
 
 `agent_opportunity` 格式：
 
 ```text
 agent_opportunity:
 - mode: none | readonly-consult | serial-subagent | context-fanout | zc-team
+- dispatch_now: yes | no
+- dispatch_evidence:
 - reason:
 - agents:
+- context_maintenance:
 - ownership:
 - fan-in:
+- loop_budget:
 - needs_confirmation:
 ```
 
@@ -186,21 +191,32 @@ agent_opportunity:
 
 - `none`：简单任务或无法证明 agent 有收益。
 - `readonly-consult`：架构、审查、测试、安全、性能、产品、上游吸收、Codex 适配、安装/更新或跨 surface 验证等只读协助；它是复杂任务进入写入前优先考虑的低风险帮助。只有用户已授权本会话或项目默认启用只读 agent 时，才可通知式启动，不改文件。
+- `agent:context-steward` 不是新的 mode，而是优先挂在 `context-fanout` 下的 sidecar 角色：主线程继续推进需求，它审计上下文是否 stale / missing / conflict；若只涉及 `.codex/context/**` 或 `AGENTS.md` managed block，可直接 scoped_write 并在 fan-in 汇报证据。
 - `serial-subagent`：已有任务计划、任务彼此独立，但不需要并行执行。
 - `context-fanout`：多个独立问题或互不重叠文件可以并行处理；写入型 fan-out 默认确认文件所有权和 fan-in 验证。若用户已在本轮接受包含这些边界的计划，且任务低风险、文件不重叠、worker 不超过 2 个，可通知式启动。
 - `zc-team`：需要 tmux + git worktree 或 Codex / Qwen 多 CLI worker 时才建议；必须用户明确要求或确认。
 
 数量上限：
 
-- 普通复杂任务最多 1 个只读 agent。
-- 跨模块或高风险任务最多 2 个只读 agent。
-- 写入型并行默认最多 2 个 worker，超过 2 个必须说明收益和 fan-in 成本。
+- 普通复杂任务默认 1-3 个只读 agent；任务问题域必须彼此独立。
+- 用户明确要求多 agent、且是上游吸收 / 审查 / 跨模块摸底 / Codex 适配这类天然独立任务时，只读 agent 最多 5 个；需要保留主线程做 controller。
+- 写入型并行默认最多 2 个 worker；只有文件所有权完全不重叠、计划已接受、验证方式明确时才放宽到 3 个。
+- 超过默认数量必须说明收益、fan-in 成本、冲突风险和降级路径。
 - `zc team` 不能因“可能更快”自动启动，必须用户明确。
+
+执行映射：
+
+- `dispatch_now: yes` 表示下一步必须实际派发可用的 Codex custom agent / subagent，或显式说明当前平台缺少可用 dispatch tool 并降级。
+- `dispatch_now: no` 表示只记录机会，不启动 agent；必须说明阻塞原因，如缺少授权、文件所有权不清、需要先写计划或风险过高。
+- `agents` 必须优先使用真实可用角色，如 `zc_context_steward`、`zc_code_reviewer`、`zc_test_engineer`、`zc_security_auditor`、`zc_performance_engineer`、`zc_architect`、`zc_product_owner`。没有对应角色时写主线程复核，不凭空造 agent。
+- `context_maintenance` 必须说明是否需要 sidecar；如果需要，默认 `scoped_write`，写入范围只能是 `.codex/context/**` 和 `AGENTS.md` 的 `zc-context:init` managed block。只有出现同文件冲突、来源不明或越过项目上下文边界时，才降级到主线程 fan-in 后确认。
+- `loop_budget` 必须写清最多几轮、同一 finding 何时停止、失败后回到哪个入口。默认：只读 consult 1 轮；串行子代理同一 task 最多 2 轮 rework；context fan-out 单 worker 最多 2 次补交；同类失败重复出现就停线回到 `task-plan` 或 `debug`。
 
 确认边界：
 
 - 只读 agent：用户已授权时通知式启用，必须说明 agent、目标和“不改文件”；未授权时只输出 `agent_opportunity` 和 `Agent assist` 预告，等待确认。
 - 写入型 agent：默认确认式启用，必须说明文件所有权、验证命令和 fan-in gate。低风险写入并行如果已经在本轮计划中获得授权，可以通知式启用，但要重复列出 worker、文件边界和 fan-in gate。
+- 上下文维护 sidecar：默认可在项目上下文边界内 scoped_write 且不阻塞主流程；它不直接改业务文件，遇到 `AGENTS.md` 非 managed 段落或跨项目持久化时必须停在 fan-in。
 - 无法证明独立、存在同文件冲突、存在依赖链：默认先 `task-plan`，不直接并行。
 - 如果进入 `zc team`，先 dry-run：`zc team plan ... --json`。
 
@@ -215,6 +231,7 @@ Codex 优先规则：
 - `AGENTS.md`、`GEMINI.md`、平台规则文件只放长期项目约定和稳定路由
 - 写入用户级配置、跨项目路由、跨会话记忆或跨机器同步前，必须明确说明影响并取得用户授权
 - 平台不支持的能力不能通过文案暗示支持；例如某个平台没有 native plugin，就走 install / filesystem 适配路线
+- 当任务可能改变长期项目事实时，优先派 `agent:context-steward` 做 sidecar 维护；主线程继续实现，fan-in 时检查它的 `context-init` 写入结果和剩余风险。
 
 ## 平台说明
 

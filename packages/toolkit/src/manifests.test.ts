@@ -139,9 +139,11 @@ describe("loadToolkitManifest", () => {
     assert.ok(Boolean(manifest.byId["skill:release-documentation-sync"]));
     assert.ok(Boolean(manifest.byId["skill:developer-experience-audit"]));
     assert.ok(Boolean(manifest.byId["command:start"]));
+    assert.ok(Boolean(manifest.byId["command:context-init"]));
     assert.ok(Boolean(manifest.byId["command:product-analysis"]));
     assert.ok(Boolean(manifest.byId["command:spec"]));
     assert.ok(Boolean(manifest.byId["agent:architect"]));
+    assert.ok(Boolean(manifest.byId["agent:context-steward"]));
     assert.equal(manifest.byId["skill:sdd-tdd-workflow"]?.meta.tier, "core");
     assert.equal(manifest.byId["agent:architect"]?.meta.audience, "advanced");
     assert.deepEqual(manifest.byRelationship.requires["command:quality-review"], [
@@ -164,27 +166,43 @@ describe("loadToolkitManifest", () => {
 
     assert.match(
       manifest.byId["command:start"]?.body ?? "",
-      /agent_opportunity:[\s\S]*readonly-consult[\s\S]*已授权[\s\S]*zc-team/
+      /agent_opportunity:[\s\S]*dispatch_now[\s\S]*loop_budget[\s\S]*zc-team/
+    );
+    assert.match(
+      manifest.byId["command:context-init"]?.body ?? "",
+      /zc context init --plan[\s\S]*\.codex\/context\/project\.md[\s\S]*主动维护规则[\s\S]*agent:context-steward/
+    );
+    assert.match(
+      manifest.byId["agent:context-steward"]?.body ?? "",
+      /Context stewardship:[\s\S]*scoped_write[\s\S]*fan-in gate[\s\S]*Recommendation:/
+    );
+    assert.deepEqual(
+      manifest.byId["agent:context-steward"]?.meta.tools,
+      ["Read", "Edit", "MultiEdit", "Grep", "Glob", "Bash"]
     );
     assert.match(
       manifest.byId["skill:sdd-tdd-workflow"]?.body ?? "",
       /producer owns fix[\s\S]*reviewer owns regression[\s\S]*controller owns fan-in/
     );
     assert.match(
+      manifest.byId["skill:sdd-tdd-workflow"]?.body ?? "",
+      /Context Steward Sidecar[\s\S]*agent:context-steward[\s\S]*context stewardship/
+    );
+    assert.match(
       manifest.byId["skill:planning-and-task-breakdown"]?.body ?? "",
-      /Agent Opportunity[\s\S]*fan-in gate/
+      /Agent Opportunity[\s\S]*dispatch_now[\s\S]*loop_budget/
     );
     assert.match(
       manifest.byId["skill:parallel-agent-dispatch"]?.body ?? "",
-      /只读 fan-out[\s\S]*写入型 fan-out/
+      /dispatch_contract[\s\S]*Bounded Loop[\s\S]*Loop budget/
     );
     assert.match(
       manifest.byId["skill:subagent-driven-development"]?.body ?? "",
-      /Regression:[\s\S]*controller decision/
+      /Bounded Loop[\s\S]*Loop budget:[\s\S]*controller decision/
     );
     assert.match(
       manifest.byId["skill:team-orchestration"]?.body ?? "",
-      /agent_opportunity\.mode=zc-team[\s\S]*用户明确确认/
+      /agent_opportunity\.mode=zc-team[\s\S]*用户明确确认[\s\S]*Bounded Team Loop/
     );
   });
 });

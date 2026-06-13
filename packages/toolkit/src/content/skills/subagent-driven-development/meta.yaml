@@ -6,7 +6,7 @@ tier: recommended
 audience: advanced
 stability: stable
 suggests:
-  - skill:planning-and-task-breakdown
+  - skill:test-driven-development
   - skill:verification-before-completion
   - skill:code-review-and-quality
 platforms:

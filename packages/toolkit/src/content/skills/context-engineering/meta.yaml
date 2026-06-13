@@ -7,6 +7,9 @@ audience: advanced
 stability: stable
 suggests:
   - skill:using-agent-skills
+  - command:context-init
+  - command:ctx-health
+  - agent:context-steward
 platforms:
   - qwen
   - codex

@@ -51,6 +51,7 @@ Recommendation: <action> because <specific evidence, trade-off, and rejected alt
 - `careful`：预警 — 激活 Careful 模式，AI 在执行任何危险命令前显示风险警告并要求确认。
 - `ci`：CI/CD — 搭建或优化 CI/CD 管道，配置质量门禁、自动化测试和部署策略。
 - `commit`：提交 — 引导规范化 Git 提交，确保原子提交、描述性消息和提交前检查。
+- `context-init`：上下文初始化 — 初始化 Codex 项目上下文索引，生成渐进式披露的 `.codex/context` 资料。
 - `ctx-health`：上下文 — 管理和刷新对话上下文，防止长会话质量下降，执行上下文健康检查并输出压缩摘要。
 - `debug`：调试 — 使用系统化方法诊断和修复 Bug，遵循 Prove-It 模式：先复现，再定位，最后修复。
 - `doc`：文档 — 生成项目文档或架构决策记录（ADR），确保知识可传递。
