@@ -41,6 +41,7 @@ Static skill text must not pretend it can perform remote fetches, install update
 ## Consequences
 
 - Codex docs and release flow should prioritize marketplace install/update.
+- Codex custom agents are maintained by `zc platform agents codex`, because the official marketplace surface does not currently provide a declarative agent install path.
 - Legacy `zc platform install codex` remains useful for development, tests, and migration, but is not the preferred user path.
 - Feature specs must name their runtime boundary before implementation.
 - Context and multi-agent features can ship in stages: skill protocol first, then runtime automation where the platform supports it.

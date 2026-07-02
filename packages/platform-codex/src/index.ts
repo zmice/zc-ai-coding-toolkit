@@ -832,6 +832,49 @@ export function createCodexMarketplaceGenerationPlan(
   }) as GenerationPlan;
 }
 
+export function createCodexAgentGenerationPlan(
+  manifest: ToolkitManifestLike,
+  options: GenerationOptions = {},
+): GenerationPlan {
+  const scope = options.scope ?? "dir";
+  const layout = getScopeLayout(scope);
+  const agentAssets = selectMatchedAssetsByKind(manifest, "agent");
+  const manifestSource = options.manifestSource ?? manifest.source ?? "toolkit-manifest";
+  const resolvedPackageName = options.packageName ?? packageName;
+
+  return attachPlanMetadata({
+    platform: platformName,
+    packageName: resolvedPackageName,
+    manifestSource,
+    matchedAssets: agentAssets,
+    capability: {
+      ...createCapability(layout),
+      surfaces: ["agents-dir"],
+      entryFile: undefined,
+      skills: undefined,
+    },
+    artifacts: [
+      ...renderCodexAgentConfigArtifacts(agentAssets, layout),
+      ...renderCodexAgentArtifacts(agentAssets, layout),
+    ],
+  }) as GenerationPlan;
+}
+
+export function createCodexAgentInstallPlan(
+  manifest: ToolkitManifestLike,
+  options: InstallOptions,
+): InstallPlan {
+  const generationPlan = createCodexAgentGenerationPlan(manifest, options);
+  const installPlan = createInstallPlan(generationPlan, options);
+
+  return {
+    ...(installPlan as BaseInstallPlan),
+    matchedAssets: generationPlan.matchedAssets,
+    capability: generationPlan.capability,
+    scope: options.scope ?? "project",
+  };
+}
+
 export function createCodexInstallPlan(
   manifest: ToolkitManifestLike,
   options: InstallOptions,

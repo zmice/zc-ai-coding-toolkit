@@ -4,6 +4,8 @@ import { join } from "node:path";
 
 import {
   capability,
+  createCodexAgentGenerationPlan,
+  createCodexAgentInstallPlan,
   createCodexContextInitPlan,
   createCodexGenerationPlan,
   createCodexInstallPlan,
@@ -354,6 +356,27 @@ describe("@zmice/platform-codex scaffold", () => {
       join(destinationRoot, "skills/zc-skill-alpha/SKILL.md"),
       join(destinationRoot, "agents/zc-code-reviewer.toml"),
     ]);
+  });
+
+  it("creates an agent-only install plan for Codex custom agents", () => {
+    const destinationRoot = join("tmp", "codex");
+    const plan = createCodexAgentInstallPlan(manifest, {
+      destinationRoot,
+      scope: "global",
+    });
+    const generationPlan = createCodexAgentGenerationPlan(manifest, {
+      scope: "global",
+    });
+
+    assert.deepEqual(generationPlan.capability.surfaces, ["agents-dir"]);
+    assert.equal(plan.scope, "global");
+    assert.deepEqual(plan.matchedAssets.map((asset) => asset.id), ["agent:code-reviewer"]);
+    assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
+      join(destinationRoot, "config.toml"),
+      join(destinationRoot, "agents/zc-code-reviewer.toml"),
+    ]);
+    assert.ok(plan.artifacts[0]?.content.includes("[agents.zc_code_reviewer]"));
+    assert.ok(plan.artifacts[1]?.content.includes('name = "zc_code_reviewer"'));
   });
 
   it("installs project AGENTS.md and project-local .codex skills", () => {

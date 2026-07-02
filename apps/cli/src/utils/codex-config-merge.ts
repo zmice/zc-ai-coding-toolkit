@@ -5,7 +5,7 @@ const zcGeneratedCommentLines = new Set([
   "# See: https://developers.openai.com/codex/config-reference",
 ]);
 
-function stripManagedZcAgentSections(content: string): string {
+export function stripManagedZcAgentSections(content: string): string {
   const lines = content.split(/\r?\n/);
   const kept: string[] = [];
   let skipping = false;

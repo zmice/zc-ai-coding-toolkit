@@ -319,6 +319,10 @@ codex plugin marketplace upgrade zc-toolkit
 zc platform plugin codex --git
 zc platform plugin codex --register
 zc platform plugin codex --global
+zc platform plugin codex --global --uninstall --plan
+zc platform plugin codex --global --uninstall --include-agents --plan
+zc platform agents codex --global --sync --prune
+zc platform agents codex --global --status
 zc platform install codex --global
 zc platform install claude --global
 zc platform install opencode --global
@@ -349,7 +353,17 @@ zc platform where qwen --global --json
   - 插件路线的 `AGENTS.md` 只保留全局规则、入口映射和文件索引，入口写成 `$start` / `$sdd-tdd`；传统直装的 `AGENTS.md` 继续写成 `$zc-start` / `$zc-sdd-tdd`
   - 追加 `--force` 时会先清理目标插件的 `skills/` 目录，再写入当前版本，避免旧命名残留
   - 生成 `.codex/config.toml` / `~/.codex/config.toml`，作为 `zc` 管理的 custom agent role 注册配置
-  - 也可以显式使用 `--project` 或 `--dir <repo>`
+  - `--uninstall` 删除 zc 生成的本地 plugin marketplace bundle，包括 `marketplace.json`、薄入口 `AGENTS.md` 和 `plugins/zc-toolkit/`
+  - `--uninstall` 默认保留 custom agents；如果需要一起清理，显式追加 `--include-agents`
+  - 不加 `--force` 时，内容已经被用户改过的薄入口、marketplace 文件或插件目录内文件会跳过；插件目录内存在未知文件时也会跳过，避免误删手工维护内容
+  - Git marketplace 注册模式不支持 `--uninstall`；官方 CLI 暂无稳定 remove 命令时，仍应在 Codex 插件界面或官方命令面处理注册状态
+  - 也可以显式使用 `--project` 或 `--dir <marketplace-root>`；`platform plugin codex --dir` 指向 repo/personal marketplace bundle root，不是 Codex home。如果要直接维护 custom agents，使用 `platform agents codex --dir <codex-home-or-project-root>`
+- `platform agents codex`
+  - 独立维护 Codex custom agents，不依赖官方 marketplace 是否支持 agent 安装
+  - 默认动作是 `--sync`，会更新当前清单内的 `zc-*.toml` 和 `config.toml` 中的 `[agents.zc_*]`
+  - `--status` 检查缺失、漂移和过期 `zc-*.toml`
+  - `--prune` 在同步时删除当前清单外的过期 zc agent 文件
+  - `--uninstall` 删除 zc-managed agent 文件，并只移除 `config.toml` 中的 `[agents.zc_*]`，保留用户自己的 agent 配置
 - `codex --global`
   - 默认安装到 `~/.codex/AGENTS.md`
   - 同时安装 `~/.codex/config.toml` 作为 `zc` 管理的 custom agent role 注册配置

@@ -33,6 +33,7 @@ describe("zc command surface", () => {
     expect(aliasesByCommand).toMatchObject({
       generate: ["g"],
       plugin: ["p"],
+      agents: ["a"],
       install: ["i"],
       where: ["w"],
       status: ["s"],
@@ -59,6 +60,7 @@ describe("zc command surface", () => {
     for (const commandName of [
       "generate",
       "plugin",
+      "agents",
       "install",
       "where",
       "status",
@@ -83,6 +85,21 @@ describe("zc command surface", () => {
       "-j, --json",
       "-f, --force",
     ]);
+  });
+
+  it("keeps platform force help text scoped to each command", () => {
+    const program = createProgram();
+    const platform = program.commands.find((command) => command.name() === "platform");
+
+    expect(platform).toBeDefined();
+
+    const getOptionDescription = (commandName: string, flags: string): string | undefined => {
+      const command = platform!.commands.find((item) => item.name() === commandName);
+      return command?.options.find((option) => option.flags === flags)?.description;
+    };
+
+    expect(getOptionDescription("generate", "-f, --force")).toBe("覆盖目标目录中已有但内容不同的产物");
+    expect(getOptionDescription("plugin", "-f, --force")).toBe("生成时覆盖漂移产物；卸载时忽略漂移/未知文件保护");
   });
 
   it.skipIf(process.platform === "win32")("treats a symlinked bin path as direct execution", () => {

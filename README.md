@@ -35,6 +35,9 @@ codex plugin marketplace add zmice/zc-codex-marketplace
 npm install -g @zmice/zc
 zc platform plugin codex --git
 zc platform plugin codex --register
+zc platform agents codex --global --sync --prune
+zc platform agents codex --global --status
+zc platform plugin codex --global --uninstall --plan
 ```
 
 如果你想装到别的平台，使用 `zc platform install`：
@@ -74,7 +77,7 @@ zc platform plugin codex --register
 
 - Codex 推荐通过官方 Git marketplace 安装插件，插件 skill 用 `$start` 这类无前缀入口
 - Codex 传统直装通过 `$zc-*` skill 别名承接统一语义
-- Codex 的 custom agents 仍是 `zc` 管理的配置路径，不等同于插件自动安装的通用能力
+- Codex 的 custom agents 仍是 `zc` 管理的配置路径，不等同于插件自动安装的通用能力；使用 `zc platform agents codex` 独立同步、检查和卸载
 - Claude Code 和 OpenCode 通过 `/zc-*` 命令承接统一语义
 - Qwen 通过 `zc:*` namespaced command 承接统一语义
 - 这样做是为了避免和平台内置命令、社区插件或未来扩展冲突
@@ -141,6 +144,7 @@ zc platform update codex --global --plan --json
 zc platform doctor codex --global --json
 zc platform repair codex --global --plan --json
 zc platform uninstall codex --global --plan --json
+zc platform plugin codex --global --uninstall --plan
 ```
 
 Qwen 用户级安装默认会优先走官方扩展链：

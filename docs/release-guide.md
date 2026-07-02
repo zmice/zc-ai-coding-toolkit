@@ -81,3 +81,5 @@
 - 确认 GitHub Release 已生成，并包含 Qwen extension release bundle 附件。
 - 确认 `zc-codex-marketplace` 已同步，且 `codex plugin marketplace upgrade zc-toolkit` 可获取最新 marketplace。
 - 确认 `zc platform plugin codex --git --json` 输出的默认源仍是 `zmice/zc-codex-marketplace`。
+- 确认 `zc platform plugin codex --global --uninstall --plan --json` 能输出本地 plugin bundle 卸载计划，且默认不删除 custom agents。
+- 确认 `zc platform agents codex --global --status --json` 能识别当前 custom agents 状态；如有过期 zc agent，运行 `zc platform agents codex --global --sync --prune`。
