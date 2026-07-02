@@ -278,13 +278,15 @@ describe("platform CLI", () => {
     }));
 
     platformMocks.resolvePlatformInstallReceiptPath.mockImplementation((plan: { platform: string; destinationRoot: string }) => (
-      join(plan.destinationRoot, ".zc", "platform-state", `${plan.platform}.install-receipt.json`)
+      plan.platform === "codex"
+        ? join(plan.destinationRoot, ".codex", "platform-state", `${plan.platform}.install-receipt.json`)
+        : join(plan.destinationRoot, ".zc", "platform-state", `${plan.platform}.install-receipt.json`)
     ));
 
     platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
       kind: "up-to-date",
       platform: "codex",
-      receiptPath: join(abs("/tmp/install"), ".zc", "platform-state", "codex.install-receipt.json"),
+      receiptPath: join(abs("/tmp/install"), ".codex", "platform-state", "codex.install-receipt.json"),
       receipt: {
         schemaVersion: 1,
         platform: "codex",
@@ -622,6 +624,87 @@ describe("platform CLI", () => {
     );
   });
 
+  it("prints Codex Git marketplace registration without generating local files", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformPlugin("codex", {
+      git: true,
+      json: true,
+    });
+
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload).toEqual(expect.objectContaining({
+      mode: "plan",
+      action: "plugin",
+      target: "codex",
+      distribution: "git-marketplace",
+      source: "zmice/zc-codex-marketplace",
+      ref: null,
+      register: false,
+      command: "codex plugin marketplace add zmice/zc-codex-marketplace",
+      updateCommand: "codex plugin marketplace upgrade zc-toolkit",
+      marketplaceName: "zc-toolkit",
+      pluginName: "zc-toolkit",
+    }));
+    expect(platformMocks.resolveInstallTarget).not.toHaveBeenCalled();
+    expect(platformMocks.createCodexMarketplaceGenerationPlan).not.toHaveBeenCalled();
+    expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
+
+    logSpy.mockRestore();
+  });
+
+  it("uses a custom Codex Git marketplace source and ref", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformPlugin("codex", {
+      git: "https://github.com/example/plugins.git",
+      ref: "main",
+      plan: true,
+      json: true,
+    });
+
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload).toEqual(expect.objectContaining({
+      mode: "plan",
+      source: "https://github.com/example/plugins.git",
+      ref: "main",
+      command: "codex plugin marketplace add https://github.com/example/plugins.git --ref main",
+      args: [
+        "codex",
+        "plugin",
+        "marketplace",
+        "add",
+        "https://github.com/example/plugins.git",
+        "--ref",
+        "main",
+      ],
+    }));
+    expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
+
+    logSpy.mockRestore();
+  });
+
+  it("rejects local selectors in Codex Git marketplace mode", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await runPlatformPlugin("codex", {
+      git: true,
+      global: true,
+      json: true,
+    });
+
+    const payload = JSON.parse(errorSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload).toEqual(expect.objectContaining({
+      mode: "error",
+      action: "generate",
+      target: "codex",
+    }));
+    expect(payload.error).toContain("不能同时使用 --dir/--project/--global");
+    expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
+
+    errorSpy.mockRestore();
+  });
+
   it("uses the personal marketplace for codex plugin when --global is explicit", async () => {
     platformMocks.createCodexGenerationPlan.mockReturnValue({
       platform: "codex",
@@ -956,7 +1039,7 @@ describe("platform CLI", () => {
     platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
       kind: "update-available",
       platform: "codex",
-      receiptPath: join(installRoot, ".zc/platform-state/codex.install-receipt.json"),
+      receiptPath: join(installRoot, ".codex/platform-state/codex.install-receipt.json"),
       receipt: null,
       contentFingerprint: "current-fingerprint",
       installedContentFingerprint: "installed-fingerprint",
@@ -994,7 +1077,7 @@ describe("platform CLI", () => {
     platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
       kind: "update-available",
       platform: "codex",
-      receiptPath: join(installRoot, ".zc/platform-state/codex.install-receipt.json"),
+      receiptPath: join(installRoot, ".codex/platform-state/codex.install-receipt.json"),
       receipt: null,
       contentFingerprint: "current-fingerprint",
       installedContentFingerprint: "installed-fingerprint",
@@ -1064,7 +1147,7 @@ describe("platform CLI", () => {
     platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
       kind: "drifted",
       platform: "codex",
-      receiptPath: "/tmp/install/.zc/platform-state/codex.install-receipt.json",
+      receiptPath: "/tmp/install/.codex/platform-state/codex.install-receipt.json",
       receipt: null,
       contentFingerprint: "current-fingerprint",
       installedContentFingerprint: "installed-fingerprint",
@@ -1096,7 +1179,7 @@ describe("platform CLI", () => {
     platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
       kind: "not-installed",
       platform: "codex",
-      receiptPath: "/tmp/install/.zc/platform-state/codex.install-receipt.json",
+      receiptPath: "/tmp/install/.codex/platform-state/codex.install-receipt.json",
       receipt: null,
       contentFingerprint: "current-fingerprint",
       installedContentFingerprint: undefined,
@@ -1283,7 +1366,7 @@ describe("platform CLI", () => {
     platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
       kind: "up-to-date",
       platform: "codex",
-      receiptPath: "/tmp/install/.zc/platform-state/codex.install-receipt.json",
+      receiptPath: "/tmp/install/.codex/platform-state/codex.install-receipt.json",
       receipt: {
         schemaVersion: 1,
         platform: "codex",
@@ -1315,7 +1398,7 @@ describe("platform CLI", () => {
 
     expect(platformMocks.removeManagedPaths).toHaveBeenCalledWith(["/tmp/install/AGENTS.md"]);
     expect(platformMocks.deletePlatformInstallReceipt).toHaveBeenCalledWith(
-      "/tmp/install/.zc/platform-state/codex.install-receipt.json",
+      "/tmp/install/.codex/platform-state/codex.install-receipt.json",
     );
   });
 
@@ -1382,7 +1465,7 @@ describe("platform CLI", () => {
     platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
       kind: "drifted",
       platform: "codex",
-      receiptPath: join(installRoot, ".zc/platform-state/codex.install-receipt.json"),
+      receiptPath: join(installRoot, ".codex/platform-state/codex.install-receipt.json"),
       receipt: {
         schemaVersion: 1,
         platform: "codex",
@@ -1450,7 +1533,7 @@ describe("platform CLI", () => {
     platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
       kind: "drifted",
       platform: "codex",
-      receiptPath: "/tmp/install/.zc/platform-state/codex.install-receipt.json",
+      receiptPath: "/tmp/install/.codex/platform-state/codex.install-receipt.json",
       receipt: {
         schemaVersion: 1,
         platform: "codex",

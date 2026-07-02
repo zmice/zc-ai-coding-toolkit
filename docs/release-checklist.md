@@ -26,4 +26,6 @@
 
 - 确认目标包已完成发布
 - 确认发布批次与计划一致
+- 确认 `zc-codex-marketplace` 已同步
+- 确认 `zc-qwen-extension` 已同步
 - 记录异常和后续动作

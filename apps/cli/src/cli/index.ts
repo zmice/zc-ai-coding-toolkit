@@ -10,6 +10,7 @@ import { registerRunCommand } from "./run.js";
 import { registerToolkitCommand } from "./toolkit.js";
 import { registerPlatformCommand } from "./platform.js";
 import { registerContextCommand } from "./context.js";
+import { registerAgentCommand } from "./agent.js";
 
 function getCliVersion(): string {
   const packageJsonPath = new URL("../../package.json", import.meta.url);
@@ -33,6 +34,7 @@ export function createProgram(): Command {
   registerDoctorCommand(program);
   registerRunCommand(program);
   registerContextCommand(program);
+  registerAgentCommand(program);
 
   registerToolkitCommand(program);
   registerPlatformCommand(program);

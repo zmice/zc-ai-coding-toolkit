@@ -244,7 +244,7 @@ npm install -g @qwen-code/qwen-code@latest
 
 | 平台 | 产物 |
 | --- | --- |
-| `codex` | 传统安装：`AGENTS.md`、`config.toml`、`skills/zc-<command>/SKILL.md`、`skills/zc-<skill>/SKILL.md`、`agents/zc-<agent>.toml`；插件安装：薄入口 `AGENTS.md` / `.codex/AGENTS.md` + `plugins/zc-toolkit/skills/<command-or-skill>/SKILL.md` / `.codex/plugins/zc-toolkit/skills/<command-or-skill>/SKILL.md` + `.codex/agents/zc-<agent>.toml` |
+| `codex` | 推荐通过官方 Git marketplace 从 `zmice/zc-codex-marketplace` 安装和更新 `zc-toolkit`；传统安装：`AGENTS.md`、`config.toml`、`skills/zc-<command>/SKILL.md`、`skills/zc-<skill>/SKILL.md`、`agents/zc-<agent>.toml`；本地插件生成：薄入口 `AGENTS.md` / `.codex/AGENTS.md` + `plugins/zc-toolkit/skills/<command-or-skill>/SKILL.md` / `.codex/plugins/zc-toolkit/skills/<command-or-skill>/SKILL.md` + `.codex/agents/zc-<agent>.toml` |
 | `claude` | `CLAUDE.md`、`.claude/commands`、`.claude/agents` |
 | `opencode` | `AGENTS.md`、`.opencode/commands`、`.opencode/skills`、`.opencode/agents` |
 | `qwen` | 用户级优先通过官方 `qwen extensions` CLI 从 `https://github.com/zmice/zc-qwen-extension.git` 安装和更新 `zc-toolkit`；扩展目录位于 `.qwen/extensions/zc-toolkit/`，其中包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/`、`skills/`、`agents/` |
@@ -314,6 +314,10 @@ zc platform install codex --project
 对于已在官方文档中明确给出默认位置的平台，可以直接这样装：
 
 ```bash
+codex plugin marketplace add zmice/zc-codex-marketplace
+codex plugin marketplace upgrade zc-toolkit
+zc platform plugin codex --git
+zc platform plugin codex --register
 zc platform plugin codex --global
 zc platform install codex --global
 zc platform install claude --global
@@ -333,6 +337,9 @@ zc platform where qwen --global --json
 当前行为：
 
 - `platform plugin codex`
+  - 推荐使用 `--git` 输出官方 `codex plugin marketplace add` 注册命令，不写本地文件
+  - `--register` 会直接调用 Codex 官方 CLI，默认 Git 源为 `zmice/zc-codex-marketplace`
+  - `--ref <ref>` 可用于 pin Git marketplace 分支或 tag
   - 不传 selector 时默认解析最近项目根，生成 repo-local marketplace
   - 项目级插件路线生成薄入口到 `<project>/AGENTS.md`
   - 显式 `--global` 时生成 Codex personal marketplace 到 `~/.agents/plugins/marketplace.json`
@@ -370,7 +377,54 @@ zc platform where qwen --global --json
     - `zc platform generate qwen --bundle release-bundle --dir /tmp/zc-toolkit`
     - 或 `node scripts/export-qwen-extension-bundle.mjs --out /tmp/zc-toolkit`
 
-### 4.4 用 GitHub Actions 同步 Qwen 独立发布仓库
+### 4.4 用 GitHub Actions 同步 Codex marketplace 仓库
+
+当前仓库已经内置：
+
+- `.github/workflows/publish-codex-marketplace-repo.yml`
+
+用途：
+
+- 从主仓库导出 Codex marketplace bundle
+- 同步到一个单独的 GitHub marketplace 仓库根目录
+- 同步结果会包含：
+  - `README.md`
+  - `LICENSE`
+  - `.agents/plugins/marketplace.json`
+  - `AGENTS.md`
+  - `plugins/zc-toolkit/`
+  - `.codex/config.toml`
+  - `.codex/agents/`
+
+需要的 GitHub secret：
+
+- `CODEX_MARKETPLACE_REPO_TOKEN`
+  - 需要对目标 marketplace 仓库具备 `contents: write`
+
+当前默认同步目标：
+
+- `zmice/zc-codex-marketplace`
+
+触发方式：
+
+- 手动触发 `workflow_dispatch`
+- 当主仓库 push `@zmice/zc@*` tag 时自动同步
+
+可选输入：
+
+- `target_branch`
+  - 默认 `main`
+- `commit_message`
+  - 默认 `chore: sync codex marketplace bundle`
+
+本地导出发布包：
+
+```bash
+pnpm --dir apps/cli build
+node scripts/export-codex-marketplace-bundle.mjs --out /tmp/zc-codex-marketplace
+```
+
+### 4.5 用 GitHub Actions 同步 Qwen 独立发布仓库
 
 当前仓库已经内置：
 
@@ -419,7 +473,7 @@ zc platform install opencode --dir <opencode-global-root>
 zc platform install qwen --dir <qwen-global-root>
 ```
 
-### 4.3 安装前先预演
+### 4.6 安装前先预演
 
 推荐先看计划，再决定是否真的落盘：
 
@@ -447,7 +501,9 @@ zc platform where codex --global
   - `platform check <target>` 等价于 `platform doctor <target>`
   - `platform fix <target>` 等价于 `platform repair <target>`
   - `platform remove <target>` 等价于 `platform uninstall <target>`
-- install 成功后会在目标根目录写入 `.zc/platform-state/<platform>.install-receipt.json`
+- install 成功后会写入平台状态回执：
+  - Codex：`.codex/platform-state/codex.install-receipt.json`
+  - 其他平台：`.zc/platform-state/<platform>.install-receipt.json`
 - `platform status` 只读取 receipt 和当前 plan，不写盘
 - `platform update` 会基于 receipt 判断是否需要更新：
   - `not-installed`：提示先 install

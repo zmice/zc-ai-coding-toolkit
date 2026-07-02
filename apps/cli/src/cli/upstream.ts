@@ -1,12 +1,30 @@
-import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { execFile } from "node:child_process";
+import { tmpdir } from "node:os";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
-import { promisify } from "node:util";
 import type { Command } from "commander";
 import { Command as CommanderCommand } from "commander";
 import { resolveWorkspacePath } from "../utils/workspace.js";
 
-const execFileAsync = promisify(execFile);
+function execFileAsync(
+  file: string,
+  args: readonly string[],
+  options: { timeout?: number; maxBuffer?: number } = {},
+): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolvePromise, reject) => {
+    execFile(file, [...args], options, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolvePromise({
+        stdout: String(stdout),
+        stderr: String(stderr),
+      });
+    });
+  });
+}
 
 interface UpstreamRecord {
   id: string;
@@ -46,6 +64,27 @@ interface RemoteHeadEvidence {
   checked_at: string;
   command: "git ls-remote HEAD";
   head_sha: string | null;
+  error?: string;
+}
+
+interface RemoteContentPathChange {
+  status: string;
+  path: string;
+  previous_path?: string;
+}
+
+interface RemoteContentEvidence {
+  source_url: string;
+  checked_at: string;
+  command: "git fetch/diff source_paths";
+  baseline_head_sha: string | null;
+  head_sha: string | null;
+  source_paths: string[];
+  status: "unchanged-same-head" | "unchanged" | "changed" | "source-paths-gap" | "unknown";
+  changed_paths: RemoteContentPathChange[];
+  unregistered_changed_path_count: number;
+  unregistered_changed_paths: string[];
+  source_paths_gap: boolean;
   error?: string;
 }
 
@@ -103,6 +142,7 @@ interface UpstreamDiffResult {
     source_url: string | null;
     source_paths: string[];
     remote?: RemoteHeadEvidence;
+    remote_content?: RemoteContentEvidence;
   };
 }
 
@@ -391,7 +431,10 @@ function compareMetadata(item: UpstreamRecord, baseline: SnapshotRecord): Metada
     }));
 }
 
-function buildImpacts(result: UpstreamDiffResult["changes"]): ImpactRecord[] {
+function buildImpacts(
+  result: UpstreamDiffResult["changes"],
+  remoteContent?: RemoteContentEvidence,
+): ImpactRecord[] {
   const impacts: ImpactRecord[] = [];
 
   if (result.text.length > 0 || result.metadata.length > 0) {
@@ -415,6 +458,29 @@ function buildImpacts(result: UpstreamDiffResult["changes"]): ImpactRecord[] {
     });
   }
 
+  const hasRemoteContentChanges = Boolean(
+    remoteContent &&
+      (remoteContent.changed_paths.length > 0 || remoteContent.source_paths_gap),
+  );
+
+  if (hasRemoteContentChanges && !impacts.some((impact) => impact.target === "toolkit")) {
+    impacts.push({
+      target: "toolkit",
+      effect: remoteContent?.source_paths_gap
+        ? "远端有变化但登记 source_paths 未命中，需要人工复核上游路径覆盖。"
+        : "远端登记路径已有内容变化，需要人工判断是否影响 canonical content。",
+      directWrite: false,
+    });
+  }
+
+  if (hasRemoteContentChanges && !impacts.some((impact) => impact.target === "platform")) {
+    impacts.push({
+      target: "platform",
+      effect: "远端内容变化可能影响平台产物生成判断，但不会直接写入 `packages/platform-*`。",
+      directWrite: false,
+    });
+  }
+
   if (impacts.length === 0) {
     impacts.push({
       target: "references",
@@ -424,6 +490,44 @@ function buildImpacts(result: UpstreamDiffResult["changes"]): ImpactRecord[] {
   }
 
   return impacts;
+}
+
+function parseNameStatusOutput(source: string): RemoteContentPathChange[] {
+  return source
+    .trim()
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [status, firstPath, secondPath] = line.split("\t");
+      if (status.startsWith("R") || status.startsWith("C")) {
+        return {
+          status,
+          previous_path: firstPath,
+          path: secondPath ?? firstPath ?? "-",
+        };
+      }
+
+      return {
+        status,
+        path: firstPath ?? "-",
+      };
+    });
+}
+
+function parseNameOnlyOutput(source: string): string[] {
+  return source
+    .trim()
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function isCoveredBySourcePaths(pathValue: string, sourcePaths: readonly string[]): boolean {
+  return sourcePaths.some((sourcePath) => {
+    const normalized = sourcePath.replace(/\/+$/g, "");
+    return normalized === "." || pathValue === normalized || pathValue.startsWith(`${normalized}/`);
+  });
 }
 
 async function createRemoteHeadEvidence(item: UpstreamRecord): Promise<RemoteHeadEvidence> {
@@ -463,6 +567,124 @@ async function createRemoteHeadEvidence(item: UpstreamRecord): Promise<RemoteHea
   }
 }
 
+async function createRemoteContentEvidence(
+  item: UpstreamRecord,
+  baseline: SnapshotRecord,
+  remote: RemoteHeadEvidence,
+): Promise<RemoteContentEvidence> {
+  const checkedAt = new Date().toISOString();
+  const baselineHead = baseline.remote?.head_sha ?? null;
+  const currentHead = remote.head_sha;
+  const base = {
+    source_url: item.sourceUrl ?? "-",
+    checked_at: checkedAt,
+    command: "git fetch/diff source_paths" as const,
+    baseline_head_sha: baselineHead,
+    head_sha: currentHead,
+    source_paths: item.sourcePaths,
+    changed_paths: [],
+    unregistered_changed_path_count: 0,
+    unregistered_changed_paths: [],
+    source_paths_gap: false,
+  };
+
+  if (!item.sourceUrl) {
+    return {
+      ...base,
+      status: "unknown",
+      error: "未配置 source_url。",
+    };
+  }
+
+  if (!currentHead || remote.error) {
+    return {
+      ...base,
+      status: "unknown",
+      error: remote.error ?? "未采集到当前远端 HEAD。",
+    };
+  }
+
+  if (!baselineHead) {
+    return {
+      ...base,
+      status: "unknown",
+      error: "基线 snapshot 缺少 remote.head_sha，无法执行真实内容 diff。",
+    };
+  }
+
+  if (baselineHead === currentHead) {
+    return {
+      ...base,
+      status: "unchanged-same-head",
+    };
+  }
+
+  const checkoutRoot = await mkdtemp(resolve(tmpdir(), "zc-upstream-"));
+
+  try {
+    await execFileAsync("git", ["init", checkoutRoot], { timeout: 15000, maxBuffer: 1024 * 1024 });
+    await execFileAsync("git", ["-C", checkoutRoot, "remote", "add", "origin", item.sourceUrl], {
+      timeout: 15000,
+      maxBuffer: 1024 * 1024,
+    });
+    await execFileAsync("git", ["-C", checkoutRoot, "fetch", "--depth=1", "origin", currentHead], {
+      timeout: 60000,
+      maxBuffer: 4 * 1024 * 1024,
+    });
+    await execFileAsync("git", ["-C", checkoutRoot, "fetch", "--depth=1", "origin", baselineHead], {
+      timeout: 60000,
+      maxBuffer: 4 * 1024 * 1024,
+    });
+
+    const registeredDiff =
+      item.sourcePaths.length > 0
+        ? await execFileAsync(
+            "git",
+            [
+              "-C",
+              checkoutRoot,
+              "diff",
+              "--name-status",
+              baselineHead,
+              currentHead,
+              "--",
+              ...item.sourcePaths,
+            ],
+            { timeout: 30000, maxBuffer: 4 * 1024 * 1024 },
+          )
+        : { stdout: "", stderr: "" };
+    const allDiff = await execFileAsync(
+      "git",
+      ["-C", checkoutRoot, "diff", "--name-only", baselineHead, currentHead],
+      { timeout: 30000, maxBuffer: 4 * 1024 * 1024 },
+    );
+    const changedPaths = parseNameStatusOutput(registeredDiff.stdout);
+    const allChangedPaths = parseNameOnlyOutput(allDiff.stdout);
+    const unregisteredChangedPaths = allChangedPaths.filter(
+      (pathValue) => !isCoveredBySourcePaths(pathValue, item.sourcePaths),
+    );
+    const sourcePathsGap = allChangedPaths.length > 0 && changedPaths.length === 0;
+
+    return {
+      ...base,
+      status: sourcePathsGap ? "source-paths-gap" : changedPaths.length > 0 ? "changed" : "unchanged",
+      changed_paths: changedPaths,
+      unregistered_changed_path_count: unregisteredChangedPaths.length,
+      unregistered_changed_paths: unregisteredChangedPaths.slice(0, 50),
+      source_paths_gap: sourcePathsGap,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      ...base,
+      status: "unknown",
+      error: message,
+    };
+  } finally {
+    await rm(checkoutRoot, { recursive: true, force: true });
+  }
+}
+
 async function createDiffResult(
   item: UpstreamRecord,
   against?: string,
@@ -472,6 +694,7 @@ async function createDiffResult(
   const baseline = await loadSnapshot(baselinePath);
   const currentNotesContent = await readOptionalFile(item.notesPath);
   const remote = options.withRemote ? await createRemoteHeadEvidence(item) : undefined;
+  const remoteContent = remote ? await createRemoteContentEvidence(item, baseline, remote) : undefined;
 
   const changes = {
     structural: comparePathLists(baseline.metadata?.source_paths ?? [], item.sourcePaths),
@@ -484,7 +707,7 @@ async function createDiffResult(
     mode: "diff",
     baseline: toWorkspaceRelative(baselinePath),
     changes,
-    impacts: buildImpacts(changes),
+    impacts: buildImpacts(changes, remoteContent),
     recommendation: "human-review-required",
     review_status: "pending-manual-review",
     evidence: {
@@ -493,6 +716,7 @@ async function createDiffResult(
       source_url: item.sourceUrl ?? null,
       source_paths: item.sourcePaths,
       ...(remote ? { remote } : {}),
+      ...(remoteContent ? { remote_content: remoteContent } : {}),
     },
   };
 }
@@ -503,7 +727,10 @@ function formatImpactLines(impacts: readonly ImpactRecord[]): string[] {
   );
 }
 
-function formatRemoteEvidenceLines(remote: RemoteHeadEvidence | undefined): string[] {
+function formatRemoteEvidenceLines(
+  remote: RemoteHeadEvidence | undefined,
+  remoteContent: RemoteContentEvidence | undefined,
+): string[] {
   if (!remote) {
     return ["- remote_head: 未采集（使用 `--with-remote` 启用）"];
   }
@@ -516,6 +743,29 @@ function formatRemoteEvidenceLines(remote: RemoteHeadEvidence | undefined): stri
 
   if (remote.error) {
     lines.push(`- remote_error: \`${remote.error}\``);
+  }
+
+  if (!remoteContent) {
+    lines.push("- remote_content: 未采集");
+    return lines;
+  }
+
+  lines.push(`- remote_content_status: \`${remoteContent.status}\``);
+  lines.push(`- remote_content_changed_paths: ${remoteContent.changed_paths.length}`);
+  lines.push(`- remote_content_source_paths_gap: ${remoteContent.source_paths_gap ? "yes" : "no"}`);
+  lines.push(`- remote_content_unregistered_changed_paths: ${remoteContent.unregistered_changed_path_count}`);
+
+  if (remoteContent.unregistered_changed_paths.length > 0) {
+    lines.push(
+      `- remote_content_unregistered_sample: ${remoteContent.unregistered_changed_paths
+        .slice(0, 5)
+        .map((pathValue) => `\`${pathValue}\``)
+        .join(", ")}`,
+    );
+  }
+
+  if (remoteContent.error) {
+    lines.push(`- remote_content_error: \`${remoteContent.error}\``);
   }
 
   return lines;
@@ -542,7 +792,7 @@ function formatDiffText(result: UpstreamDiffResult): string {
     `审阅状态：${result.review_status}`,
     `源地址：${result.evidence.source_url ?? "-"}`,
     `源路径：${result.evidence.source_paths.join(", ") || "-"}`,
-    ...formatRemoteEvidenceLines(result.evidence.remote),
+    ...formatRemoteEvidenceLines(result.evidence.remote, result.evidence.remote_content),
     "",
     "结构变化：",
     ...structuralLines,
@@ -577,7 +827,7 @@ function formatReportText(results: readonly UpstreamDiffResult[]): string {
         `- 元数据变化：${result.changes.metadata.length}`,
         `- 源地址：${result.evidence.source_url ?? "-"}`,
         `- 源路径：${result.evidence.source_paths.join(", ") || "-"}`,
-        ...formatRemoteEvidenceLines(result.evidence.remote),
+        ...formatRemoteEvidenceLines(result.evidence.remote, result.evidence.remote_content),
         "",
         "影响范围：",
         ...formatImpactLines(result.impacts),
@@ -604,7 +854,7 @@ function formatReportMarkdown(results: readonly UpstreamDiffResult[]): string {
       `- current notes: \`${result.evidence.notes_path ?? "-"}\``,
       `- source url: \`${result.evidence.source_url ?? "-"}\``,
       `- source paths: ${result.evidence.source_paths.map((pathValue) => `\`${pathValue}\``).join(", ") || "-"}`,
-      ...formatRemoteEvidenceLines(result.evidence.remote),
+      ...formatRemoteEvidenceLines(result.evidence.remote, result.evidence.remote_content),
       "",
       "## Changes",
       `- structural: ${result.changes.structural.length}`,
@@ -914,7 +1164,7 @@ function buildUpstreamCommand(): CommanderCommand {
     .argument("<id>", "上游 ID")
     .option("--against <baseline>", "指定基线 snapshot，相对 snapshots_path 解析")
     .option("--format <format>", "输出格式：text | json", "text")
-    .option("--with-remote", "通过 git ls-remote 采集当前远端 HEAD 作为审阅证据")
+    .option("--with-remote", "采集远端 HEAD，并在 HEAD 变化时对 source_paths 执行真实内容 diff")
     .action(async (id: string, options: { against?: string; format?: DiffFormat; withRemote?: boolean }) => {
       try {
         const upstreams = await loadUpstreams();
@@ -967,7 +1217,7 @@ function buildUpstreamCommand(): CommanderCommand {
     .argument("<target>", "上游 ID 或 all")
     .option("--format <format>", "输出格式：text | json | md", "text")
     .option("--output <path>", "把输出写入文件，而不是打印到终端")
-    .option("--with-remote", "通过 git ls-remote 采集当前远端 HEAD 作为审阅证据")
+    .option("--with-remote", "采集远端 HEAD，并在 HEAD 变化时对 source_paths 执行真实内容 diff")
     .action(async (target: string, options: { format?: ReportFormat; output?: string; withRemote?: boolean }) => {
       try {
         const upstreams = await loadUpstreams();

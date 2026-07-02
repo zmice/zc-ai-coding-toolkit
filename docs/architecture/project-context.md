@@ -19,11 +19,13 @@ Codex 项目可通过 `zc context init` 生成同类索引到 `.codex/context/`�
 - `apps/cli/README.md`
 - `apps/cli/src/cli/`
 - `apps/cli/src/runtime/`
+- `apps/cli/src/agent/`
 - `apps/cli/src/team/`
 
 适用任务：
 
 - `zc run`
+- `zc agent`
 - `zc team`
 - `zc toolkit`
 - `zc platform`
@@ -99,6 +101,10 @@ Codex 项目可通过 `zc context init` 生成同类索引到 `.codex/context/`�
   - 看内容优化主线
 - `docs/architecture/workflow-entry-routing.md`
   - 看 6 条固定 workflow、统一任务入口、canonical command 与平台暴露分离、以及当前没有 `zc start` CLI 的边界
+- `docs/architecture/codex-context-system.md`
+  - 看 Codex 项目上下文 `init / update / doctor`、渐进式披露和文档维护规则
+- `docs/architecture/codex-multi-agent-controller.md`
+  - 看 Codex 多 agent 触发、任务 brief、report、ledger、ownership 和 fan-in 规则
 - `docs/architecture/toolkit-naming-and-source-identity.md`
   - 看命名与上游身份映射规则
 - `docs/architecture/platform-deepening.md`

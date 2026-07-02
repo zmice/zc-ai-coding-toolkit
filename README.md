@@ -24,12 +24,20 @@
 ## 三分钟上手
 
 ```bash
-npm install -g @zmice/zc
-zc platform install codex --global
-zc platform status codex --global --json
+codex plugin marketplace add zmice/zc-codex-marketplace
 ```
 
-如果你想装到别的平台，直接把 `codex` 换成：
+然后在 Codex 的 **Plugins** 页面安装或启用 `zc-toolkit`，新线程中从 `$start` 开始。
+
+如果已经安装 `@zmice/zc`，也可以让 CLI 输出或执行同一条官方注册命令：
+
+```bash
+npm install -g @zmice/zc
+zc platform plugin codex --git
+zc platform plugin codex --register
+```
+
+如果你想装到别的平台，使用 `zc platform install`：
 
 - `claude`
 - `opencode`
@@ -57,15 +65,16 @@ zc platform status codex --global --json
 
 | 平台 | 入口文件 | Commands | Skills | Agents | Extension / Plugin | 统一入口适配 |
 | --- | --- | --- | --- | --- | --- | --- |
-| Codex | `AGENTS.md` | Skill alias | Yes | zc-managed custom agents | zc-managed plugin / marketplace bundle | `zc:start -> $zc-start` |
+| Codex | `AGENTS.md` | Skill alias | Yes | zc-managed custom agents | Git marketplace plugin / zc-managed local bundle | `zc:start -> $start` / `$zc-start` |
 | Claude Code | `CLAUDE.md` | Yes | - | Yes | - | `zc:start -> /zc-start` |
 | OpenCode | `AGENTS.md` | Yes | Yes | Yes | - | `zc:start -> /zc-start` |
 | Qwen | `QWEN.md` | Yes | Yes | Yes | Yes | `zc:start -> zc:start` |
 
 补充说明：
 
-- Codex 通过 `$zc-*` skill 别名承接统一语义
-- Codex 的 agents / plugin / marketplace 是 `zc` 当前实现的打包与配置路径，不等同于给 Codex 发明通用 slash command 面
+- Codex 推荐通过官方 Git marketplace 安装插件，插件 skill 用 `$start` 这类无前缀入口
+- Codex 传统直装通过 `$zc-*` skill 别名承接统一语义
+- Codex 的 custom agents 仍是 `zc` 管理的配置路径，不等同于插件自动安装的通用能力
 - Claude Code 和 OpenCode 通过 `/zc-*` 命令承接统一语义
 - Qwen 通过 `zc:*` namespaced command 承接统一语义
 - 这样做是为了避免和平台内置命令、社区插件或未来扩展冲突

@@ -1,4 +1,5 @@
 import { Command, InvalidArgumentError } from "commander";
+import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
@@ -58,6 +59,14 @@ type PlatformTargetSelectorOpts = {
   project?: boolean;
   global?: boolean;
 };
+type PlatformPluginOpts = PlatformTargetSelectorOpts & {
+  force?: boolean;
+  plan?: boolean;
+  json?: boolean;
+  git?: boolean | string;
+  ref?: string;
+  register?: boolean;
+};
 type PlatformGenerateOpts = PlatformTargetSelectorOpts & {
   force?: boolean;
   plan?: boolean;
@@ -66,6 +75,8 @@ type PlatformGenerateOpts = PlatformTargetSelectorOpts & {
 };
 const platformNames: readonly PlatformName[] = ["qwen", "codex", "claude", "opencode"];
 const codexPluginManifestPath = ".codex-plugin/plugin.json";
+const codexMarketplacePluginName = "zc-toolkit";
+const codexMarketplaceDefaultGitSource = "zmice/zc-codex-marketplace";
 
 interface ToolkitAssetMetaLike {
   kind: "skill" | "command" | "agent";
@@ -858,6 +869,146 @@ function parseGenerateBundleType(value: string): PlatformGenerateBundleType {
   throw new InvalidArgumentError(`不支持的 bundle 类型：${value}。当前支持：release-bundle | codex-plugin | codex-marketplace`);
 }
 
+function resolveCodexMarketplaceGitSource(value: boolean | string | undefined): string {
+  if (typeof value === "string" && value.trim().length > 0) {
+    return value.trim();
+  }
+
+  return codexMarketplaceDefaultGitSource;
+}
+
+function buildCodexMarketplaceAddArgs(source: string, ref: string | undefined): string[] {
+  return [
+    "plugin",
+    "marketplace",
+    "add",
+    source,
+    ...(ref ? ["--ref", ref] : []),
+  ];
+}
+
+function quoteShellArg(value: string): string {
+  if (/^[A-Za-z0-9_@%+=:,./-]+$/.test(value)) {
+    return value;
+  }
+
+  return `'${value.replace(/'/g, "'\\''")}'`;
+}
+
+function formatShellCommand(command: string, args: readonly string[]): string {
+  return [command, ...args].map(quoteShellArg).join(" ");
+}
+
+function assertCodexGitMarketplaceOptions(opts: PlatformPluginOpts): void {
+  if (opts.dir || opts.project || opts.global) {
+    throw new Error("Git marketplace 模式不写本地 marketplace root，不能同时使用 --dir/--project/--global。");
+  }
+
+  if (opts.force) {
+    throw new Error("Git marketplace 模式不写文件，不能同时使用 --force。");
+  }
+}
+
+async function runCodexMarketplaceAdd(args: readonly string[], mirrorOutput: boolean): Promise<{
+  stdout: string;
+  stderr: string;
+}> {
+  return await new Promise((resolvePromise, rejectPromise) => {
+    const child = spawn("codex", args, {
+      shell: false,
+      stdio: ["inherit", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout?.on("data", (chunk: Buffer) => {
+      const text = chunk.toString();
+      stdout += text;
+      if (mirrorOutput) {
+        process.stdout.write(text);
+      }
+    });
+    child.stderr?.on("data", (chunk: Buffer) => {
+      const text = chunk.toString();
+      stderr += text;
+      if (mirrorOutput) {
+        process.stderr.write(text);
+      }
+    });
+    child.once("error", (error) => {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        rejectPromise(new Error("未检测到 codex CLI，无法自动注册 Git marketplace。"));
+        return;
+      }
+
+      rejectPromise(error);
+    });
+    child.once("close", (code, signal) => {
+      if (code === 0) {
+        resolvePromise({ stdout, stderr });
+        return;
+      }
+
+      rejectPromise(
+        new Error(
+          signal
+            ? `codex plugin marketplace add 被信号 ${signal} 中断。`
+            : `codex plugin marketplace add 退出码为 ${code ?? "unknown"}。`,
+        ),
+      );
+    });
+  });
+}
+
+async function runCodexMarketplaceGitMode(opts: PlatformPluginOpts): Promise<void> {
+  const format = resolveOutputFormat(opts.json);
+  const source = resolveCodexMarketplaceGitSource(opts.git);
+  const addArgs = buildCodexMarketplaceAddArgs(source, opts.ref);
+  const upgradeArgs = ["plugin", "marketplace", "upgrade", codexMarketplacePluginName];
+  const addCommand = formatShellCommand("codex", addArgs);
+  const upgradeCommand = formatShellCommand("codex", upgradeArgs);
+  const registered = Boolean(opts.register && !opts.plan);
+
+  if (registered) {
+    if (format === "text") {
+      console.log(`正在调用官方命令：${addCommand}`);
+    }
+    await runCodexMarketplaceAdd(addArgs, format === "text");
+  }
+
+  emitOutput(
+    format,
+    {
+      mode: registered ? "result" : "plan",
+      action: "plugin",
+      target: "codex",
+      distribution: "git-marketplace",
+      source,
+      ref: opts.ref ?? null,
+      register: registered,
+      command: addCommand,
+      args: ["codex", ...addArgs],
+      updateCommand: upgradeCommand,
+      updateArgs: ["codex", ...upgradeArgs],
+      marketplaceName: codexMarketplacePluginName,
+      pluginName: codexMarketplacePluginName,
+      nextSteps: [
+        "在 Codex 的 Plugins 页面安装或启用 zc-toolkit",
+        "新线程中使用 $start 或直接 @zc-toolkit 调用插件 skill",
+        `后续更新运行 ${upgradeCommand}`,
+      ],
+    },
+    [
+      registered ? "Codex Git marketplace 已注册" : "Codex Git marketplace 注册指令",
+      `来源：${source}`,
+      ...(opts.ref ? [`Ref：${opts.ref}`] : []),
+      `注册命令：${addCommand}`,
+      `更新命令：${upgradeCommand}`,
+      "下一步：在 Codex 的 Plugins 页面安装或启用 zc-toolkit，新线程中使用 $start 或 @zc-toolkit。",
+    ].join("\n"),
+  );
+}
+
 function buildResultPayload(action: PlatformAction, target: PlatformName, root: string, result: {
   created: number;
   overwritten: number;
@@ -1370,7 +1521,7 @@ export async function runPlatformGenerate(
 
 export async function runPlatformPlugin(
   target: PlatformName,
-  opts: { dir?: string; project?: boolean; global?: boolean; force?: boolean; plan?: boolean; json?: boolean }
+  opts: PlatformPluginOpts
 ): Promise<void> {
   const format = resolveOutputFormat(opts.json);
 
@@ -1378,6 +1529,13 @@ export async function runPlatformPlugin(
     if (target !== "codex") {
       throw new Error("当前仅 Codex 支持插件 marketplace 快捷安装。");
     }
+
+    if (opts.git !== undefined || opts.register) {
+      assertCodexGitMarketplaceOptions(opts);
+      await runCodexMarketplaceGitMode(opts);
+      return;
+    }
+
     assertExclusiveTargetSelector(opts);
 
     const useProject = opts.project || (!opts.dir && !opts.global);
@@ -2590,6 +2748,9 @@ export function registerPlatformCommand(program: Command): void {
     .option("-d, --dir <dir>", "使用指定 marketplace root")
     .option("-p, --project", "使用当前目录向上解析出的最近项目根")
     .option("-g, --global", "使用用户级 personal marketplace")
+    .option("--git [source]", "输出 Git marketplace 注册指令；未给 source 时使用 zc 官方 Codex marketplace 仓库")
+    .option("--ref <ref>", "Git marketplace ref（仅 --git/--register）")
+    .option("--register", "直接调用 codex plugin marketplace add 注册 Git marketplace")
     .option("--plan", "只查看生成计划，不写文件")
     .option("-j, --json", "输出 JSON")
     .option("-f, --force", "覆盖目标目录中已有但内容不同的产物")

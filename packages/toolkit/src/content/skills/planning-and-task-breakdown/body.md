@@ -28,7 +28,7 @@
    - Files likely touched
 5. 排出顺序，并设置阶段性检查点
 6. 如果发现会改变计划路线的阻塞问题，先进入 `stop gate`，不要把问题静默写进计划后继续推进
-7. 把 multi-agent 模式作为执行决策写入计划：先评估只读协助，再判断是否需要串行子代理、context fan-out 或 `zc team`
+7. 把 multi-agent 模式作为执行决策写入计划：先评估只读协助，再判断是否需要串行子代理、context fan-out、`zc agent plan` 或 `zc team`
 
 ## 提问纪律
 
@@ -45,8 +45,8 @@
 - `evidence`：读取过的规格、代码、配置、测试或上游证据
 - `open risks`：尚未证明的风险和验证方式
 - `stop gates`：会改变架构、数据模型、破坏性边界、并行边界或验收口径的阻塞决策
-- `agent_opportunity`：本计划是否需要只读协助、串行子代理、上下文级并行或 `zc team`，并列出匹配的 Codex agents / workers、确认边界和 fan-in gate
-- `fan-out eligibility`：是否能并行、按哪些文件或模块拆、是否有确认边界、是否需要 `zc team plan`
+- `agent_opportunity`：本计划是否需要只读协助、串行子代理、上下文级并行、`zc agent plan` 或 `zc team`，并列出匹配的 Codex agents / workers、确认边界和 fan-in gate
+- `fan-out eligibility`：是否能并行、按哪些文件或模块拆、是否有确认边界、是否需要 `zc agent plan` 或 `zc team plan`
 - `fan-in gate`：实现后如何合流、审查、回归、验证和清理
 - `loop_budget`：多 agent、review finding、worker 补交或验证失败最多允许几轮，何时停线回到计划或调试
 - `implementation tasks`：从计划或评审发现转化来的可执行任务列表
@@ -116,7 +116,7 @@ STOP: <阻塞发现>
 
 ```text
 agent_opportunity:
-- mode: none | readonly-consult | serial-subagent | context-fanout | zc-team
+- mode: none | readonly-consult | serial-subagent | context-fanout | worktree team
 - dispatch_now: yes | no
 - trigger:
 - dispatch_evidence:
@@ -134,7 +134,8 @@ agent_opportunity:
 - `agent:context-steward`：当计划会改变模块结构、验证命令、上下文索引或长期项目约定时，以 sidecar 形式加入 `context_maintenance`。它默认 scoped_write，不占用主实现任务；写入只能触碰 `.codex/context/**` 和 `AGENTS.md` managed block，冲突或越界时才降级 fan-in。
 - `serial-subagent`：任务独立但存在依赖顺序，主线程逐个委派并 fan-in。
 - `context-fanout`：任务可按文件、模块或证据问题拆开，写入前必须明确文件所有权、验证命令和 fan-in gate。若计划已被用户接受，低风险写入并行可视为本轮预授权，不必再次逐项确认。
-- `zc-team`：只有用户明确要求或确认，且 `zc team plan` 返回可启动时才进入。
+- `zc agent plan`：用于普通 Codex 多 agent controller dry-run，先生成 task brief、report、ledger 和 fan-in 模板，不启动 worker。
+- `worktree team`：只有用户明确要求或确认，且 `zc team plan` 返回可启动时才进入。
 - `none`：任务简单、强耦合、同文件冲突或缺少验证方式。
 
 Codex agents / workers 必须写成可执行角色或本地已知 agent 名；如果当前平台没有对应 agent，就写 `none` 或“主线程只读复核”，不要凭空造角色。
@@ -145,7 +146,7 @@ Codex agents / workers 必须写成可执行角色或本地已知 agent 名；�
 - `agent: zc_context_steward | main-thread`
 - `mode: readonly_audit | scoped_write | fan_in_write`
 - `owned files: .codex/context/**, AGENTS.md managed block`
-- `fan-in: 主线程读取报告和写入证据；只有冲突、越界或来源不明时才决定是否运行 zc context init --write`
+- `fan-in: 主线程读取报告和写入证据；只有冲突、越界或来源不明时才决定是否运行 zc context doctor / update --write`
 
 fan-in gate 必须说明：
 
@@ -162,6 +163,7 @@ loop_budget 必须说明：
 - 只读 consult 默认 1 轮；如果发现互相冲突的结论，主线程先做 fan-in 判断，不继续加派同类 agent。
 - 串行子代理每个 task 最多 2 轮 rework；同一 finding 两次无法关闭，进入 stop gate。
 - Context fan-out 每个 worker 最多 2 次补交；补交必须改变上下文、任务范围或验证方式，不能原样重试。
+- `zc agent plan` 必须有文件所有权、验证命令、loop budget、report 路径和 fan-in gate。
 - `zc team` 必须有监控间隔、最长等待、stuck 判定和 shutdown plan；缺少这些字段时不能把计划视为已确认。
 - 出现同文件冲突、重复失败、验证方式缺失或 agent 状态不明时，回到 `planning-and-task-breakdown` 或 `debugging-and-error-recovery`。
 

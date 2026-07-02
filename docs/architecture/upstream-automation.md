@@ -225,7 +225,18 @@ Stage 1 的命令面应保持与当前仓库级 upstream 治理入口一致，�
 - `pnpm upstream -- report <id|all> [--format text|json|md] [--output <path>] [--with-remote]`
 - `pnpm upstream -- import <id> --dry-run [--format text|json] [--output <path>]`
 
-`--with-remote` 通过 `git ls-remote <source_url> HEAD` 采集远端 HEAD 证据。默认不启用网络访问，避免 CI、离线审阅和不可变 snapshot 因网络状态产生漂移。
+`--with-remote` 不能只通过 `git ls-remote <source_url> HEAD` 采集远端 HEAD 证据。HEAD 只能证明远端 commit 是否变化，不能证明登记的 `source_paths` 是否覆盖了真实内容变化。
+
+远程审阅必须区分两级证据：
+
+- `remote-head`: 只读取远端 HEAD，用于快速判断是否可能有更新
+- `remote-content`: 获取远端内容并对登记路径执行真实 diff，用于判断上游到底变了什么
+
+`report --with-remote` 默认应至少展示 `remote-head`，并在远端 HEAD 与 baseline 不同时提示是否已完成 `remote-content`。任何声称“上游无内容变化”的结论都必须基于 `remote-content`，不能只基于 `remote-head`。
+
+如果某个 upstream 的登记路径没有覆盖实际有价值的上游变更，报告必须把它列为 `source_paths_gap`，而不是输出“无更新”。
+
+默认不启用网络访问，避免 CI、离线审阅和不可变 snapshot 因网络状态产生漂移。
 
 ## Project Structure
 
@@ -281,6 +292,8 @@ Stage 1 先验证规格和 contract，再验证实现。
 ### Future implementation checks
 
 - `pnpm upstream -- diff` 在不同 baseline 上输出稳定
+- `pnpm upstream -- report --with-remote` 在远端 HEAD 变化时能证明是否执行了真实内容 diff
+- `source_paths` 覆盖不足时报告 `source_paths_gap`
 - `pnpm upstream -- snapshot` 只追加不改写
 - `pnpm upstream -- report` 在 text / json / md 间保持字段一致
 - `pnpm upstream -- import --dry-run` 不产生写入副作用

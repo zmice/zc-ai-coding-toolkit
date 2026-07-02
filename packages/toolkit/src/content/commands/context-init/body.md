@@ -15,9 +15,15 @@
 zc context init --plan
 zc context init --write
 zc context init --write --dir <project-root>
+zc context doctor --json
+zc context update --write
 ```
 
 当前 CLI 默认是 dry-run；即使不写 `--plan`，也只输出将创建/更新的文件。只有 `--write` 才写入。
+
+- `context init`：首次建立项目上下文，默认只输出计划。
+- `context update`：刷新已有上下文，默认只输出计划，`--write` 才写入。
+- `context doctor`：只读检查缺失、过期和冲突，发现问题时返回非零 exit code。
 
 ## 产物结构
 
@@ -26,6 +32,7 @@ AGENTS.md
 .codex/context/project.md
 .codex/context/commands.md
 .codex/context/modules/README.md
+.codex/context/docs.md
 .codex/context/manifest.json
 ```
 
@@ -33,6 +40,7 @@ AGENTS.md
 - `.codex/context/project.md`：项目级上下文地图，包括读取顺序、项目事实、目录入口和维护触发器。
 - `.codex/context/commands.md`：常用命令、测试和验证选择。
 - `.codex/context/modules/README.md`：模块入口索引，帮助 AI 按任务渐进式读取。
+- `.codex/context/docs.md`：长期文档索引和文档维护 gate。
 - `.codex/context/manifest.json`：生成时间、产物列表、维护触发器和 provenance。
 
 ## 主动维护规则
@@ -41,6 +49,7 @@ AI 在以下情况必须主动提示或执行刷新：
 
 - 新增、删除或移动模块目录。
 - `package.json` scripts、验证命令、安装方式或平台入口发生变化。
+- README、docs、ADR、发布说明等长期文档入口发生变化。
 - 根 `AGENTS.md` 路由、项目约定或冻结边界变化。
 - 子代理报告 `NEEDS_CONTEXT`、上下文过旧、路径不存在或命令漂移。
 - 长会话进入新阶段，需要把探索结论提升为稳定项目事实。
@@ -52,10 +61,11 @@ AI 在以下情况必须主动提示或执行刷新：
 长任务或多 agent 任务中，优先把上下文维护交给 `agent:context-steward`，避免打断主流程：
 
 1. context steward 审计 `AGENTS.md`、`.codex/context/**`、package scripts、README 和模块入口。
-2. 运行 `zc context init --plan --json` 获取候选变更和 provenance。
-3. 如果候选变更只涉及 `.codex/context/**` 和 `AGENTS.md` 的 `zc-context:init` managed block，context steward 可直接执行 `zc context init --write --json`。
-4. 返回 `Context stewardship` 报告，说明 `fresh / stale / missing / conflict / updated`、实际写入文件、命令输出和风险。
-5. 只有出现同文件冲突、来源不明、需要修改用户手写规则或越过项目上下文边界时，才停在 fan-in 等主线程决策。
+2. 运行 `zc context doctor --json` 判断 `fresh / missing / stale / conflict`。
+3. 需要刷新时运行 `zc context update --plan --json` 获取候选变更和 provenance。
+4. 如果候选变更只涉及 `.codex/context/**` 和 `AGENTS.md` 的 `zc-context:init` managed block，context steward 可直接执行 `zc context update --write --json`。
+5. 返回 `Context stewardship` 报告，说明 `fresh / stale / missing / conflict / updated`、实际写入文件、命令输出和风险。
+6. 只有出现同文件冲突、来源不明、需要修改用户手写规则或越过项目上下文边界时，才停在 fan-in 等主线程决策。
 
 如果当前平台没有可用子代理，则主线程按同一边界执行 dry-run 或 scoped_write，并在继续主流程前只保留必要结论。
 
@@ -63,7 +73,7 @@ AI 在以下情况必须主动提示或执行刷新：
 
 1. 先读根 `AGENTS.md`，拿长期规则和上下文索引。
 2. 读取 `.codex/context/project.md`，确认项目边界和读取顺序。
-3. 按任务选择 `.codex/context/commands.md` 或 `.codex/context/modules/README.md`。
+3. 按任务选择 `.codex/context/commands.md`、`.codex/context/modules/README.md` 或 `.codex/context/docs.md`。
 4. 最后只读取本次要改的源码、测试、配置和错误输出。
 
 如果上下文项没有 provenance、来源不明或疑似过期，要显式说明并优先刷新，不要把旧结论当事实。
@@ -80,5 +90,6 @@ AI 在以下情况必须主动提示或执行刷新：
 完成前至少给出：
 
 - `zc context init --dir <project-root> --json` 的 dry-run 结果，或 `--write --json` 的写入结果。
+- `zc context doctor --dir <project-root> --json` 的健康检查结果。
 - `git diff --check`。
 - 如果改了 CLI：运行对应 `apps/cli` 测试。

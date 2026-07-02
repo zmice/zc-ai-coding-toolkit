@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, realpath, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -30,6 +30,7 @@ async function runCli(args: string[]): Promise<{ stdout: string; stderr: string 
 
 async function createTempProject(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), "zc-context-test-"));
+  await writeFile(join(root, "README.md"), "# Context test\n", "utf8");
   await writeFile(
     join(root, "package.json"),
     JSON.stringify({
@@ -42,6 +43,8 @@ async function createTempProject(): Promise<string> {
     "utf8",
   );
   await writeFile(join(root, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n", "utf8");
+  await mkdir(join(root, "docs", "adr"), { recursive: true });
+  await writeFile(join(root, "docs", "README.md"), "# Docs\n", "utf8");
   return root;
 }
 
@@ -65,6 +68,7 @@ describe("context CLI", () => {
     expect(payload.dryRun).toBe(true);
     expect(payload.artifacts.map((artifact) => artifact.relativePath)).toContain("AGENTS.md");
     expect(payload.artifacts.map((artifact) => artifact.relativePath)).toContain(".codex/context/project.md");
+    expect(payload.artifacts.map((artifact) => artifact.relativePath)).toContain(".codex/context/docs.md");
     await expect(readFile(join(root, ".codex/context/project.md"), "utf8")).rejects.toThrow();
   });
 
@@ -95,6 +99,19 @@ describe("context CLI", () => {
 
     const commandsContext = await readFile(join(root, ".codex/context/commands.md"), "utf8");
     expect(commandsContext).toContain("`pnpm test`: `vitest run`");
+
+    const docsContext = await readFile(join(root, ".codex/context/docs.md"), "utf8");
+    expect(docsContext).toContain("Documentation Index");
+    expect(docsContext).toContain("docs_required: no | context-only | decision-note | architecture-doc | release-doc");
+    expect(docsContext).toContain("`README.md`");
+  });
+
+  it("does not create the legacy .zc directory during context init", async () => {
+    const root = await createTempProject();
+
+    await runCli(["context", "init", "--dir", root, "--write", "--json"]);
+
+    await expect(stat(join(root, ".zc"))).rejects.toThrow();
   });
 
   it("keeps a second run unchanged when context files are already current", async () => {
@@ -110,9 +127,87 @@ describe("context CLI", () => {
     expect(payload.summary).toEqual({
       creates: 0,
       updates: 0,
-      unchanged: 5,
+      unchanged: 6,
       conflicts: 0,
     });
+  });
+
+  it("context update refreshes managed files using the same write boundary", async () => {
+    const root = await createTempProject();
+
+    await runCli(["context", "init", "--dir", root, "--write", "--json"]);
+    await writeFile(
+      join(root, "package.json"),
+      JSON.stringify({
+        name: "context-test",
+        scripts: {
+          test: "vitest run",
+          build: "tsc",
+          check: "tsc --noEmit",
+        },
+      }),
+      "utf8",
+    );
+
+    const result = await runCli(["context", "update", "--dir", root, "--write", "--json"]);
+    const payload = JSON.parse(result.stdout) as {
+      mode: string;
+      dryRun: boolean;
+      summary: { updates: number; conflicts: number };
+    };
+    const commandsContext = await readFile(join(root, ".codex/context/commands.md"), "utf8");
+
+    expect(result.stderr).toBe("");
+    expect(payload.mode).toBe("update");
+    expect(payload.dryRun).toBe(false);
+    expect(payload.summary.updates).toBeGreaterThan(0);
+    expect(payload.summary.conflicts).toBe(0);
+    expect(commandsContext).toContain("`pnpm check`: `tsc --noEmit`");
+  });
+
+  it("context doctor reports fresh context without writing files", async () => {
+    const root = await createTempProject();
+
+    await runCli(["context", "init", "--dir", root, "--write", "--json"]);
+    const result = await runCli(["context", "doctor", "--dir", root, "--json"]);
+    const payload = JSON.parse(result.stdout) as {
+      status: string;
+      summary: { unchanged: number; creates: number; updates: number; conflicts: number };
+      issues: unknown[];
+    };
+
+    expect(result.stderr).toBe("");
+    expect(payload.status).toBe("fresh");
+    expect(payload.summary).toEqual({
+      creates: 0,
+      updates: 0,
+      unchanged: 6,
+      conflicts: 0,
+    });
+    expect(payload.issues).toEqual([]);
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it("context doctor exits non-zero when context is missing", async () => {
+    const root = await createTempProject();
+
+    const result = await runCli(["context", "doctor", "--dir", root, "--json"]);
+    const payload = JSON.parse(result.stdout) as {
+      status: string;
+      summary: { creates: number };
+      issues: Array<{ kind: string; relativePath: string }>;
+    };
+
+    expect(result.stderr).toBe("");
+    expect(payload.status).toBe("missing");
+    expect(payload.summary.creates).toBeGreaterThan(0);
+    expect(payload.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "missing", relativePath: ".codex/context/project.md" }),
+      ]),
+    );
+    expect(process.exitCode).toBe(1);
+    await expect(readFile(join(root, ".codex/context/project.md"), "utf8")).rejects.toThrow();
   });
 
   it("refreshes generatedAt only when detected context inputs change", async () => {
@@ -162,7 +257,7 @@ describe("context CLI", () => {
     });
     expect(unchangedPayload.initializedAt).toBe("2026-06-12T00:00:00.000Z");
     expect(unchangedPayload.generatedAt).toBe("2026-06-12T00:00:00.000Z");
-    expect(unchangedPayload.summary).toMatchObject({ unchanged: 5, updates: 0 });
+    expect(unchangedPayload.summary).toMatchObject({ unchanged: 6, updates: 0 });
     expect(refreshedPayload.initializedAt).toBe("2026-06-12T00:00:00.000Z");
     expect(refreshedPayload.generatedAt).toBe("2026-06-12T02:00:00.000Z");
     expect(refreshedPayload.summary.updates).toBeGreaterThan(0);

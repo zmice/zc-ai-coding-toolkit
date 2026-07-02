@@ -41,6 +41,7 @@
 - 平台能力矩阵
 - 命名与来源追溯
 - workflow 路由
+- Codex marketplace、context 和多 agent 控制器边界
 - 上游治理
 - 中文化规则
 

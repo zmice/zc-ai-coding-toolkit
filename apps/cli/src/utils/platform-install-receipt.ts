@@ -11,7 +11,13 @@ import type { PlatformInstallPlanLike, PlatformInstallReceipt } from "../platfor
 
 const platformNames = ["qwen", "codex", "claude", "opencode"] as const satisfies readonly PlatformName[];
 const overwriteModes = ["error", "force"] as const satisfies readonly OverwriteMode[];
-const receiptDirectorySegments = [".zc", "platform-state"] as const;
+function getReceiptDirectorySegments(platform: PlatformName): readonly string[] {
+  if (platform === "codex") {
+    return [".codex", "platform-state"];
+  }
+
+  return [".zc", "platform-state"];
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -59,7 +65,7 @@ export function resolvePlatformInstallReceiptPath(input: {
   readonly platform: PlatformName;
   readonly destinationRoot: string;
 }): string {
-  return join(input.destinationRoot, ...receiptDirectorySegments, `${input.platform}.install-receipt.json`);
+  return join(input.destinationRoot, ...getReceiptDirectorySegments(input.platform), `${input.platform}.install-receipt.json`);
 }
 
 export async function readPlatformInstallReceipt(receiptPath: string): Promise<PlatformInstallReceipt | null> {

@@ -30,9 +30,18 @@ upstreams:
     owner: codex
     source_url: https://github.com/obra/superpowers.git
     source_paths:
-      - prompts
-      - instructions
-      - agents
+      - CLAUDE.md
+      - README.md
+      - RELEASE-NOTES.md
+      - package.json
+      - .claude-plugin
+      - .codex-plugin
+      - .opencode
+      - docs
+      - hooks
+      - skills
+      - scripts
+      - tests
     notes_path: references/notes/superpowers.md
     snapshots_path: references/snapshots/superpowers/
     sync:

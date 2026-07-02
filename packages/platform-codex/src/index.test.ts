@@ -64,6 +64,8 @@ describe("@zmice/platform-codex scaffold", () => {
         test: "vitest run",
       },
       directories: ["apps", "packages"],
+      docPaths: ["README.md", "docs/README.md", "docs/adr"],
+      entryFiles: ["AGENTS.md", "package.json"],
       existingFiles: [
         {
           relativePath: "AGENTS.md",
@@ -78,9 +80,10 @@ describe("@zmice/platform-codex scaffold", () => {
       ".codex/context/project.md",
       ".codex/context/commands.md",
       ".codex/context/modules/README.md",
+      ".codex/context/docs.md",
       ".codex/context/manifest.json",
     ]);
-    assert.equal(plan.summary.creates, 4);
+    assert.equal(plan.summary.creates, 5);
     assert.equal(plan.summary.updates, 1);
     assert.equal(plan.initializedAt, "2026-06-12T00:00:00.000Z");
     assert.equal(plan.generatedAt, "2026-06-12T00:00:00.000Z");
@@ -90,6 +93,8 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.ok(plan.artifacts[1]?.content.includes("Initialized by `zc context init` at 2026-06-12T00:00:00.000Z."));
     assert.ok(plan.artifacts[1]?.content.includes("Last refreshed at 2026-06-12T00:00:00.000Z."));
     assert.ok(plan.artifacts[2]?.content.includes("`pnpm test`: `vitest run`"));
+    assert.ok(plan.artifacts[4]?.content.includes("Documentation Index"));
+    assert.ok(plan.artifacts[4]?.content.includes("`docs/adr`"));
   });
 
   it("keeps context init idempotent when managed files are unchanged", () => {
@@ -115,7 +120,7 @@ describe("@zmice/platform-codex scaffold", () => {
       generatedAt: firstPlan.generatedAt,
     });
 
-    assert.equal(secondPlan.summary.unchanged, 5);
+    assert.equal(secondPlan.summary.unchanged, 6);
     assert.equal(secondPlan.summary.creates, 0);
     assert.equal(secondPlan.summary.updates, 0);
     assert.equal(secondPlan.summary.conflicts, 0);
@@ -153,7 +158,7 @@ describe("@zmice/platform-codex scaffold", () => {
 
     assert.equal(secondPlan.initializedAt, "2026-06-12T00:00:00.000Z");
     assert.equal(secondPlan.generatedAt, "2026-06-12T00:00:00.000Z");
-    assert.equal(secondPlan.summary.unchanged, 5);
+    assert.equal(secondPlan.summary.unchanged, 6);
     assert.equal(secondPlan.summary.updates, 0);
   });
 

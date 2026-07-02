@@ -22,7 +22,7 @@
 - 本包只关心 Codex 平台模板、安装计划和产物布局
 - 不承担仓库治理能力
 
-`zc context init` 的 CLI 入口位于 `apps/cli`，但 Codex 上下文产物的模板和 action plan 由本包的 `createCodexContextInitPlan` 提供。
+`zc context init/update/doctor` 的 CLI 入口位于 `apps/cli`，但 Codex 上下文产物的模板和 action plan 由本包的 `createCodexContextInitPlan` 提供。
 
 ## 常用用法
 
@@ -30,6 +30,8 @@
 zc platform install codex --dir /tmp/codex-out
 zc platform install codex
 zc platform install codex --global
+zc platform plugin codex --git
+zc platform plugin codex --register
 zc platform plugin codex
 zc platform plugin codex --global
 zc platform p codex
@@ -68,7 +70,12 @@ zc platform install codex --plan --json
   - 用于 Codex plugin marketplace / 本地 plugin 打包场景，不替代项目级 `AGENTS.md`
   - Codex plugin manifest 当前只声明 skills / apps / MCP，不直接打包 custom agents
 - `plugin codex`
-  - `generate codex --bundle codex-marketplace --project` 的短入口
+  - 推荐消费路径是 `plugin codex --git` / `plugin codex --register`，对齐官方 `codex plugin marketplace add`
+  - `plugin codex --git` 默认输出 `codex plugin marketplace add zmice/zc-codex-marketplace`
+  - `plugin codex --register` 直接调用 Codex CLI 注册默认 Git marketplace
+  - `plugin codex --ref <ref>` 可 pin Git marketplace 分支或 tag
+  - 不使用 `--git` / `--register` 时，才进入本地 marketplace 生成路径
+  - 本地生成等价于 `generate codex --bundle codex-marketplace --project` 的短入口
   - 不传 selector 时默认解析最近项目根，生成 repo-local marketplace
   - 项目级插件路线生成薄入口到 `<project>/AGENTS.md`
   - `plugin codex --global` 生成 personal marketplace 到 `~/.agents/plugins/marketplace.json`
@@ -130,14 +137,20 @@ zc platform install codex --plan --json
 
 ## Codex plugin 分发策略
 
-Codex 不要求像 Qwen 一样先拆独立发布仓库。推荐按阶段推进：
+推荐把 Codex 插件分发交给官方 Git marketplace：
+
+1. 发布态同步：`scripts/export-codex-marketplace-bundle.mjs` 导出 marketplace 仓库根。
+2. Git 仓库分发：`.github/workflows/publish-codex-marketplace-repo.yml` 同步到 `zmice/zc-codex-marketplace`。
+3. 用户注册：`codex plugin marketplace add zmice/zc-codex-marketplace` 或 `zc platform plugin codex --register`。
+4. 用户更新：`codex plugin marketplace upgrade zc-toolkit`。
+
+本地生成仍保留，用途是开发验证、项目级 curated marketplace 或离线调试：
 
 1. 本地验证：`--bundle codex-plugin` 生成单个 plugin root，用个人 marketplace 指向它。
-2. 个人级使用：`platform plugin codex --global` 生成 personal marketplace 和 `~/.codex/AGENTS.md` 薄入口，Codex 可从 `~/.agents/plugins/marketplace.json` 发现插件，并从 `~/.codex/agents/*.toml` 加载 custom agents。
-3. 仓库内分发：`--bundle codex-marketplace --dir <repo>` 生成 repo-local marketplace 和仓库根 `AGENTS.md` 薄入口，Codex 可从 `$REPO_ROOT/.agents/plugins/marketplace.json` 发现插件，并从 `$REPO_ROOT/.codex/agents/*.toml` 加载 custom agents。
-4. 跨仓库/跨团队发布：把 `plugins/zc-toolkit/` 放在独立仓库根目录，或把本仓库作为 `git-subdir` source 暴露给 marketplace。
+2. 个人级验证：`platform plugin codex --global` 生成 personal marketplace 和 `~/.codex/AGENTS.md` 薄入口。
+3. 仓库内验证：`--bundle codex-marketplace --dir <repo>` 生成 repo-local marketplace 和仓库根 `AGENTS.md` 薄入口。
 
-只有当需要稳定版本、独立权限、独立 README/LICENSE、自动同步和跨项目安装时，才需要像 Qwen 的 `zc-qwen-extension` 一样新建独立仓库。
+注意：Codex plugin manifest 当前承载 skills / apps / MCP。`zc` 的 custom agents 仍由 `.codex/config.toml` 和 `.codex/agents/*.toml` 管理，不能假设会随插件安装自动成为 Codex subagent role。
 
 ## 验证
 

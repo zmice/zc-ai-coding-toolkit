@@ -86,12 +86,14 @@ zc platform update <qwen|codex|claude|opencode>
 
 新增安装回执文件：
 
-- project/dir/global 安装统一写到：
-  - `<target-root>/.zc/platform-state/<platform>.install-receipt.json`
+- project/dir/global 安装写到平台状态目录：
+  - Codex：`<target-root>/.codex/platform-state/codex.install-receipt.json`
+  - 其他平台：`<target-root>/.zc/platform-state/<platform>.install-receipt.json`
 
 说明：
 
-- receipt 固定放在目标根目录下的 `.zc/platform-state/`
+- Codex receipt 放在目标根目录下的 `.codex/platform-state/`，避免 Codex 项目根生成 legacy `.zc/`
+- 其他平台 receipt 暂保留在 `.zc/platform-state/`
 - 每个平台一份 receipt，避免同一目录下不同平台互相覆盖
 - status/update 只认该路径，不扫描其他历史位置
 

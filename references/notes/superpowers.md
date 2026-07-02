@@ -32,6 +32,14 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 - observed date: 2026-05-15
 - notable upstream change: v5.1.0 refreshes worktree guidance, code-reviewer prompt material, Codex / OpenCode plugin sync surfaces, and release notes. The most relevant delta is still worktree lifecycle clarity and explicit transcript-style verification.
 
+## Latest Remote Evidence
+
+- remote head: `896224c4b1879920ab573417e68fd51d2ccc9072`
+- observed date: 2026-06-29
+- evidence: `pnpm upstream -- report superpowers --format json --with-remote`
+- finding: previous `source_paths` (`prompts`, `instructions`, `agents`) missed all registered-path changes while upstream had 130 changed paths.
+- registry update: track current useful surfaces including `skills`, `docs`, `hooks`, `scripts`, `tests`, `.claude-plugin`, `.codex-plugin`, `.opencode`, `README.md`, `CLAUDE.md`, release notes, and `package.json`.
+
 ## Extractable Upgrades
 
 - Worktree setup should select `.worktrees/` before `worktrees/`, then verify project-local directories are ignored.

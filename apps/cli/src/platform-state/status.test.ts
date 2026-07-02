@@ -41,7 +41,7 @@ describe("resolvePlatformInstallStatus", () => {
 
     assert.equal(status.kind, "not-installed");
     assert.equal(status.receipt, null);
-    assert.equal(status.receiptPath, join(root, ".zc", "platform-state", "codex.install-receipt.json"));
+    assert.equal(status.receiptPath, join(root, ".codex", "platform-state", "codex.install-receipt.json"));
   });
 
   it("reports up-to-date when disk content and current plan both match the receipt", async () => {

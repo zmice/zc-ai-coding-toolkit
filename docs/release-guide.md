@@ -46,6 +46,7 @@
   - 创建或更新 GitHub Release
   - 使用仓库内的 release notes 模板生成版本说明
   - 上传 Qwen extension release bundle 压缩包
+  - 同步 `zc-codex-marketplace` 仓库
   - 同步 `zc-qwen-extension` 仓库
 
 ## 标准发布流程
@@ -58,7 +59,7 @@
 6. 运行 `pnpm verify`，确认 `zc` build 后携带的 vendored 运行时正常。
 7. 审阅 `apps/cli/package.json`、`pnpm-lock.yaml` 和 changeset 消耗后的 `.changeset/*.md` 变化。
 8. 运行 `pnpm release`。
-9. 推送 tag 后，检查 GitHub Release 是否已生成，并确认 Qwen bundle 附件上传成功。
+9. 推送 tag 后，检查 GitHub Release 是否已生成，并确认 Qwen bundle 附件、`zc-codex-marketplace` 和 `zc-qwen-extension` 同步成功。
 
 ## 失败处理
 
@@ -78,3 +79,5 @@
 - 确认没有内部包被误带入发布批次。
 - 确认 CLI 全局安装后仍能执行 `toolkit` / `platform` 相关命令。
 - 确认 GitHub Release 已生成，并包含 Qwen extension release bundle 附件。
+- 确认 `zc-codex-marketplace` 已同步，且 `codex plugin marketplace upgrade zc-toolkit` 可获取最新 marketplace。
+- 确认 `zc platform plugin codex --git --json` 输出的默认源仍是 `zmice/zc-codex-marketplace`。

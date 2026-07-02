@@ -33,7 +33,7 @@ pnpm upstream -- report all --format md
 pnpm upstream -- import agent-skills --dry-run
 ```
 
-需要把当前远端 HEAD 纳入审阅证据时，显式追加 `--with-remote`：
+需要把当前远端 HEAD 和登记路径内容 diff 纳入审阅证据时，显式追加 `--with-remote`：
 
 ```bash
 pnpm upstream -- report all --format md --with-remote
@@ -41,6 +41,8 @@ pnpm upstream -- snapshot agent-skills --label remote-review --with-remote
 ```
 
 默认不访问网络，以保证本地审阅、CI 和快照生成可重复。
+
+`--with-remote` 会先读取远端 HEAD；当远端 HEAD 与基线不一致时，会拉取远端对象并对 `source_paths` 执行真实 diff。如果远端有变化但登记路径没有命中，报告会标记 `source_paths_gap`，提醒先修正 upstream 登记范围。
 
 ## 规则
 

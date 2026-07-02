@@ -1,0 +1,96 @@
+name: Publish Codex Marketplace Repo
+
+on:
+  push:
+    tags:
+      - "@zmice/zc@*"
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: "目标分支"
+        required: false
+        default: "main"
+        type: string
+      commit_message:
+        description: "同步提交信息"
+        required: false
+        default: "chore: sync codex marketplace bundle"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish-codex-marketplace-repo:
+    name: export and sync codex marketplace repo
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MARKETPLACE_REPO_TOKEN: ${{ secrets.CODEX_MARKETPLACE_REPO_TOKEN }}
+      MARKETPLACE_REPO: "zmice/zc-codex-marketplace"
+      MARKETPLACE_BRANCH: "${{ github.event.inputs.target_branch || 'main' }}"
+      MARKETPLACE_COMMIT_MESSAGE: "${{ github.event.inputs.commit_message || 'chore: sync codex marketplace bundle' }}"
+
+    steps:
+      - name: Validate token
+        run: |
+          if [ -z "$MARKETPLACE_REPO_TOKEN" ]; then
+            echo "缺少 secret：CODEX_MARKETPLACE_REPO_TOKEN" >&2
+            exit 1
+          fi
+
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build CLI
+        run: pnpm --dir apps/cli build
+
+      - name: Export Codex marketplace bundle
+        run: node scripts/export-codex-marketplace-bundle.mjs --out "$RUNNER_TEMP/codex-marketplace"
+
+      - name: Prepare target marketplace repository
+        run: |
+          mkdir -p .codex-marketplace-repo
+          cd .codex-marketplace-repo
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${MARKETPLACE_REPO_TOKEN}@github.com/${MARKETPLACE_REPO}.git"
+
+          if git ls-remote --exit-code --heads origin "$MARKETPLACE_BRANCH" >/dev/null 2>&1; then
+            git fetch --depth=1 origin "$MARKETPLACE_BRANCH"
+            git checkout -B "$MARKETPLACE_BRANCH" "origin/$MARKETPLACE_BRANCH"
+          else
+            git checkout --orphan "$MARKETPLACE_BRANCH"
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+
+      - name: Sync bundle to target repository
+        run: |
+          rsync -a --delete --exclude '.git/' "$RUNNER_TEMP/codex-marketplace/" ".codex-marketplace-repo/"
+
+      - name: Commit and push if changed
+        working-directory: .codex-marketplace-repo
+        run: |
+          if git diff --quiet -- . && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+            echo "No changes to publish."
+            exit 0
+          fi
+
+          git add .
+          git commit -m "$MARKETPLACE_COMMIT_MESSAGE"
+          git push origin "HEAD:$MARKETPLACE_BRANCH"

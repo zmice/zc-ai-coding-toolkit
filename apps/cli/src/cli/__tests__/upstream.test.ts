@@ -1,12 +1,36 @@
 import { mkdirSync, readFileSync, rmSync } from "node:fs";
+import { execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createUpstreamProgram, createUpstreamSnapshot } from "../upstream.js";
 
+vi.mock("node:child_process", () => ({
+  execFile: vi.fn(),
+}));
+
 const cleanupPaths = new Set<string>();
 const workspaceRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
+const execFileMock = vi.mocked(execFile);
+
+function mockGitExecFile(handler: (args: string[]) => string): void {
+  execFileMock.mockImplementation(((file, args, optionsOrCallback, maybeCallback) => {
+    const callback = (typeof optionsOrCallback === "function" ? optionsOrCallback : maybeCallback) as
+      | ((error: Error | null, stdout: string, stderr: string) => void)
+      | undefined;
+
+    if (!callback) {
+      throw new Error("execFile callback is required");
+    }
+
+    queueMicrotask(() => {
+      callback(null, handler(Array.isArray(args) ? args.map(String) : []), "");
+    });
+
+    return {} as ReturnType<typeof execFile>;
+  }) as typeof execFile);
+}
 
 async function runCli(args: string[]): Promise<{ stdout: string; stderr: string }> {
   const stdoutLines: string[] = [];
@@ -44,6 +68,7 @@ describe("upstream governance commands", () => {
     cleanupPaths.clear();
     vi.useRealTimers();
     vi.restoreAllMocks();
+    execFileMock.mockReset();
   });
 
   it("以文本格式输出 diff，并区分结构、文本、元数据和影响面", async () => {
@@ -95,6 +120,63 @@ describe("upstream governance commands", () => {
     );
     expect(payload.changes.metadata).toEqual(
       expect.arrayContaining([expect.objectContaining({ field: "status", before: "evaluating", after: "active" })]),
+    );
+  });
+
+  it("with-remote 会在 HEAD 变化时执行真实 source_paths 内容 diff", async () => {
+    mockGitExecFile((args) => {
+      if (args[0] === "ls-remote") {
+        return "1111111111111111111111111111111111111111\tHEAD\n";
+      }
+
+      if (args.includes("--name-status")) {
+        return "M\tskills/context-engineering/SKILL.md\n";
+      }
+
+      if (args.includes("--name-only")) {
+        return "skills/context-engineering/SKILL.md\nREADME.md\n";
+      }
+
+      return "";
+    });
+
+    const result = await runCli([
+      "diff",
+      "agent-skills",
+      "--against",
+      "2026-06-12T05-03-41-482Z-2026-06-12-review.json",
+      "--with-remote",
+      "--format",
+      "json",
+    ]);
+
+    const payload = JSON.parse(result.stdout) as {
+      evidence: {
+        remote: { head_sha: string };
+        remote_content: {
+          status: string;
+          changed_paths: Array<{ path: string; status: string }>;
+          unregistered_changed_path_count: number;
+          unregistered_changed_paths: string[];
+          source_paths_gap: boolean;
+        };
+      };
+    };
+
+    expect(result.stderr).toBe("");
+    expect(payload.evidence.remote.head_sha).toBe("1111111111111111111111111111111111111111");
+    expect(payload.evidence.remote_content.status).toBe("changed");
+    expect(payload.evidence.remote_content.changed_paths).toEqual([
+      { status: "M", path: "skills/context-engineering/SKILL.md" },
+    ]);
+    expect(payload.evidence.remote_content.unregistered_changed_path_count).toBe(1);
+    expect(payload.evidence.remote_content.unregistered_changed_paths).toEqual(["README.md"]);
+    expect(payload.evidence.remote_content.source_paths_gap).toBe(false);
+    expect(execFileMock).toHaveBeenCalledWith(
+      "git",
+      expect.arrayContaining(["diff", "--name-status"]),
+      expect.any(Object),
+      expect.any(Function),
     );
   });
 

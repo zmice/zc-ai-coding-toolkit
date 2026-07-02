@@ -95,6 +95,7 @@ function main() {
 
   const smokeRoot = mkdtempSync(join(tmpdir(), "ai-coding-verify-"));
   const installRoot = mkdtempSync(join(tmpdir(), "ai-coding-install-"));
+  const codexMarketplaceRoot = mkdtempSync(join(tmpdir(), "ai-coding-codex-marketplace-"));
   try {
     const qwenExtensionRoot = join(smokeRoot, ".qwen", "extensions", "zc-toolkit");
     run(
@@ -105,6 +106,14 @@ function main() {
     assertFile(join(qwenExtensionRoot, "QWEN.md"), /skill:api-and-interface-design|skill:sdd-tdd-workflow/);
     assertFile(join(qwenExtensionRoot, "qwen-extension.json"), /"platform": "qwen"/);
     assertFile(join(qwenExtensionRoot, "commands", "zc", "start.md"), /zc:start/);
+    run(
+      "node",
+      ["scripts/export-codex-marketplace-bundle.mjs", "--out", codexMarketplaceRoot],
+      "smoke export codex marketplace bundle"
+    );
+    assertFile(join(codexMarketplaceRoot, ".agents", "plugins", "marketplace.json"), /"path": "\.\/plugins\/zc-toolkit"/);
+    assertFile(join(codexMarketplaceRoot, "plugins", "zc-toolkit", ".codex-plugin", "plugin.json"), /"name": "zc-toolkit"/);
+    assertFile(join(codexMarketplaceRoot, "plugins", "zc-toolkit", "skills", "start", "SKILL.md"));
     run(
       "node",
       ["apps/cli/dist/cli/index.js", "platform", "install", "claude", "--dir", installRoot],
@@ -142,6 +151,7 @@ function main() {
   } finally {
     rmSync(smokeRoot, { recursive: true, force: true });
     rmSync(installRoot, { recursive: true, force: true });
+    rmSync(codexMarketplaceRoot, { recursive: true, force: true });
   }
 
   console.log("\nWorkspace MVP verification passed.");

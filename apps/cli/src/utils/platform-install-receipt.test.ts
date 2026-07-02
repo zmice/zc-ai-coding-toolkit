@@ -25,7 +25,7 @@ afterEach(async () => {
 });
 
 describe("platform install receipt store", () => {
-  it("stores receipts under a hidden per-platform path beneath the destination root", async () => {
+  it("stores codex receipts under the codex-native state path", async () => {
     const root = await createTempDir();
 
     const receiptPath = resolvePlatformInstallReceiptPath({
@@ -33,7 +33,18 @@ describe("platform install receipt store", () => {
       destinationRoot: root,
     });
 
-    assert.equal(receiptPath, join(root, ".zc", "platform-state", "codex.install-receipt.json"));
+    assert.equal(receiptPath, join(root, ".codex", "platform-state", "codex.install-receipt.json"));
+  });
+
+  it("keeps non-codex receipts on the legacy shared platform path", async () => {
+    const root = await createTempDir();
+
+    const receiptPath = resolvePlatformInstallReceiptPath({
+      platform: "claude",
+      destinationRoot: root,
+    });
+
+    assert.equal(receiptPath, join(root, ".zc", "platform-state", "claude.install-receipt.json"));
   });
 
   it("writes and reads a receipt generated from an install plan", async () => {

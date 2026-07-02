@@ -17,17 +17,26 @@
 ## 最短路径
 
 ```bash
-npm install -g @zmice/zc
-zc platform plugin codex
+codex plugin marketplace add zmice/zc-codex-marketplace
 ```
 
-不传 `--dir` / `--project` / `--global` 时默认使用项目级目标；用户级 Codex plugin 使用：
+然后在 Codex 的 **Plugins** 页面安装或启用 `zc-toolkit`，新线程中优先使用 `$start`。
+
+如果已经安装 `@zmice/zc`，也可以用 CLI 输出或执行同一条官方注册命令：
 
 ```bash
-zc platform plugin codex --global
+npm install -g @zmice/zc
+zc platform plugin codex --git
+zc platform plugin codex --register
 ```
 
-`plugin` 子命令当前只支持 Codex。其他平台使用 install 路线，可按需追加 `--global`：
+后续更新交给 Codex 官方 marketplace 管理：
+
+```bash
+codex plugin marketplace upgrade zc-toolkit
+```
+
+`plugin` 子命令当前只支持 Codex。Codex 本地生成/开发态验证仍可使用 `zc platform plugin codex --project|--global|--dir <repo>`。其他平台使用 install 路线，可按需追加 `--global`：
 
 ```bash
 zc platform install <claude|opencode|qwen> [--global]
@@ -68,7 +77,7 @@ pnpm upstream -- report all --format md --with-remote
 
 | 平台 | 当前安装形态 | 统一入口适配 |
 | --- | --- | --- |
-| Codex | 传统：`AGENTS.md` + `config.toml` + `skills/` + `agents/`；插件：薄 `AGENTS.md` 入口 + `zc-toolkit` marketplace plugin + `agents/` | 传统 `zc:start -> $zc-start`；插件 `zc:start -> $start` |
+| Codex | 推荐：Git marketplace plugin；本地/传统：`AGENTS.md` + `config.toml` + `skills/` + `agents/` | 传统 `zc:start -> $zc-start`；插件 `zc:start -> $start` |
 | Claude Code | `CLAUDE.md` + `commands/` + `agents/` | `zc:start -> /zc-start` |
 | OpenCode | `AGENTS.md` + `commands/` + `skills/` + `agents/` | `zc:start -> /zc-start` |
 | Qwen | `QWEN.md` + extension 目录 | `zc:start -> zc:start` |
@@ -139,16 +148,25 @@ zc --help
 
 ### 普通使用者
 
-最常见的是这条循环：
+最常见的是走 Codex 官方 Git marketplace：
+
+```bash
+codex plugin marketplace add zmice/zc-codex-marketplace
+codex plugin marketplace upgrade zc-toolkit
+```
+
+如果希望由 `zc` 帮你输出或执行官方注册命令：
+
+```bash
+zc platform plugin codex --git
+zc platform plugin codex --register
+```
+
+如果使用本地生成、用户级或传统平台安装模型，则是：
 
 ```bash
 zc platform plugin codex --plan
 zc platform plugin codex
-```
-
-如果使用用户级或传统平台安装模型，则是：
-
-```bash
 zc platform plugin codex --global
 zc platform where codex --global --json
 zc platform install codex --global
@@ -180,12 +198,29 @@ pnpm verify
 ### Runtime
 
 - `zc run`
+- `zc agent plan`
 - `zc team ...`
 - `zc task ...`
 - `zc msg ...`
 - `zc doctor`
 
-团队并行先 dry-run，再启动：
+轻量 Codex agent controller 先生成 run artifacts，不启动 worker：
+
+```bash
+zc agent plan \
+  -t "API | files=src/api.ts,src/api.test.ts | verify=pnpm test" \
+  -t "UI | files=src/ui.ts,src/ui.test.ts | verify=pnpm test" \
+  --json
+
+zc agent plan \
+  -t "API | files=src/api.ts | verify=pnpm test" \
+  --run-id feature-api \
+  --write
+```
+
+`zc agent plan` 会选择 `readonly-consult / serial-subagent / context-fanout / worktree-team`，检查文件所有权、验证命令、冲突和 fan-in gate。`--write` 只写 `.codex/work/agent-runs/<run-id>/` 下的 `plan.json`、task brief、report、review、ledger 和 fan-in 模板；不会启动真实 worker。
+
+重型团队并行先 dry-run，再启动：
 
 ```bash
 zc team plan -w 2 \
@@ -203,16 +238,23 @@ zc team start -w "w1:codex,w2:codex" \
 ### Context
 
 - `zc context init`
+- `zc context update`
+- `zc context doctor`
 
-`context init` 是 Codex-only 的项目上下文初始化入口，默认只输出计划，不写文件：
+`context` 是 Codex-only 的项目上下文维护入口，默认只输出计划，不写文件：
 
 ```bash
 zc context init --json
 zc context init --write
+zc context update --json
+zc context update --write
+zc context doctor --json
 zc context init --dir /path/to/project --write
 ```
 
-它会维护项目根 `AGENTS.md` 的受管上下文块，并生成 `.codex/context/project.md`、`.codex/context/commands.md`、`.codex/context/modules/README.md` 和 `.codex/context/manifest.json`。这些文件用于渐进式披露项目上下文，不替代当前任务的源码阅读，也不写用户级 `~/.codex` 配置。
+它会维护项目根 `AGENTS.md` 的受管上下文块，并生成 `.codex/context/project.md`、`.codex/context/commands.md`、`.codex/context/modules/README.md`、`.codex/context/docs.md` 和 `.codex/context/manifest.json`。这些文件用于渐进式披露项目上下文，不替代当前任务的源码阅读，也不写用户级 `~/.codex` 配置。
+
+`context doctor` 是只读健康检查；发现缺失、过期或冲突时返回非零 exit code，便于在长任务和多 agent fan-in 前做上下文门禁。
 
 ### Toolkit
 
@@ -243,6 +285,9 @@ zc context init --dir /path/to/project --write
 - `--project`
 - `--global`
 - `--dir <path>`
+- `--git [source]`
+- `--ref <ref>`
+- `--register`
 - `--plan`
 - `--json`
 - `--force`
@@ -252,13 +297,15 @@ zc context init --dir /path/to/project --write
 - `--dir <path>`、`--project`、`--global` 在 platform 子命令中保持同一语义和展示顺序
 - 三者互斥；不传时按命令默认行为处理
 - `generate --project/--global` 只用于带项目级或用户级布局语义的 bundle，目前是 `codex --bundle codex-marketplace`
+- `plugin codex --git` 不写本地文件，只输出 `codex plugin marketplace add` 命令
+- `plugin codex --register` 使用默认 Git 源 `zmice/zc-codex-marketplace` 并直接调用官方 Codex CLI
 
 常用别名：
 
 | 长命令 | 短入口 | 用途 |
 | --- | --- | --- |
 | `generate` | `g` | 导出高级 bundle |
-| `plugin` | `p` | 生成 Codex personal/repo marketplace |
+| `plugin` | `p` | 生成本地 Codex marketplace，或输出/注册 Git marketplace |
 | `install` | `i` | 安装平台内容 |
 | `where` | `w` | 查看安装位置 |
 | `status` | `s` | 查看安装状态 |
