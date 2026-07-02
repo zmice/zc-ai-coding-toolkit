@@ -35,6 +35,7 @@ export interface AgentControllerTask {
   readonly description: string;
   readonly execution: AgentTaskExecution;
   readonly agent: string;
+  readonly model: string;
   readonly dependencies: readonly string[];
   readonly ownership: AgentTaskOwnership;
   readonly verification: string;
@@ -42,6 +43,7 @@ export interface AgentControllerTask {
   readonly artifactPaths: {
     readonly brief: string;
     readonly report: string;
+    readonly reviewPackage: string;
     readonly review: string;
   };
 }
@@ -205,6 +207,7 @@ function buildTask(
   const verification = fields.get("verify") ?? fields.get("verification") ?? "";
   const briefPath = join(runRoot, "tasks", `${id}.md`);
   const reportPath = join(runRoot, "reports", `${id}.md`);
+  const reviewPackagePath = join(runRoot, "review-packages", `${id}.md`);
   const reviewPath = join(runRoot, "reviews", `${id}.md`);
 
   return {
@@ -213,6 +216,7 @@ function buildTask(
     description: fields.get("description") ?? title,
     execution,
     agent: fields.get("agent") ?? (execution === "readonly" ? "readonly-consult" : "implementer"),
+    model: fields.get("model") ?? "platform-default",
     dependencies: splitList(fields.get("deps") ?? fields.get("dependencies")),
     ownership: {
       files,
@@ -229,6 +233,7 @@ function buildTask(
     artifactPaths: {
       brief: toRelative(root, briefPath),
       report: toRelative(root, reportPath),
+      reviewPackage: toRelative(root, reviewPackagePath),
       review: toRelative(root, reviewPath),
     },
   };
@@ -347,6 +352,7 @@ function fanInGateFor(mode: AgentControllerMode): string[] {
   const base = [
     "all task reports exist before acceptance",
     "controller checks unowned file changes before fan-in",
+    "review package exists for each task before reviewer handoff",
     "producer owns fix for accepted findings",
     "reviewer owns regression for review findings",
     "controller runs final verification before completion",
@@ -425,6 +431,7 @@ function renderTaskBrief(plan: AgentControllerPlan, task: AgentControllerTask): 
     `Run: ${plan.run_id}`,
     `Mode: ${task.execution}`,
     `Agent: ${task.agent}`,
+    `Model: ${task.model}`,
     "",
     "## Objective",
     "",
@@ -443,6 +450,13 @@ function renderTaskBrief(plan: AgentControllerPlan, task: AgentControllerTask): 
     "## Verification",
     "",
     task.verification || "- missing",
+    "",
+    "## Handoff Files",
+    "",
+    `- brief: ${task.artifactPaths.brief}`,
+    `- report: ${task.artifactPaths.report}`,
+    `- review package: ${task.artifactPaths.reviewPackage}`,
+    `- review: ${task.artifactPaths.review}`,
     "",
     "## Loop Budget",
     "",
@@ -466,6 +480,8 @@ function renderReportTemplate(plan: AgentControllerPlan, task: AgentControllerTa
     `# Report: ${task.id}`,
     "",
     `Run: ${plan.run_id}`,
+    `Agent: ${task.agent}`,
+    `Model: ${task.model}`,
     "",
     "## Status",
     "",
@@ -479,6 +495,12 @@ function renderReportTemplate(plan: AgentControllerPlan, task: AgentControllerTa
     "",
     "- not run",
     "",
+    "## Review Package Inputs",
+    "",
+    `- package: ${task.artifactPaths.reviewPackage}`,
+    "- include changed files, scoped diff summary, verification evidence, and unresolved risks",
+    "- do not paste full conversation history",
+    "",
     "## Findings",
     "",
     "- none",
@@ -490,11 +512,50 @@ function renderReportTemplate(plan: AgentControllerPlan, task: AgentControllerTa
   ].join("\n");
 }
 
+function renderReviewPackageTemplate(plan: AgentControllerPlan, task: AgentControllerTask): string {
+  return [
+    `# Review Package: ${task.id}`,
+    "",
+    `Run: ${plan.run_id}`,
+    `Agent: ${task.agent}`,
+    `Model: ${task.model}`,
+    "",
+    "## Scope",
+    "",
+    `- brief: ${task.artifactPaths.brief}`,
+    `- report: ${task.artifactPaths.report}`,
+    "- review scope: this task only; final fan-in owns cross-task integration",
+    "",
+    "## Changed Files",
+    "",
+    "- pending",
+    "",
+    "## Diff Summary",
+    "",
+    "- pending",
+    "",
+    "## Verification Evidence",
+    "",
+    "- pending",
+    "",
+    "## Reviewer Instructions",
+    "",
+    "- review this package, the changed files, and the scoped diff",
+    "- do not paste full conversation history; do not rely on pasted chat history as evidence",
+    "- do not re-run implementer tests unless the evidence is missing, stale, or suspicious",
+    "- record findings in the paired review file without pre-judging them as valid or invalid",
+    "",
+  ].join("\n");
+}
+
 function renderReviewTemplate(plan: AgentControllerPlan, task: AgentControllerTask): string {
   return [
     `# Review: ${task.id}`,
     "",
     `Run: ${plan.run_id}`,
+    `Agent: ${task.agent}`,
+    `Model: ${task.model}`,
+    `Package: ${task.artifactPaths.reviewPackage}`,
     "",
     "## Spec Compliance",
     "",
@@ -507,6 +568,11 @@ function renderReviewTemplate(plan: AgentControllerPlan, task: AgentControllerTa
     "## Regression",
     "",
     "- pending",
+    "",
+    "## Reviewer Notes",
+    "",
+    "- findings must include file/path evidence and expected remedy",
+    "- if tests are re-run, record command, exit code, and reason",
     "",
   ].join("\n");
 }
@@ -524,7 +590,16 @@ function renderLedger(plan: AgentControllerPlan): string {
     "",
     "## Tasks",
     "",
-    ...plan.tasks.map((task) => [`### ${task.id}`, "", `- status: planned`, `- report: ${task.artifactPaths.report}`, ""].join("\n")),
+    ...plan.tasks.map((task) => [
+      `### ${task.id}`,
+      "",
+      "- status: planned",
+      `- brief: ${task.artifactPaths.brief}`,
+      `- report: ${task.artifactPaths.report}`,
+      `- review package: ${task.artifactPaths.reviewPackage}`,
+      `- review: ${task.artifactPaths.review}`,
+      "",
+    ].join("\n")),
   ].join("\n");
 }
 
@@ -591,6 +666,7 @@ export async function writeAgentControllerArtifacts(
     writes.push(
       { path: join(runRoot, "tasks", `${task.id}.md`), content: renderTaskBrief(plan, task) },
       { path: join(runRoot, "reports", `${task.id}.md`), content: renderReportTemplate(plan, task) },
+      { path: join(runRoot, "review-packages", `${task.id}.md`), content: renderReviewPackageTemplate(plan, task) },
       { path: join(runRoot, "reviews", `${task.id}.md`), content: renderReviewTemplate(plan, task) },
     );
   }

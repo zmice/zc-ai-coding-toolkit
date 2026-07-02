@@ -43,6 +43,15 @@ const manifest: ToolkitManifestLike = {
       body: "# 上下文初始化\n\n生成渐进式披露的项目上下文索引。\n",
     },
     {
+      id: "command:api",
+      kind: "command",
+      platforms: ["codex"],
+      title: "API command",
+      name: "api",
+      summary: "设计和审查 API 接口。",
+      body: "# API\n\n设计和审查 API 接口。\n",
+    },
+    {
       id: "agent:code-reviewer",
       kind: "agent",
       platforms: ["codex"],
@@ -292,6 +301,7 @@ describe("@zmice/platform-codex scaffold", () => {
       "skill-alpha",
       "command:start",
       "command:context-init",
+      "command:api",
       "agent:code-reviewer",
     ]);
     assert.deepEqual(plan.capability, capability);
@@ -300,6 +310,7 @@ describe("@zmice/platform-codex scaffold", () => {
       templateFiles.config,
       "skills/zc-start/SKILL.md",
       "skills/zc-context-init/SKILL.md",
+      "skills/zc-api/SKILL.md",
       "skills/zc-skill-alpha/SKILL.md",
       "agents/zc-code-reviewer.toml",
     ]);
@@ -307,17 +318,21 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.ok(plan.artifacts[0]?.content.includes("$zc-sdd-tdd"));
     assert.ok(plan.artifacts[0]?.content.includes("统一命令语义到 Codex skill 的映射"));
     assert.ok(plan.artifacts[0]?.content.includes("`zc:context-init` -> `$zc-context-init`"));
-    assert.ok(plan.artifacts[0]?.content.includes("固定 workflow"));
+    assert.ok(plan.artifacts[0]?.content.includes("入口选择"));
+    assert.ok(plan.artifacts[0]?.content.includes("专项入口（按需召回）"));
+    assert.ok(plan.artifacts[0]?.content.includes("$zc-api"));
+    assert.ok(plan.artifacts[0]?.content.includes("不裁剪 Codex 安装资产"));
     assert.ok(plan.artifacts[0]?.content.includes("config.toml"));
     assert.ok(plan.artifacts[1]?.content.includes("[agents.zc_code_reviewer]"));
     assert.ok(plan.artifacts[1]?.content.includes('config_file = "agents/zc-code-reviewer.toml"'));
     assert.ok(plan.artifacts[2]?.content.includes("command-alias skill"));
     assert.ok(plan.artifacts[2]?.content.includes("$zc-start"));
     assert.ok(plan.artifacts[3]?.content.includes("$zc-context-init"));
-    assert.ok(plan.artifacts[4]?.content.includes("Alpha skill"));
-    assert.ok(plan.artifacts[5]?.content.includes('name = "zc_code_reviewer"'));
-    assert.ok(plan.artifacts[5]?.content.includes('tools = ["Read", "Edit"]'));
-    assert.ok(plan.artifacts[5]?.content.includes("developer_instructions"));
+    assert.ok(plan.artifacts[4]?.content.includes("$zc-api"));
+    assert.ok(plan.artifacts[5]?.content.includes("Alpha skill"));
+    assert.ok(plan.artifacts[6]?.content.includes('name = "zc_code_reviewer"'));
+    assert.ok(plan.artifacts[6]?.content.includes('tools = ["Read", "Edit"]'));
+    assert.ok(plan.artifacts[6]?.content.includes("developer_instructions"));
   });
 
   it("creates a global install plan with AGENTS and skills", () => {
@@ -335,6 +350,7 @@ describe("@zmice/platform-codex scaffold", () => {
       join(destinationRoot, "config.toml"),
       join(destinationRoot, "skills/zc-start/SKILL.md"),
       join(destinationRoot, "skills/zc-context-init/SKILL.md"),
+      join(destinationRoot, "skills/zc-api/SKILL.md"),
       join(destinationRoot, "skills/zc-skill-alpha/SKILL.md"),
       join(destinationRoot, "agents/zc-code-reviewer.toml"),
     ]);
@@ -353,6 +369,7 @@ describe("@zmice/platform-codex scaffold", () => {
       join(destinationRoot, ".codex/config.toml"),
       join(destinationRoot, ".codex/skills/zc-start/SKILL.md"),
       join(destinationRoot, ".codex/skills/zc-context-init/SKILL.md"),
+      join(destinationRoot, ".codex/skills/zc-api/SKILL.md"),
       join(destinationRoot, ".codex/skills/zc-skill-alpha/SKILL.md"),
       join(destinationRoot, ".codex/agents/zc-code-reviewer.toml"),
     ]);
@@ -376,12 +393,14 @@ describe("@zmice/platform-codex scaffold", () => {
       templateFiles.pluginManifest,
       "skills/start/SKILL.md",
       "skills/context-init/SKILL.md",
+      "skills/api/SKILL.md",
       "skills/skill-alpha/SKILL.md",
     ]);
     assert.ok(plan.artifacts[1]?.content.includes('name: "start"'));
     assert.ok(plan.artifacts[1]?.content.includes("$start"));
     assert.ok(!plan.artifacts[1]?.content.includes("$zc-start"));
     assert.ok(plan.artifacts[2]?.content.includes("$context-init"));
+    assert.ok(plan.artifacts[3]?.content.includes("$api"));
 
     const pluginManifest = JSON.parse(plan.artifacts[0]!.content) as {
       name: string;
@@ -397,7 +416,7 @@ describe("@zmice/platform-codex scaffold", () => {
       "Use start to choose the right workflow for this task.",
       "Use team-orchestration when multiple agents need coordinated worktree isolation.",
     ]);
-    assert.deepEqual(pluginManifest.zc, { commands: 2, skills: 1 });
+    assert.deepEqual(pluginManifest.zc, { commands: 3, skills: 1 });
   });
 
   it("creates a Codex repo marketplace generation plan", () => {
@@ -411,6 +430,7 @@ describe("@zmice/platform-codex scaffold", () => {
       "plugins/zc-toolkit/.codex-plugin/plugin.json",
       "plugins/zc-toolkit/skills/start/SKILL.md",
       "plugins/zc-toolkit/skills/context-init/SKILL.md",
+      "plugins/zc-toolkit/skills/api/SKILL.md",
       "plugins/zc-toolkit/skills/skill-alpha/SKILL.md",
       ".codex/config.toml",
       ".codex/agents/zc-code-reviewer.toml",
@@ -422,6 +442,8 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.ok(plan.artifacts[1]?.content.includes("Codex zc-toolkit 插件入口"));
     assert.ok(plan.artifacts[1]?.content.includes("zc:start` -> `$start"));
     assert.ok(plan.artifacts[1]?.content.includes("zc:context-init` -> `$context-init"));
+    assert.ok(plan.artifacts[1]?.content.includes("zc:api` -> `$api"));
+    assert.ok(plan.artifacts[1]?.content.includes("专项入口（按需召回）"));
     assert.ok(!plan.artifacts[1]?.content.includes("$zc-start"));
     assert.ok(plan.artifacts[1]?.content.includes("plugins/zc-toolkit/skills/<command-or-skill>/SKILL.md"));
 
@@ -455,6 +477,7 @@ describe("@zmice/platform-codex scaffold", () => {
       ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json",
       ".codex/plugins/zc-toolkit/skills/start/SKILL.md",
       ".codex/plugins/zc-toolkit/skills/context-init/SKILL.md",
+      ".codex/plugins/zc-toolkit/skills/api/SKILL.md",
       ".codex/plugins/zc-toolkit/skills/skill-alpha/SKILL.md",
       ".codex/config.toml",
       ".codex/agents/zc-code-reviewer.toml",

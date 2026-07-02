@@ -56,9 +56,15 @@ upstreams:
     owner: codex
     source_url: https://github.com/affaan-m/everything-claude-code.git
     source_paths:
+      - README.md
+      - AGENTS.md
       - CLAUDE.md
       - docs
       - commands
+      - agents
+      - skills
+      - .agents/plugins/marketplace.json
+      - .agents/skills
     notes_path: references/notes/everything-claude-code.md
     snapshots_path: references/snapshots/everything-claude-code/
     sync:

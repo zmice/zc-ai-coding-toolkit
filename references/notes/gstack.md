@@ -32,6 +32,13 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 - observed date: 2026-05-18
 - notable upstream change: upstream advanced through v1.40.x with plan-mode `EXIT PLAN MODE` gating, Implementation Tasks aggregation, stronger stop-gate tests, browser sanitization, and additional gbrain hardening.
 
+## Latest Remote Evidence
+
+- remote head: `11de390be1be6849eb9a15f91ff4922dd16c589a`
+- observed date: 2026-07-02
+- evidence: `pnpm upstream -- report all --format md --with-remote`
+- finding: registered `docs` paths changed in 2 files, mainly documenting offline diagram rendering, Mermaid / Excalidraw output, HTML / DOCX export, and strict placeholder failure behavior.
+
 ## Extractable Upgrades
 
 - Keep plan-mode questions few, outcome-framed, and preference-aware.
@@ -43,6 +50,7 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 - Adopt the useful part of document-generation work: choose the document type first, then write; do not mix tutorial, how-to, reference, explanation, and ADR purposes in one artifact.
 - Keep gbrain as a reference for memory architecture tradeoffs only; cross-machine memory sync remains opt-in and out of the default toolkit runtime.
 - Upgrade `planning-and-task-breakdown`, `multi-perspective-review`, and `plan-review` wording so route-changing findings trigger explicit stop gates and review findings become P1/P2/P3 Implementation Tasks.
+- Diagram/document export ideas are useful for a future doc-generation surface: keep source diagrams editable, render offline, fail loudly in CI for broken assets, and preserve accessibility labels.
 
 ## Non-Adoption Boundary
 

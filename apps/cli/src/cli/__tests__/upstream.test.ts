@@ -158,6 +158,8 @@ describe("upstream governance commands", () => {
           changed_paths: Array<{ path: string; status: string }>;
           unregistered_changed_path_count: number;
           unregistered_changed_paths: string[];
+          unregistered_ai_asset_path_count: number;
+          unregistered_ai_asset_paths: string[];
           source_paths_gap: boolean;
         };
       };
@@ -171,12 +173,81 @@ describe("upstream governance commands", () => {
     ]);
     expect(payload.evidence.remote_content.unregistered_changed_path_count).toBe(1);
     expect(payload.evidence.remote_content.unregistered_changed_paths).toEqual(["README.md"]);
+    expect(payload.evidence.remote_content.unregistered_ai_asset_path_count).toBe(0);
+    expect(payload.evidence.remote_content.unregistered_ai_asset_paths).toEqual([]);
     expect(payload.evidence.remote_content.source_paths_gap).toBe(false);
     expect(execFileMock).toHaveBeenCalledWith(
       "git",
       expect.arrayContaining(["diff", "--name-status"]),
       expect.any(Object),
       expect.any(Function),
+    );
+  });
+
+  it("with-remote 会单独标记未登记的疑似 AI asset 路径", async () => {
+    mockGitExecFile((args) => {
+      if (args[0] === "ls-remote") {
+        return "2222222222222222222222222222222222222222\tHEAD\n";
+      }
+
+      if (args.includes("--name-status")) {
+        return "";
+      }
+
+      if (args.includes("--name-only")) {
+        return [
+          ".claude-plugin/plugin.json",
+          "agents/reviewer.md",
+          "docs/guide.md",
+        ].join("\n");
+      }
+
+      return "";
+    });
+
+    const result = await runCli([
+      "diff",
+      "agent-skills",
+      "--against",
+      "2026-06-12T05-03-41-482Z-2026-06-12-review.json",
+      "--with-remote",
+      "--format",
+      "json",
+    ]);
+
+    const payload = JSON.parse(result.stdout) as {
+      impacts: Array<{ target: string; effect: string }>;
+      evidence: {
+        remote_content: {
+          status: string;
+          unregistered_changed_path_count: number;
+          unregistered_ai_asset_path_count: number;
+          unregistered_ai_asset_paths: string[];
+          source_paths_gap: boolean;
+        };
+      };
+    };
+
+    expect(result.stderr).toBe("");
+    expect(payload.evidence.remote_content.status).toBe("source-paths-gap");
+    expect(payload.evidence.remote_content.source_paths_gap).toBe(true);
+    expect(payload.evidence.remote_content.unregistered_changed_path_count).toBe(3);
+    expect(payload.evidence.remote_content.unregistered_ai_asset_path_count).toBe(2);
+    expect(payload.evidence.remote_content.unregistered_ai_asset_paths).toEqual([
+      ".claude-plugin/plugin.json",
+      "agents/reviewer.md",
+    ]);
+    expect(payload.impacts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          target: "references",
+          effect: expect.stringContaining("疑似 AI asset 路径"),
+        }),
+        expect.objectContaining({
+          target: "toolkit",
+          effect: expect.stringContaining("AI asset"),
+        }),
+      ]),
     );
   });
 

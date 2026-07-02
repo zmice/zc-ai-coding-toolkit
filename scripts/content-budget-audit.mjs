@@ -115,7 +115,7 @@ function renderMarkdown(result) {
     "",
     `Workspace: \`${relative(process.cwd(), root) || "."}\``,
     "",
-    "This is a read-only audit of generated platform artifacts. It measures the current default generation plans and helps decide whether content should be filtered by `tier`, `audience`, or platform exposure before installation.",
+    "This is a read-only audit of generated platform artifacts. It measures the current default generation plans and helps decide whether entry routing, progressive disclosure, or supporting assets should be adjusted before changing source content.",
     "",
     "| Platform | Matched Assets | Artifacts | Total | Entry | Commands | Skills | Agents | Metadata |",
     "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
@@ -155,7 +155,7 @@ function renderMarkdown(result) {
     "",
     "- `entry` is the first file a platform loads, such as `AGENTS.md`, `CLAUDE.md`, or `QWEN.md`.",
     "- `skills` includes Codex command-alias skills and workflow skills, so it is usually the largest bucket.",
-    "- If entry or skills budgets grow too quickly, prefer filtering default installs by `tier`, `audience`, and platform exposure rather than shortening source content blindly.",
+    "- Keep matched assets installed by default; when budgets grow too quickly, first improve entry routing, progressive disclosure, and supporting asset loading before considering source-content shortening.",
   );
 
   return `${lines.join("\n")}\n`;

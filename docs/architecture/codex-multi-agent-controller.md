@@ -38,11 +38,19 @@ Minimum files:
 - `plan.json`: task graph, mode, ownership, budgets, and verification gates
 - `tasks/task-<n>.md`: worker brief with scope, allowed paths, forbidden paths, loop budget, and output contract
 - `reports/task-<n>.md`: worker result, evidence, changed paths, tests, and open risks
+- `review-packages/task-<n>.md`: scoped reviewer handoff with changed files, diff summary, verification evidence, and unresolved risks
 - `reviews/task-<n>.md`: controller or reviewer notes
 - `ledger.md`: status timeline and blocking conditions
 - `fan-in.md`: final merge decision and verification evidence
 
 Only stable decisions or reusable project facts should be promoted into `docs/` or `.codex/context/**`.
+
+Reviewer handoff rules:
+
+- reviewer reads the brief, report, changed files, and scoped diff package; it does not need pasted chat history
+- task review stays scoped to that task; only final fan-in performs cross-task integration review
+- reviewer should not re-run implementer tests unless evidence is missing, stale, suspicious, or the finding requires reproduction
+- controller records findings without pre-judging them, then routes accepted findings back through `producer owns fix` and `reviewer owns regression`
 
 Current CLI implementation:
 
@@ -60,6 +68,7 @@ Every writable task must declare:
 - forbidden files or directories
 - expected line ranges when practical
 - intent set, such as `tests-only`, `docs-only`, `module-a-impl`
+- agent role and model, or the explicit `platform-default` fallback
 - loop budget
 - verification command
 

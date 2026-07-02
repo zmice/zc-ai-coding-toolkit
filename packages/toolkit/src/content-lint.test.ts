@@ -156,6 +156,21 @@ describe("lintToolkitManifest", () => {
     assert.equal(result.issues[0]?.rule, "description-too-long");
   });
 
+  it("warns when descriptions contain workflow command lists", () => {
+    const result = lintToolkitManifest(
+      makeManifest({
+        tier: "recommended",
+        audience: "default",
+        stability: "stable",
+        description: "适用于完整流程，可通过 /spec、/task-plan、/build、/verify 触发各阶段。",
+        source: adaptedAgentSkillsSourceWithOrigin
+      })
+    );
+
+    assert.equal(result.summary.warnings, 1);
+    assert.equal(result.issues[0]?.rule, "description-workflow-summary");
+  });
+
   it("errors when a content body is empty", () => {
     const result = lintToolkitManifest(
       makeManifestWithAssets([

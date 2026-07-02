@@ -33,6 +33,13 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 - observed date: 2026-05-18
 - notable upstream change: upstream added `scripts/validate-skills.js` and a plugin-install CI workflow that validates skill `SKILL.md` presence, frontmatter shape, description budget, required sections, and dead cross-skill references.
 
+## Latest Remote Evidence
+
+- remote head: `aba7c4e9695c363e65cb59effe926c7f1d1abe3d`
+- observed date: 2026-07-02
+- evidence: `pnpm upstream -- report all --format md --with-remote`
+- finding: registered `skills` / `commands` paths changed in 12 files, with notable updates to code review, planning, spec-driven development, using-agent-skills, and observability wording.
+
 ## Extractable Upgrades
 
 - Adopt the skill anatomy checklist as a governance heuristic: trigger clarity, workflow steps, anti-rationalization, red flags, verification evidence.
@@ -45,6 +52,8 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 - Keep local skill discovery names accurate; upstream references to a browser testing skill should map to this repo's `browser-qa-testing`.
 - Treat interview-style clarification as already covered by `idea-refine` / `product-analysis`; no separate interview skill is needed yet.
 - Absorb validator intent into `toolkit lint`: check description length, empty body, skill activation sections, and explicit skill / command / agent references without copying upstream's file layout.
+- Code review content now has stronger structural-remedy language: repeated conditionals, feature logic leaking into shared modules, refactors that relocate rather than remove complexity, and large-file growth should become review signals.
+- Definition-of-Done separation is useful: per-task acceptance criteria should sit under a project-wide done bar instead of replacing it.
 
 ## Non-Adoption Boundary
 

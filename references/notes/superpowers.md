@@ -40,6 +40,12 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 - finding: previous `source_paths` (`prompts`, `instructions`, `agents`) missed all registered-path changes while upstream had 130 changed paths.
 - registry update: track current useful surfaces including `skills`, `docs`, `hooks`, `scripts`, `tests`, `.claude-plugin`, `.codex-plugin`, `.opencode`, `README.md`, `CLAUDE.md`, release notes, and `package.json`.
 
+## Latest Remote Evidence 2026-07-02
+
+- remote head: `f268f7c953744036f0fa7e9d4b73535c04e57cb8`
+- evidence: `pnpm upstream -- report all --format md --with-remote`
+- finding: registered paths changed in 122 files. The most relevant deltas are `writing-skills` guidance, new-harness portability docs, Codex plugin sync surface, and subagent-driven development review package / task brief mechanics.
+
 ## Extractable Upgrades
 
 - Worktree setup should select `.worktrees/` before `worktrees/`, then verify project-local directories are ignored.
@@ -47,11 +53,15 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 - Shutdown is not branch closure; branch/worktree ownership must be resolved separately.
 - Worktree cleanup text must not imply that deleting a worktree is always lossless; inspect status and decide merge / keep / discard first.
 - New-harness or multi-worker work should leave an acceptance transcript: task ownership, changed files, evidence, conflicts, and cleanup state.
+- Skill authoring should treat guidance as behavior-shaping assets: classify the baseline failure first, choose the guidance form that fits, micro-test wording against no-guidance controls, and avoid workflow summaries in discovery descriptions.
+- Cross-harness support should keep skill bodies action-oriented and platform-neutral; platform adapters provide tool mapping and bootstrap/install delivery.
+- Subagent review can reduce context and cost by handing task briefs, reports, review packages, and progress ledgers as files instead of pasting accumulated history into prompts.
 
 ## Non-Adoption Boundary
 
 - Do not copy Superpowers commands wholesale.
 - Do not create hidden worktrees without proving ignore safety.
+- Do not import Superpowers scripts or prompts directly; convert the durable mechanics into this repo's `zc agent plan` controller model and toolkit content.
 
 ## Recommended Phase
 

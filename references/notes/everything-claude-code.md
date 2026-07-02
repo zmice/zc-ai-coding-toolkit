@@ -32,6 +32,14 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 - observed date: 2026-05-18
 - notable upstream change: upstream added Zed install support, preview-pack smoke/readiness gates, supply-chain watch/advisory refresh work, operator readiness dashboards, continued command registry / hook hardening, and a late rc1 launch-readiness copy refresh.
 
+## Latest Remote Evidence
+
+- remote head: `81af40761939056ab3dc54732fd4f562a27309d0`
+- observed date: 2026-07-02
+- evidence: `pnpm upstream -- report all --format md --with-remote`
+- finding: upstream now carries a large `.agents/skills/` AI asset surface plus changed `README.md`, `commands/*`, and docs. Previous registry paths (`CLAUDE.md`, `docs`, `commands`) missed this AI asset directory and left it as unregistered churn.
+- registry update: track `README.md`, `AGENTS.md`, `agents`, `skills`, `.agents/plugins/marketplace.json`, and `.agents/skills` in addition to existing `CLAUDE.md`, `docs`, and `commands`.
+
 ## Extractable Upgrades
 
 - Codex custom agents should be registered through `[agents.*] config_file` rather than only writing agent TOML files.
@@ -40,6 +48,7 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 - Command registry coverage is a useful future validation idea for `toolkit lint`, but should be designed against this repo's manifest model rather than copied.
 - Supply-chain IOC scanning belongs in release/security automation only after threat model and maintenance ownership are clear.
 - Preview-pack smoke gates and operator readiness dashboards are useful references for a later `release:check` / platform install readiness phase, not for the current content-only sync.
+- Newly visible `.agents/skills/` content is useful as source material for AI asset governance and discovery audits, especially benchmark methodology, brand/content, competitive analysis, and TDD workflow assets.
 
 ## Non-Adoption Boundary
 
@@ -47,6 +56,7 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 - Keep `zc` user-level config writes conflict-safe until add-only merge is implemented.
 - Do not import Ruby/Rails or Copilot prompt packs unless this toolkit adds explicit platform/rule-pack scope for them.
 - Do not add Zed as a platform target until `packages/platform-*` has a scoped adapter design and tests.
+- Do not import ECC's `.agents/skills`, top-level `skills`, `agents`, or rule packs wholesale; use them as review inputs and extract only durable, toolkit-shaped heuristics.
 
 ## Recommended Phase
 

@@ -195,6 +195,30 @@ describe("toolkit query helpers", () => {
     });
   });
 
+  it("treats command assets without explicit workflow metadata as specialist entries", async () => {
+    const manifest = await loadToolkitManifest();
+    const recommendation = recommendToolkitAssets(manifest, "api");
+
+    assert.equal(recommendation?.target.id, "command:api");
+    assert.deepEqual(
+      recommendation?.required.map((asset) => asset.id),
+      ["skill:api-and-interface-design"]
+    );
+    assert.deepEqual(recommendation?.route, {
+      family: "specialized",
+      role: "specialized-entry",
+      workflows: [],
+      workflowEntries: {},
+      taskTypes: [],
+      next: [],
+      requiresFullLifecycle: false
+    });
+    assert.deepEqual(recommendation?.entry, {
+      commandId: "command:api",
+      reason: "该资产是可直接进入的专项能力入口；不需要先裁剪安装资产。"
+    });
+  });
+
   it("prefers command:product-analysis as the product-analysis workflow entry when present", () => {
     const manifest = createSyntheticManifest([
       createSyntheticCommandAsset("command:start", {

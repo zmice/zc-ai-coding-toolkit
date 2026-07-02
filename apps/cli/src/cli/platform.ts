@@ -83,9 +83,17 @@ interface ToolkitAssetMetaLike {
   name: string;
   title: string;
   description: string;
+  tier?: string;
+  audience?: string;
+  stability?: string;
   tools?: readonly string[];
   platforms?: readonly PlatformName[];
   requires?: readonly string[];
+  workflowFamily?: string;
+  workflowRole?: string;
+  routingWorkflows?: readonly string[];
+  taskTypes?: readonly string[];
+  platformExposure?: Partial<Record<PlatformName, string>>;
 }
 
 interface ToolkitAssetLike {
@@ -110,6 +118,14 @@ interface PlatformAssetLike {
   body?: string;
   tools?: readonly string[];
   requires?: readonly string[];
+  tier?: string;
+  audience?: string;
+  stability?: string;
+  workflowFamily?: string;
+  workflowRole?: string;
+  routingWorkflows?: readonly string[];
+  taskTypes?: readonly string[];
+  platformExposure?: Partial<Record<PlatformName, string>>;
 }
 
 interface PlatformManifestLike {
@@ -319,7 +335,15 @@ function normalizeManifest(manifest: ToolkitManifestLike): PlatformManifestLike 
       summary: asset.meta.description,
       body: asset.body,
       tools: asset.meta.tools,
-      requires: asset.meta.requires
+      requires: asset.meta.requires,
+      tier: asset.meta.tier,
+      audience: asset.meta.audience,
+      stability: asset.meta.stability,
+      workflowFamily: asset.meta.workflowFamily,
+      workflowRole: asset.meta.workflowRole,
+      routingWorkflows: asset.meta.routingWorkflows,
+      taskTypes: asset.meta.taskTypes,
+      platformExposure: asset.meta.platformExposure
     }))
   };
 }

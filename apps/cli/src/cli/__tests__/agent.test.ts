@@ -60,7 +60,10 @@ describe("agent controller CLI", () => {
       mode: string;
       dry_run: boolean;
       dispatch_contract: { dispatch_now: string };
-      tasks: unknown[];
+      tasks: Array<{
+        model: string;
+        artifactPaths: { brief: string; report: string; reviewPackage: string; review: string };
+      }>;
       artifacts: { root: string };
     };
 
@@ -70,6 +73,10 @@ describe("agent controller CLI", () => {
     expect(plan.dry_run).toBe(true);
     expect(plan.dispatch_contract.dispatch_now).toBe("no");
     expect(plan.tasks).toHaveLength(2);
+    expect(plan.tasks[0]?.model).toBe("platform-default");
+    expect(plan.tasks[0]?.artifactPaths.reviewPackage).toBe(
+      ".codex/work/agent-runs/agent-test/review-packages/task-001.md",
+    );
     expect(plan.artifacts.root).toBe(".codex/work/agent-runs/agent-test");
   });
 
@@ -150,6 +157,10 @@ describe("agent controller CLI", () => {
       written: string[];
     };
     const brief = await readFile(join(root, ".codex/work/agent-runs/agent-write/tasks/task-001.md"), "utf8");
+    const reviewPackage = await readFile(
+      join(root, ".codex/work/agent-runs/agent-write/review-packages/task-001.md"),
+      "utf8",
+    );
     const fanIn = await readFile(join(root, ".codex/work/agent-runs/agent-write/fan-in.md"), "utf8");
 
     expect(result.stderr).toBe("");
@@ -161,12 +172,18 @@ describe("agent controller CLI", () => {
         ".codex/work/agent-runs/agent-write/fan-in.md",
         ".codex/work/agent-runs/agent-write/tasks/task-001.md",
         ".codex/work/agent-runs/agent-write/reports/task-001.md",
+        ".codex/work/agent-runs/agent-write/review-packages/task-001.md",
         ".codex/work/agent-runs/agent-write/reviews/task-001.md",
       ]),
     );
     expect(brief).toContain("Allowed files:");
     expect(brief).toContain("- src/api.ts");
     expect(brief).toContain("Intent: backend");
+    expect(brief).toContain("Model: platform-default");
+    expect(brief).toContain("review package: .codex/work/agent-runs/agent-write/review-packages/task-001.md");
+    expect(reviewPackage).toContain("do not paste full conversation history");
+    expect(reviewPackage).toContain("do not re-run implementer tests unless");
     expect(fanIn).toContain("controller runs final verification before completion");
+    expect(fanIn).toContain("review package exists for each task before reviewer handoff");
   });
 });

@@ -152,6 +152,19 @@ parallel-agent-dispatch
 - controller 负责 fan-in：判断 finding 是否成立、是否阻塞当前任务、是否接受修复、是否需要重新分派。
 - producer 两次无法关闭同一 finding 时，controller 可以缩小任务或改派，但必须保留 reviewer 的回归标准。
 
+### 文件交接
+
+每个任务使用最小交接包，而不是把完整聊天历史交给下一个角色：
+
+- `tasks/<id>.md`：controller 写给实现者，包含目标、文件所有权、验证命令和 loop budget。
+- `reports/<id>.md`：实现者填写，列出变更文件、验证证据、风险和 fan-in 事项。
+- `review-packages/<id>.md`：controller 生成给 reviewer，包含 scoped diff、验证证据和未决风险。
+- `reviews/<id>.md`：reviewer 填写 finding、复验标准和回归结论。
+
+每个交接文件都应写明 agent role 和 model；没有特定模型时写 `platform-default`，不要让 reviewer 从聊天上下文猜执行环境。
+
+reviewer 默认不重跑实现者测试，除非证据缺失、过期、可疑或 finding 需要复现。单任务 review 只审该任务；最终整体审查才处理跨任务一致性。
+
 ## 子代理状态处理
 
 子代理报告四种状态之一：

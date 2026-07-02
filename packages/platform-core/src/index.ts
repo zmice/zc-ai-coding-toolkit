@@ -23,6 +23,14 @@ export interface ToolkitAssetLike {
   readonly body?: string;
   readonly tools?: readonly string[];
   readonly requires?: readonly string[];
+  readonly tier?: string;
+  readonly audience?: string;
+  readonly stability?: string;
+  readonly workflowFamily?: string;
+  readonly workflowRole?: string;
+  readonly routingWorkflows?: readonly string[];
+  readonly taskTypes?: readonly string[];
+  readonly platformExposure?: Readonly<Partial<Record<string, string>>>;
 }
 
 export interface ToolkitManifestLike {

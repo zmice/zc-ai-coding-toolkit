@@ -110,6 +110,17 @@ STOP: <阻塞发现>
 - 每个任务必须来自具体发现、需求或证据；不能为了填表新增空任务
 - 任务标题用动作开头，能直接交给实现阶段
 
+## Definition of Done 分层
+
+不要把任务验收和项目级 DoD 混在一起。
+
+- `Acceptance criteria`：只写这个任务本身必须满足的可观察行为、文件边界和局部验证。
+- `Verification`：只写证明这个任务完成所需的命令或人工检查。
+- `Project DoD`：只在计划末尾写一次，覆盖整体回归、lint/build、文档同步、上下文维护、发布检查、提交范围和清理要求。
+- 任务之间共享的门禁不要复制到每个任务；用 `fan-in gate` 或 `Project DoD` 引用，避免计划膨胀。
+
+每个任务的 acceptance criteria 必须可独立判断；Project DoD 必须能回答“整批变更是否可以交付”。
+
 ## Agent Opportunity
 
 计划阶段必须给出明确的多 agent 结论，而不是只写“可并行”：

@@ -27,6 +27,8 @@ Codex plugin assets remain Codex-native:
 - root `AGENTS.md` stays a thin entry and routing file
 - generated project context is loaded progressively, not embedded into the entry file
 - users should not need to understand internal `zc` commands before using the Codex plugin
+- user install/update should prefer native Codex marketplace Git commands over hand-editing global config
+- skill bodies stay platform-neutral; Codex bootstrap, marketplace metadata, and update behavior live in platform adapters and release automation
 
 Runtime-requiring features must choose one of these execution homes:
 
@@ -43,3 +45,4 @@ Static skill text must not pretend it can perform remote fetches, install update
 - Feature specs must name their runtime boundary before implementation.
 - Context and multi-agent features can ship in stages: skill protocol first, then runtime automation where the platform supports it.
 - The repository should avoid adding large generated context or workflow transcripts to root entry files.
+- Platform-specific install details must not leak back into canonical `packages/toolkit` content beyond explicit capability boundaries.

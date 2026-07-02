@@ -92,8 +92,9 @@ Use long-term docs only for durable facts:
 - public API or platform behavior
 - release or compatibility changes
 - project structure that future agents must know
+- requirement changes that alter durable behavior, contracts, ownership, or future maintenance rules
 
-Use task ledgers for process recovery and fan-in. Do not promote execution logs, temporary plans, or unverified exploration into `docs/`.
+Use task ledgers for process recovery and fan-in. Do not promote execution logs, temporary plans, routine requirement churn, or unverified exploration into `docs/`.
 
 ## Verification
 

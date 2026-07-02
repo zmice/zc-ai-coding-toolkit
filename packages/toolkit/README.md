@@ -42,6 +42,16 @@ Recommendation: <action> because <specific evidence, trade-off, and rejected alt
 
 不要用“更稳”“更好”“建议继续”替代可审查的依据。
 
+## AI 资产维护门禁
+
+改 `skills / commands / agents` 时，先按失败类型补最小 guidance，再验证它真的改善行为：
+
+- 先描述失败基线：路由失败、越界写入、验证缺失、上下文过载、平台能力误判或输出不可消费
+- guidance 只修对应失败类型，不把完整流程塞回 `description`、入口文件或角色卡
+- 复杂 guidance 至少做一次 micro-test：用相同任务对比有无 guidance 时的首轮输出差异
+- 部署前给出证据：`toolkit lint`、相关单测、必要的平台生成/安装 dry-run 或人工对照结论
+- 平台安装和更新逻辑只放 adapter / CLI / marketplace 发布链，内容资产保持平台中立
+
 ## 内容清单
 
 ### Commands

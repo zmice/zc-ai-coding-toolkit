@@ -181,6 +181,19 @@ source:
 - 缺少 source 字段
 - `experimental` 内容被标为所有平台默认暴露
 
+### 2.1 AI Asset Authoring Contract
+
+`skills / commands / agents` 是 AI 资产，不是普通文档。每次改动都必须先说明它要修复哪类失败，再用证据证明 guidance 有效。
+
+门禁：
+
+- `meta.yaml.description` 只写触发条件和适用场景，不写命令清单、完整生命周期或平台安装细节。
+- `body.md` 承载当前阶段 quick path、决策门、输出格式和验证要求；长 checklist、示例和平台细节放进 `assets/` 或专项 skill。
+- 新增 guidance 前先记录 failure baseline：路由失败、越界写入、验证缺失、上下文过载、平台能力误判或输出不可消费。
+- guidance 按失败类型分类，不用大段通用原则覆盖局部问题。
+- 高影响 guidance 至少做一次 micro-test：同一个任务在 no-guidance control 和新 guidance 下比较首轮输出，确认误触发、token 成本和行为改善。
+- 部署前必须留下证据：`toolkit lint`、相关测试、必要的平台生成 / 安装 dry-run 或人工审阅结论。
+
 ### 3. Search / Recommend Index
 
 在 manifest 层增加索引：

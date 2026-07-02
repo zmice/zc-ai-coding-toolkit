@@ -51,6 +51,16 @@ Recommendation: <Approve / Request changes / Defer> because <evidence, risk, and
 - 只评论代码，不评论作者
 - 技术事实高于风格偏好
 
+## 结构性红旗
+
+以下问题即使 diff 不大，也要作为架构或可维护性风险审查：
+
+- 重复的条件判断、模式匹配或 switch 分支不断出现，通常说明缺少领域模型、策略表、dispatcher 或数据驱动映射。
+- shared / common 模块里出现 feature-specific 分支，通常说明边界泄漏；优先建议把专属逻辑下沉到调用方、adapter 或策略实现。
+- 重构只是把复杂度从一个文件搬到另一个文件，没有减少状态、分支、耦合或重复时，不应算质量改善。
+- 文件已经过大、职责混杂或新增逻辑需要读很远的上下文才能判断正确时，即使本次新增行数少，也要指出后续维护风险。
+- finding 不能只说“建议抽象一下”；必须给出结构性 remedy，例如引入明确模型、拆 dispatcher、移动边界、删除重复路径或缩小公共 API。
+
 ## 与其他技能的衔接
 
 - 接在 `incremental-implementation` 或 bug 修复之后

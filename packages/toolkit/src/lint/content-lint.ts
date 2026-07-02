@@ -30,6 +30,8 @@ export interface ToolkitLintOptions {
 const chineseCharacterPattern = /[\u3400-\u9fff]/u;
 const longEnglishFragmentPattern = /\b[A-Za-z]+(?:\s+[A-Za-z]+){3,}\b/u;
 const maxDescriptionLength = 1024;
+const slashCommandTokenPattern = /(?:^|[\s，、,;；])\/[a-z][a-z0-9-]+/gu;
+const lifecyclePhaseTokenPattern = /\b(?:Brainstorm|Specify|Plan|Build|Review|Commit)\b/gu;
 const markdownSectionHeadingPattern = /^##\s+\S/mu;
 const skillActivationHeadingPattern =
   /^##\s+(?:Overview|何时使用|When to Use|使用条件|角色定位|Skill Discovery)(?:\s|$)/mu;
@@ -59,6 +61,7 @@ const nonAssetReferenceAllowlist = new Set<string>([
   "localize",
   "needs-follow-up",
   "official-global",
+  "platform-default",
   "project-local",
   "refactor",
   "readonly-consult",
@@ -179,6 +182,29 @@ function checkDescriptionLength(assetId: string, meta: ToolkitAssetMeta): Toolki
       assetId,
       rule: "description-too-long",
       message: `description 长度为 ${meta.description.length}，超过 ${maxDescriptionLength} 字符；平台通常会把 description 注入发现上下文，应保持短而准。`
+    }
+  ];
+}
+
+function countPatternMatches(text: string, pattern: RegExp): number {
+  pattern.lastIndex = 0;
+  return [...text.matchAll(pattern)].length;
+}
+
+function checkDescriptionDiscoveryScope(assetId: string, meta: ToolkitAssetMeta): ToolkitLintIssue[] {
+  const commandMentions = countPatternMatches(meta.description, slashCommandTokenPattern);
+  const lifecycleMentions = countPatternMatches(meta.description, lifecyclePhaseTokenPattern);
+
+  if (commandMentions < 3 && lifecycleMentions < 4) {
+    return [];
+  }
+
+  return [
+    {
+      level: "warning",
+      assetId,
+      rule: "description-workflow-summary",
+      message: "description 应只负责发现和触发条件，不应承载命令清单或完整生命周期摘要；请把流程细节移到 body.md 或 assets/。"
     }
   ];
 }
@@ -592,6 +618,7 @@ export function lintToolkitManifest(
     ...checkMissingGovernanceFields(asset.id, asset.meta),
     ...checkGovernanceConsistency(asset.id, asset.meta),
     ...checkDescriptionLength(asset.id, asset.meta),
+    ...checkDescriptionDiscoveryScope(asset.id, asset.meta),
     ...checkLocalizedSummary(asset.id, asset.meta),
     ...checkUpstreamRegistryConsistency(asset.id, asset.meta, options.knownUpstreams),
     ...checkSourceTraceability(asset.id, asset.meta),

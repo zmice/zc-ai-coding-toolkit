@@ -84,6 +84,8 @@ interface RemoteContentEvidence {
   changed_paths: RemoteContentPathChange[];
   unregistered_changed_path_count: number;
   unregistered_changed_paths: string[];
+  unregistered_ai_asset_path_count: number;
+  unregistered_ai_asset_paths: string[];
   source_paths_gap: boolean;
   error?: string;
 }
@@ -462,13 +464,26 @@ function buildImpacts(
     remoteContent &&
       (remoteContent.changed_paths.length > 0 || remoteContent.source_paths_gap),
   );
+  const hasUnregisteredAiAssetPaths = Boolean(
+    remoteContent && remoteContent.unregistered_ai_asset_path_count > 0,
+  );
+
+  if (hasUnregisteredAiAssetPaths) {
+    impacts.push({
+      target: "references",
+      effect: "远端出现未登记的疑似 AI asset 路径，需要更新 `references/upstreams.yaml` 或记录不采纳边界。",
+      directWrite: false,
+    });
+  }
 
   if (hasRemoteContentChanges && !impacts.some((impact) => impact.target === "toolkit")) {
     impacts.push({
       target: "toolkit",
-      effect: remoteContent?.source_paths_gap
-        ? "远端有变化但登记 source_paths 未命中，需要人工复核上游路径覆盖。"
-        : "远端登记路径已有内容变化，需要人工判断是否影响 canonical content。",
+      effect: hasUnregisteredAiAssetPaths
+        ? "远端未登记路径疑似包含 AI asset，需要人工判断是否扩展 source_paths 并吸收 canonical content。"
+        : remoteContent?.source_paths_gap
+          ? "远端有变化但登记 source_paths 未命中，需要人工复核上游路径覆盖。"
+          : "远端登记路径已有内容变化，需要人工判断是否影响 canonical content。",
       directWrite: false,
     });
   }
@@ -521,6 +536,25 @@ function parseNameOnlyOutput(source: string): string[] {
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
+}
+
+const aiAssetPathPatterns = [
+  /^AGENTS\.md$/u,
+  /^CLAUDE\.md$/u,
+  /^GEMINI\.md$/u,
+  /^QWEN\.md$/u,
+  /(^|\/)(?:agents|commands|skills|prompts)\//u,
+  /^\.agents\/(?:agents|commands|skills|plugins)(?:\/|$)/u,
+  /^\.agents\/plugins\/marketplace\.json$/u,
+  /^\.codex-plugin(?:\/|$)/u,
+  /^\.claude-plugin(?:\/|$)/u,
+  /^\.claude\/(?:agents|commands|skills)(?:\/|$)/u,
+  /^\.opencode\/(?:agents|commands|skills)(?:\/|$)/u,
+  /^\.gemini\/(?:agents|commands|skills)(?:\/|$)/u,
+];
+
+function isLikelyAiAssetPath(pathValue: string): boolean {
+  return aiAssetPathPatterns.some((pattern) => pattern.test(pathValue));
 }
 
 function isCoveredBySourcePaths(pathValue: string, sourcePaths: readonly string[]): boolean {
@@ -585,6 +619,8 @@ async function createRemoteContentEvidence(
     changed_paths: [],
     unregistered_changed_path_count: 0,
     unregistered_changed_paths: [],
+    unregistered_ai_asset_path_count: 0,
+    unregistered_ai_asset_paths: [],
     source_paths_gap: false,
   };
 
@@ -663,6 +699,7 @@ async function createRemoteContentEvidence(
     const unregisteredChangedPaths = allChangedPaths.filter(
       (pathValue) => !isCoveredBySourcePaths(pathValue, item.sourcePaths),
     );
+    const unregisteredAiAssetPaths = unregisteredChangedPaths.filter(isLikelyAiAssetPath);
     const sourcePathsGap = allChangedPaths.length > 0 && changedPaths.length === 0;
 
     return {
@@ -671,6 +708,8 @@ async function createRemoteContentEvidence(
       changed_paths: changedPaths,
       unregistered_changed_path_count: unregisteredChangedPaths.length,
       unregistered_changed_paths: unregisteredChangedPaths.slice(0, 50),
+      unregistered_ai_asset_path_count: unregisteredAiAssetPaths.length,
+      unregistered_ai_asset_paths: unregisteredAiAssetPaths.slice(0, 50),
       source_paths_gap: sourcePathsGap,
     };
   } catch (error) {
@@ -754,10 +793,20 @@ function formatRemoteEvidenceLines(
   lines.push(`- remote_content_changed_paths: ${remoteContent.changed_paths.length}`);
   lines.push(`- remote_content_source_paths_gap: ${remoteContent.source_paths_gap ? "yes" : "no"}`);
   lines.push(`- remote_content_unregistered_changed_paths: ${remoteContent.unregistered_changed_path_count}`);
+  lines.push(`- remote_content_unregistered_ai_asset_paths: ${remoteContent.unregistered_ai_asset_path_count}`);
 
   if (remoteContent.unregistered_changed_paths.length > 0) {
     lines.push(
       `- remote_content_unregistered_sample: ${remoteContent.unregistered_changed_paths
+        .slice(0, 5)
+        .map((pathValue) => `\`${pathValue}\``)
+        .join(", ")}`,
+    );
+  }
+
+  if (remoteContent.unregistered_ai_asset_paths.length > 0) {
+    lines.push(
+      `- remote_content_unregistered_ai_asset_sample: ${remoteContent.unregistered_ai_asset_paths
         .slice(0, 5)
         .map((pathValue) => `\`${pathValue}\``)
         .join(", ")}`,

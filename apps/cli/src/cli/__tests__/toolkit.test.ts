@@ -128,4 +128,16 @@ describe("toolkit CLI", () => {
     expect(result.stdout).toContain("command:spec");
     expect(result.stdout).toContain("command:task-plan");
   });
+
+  it("toolkit recommend treats unclassified commands as specialist entries", async () => {
+    const result = await runCli(["toolkit", "recommend", "api"]);
+
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("推荐目标：command:api");
+    expect(result.stdout).toContain("工作流家族：specialized");
+    expect(result.stdout).toContain("工作流角色：specialized-entry");
+    expect(result.stdout).toContain("推荐起始入口：command:api");
+    expect(result.stdout).toContain("专项能力入口");
+    expect(result.stdout).toContain("skill:api-and-interface-design");
+  });
 });

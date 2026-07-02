@@ -236,6 +236,8 @@ Stage 1 的命令面应保持与当前仓库级 upstream 治理入口一致，�
 
 如果某个 upstream 的登记路径没有覆盖实际有价值的上游变更，报告必须把它列为 `source_paths_gap`，而不是输出“无更新”。
 
+如果未登记路径看起来是 AI 资产，报告还必须单独列为 `unregistered_ai_asset_paths`，典型路径包括 `skills/`、`agents/`、`commands/`、`.agents/skills/`、`.agents/plugins/marketplace.json`、`.codex-plugin/`、`.claude-plugin/`、`.claude/commands/`、`.opencode/skills/` 等。这个信号不代表自动采纳，只表示需要更新 `references/upstreams.yaml` 或在 notes 中记录不采纳边界。
+
 默认不启用网络访问，避免 CI、离线审阅和不可变 snapshot 因网络状态产生漂移。
 
 ## Project Structure
@@ -294,6 +296,7 @@ Stage 1 先验证规格和 contract，再验证实现。
 - `pnpm upstream -- diff` 在不同 baseline 上输出稳定
 - `pnpm upstream -- report --with-remote` 在远端 HEAD 变化时能证明是否执行了真实内容 diff
 - `source_paths` 覆盖不足时报告 `source_paths_gap`
+- 未登记的 AI 资产候选路径报告为 `unregistered_ai_asset_paths`
 - `pnpm upstream -- snapshot` 只追加不改写
 - `pnpm upstream -- report` 在 text / json / md 间保持字段一致
 - `pnpm upstream -- import --dry-run` 不产生写入副作用

@@ -3,7 +3,6 @@ import {
   createSkillArtifact,
   createInstallPlan,
   describeAsset,
-  renderPlatformAssetList,
   selectMatchedAssets,
   stripAssetKindPrefix,
   type GenerationPlan as BaseGenerationPlan,
@@ -57,6 +56,14 @@ export interface PlatformCapability {
 
 export interface ToolkitAssetLike extends BaseToolkitAssetLike {
   readonly name?: string;
+  readonly tier?: string;
+  readonly audience?: string;
+  readonly stability?: string;
+  readonly workflowFamily?: string;
+  readonly workflowRole?: string;
+  readonly routingWorkflows?: readonly string[];
+  readonly taskTypes?: readonly string[];
+  readonly platformExposure?: Readonly<Partial<Record<string, string>>>;
 }
 
 export interface ToolkitManifestLike extends Omit<BaseToolkitManifestLike, "assets"> {
@@ -195,6 +202,143 @@ function selectMatchedAssetsByKind(
   return selectMatchedAssets(manifest, platformName).filter((asset) => asset.kind === kind);
 }
 
+function getCodexExposure(asset: ToolkitAssetLike): string {
+  return asset.platformExposure?.[platformName] ?? "listed";
+}
+
+function getCommandSlug(asset: ToolkitAssetLike): string {
+  return toCodexSkillSlug(asset);
+}
+
+function createCommandIndex(
+  assets: readonly ToolkitAssetLike[],
+): ReadonlyMap<string, ToolkitAssetLike> {
+  return new Map(
+    assets
+      .filter((asset) => asset.kind === "command" && getCodexExposure(asset) !== "hidden")
+      .map((asset) => [getCommandSlug(asset), asset]),
+  );
+}
+
+function pickCommands(
+  commandIndex: ReadonlyMap<string, ToolkitAssetLike>,
+  names: readonly string[],
+): readonly ToolkitAssetLike[] {
+  return names
+    .map((name) => commandIndex.get(name))
+    .filter((asset): asset is ToolkitAssetLike => Boolean(asset));
+}
+
+function uniqueCommands(commands: readonly ToolkitAssetLike[]): readonly ToolkitAssetLike[] {
+  const seen = new Set<string>();
+  const result: ToolkitAssetLike[] = [];
+
+  for (const command of commands) {
+    if (seen.has(command.id)) {
+      continue;
+    }
+
+    seen.add(command.id);
+    result.push(command);
+  }
+
+  return result;
+}
+
+function excludeCommands(
+  commands: readonly ToolkitAssetLike[],
+  excluded: readonly ToolkitAssetLike[],
+): readonly ToolkitAssetLike[] {
+  const excludedIds = new Set(excluded.map((asset) => asset.id));
+
+  return commands.filter((asset) => !excludedIds.has(asset.id));
+}
+
+function renderCommandEntryList(
+  commands: readonly ToolkitAssetLike[],
+  naming: SkillNaming,
+): string {
+  if (commands.length === 0) {
+    return "- 当前安装清单未提供该类入口。";
+  }
+
+  return commands
+    .map((asset) => `- \`$${toCodexSkillName(asset, naming)}\`: ${asset.summary ?? describeAsset(asset)}`)
+    .join("\n");
+}
+
+function renderCodexEntryGuide(
+  assets: readonly ToolkitAssetLike[],
+  naming: SkillNaming,
+): string {
+  const commandIndex = createCommandIndex(assets);
+  const allCommands = Array.from(commandIndex.values());
+  const primary = pickCommands(commandIndex, ["start"]);
+  const workflow = pickCommands(commandIndex, [
+    "product-analysis",
+    "sdd-tdd",
+    "debug",
+    "quality-review",
+    "doc",
+    "onboard",
+    "ctx-health",
+  ]);
+  const stage = pickCommands(commandIndex, [
+    "task-plan",
+    "spec",
+    "build",
+    "verify",
+    "plan-review",
+    "idea",
+    "ship",
+  ]);
+  const governance = pickCommands(commandIndex, [
+    "context-init",
+    "learn",
+    "retro",
+    "commit",
+    "ci",
+  ]);
+  const guardrails = pickCommands(commandIndex, ["guard", "careful", "freeze"]);
+  const alreadyGrouped = uniqueCommands([
+    ...primary,
+    ...workflow,
+    ...stage,
+    ...governance,
+    ...guardrails,
+  ]);
+  const specialist = excludeCommands(allCommands, alreadyGrouped);
+
+  return `## 入口选择
+
+这里控制的是推荐入口顺序，不裁剪 Codex 安装资产。所有匹配 Codex 的 assets 都会生成到插件或项目目录中。
+
+### 默认入口
+
+${renderCommandEntryList(primary, naming)}
+
+### 固定 workflow 入口
+
+${renderCommandEntryList(workflow, naming)}
+
+### 阶段 / 收尾入口
+
+${renderCommandEntryList(stage, naming)}
+
+### 专项入口（按需召回）
+
+${renderCommandEntryList(specialist, naming)}
+
+### 上下文、发布和治理入口
+
+${renderCommandEntryList(governance, naming)}
+
+### 防护入口
+
+${renderCommandEntryList(guardrails, naming)}
+`;
+}
+
 function renderAgentsFile(
   manifestSource: string,
   assets: readonly ToolkitAssetLike[],
@@ -243,86 +387,11 @@ Codex agent role 注册位于 \`${layout.displayConfigFile}\` 的 \`[agents.*]\`
 - 多 agent 触发以 \`agent_opportunity.dispatch_now\` 为准；为 \`yes\` 时必须真实派发可用 Codex agent，或说明平台能力不足并降级
 - 写入型 agent 必须有文件所有权、loop budget 和 fan-in 验证
 
+${renderCodexEntryGuide(assets, namespacedSkillNaming)}
+
 ## 统一命令语义到 Codex skill 的映射
 
 ${commandMappings}
-
-## 固定 workflow
-
-### 1. product-analysis
-
-适用：
-- 需求还模糊
-- 需要先把目标、范围和验收标准收敛清楚
-
-默认 skill：
-- \`$zc-product-analysis\`
-- 需要更深的设计或规格时，再接 \`$zc-brainstorming-and-design\` / \`$zc-spec-driven-development\`
-
-### 2. full-delivery
-
-适用：
-- 新功能、较大改动、完整交付
-
-默认 skill：
-- \`$zc-sdd-tdd\`
-- 需要完整主流程时，再接 \`$zc-sdd-tdd-workflow\`
-
-### 3. bugfix
-
-适用：
-- Bug、失败测试、异常行为
-
-默认 skill：
-- \`$zc-debug\`
-- 需要深入根因分析时，再接 \`$zc-debugging-and-error-recovery\`
-
-### 4. review-closure
-
-适用：
-- 已有改动，当前重点是审查、反馈处理、收尾
-
-默认 skill：
-- \`$zc-quality-review\`
-- 必要时接 \`$zc-code-review-and-quality\` / \`$zc-review-response-and-resolution\`
-
-### 5. docs-release
-
-适用：
-- 文档、ADR、发布说明、发布后同步
-
-默认 skill：
-- \`$zc-doc\`
-- 发布收尾时可接 \`$zc-ship\`
-- 必要时接 \`$zc-documentation-and-adrs\` / \`$zc-release-documentation-sync\`
-
-### 6. investigation
-
-适用：
-- 陌生代码库
-- 上下文失焦
-- 需要先摸清项目或限制
-
-默认 skill：
-- \`$zc-onboard\` / \`$zc-ctx-health\`
-- 必要时接 \`$zc-codebase-onboarding\` / \`$zc-context-engineering\`
-
-## 推荐开始方式
-
-- 不确定从哪开始：直接用 \`$zc-start\`
-- 需求还模糊：先用 \`$zc-product-analysis\`
-- 已确认是完整交付：直接用 \`$zc-sdd-tdd\`
-- 明确是 bug：直接用 \`$zc-debug\`
-- 明确是审查：直接用 \`$zc-quality-review\`
-
-## 最常用入口速查
-
-- 做新需求但范围还没收敛：\`$zc-product-analysis\`
-- 进入完整交付主流程：\`$zc-sdd-tdd\`
-- 修 bug：\`$zc-debug\`
-- 做代码审查和反馈收敛：\`$zc-quality-review\`
-- 补文档或发布说明：\`$zc-doc\`
-- 陌生项目先摸底：\`$zc-onboard\` 或 \`$zc-ctx-health\`
 
 ## 详细内容在哪里
 
@@ -339,8 +408,6 @@ ${commandMappings}
 - command-alias skills：${commandCount} 个
 - skills：${skillCount} 个
 - custom agents：${agentCount} 个
-
-${renderPlatformAssetList(assets)}
 `;
 }
 
@@ -381,19 +448,11 @@ function renderPluginCompanionAgentsFile(options: {
 - 多 agent 触发以 \`agent_opportunity.dispatch_now\` 为准；为 \`yes\` 时必须真实派发可用 Codex custom agents，或说明平台能力不足并降级
 - 写入型 agent 必须有文件所有权、loop budget 和 fan-in 验证
 
+${renderCodexEntryGuide(options.assets, pluginSkillNaming)}
+
 ## 统一命令语义到插件 skill 的映射
 
 ${commandMappings}
-
-## 推荐开始方式
-
-- 不确定从哪开始：\`$start\`
-- 需求还模糊：\`$product-analysis\`
-- 完整交付主流程：\`$sdd-tdd\`
-- 修 bug：\`$debug\`
-- 代码审查和反馈收敛：\`$quality-review\`
-- 文档或发布说明：\`$doc\`
-- 陌生项目先摸底：\`$onboard\` 或 \`$ctx-health\`
 
 ## 详细内容在哪里
 

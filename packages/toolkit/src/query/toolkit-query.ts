@@ -57,6 +57,13 @@ function buildRoutingWorkflows(asset: ToolkitAssetUnit): readonly ToolkitWorkflo
   return asset.meta.routingWorkflows ?? [];
 }
 
+function buildNextCommandIds(asset: ToolkitAssetUnit): readonly string[] {
+  return [
+    ...(asset.meta.requires ?? []).filter((target) => target.startsWith("command:")),
+    ...(asset.meta.suggests ?? []).filter((target) => target.startsWith("command:"))
+  ];
+}
+
 function pickDefaultWorkflowEntry(
   manifest: ToolkitManifest,
   workflow: ToolkitWorkflowRoute
@@ -95,14 +102,23 @@ function buildRouteHint(
   asset: ToolkitAssetUnit
 ): ToolkitRouteHint | undefined {
   if (!asset.meta.workflowFamily || !asset.meta.workflowRole) {
-    return undefined;
+    if (asset.meta.kind !== "command") {
+      return undefined;
+    }
+
+    return {
+      family: "specialized",
+      role: "specialized-entry",
+      workflows: [],
+      workflowEntries: {},
+      taskTypes: asset.meta.taskTypes ?? [],
+      next: buildNextCommandIds(asset),
+      requiresFullLifecycle: false
+    };
   }
 
   const workflows = buildRoutingWorkflows(asset);
-  const next = [
-    ...(asset.meta.requires ?? []).filter((target) => target.startsWith("command:")),
-    ...(asset.meta.suggests ?? []).filter((target) => target.startsWith("command:"))
-  ];
+  const next = buildNextCommandIds(asset);
 
   return {
     family: asset.meta.workflowFamily,
@@ -132,6 +148,13 @@ function buildRecommendedEntry(
   }
 
   if (route.role === "workflow-entry" || route.role === "specialized-entry" || route.role === "guardrail") {
+    if (route.family === "specialized") {
+      return {
+        commandId: target.id,
+        reason: "该资产是可直接进入的专项能力入口；不需要先裁剪安装资产。"
+      };
+    }
+
     return {
       commandId: target.id,
       reason: "该资产本身就是适合直接进入的 workflow 入口。"

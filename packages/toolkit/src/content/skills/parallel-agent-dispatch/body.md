@@ -149,6 +149,7 @@ dispatch_contract:
 - 允许读取的关键上下文
 - 允许修改的文件或模块边界；只读 worker 必须明确“不改文件”
 - 不得触碰其他 worker 文件的说明
+- agent role 和 model；没有特定模型时写明 `platform-default`
 - 任务内验证命令
 - 返回格式：`DONE / BLOCKED / NEEDS_CONTEXT`
 
@@ -159,6 +160,21 @@ dispatch_contract:
 - 提出的 findings 或回归结论
 - 未覆盖风险
 - 需要主线程 fan-in 的事项
+
+文件交接必须走最小资产包：
+
+| 文件 | 负责人 | 用途 |
+|---|---|---|
+| `tasks/<id>.md` | controller | 给 worker 的任务目标、所有权、验证和 loop budget |
+| `reports/<id>.md` | worker | 记录变更、证据、风险和 fan-in 事项 |
+| `review-packages/<id>.md` | controller | 给 reviewer 的 scoped diff、验证证据和未决风险 |
+| `reviews/<id>.md` | reviewer | 记录 finding、复验标准和回归结论 |
+| `ledger.md` / `fan-in.md` | controller | 记录状态、接受/拒绝、最终验证和清理 |
+
+- 不把完整聊天历史粘给 reviewer；reviewer 读 brief、report、changed files 和 scoped diff。
+- 单任务 review 只审该任务，跨任务一致性由最终 fan-in review 处理。
+- reviewer 默认不重跑 implementer 测试，除非证据缺失、过期、可疑或 finding 需要复现。
+- findings 先作为待判定事实记录，不在转给 producer 前预设“有效/无效”。
 
 ## Bounded Loop
 
