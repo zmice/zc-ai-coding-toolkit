@@ -1,14 +1,8 @@
-# Subagent-Driven Development
+# 子代理驱动开发
 
-## Overview
+## 何时使用
 
-通过为每个任务分派独立的子代理来执行实现计划，每个任务完成后进行两阶段审查：先验证规格合规性，再验证代码质量。主线程负责控制计划、分派、fan-in 和最终验证。
-
-**核心原则：每任务一个新子代理 + 两阶段审查 = 高质量 + 快速迭代**
-
-为什么要用子代理：你将任务委派给隔离上下文的专门代理。通过精心构造它们的指令和上下文，确保它们专注且成功。子代理不应继承你的会话上下文 — 你精确构造它们所需的一切。这也保护你自己的上下文用于协调工作。
-
-管控原则：
+已有实现计划、任务大多独立但不需要并行时使用。在当前会话内串行分派独立任务，让主线程保留集成上下文：
 
 ```text
 producer owns fix
@@ -16,299 +10,94 @@ reviewer owns regression
 controller owns fan-in
 ```
 
-- 主线程是 controller / integrator，负责目标、计划、分派、文件所有权、stop gate、fan-in 和最终验证。
-- 实现方或产生方负责优先修复自己引入的问题。
-- 审查方或提出方负责给出复现条件、断言、期望行为和风险等级，并在修复后回归确认。
-- 主线程判断 finding 是否成立、是否阻塞、是否需要转派或降级。
-- 上下文缺口优先交给 `agent:context-steward` 做 sidecar 维护；实现子代理不自行扩大读取范围或维护 `.codex/context/**`。
-- 在 Codex 上，只有本地已有 custom agent 或角色匹配时才使用对应 agent；没有匹配角色时由主线程构造一次性子代理指令，不把不存在的 agent 名写进计划。
+本 skill 适合已有计划、任务大多独立但不需要并行的实现。需要并行时使用 `parallel-agent-dispatch`；任务紧耦合时由主线程直接增量实现。
 
-## When to Use
+## 启动门禁
 
-决策树：
+1. 确认平台有可用子代理能力；没有时由主线程按同一任务/审查契约串行执行。
+2. 为计划创建独立、项目忽略的 scratch workspace，不读取其他计划的 ledger。
+3. 检查当前分支、dirty worktree 和文件所有权；不要让 worker 覆盖用户已有改动。
+4. 扫描任务之间和全局约束之间的冲突；只有会改变路线的冲突才暂停询问。
+5. 给每个任务写 brief、验证命令和默认两轮 loop budget。
 
-```
-有实现计划？ ─── 否 ──→ 先用 /task-plan 或 brainstorming-and-design
-    │
-   是
-    ▼
-任务大多独立？ ─── 否（紧耦合）──→ 手动执行或串行构建
-    │
-   是
-    ▼
-需要并行执行？ ─── 否 ──→ subagent-driven-development（本技能）
-    │
-   是
-    ▼
-parallel-agent-dispatch
-```
+完整角色、文件格式、状态和循环协议见 `references/execution-protocol.md`。
 
-### vs 手动执行
-- 子代理自然遵循 TDD
-- 每任务新鲜上下文（无污染）
-- 子代理可以在开始前提问
-- 审查检查点自动化
+## 每任务 Quick Path
 
-### vs parallel-agent-dispatch
-- 本技能：串行执行，同一会话，持续推进
-- parallel-agent-dispatch：并行执行，多代理同时工作
+1. 记录任务开始基线和允许修改的文件。
+2. 写最小 task brief；精确值只保留一份，不粘贴完整会话历史。
+3. 分派全新 implementer，要求先读 brief、按 TDD 实现、自审并写 report。
+4. 收到 `NEEDS_CONTEXT` 时只补具体缺口；收到 `BLOCKED` 时改变范围、上下文、模型或验证方式。
+5. 生成 scoped review package，交给独立 reviewer 同时给出规格和质量 verdict。
+6. finding 优先退回原 producer；reviewer 给出复验标准并做 scoped re-review。
+7. 修复仍失败且预算耗尽时，由 controller adjudicate：缩小任务、改派、接手或进入 stop gate。
+8. 两个 verdict 均通过后，在 plan ledger 记录完成、证据和未决风险。
 
-## 执行流程
+不要在同一任务上并行派多个 implementer。不要因为 worker 自审通过就跳过独立 task review。
 
-```
-读取计划，提取所有任务
-    │
-    ▼
-┌─────────────────── 每个任务循环 ───────────────────┐
-│                                                      │
-│  1. 分派实现子代理（携带完整任务文本 + 上下文）      │
-│     │                                                │
-│     ├─ 子代理提问？ → 提供上下文，重新分派            │
-│     │                                                │
-│     └─ 子代理实现 → 测试 → 报告 diff/验证 → 自审      │
-│                                                      │
-│  2. 分派规格审查子代理                                │
-│     │                                                │
-│     ├─ 规格不合规？ → 实现者修复 → 提出方回归         │
-│     │                                                │
-│     └─ 规格合规 ✓                                    │
-│                                                      │
-│  3. 分派代码质量审查子代理                            │
-│     │                                                │
-│     ├─ 质量不过关？ → 实现者修复 → 提出方回归         │
-│     │                                                │
-│     └─ 质量通过 ✓                                    │
-│                                                      │
-│  4. 标记任务完成                                      │
-│                                                      │
-└──────────────── 更多任务？继续循环 ─────────────────┘
-    │
-    ▼
-分派最终代码审查子代理（整体实现）
-    │
-    ▼
-完成
-```
+## 恢复与上下文
 
-## 三个角色
+- ledger 第一行必须绑定 plan identity。
+- compaction 或中断后先核对 ledger、Git 历史和工作区状态，再从首个未完成任务恢复。
+- 已完成任务不得重复分派；处于 fix round 的任务从下一轮继续。
+- 交接只传 brief、report、review package 和必要的接口决策。
+- reviewer 默认不重跑已有可信测试；证据缺失、过期、可疑或需要复现 finding 时才重跑。
 
-### 实现者（Implementer）
+## Bounded Fix Loop
 
-职责：按任务规格实现代码，遵循 TDD，报告变更文件、验证结果和风险。实现者不自行提交，提交范围由主线程和用户确认。
+- 默认最多两轮实现返工和两轮同 finding 回归。
+- 第一轮失败后优先恢复原 producer，但下一轮输入必须发生可解释变化。
+- 第二轮仍失败时不做原样重试；controller 逐项裁定 finding。
+- `NEEDS_CONTEXT` 最多补两次，且必须具体到文件、规格、错误输出或命令。
+- load-bearing finding 仍未关闭时停止并报告，不用“继续尝试”掩盖阻塞。
 
-提示模板要点：
-```
-你是一个实现代理。你的任务是：
-- 严格按照给定的任务规格实现
-- 遵循 TDD：先写失败测试，再写最小实现
-- 完成后执行内联自审检查清单，修复发现的问题
-- 返回修改文件、验证结果、风险和待 fan-in 项
+## Review 深度
 
-任务文本：[完整任务描述]
-相关上下文：[文件列表、模式示例、约束]
-项目约定：[命名、目录结构、测试框架]
-```
+| 任务 | Review |
+|---|---|
+| 1-2 个文件、机械修改 | implementer 自审 + controller 检查 |
+| 多文件或接口变化 | 独立 task reviewer + scoped re-review |
+| 架构、高风险、安全、性能 | 规格与质量分离，并追加对应专家审查 |
 
-**实现者内联自审检查清单**（提交前必做，替代部分审查子代理开销）：
-1. **规格覆盖扫描** — 逐条检查任务要求，确认每条都已实现，无遗漏无多余
-2. **占位符扫描** — 搜索 TODO、TBD、FIXME、空方法体、硬编码魔法值
-3. **一致性检查** — 命名是否与计划中其他任务一致？接口签名是否匹配？
-4. **简洁性检查** — 是否存在过度工程？能否用更少代码实现同样效果？
+审查只覆盖当前任务；所有任务完成后再做一次整体 review 和最终集成验证。
 
-### 规格审查员（Spec Reviewer）
+## 模型选择
 
-职责：验证实现是否完全匹配任务规格 — 不多不少。
+- 规格完整、机械任务：快速模型
+- 多文件集成与一般 review：标准模型
+- 架构判断、复杂故障和最终整体 review：更强模型
 
-审查要点：
-```
-- 所有规格要求是否都已实现？
-- 是否有超出规格的额外实现？（over-building）
-- 接口是否与规格一致？
-- 测试是否覆盖规格中的验收条件？
-- 如果提出 finding，必须给出复验标准，并在修复后确认原 finding 是否关闭。
-```
+重试是否升级模型取决于失败原因，不因“贵”或“强”本身判断。记录实际 role 和 model；未指定时写 `platform-default`。
 
-### 代码质量审查员（Code Quality Reviewer）
+## 完成门禁
 
-职责：检查实现的工程质量（不关心规格合规，那是上一步的事）。
+全部任务结束后：
 
-审查要点：
-```
-- 代码可读性和清晰度
-- 命名一致性
-- 错误处理完整性
-- 性能考量
-- 安全实践
-- 测试质量
-- 如果提出 finding，必须给出风险等级、期望修复结果和回归结论。
-```
+1. 做 whole-change review，重点检查跨任务接口、重复实现和遗漏。
+2. 运行主线程掌控的 fresh verification，不能只汇总 worker 报告。
+3. 检查 dirty worktree、计划 workspace 和未决 finding。
+4. 只有验证通过且 load-bearing finding 已关闭，才进入 branch finish。
 
-审查方默认不直接修复。只有用户明确要求“修复 review findings”，或 finding 是机械小修且主线程确认后，才把审查结论转成修复任务。
-
-### Findings 回流
-
-- 规格或质量 finding 先回到 producer，由 producer 优先修复。
-- reviewer 必须给出 regression evidence，说明原 finding 的触发条件、修复后检查方式和结论。
-- controller 负责 fan-in：判断 finding 是否成立、是否阻塞当前任务、是否接受修复、是否需要重新分派。
-- producer 两次无法关闭同一 finding 时，controller 可以缩小任务或改派，但必须保留 reviewer 的回归标准。
-
-### 文件交接
-
-每个任务使用最小交接包，而不是把完整聊天历史交给下一个角色：
-
-- `tasks/<id>.md`：controller 写给实现者，包含目标、文件所有权、验证命令和 loop budget。
-- `reports/<id>.md`：实现者填写，列出变更文件、验证证据、风险和 fan-in 事项。
-- `review-packages/<id>.md`：controller 生成给 reviewer，包含 scoped diff、验证证据和未决风险。
-- `reviews/<id>.md`：reviewer 填写 finding、复验标准和回归结论。
-
-每个交接文件都应写明 agent role 和 model；没有特定模型时写 `platform-default`，不要让 reviewer 从聊天上下文猜执行环境。
-
-reviewer 默认不重跑实现者测试，除非证据缺失、过期、可疑或 finding 需要复现。单任务 review 只审该任务；最终整体审查才处理跨任务一致性。
-
-## 子代理状态处理
-
-子代理报告四种状态之一：
-
-| 状态 | 含义 | 处理方式 |
-|------|------|---------|
-| **DONE** | 任务完成 | 进入规格审查 |
-| **DONE_WITH_CONCERNS** | 完成但有疑虑 | 先读取疑虑，评估后决定是否处理 |
-| **NEEDS_CONTEXT** | 需要更多信息 | 优先派 `agent:context-steward` 定位缺口；如果是项目上下文过期，让它在自有边界内 scoped_write，再提供精确上下文并重新分派 |
-| **BLOCKED** | 无法完成 | 评估阻塞原因（见下方） |
-
-**BLOCKED 的处理：**
-1. 如果是上下文问题 → 先让 context steward 确认是缺少任务上下文还是项目上下文陈旧；项目上下文陈旧时由它 scoped_write 后再重新分派
-2. 如果任务需要更强推理 → 用更强模型重新分派
-3. 如果任务太大 → 拆分为更小的子任务
-4. 如果计划本身有问题 → 上报给人类
-
-**永远不要忽略阻塞或让同一模型不做任何改变就重试。** 如果子代理说卡住了，必须有所改变。
-
-## Bounded Loop
-
-每个任务必须有循环预算，防止“继续派同一个 agent 再试一次”变成无边界重试：
-
-- 每个 task 默认最多 2 轮实现返工；第二轮仍无法满足规格或验证，进入 stop gate。
-- 同一 reviewer finding 最多 2 轮修复/回归；仍未关闭时由 controller 缩小任务、改派更合适 agent 或自己接手。
-- `NEEDS_CONTEXT` 最多补上下文 2 次；补充内容必须具体到文件、规格、错误输出或验证命令。
-- `BLOCKED` 不能原样重派；必须改变任务范围、上下文、模型级别、验证方式或执行模式。
-- 连续出现同类失败、同一文件冲突、验证缺失或 agent 状态不明时，停止当前循环并回到 `planning-and-task-breakdown` 或 `debugging-and-error-recovery`。
-
-Loop 记录格式：
+## 输出
 
 ```text
-Loop budget:
-- task:
-- max rounds:
-- current round:
-- changed input since last round:
-- stop condition:
-- controller decision:
+Subagent delivery:
+- Plan:
+- Tasks completed:
+- Agent roles / models:
+- Files owned:
+- Review verdicts:
+- Fresh verification:
+- Open findings:
+- Workspace / cleanup state:
+- Recommendation: <finish / fix / stop> because <evidence and trade-off>
 ```
-
-## 审查策略选择
-
-并非所有任务都需要完整的三角色审查流。根据任务复杂度选择审查策略：
-
-| 任务特征 | 推荐审查策略 |
-|---------|------------|
-| 涉及 1-2 个文件，规格明确，机械性实现 | **light review**：实现者自审 + 主线程检查 |
-| 涉及多文件，有接口/集成关注点 | **standard review**：实现者自审 + 独立 reviewer + 提出方回归 |
-| 涉及设计判断、广泛代码库理解或高风险路径 | **strict review**：规格审查 + 代码质量审查 + 测试 / 安全 / 性能按风险加入 |
-
-> **经验参考**：superpowers 项目实测发现，充分的实现者自审可替代大部分审查子代理的工作，将单任务审查时间从 ~25min 降至 ~30s，且缺陷捕获率相当。关键在于实现者自审检查清单的严格执行。
-
-默认中等以上任务使用 `standard review`，高风险任务使用 `strict review`。
-
-## Bugfix 与回归闭环
-
-当审查或回归发现 bug：
-
-1. 主线程先判断归属：实现方引入、集成引入、规格不清或外部环境问题。
-2. 实现方引入的问题优先退回实现方修复。
-3. 同一个 finding 两次修不好时，主线程缩小问题后转派给更合适的 agent 或自己接手。
-4. 提出方负责复验原问题；测试代码可以由实现方补，也可以由 test agent 补，但回归结论由提出方给出。
-5. 主线程运行最终集成验证后才能接受。
-
-回归记录必须能回答：
-
-```text
-Regression:
-- finding:
-- producer:
-- fix:
-- reviewer:
-- regression evidence:
-- controller decision:
-```
-
-## 模型选择指南
-
-用最经济的模型处理每个角色，节省成本提高速度。
-
-| 任务复杂度信号 | 推荐模型级别 |
-|--------------|------------|
-| 涉及 1-2 个文件，规格完整 | 快速/经济模型 |
-| 涉及多文件，有集成关注点 | 标准模型 |
-| 需要设计判断或广泛代码库理解 | 最强模型 |
-
-大多数实现任务在计划良好时都是机械性的 → 用快速模型。
-
-审查任务需要判断力 → 用标准或更强模型。
-
-## 示例工作流
-
-```
-控制器：按子代理驱动模式执行计划。
-
-[读取计划文件，提取全部 5 个任务的完整文本和上下文]
-[创建 TodoWrite 追踪所有任务]
-
-Task 1: 用户认证模块
-├─ [分派实现子代理 + 完整任务文本 + 上下文]
-├─ 实现者："开始前确认 — 密码哈希用 bcrypt 还是 argon2？"
-├─ 控制器："用 argon2，项目中已有依赖"
-├─ 实现者：实现完成，5/5 测试通过，已报告变更文件和验证结果
-├─ [分派规格审查子代理]
-├─ 规格审查：✅ 所有要求满足，无额外内容
-├─ [分派代码质量审查子代理]
-├─ 质量审查：✅ 通过
-└─ [标记 Task 1 完成]
-
-Task 2: 会话管理
-├─ [分派实现子代理 + 完整任务文本 + 上下文]
-├─ 实现者：实现完成，8/8 测试通过
-├─ [分派规格审查子代理]
-├─ 规格审查：❌ 缺少"每100项报告进度"的要求
-├─ 实现者：修复，添加进度报告
-├─ 规格审查：✅ 合规
-├─ [分派代码质量审查子代理]
-├─ 质量审查：有 Magic Number (100)
-├─ 实现者：提取为 PROGRESS_INTERVAL 常量
-├─ 质量审查：✅ 通过
-└─ [标记 Task 2 完成]
-
-... 重复直到所有任务完成 ...
-
-[分派最终整体审查子代理]
-最终审查：✅ 所有要求满足，可合并
-完成！
-```
-
-## 与其他技能的衔接
-
-- **planning-and-task-breakdown** — 上游：生成子代理执行的任务计划
-- **test-driven-development** — 每个实现子代理内部遵循 TDD 循环
-- **verification-before-completion** — 每个审查阶段遵循验证铁律
-- **code-review-and-quality** — 最终整体审查使用五维度审查
-- **parallel-agent-dispatch** — 姊妹技能：并行版本的子代理调度
 
 ## Red Flags
 
-- 已经选择子代理驱动模式后，控制器绕过已分配 worker 直接改同一任务
-- 跳过规格审查直接进入代码质量审查
-- 子代理报告 BLOCKED 后不做改变就重试
-- 所有任务用同一个最强模型（浪费资源）
-- 子代理间共享上下文（违背隔离原则）
-- 没有最终的整体审查就声明完成
-- reviewer 提出 finding 后不负责回归确认
+- worker 读取整个聊天历史或另一个计划的 scratch
+- controller 与 worker 同时修改同一任务文件
+- finding 没有复验标准，或修复后 reviewer 不回归
+- 同一输入、同一模型、同一验证方式反复重派
+- 用 worker 的“测试通过”代替主线程最终验证
+- 没有处理用户原有 dirty changes 就生成补丁、清理或提交

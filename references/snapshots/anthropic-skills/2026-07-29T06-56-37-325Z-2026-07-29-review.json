@@ -1,0 +1,28 @@
+{
+  "upstream": "anthropic-skills",
+  "captured_at": "2026-07-29T06:56:37.325Z",
+  "label": "2026-07-29-review",
+  "metadata": {
+    "title": "Anthropic Skills",
+    "kind": "github-public-repo",
+    "status": "active",
+    "owner": "codex",
+    "source_url": "https://github.com/anthropics/skills.git",
+    "source_paths": [
+      "README.md",
+      "spec",
+      "template",
+      "skills/skill-creator"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/anthropics/skills.git",
+    "checked_at": "2026-07-29T06:56:37.326Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "b29e7cf65e5cb78a5ac33d582270551bc74a14eb"
+  },
+  "notes": {
+    "path": "references/notes/anthropic-skills.md",
+    "content": "# Anthropic Skills\n\nSource: `https://github.com/anthropics/skills`\n\n## Status\n\nActive official Agent Skills reference with a public specification pointer, examples, and a skill-creation evaluation workflow.\n\n## Latest Remote Evidence\n\n- remote head: `b29e7cf65e5cb78a5ac33d582270551bc74a14eb`\n- observed date: 2026-07-29\n- evidence: shallow clone review of `README.md`, `spec`, `template`, and `skills/skill-creator`\n\n## Extractable Upgrades\n\n- Evaluate skills with representative prompts rather than only linting Markdown structure.\n- Compare a new skill with no guidance, and an updated skill with the previous version.\n- Separate objective assertions from human judgment; do not force subjective quality into weak numeric checks.\n- Preserve timing and token evidence where the execution harness exposes it.\n- Iterate from observed failures, and generalize corrections instead of overfitting a few prompts.\n\n## License Boundary\n\n- Many example skills are Apache-2.0, but document skills can be source-available rather than open source.\n- Review the license inside each skill directory before copying or adapting any content.\n- This workspace absorbs rewritten governance mechanics, not document-skill source.\n\n## Recommended Phase\n\n- Fold the baseline / candidate / review loop into the toolkit skill-authoring workflow.\n- Keep full benchmark viewers and provider-specific runners out of the core toolkit until a portable harness exists.\n"
+  }
+}

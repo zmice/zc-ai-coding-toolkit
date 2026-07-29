@@ -1,6 +1,6 @@
 # ADR 0004: Codex Marketplace First Runtime Boundary
 
-Status: Accepted
+Status: Accepted, amended 2026-07-29
 
 ## Context
 
@@ -24,6 +24,7 @@ The `zc` CLI is demoted from "main user install path" to maintainer and runtime 
 Codex plugin assets remain Codex-native:
 
 - skills are exposed through marketplace-installed plugin skills
+- commands and agents are distributed as plugin-level directories beside the manifest
 - root `AGENTS.md` stays a thin entry and routing file
 - generated project context is loaded progressively, not embedded into the entry file
 - users should not need to understand internal `zc` commands before using the Codex plugin
@@ -38,10 +39,17 @@ Runtime-requiring features must choose one of these execution homes:
 
 Static skill text must not pretend it can perform remote fetches, install updates, spawn writable agents, or validate fan-in without a real runtime.
 
+Plugin-native agents are the default packaged boundary:
+
+- the plugin bundle contains `agents/*.md`; no user config mutation is required for the native surface
+- `commands/`, `agents/`, and `hooks.json` are sibling plugin surfaces shown by the official `openai/plugins` repository, not invented manifest fields
+- the bundle may additionally carry inert, hash-addressed TOML agents under `assets/zc-agents/` for traditional config-role compatibility
+- only explicit `--with-agents` consumes that compatibility payload; writes and removals remain receipt-owned
+
 ## Consequences
 
 - Codex docs and release flow should prioritize marketplace install/update.
-- Codex custom agents are maintained by `zc platform agents codex`, because the official marketplace surface does not currently provide a declarative agent install path.
+- Codex plugin agents ship with the marketplace bundle. `zc platform agents codex` and `--with-agents` remain compatibility paths for traditional `[agents.*]` TOML roles.
 - Legacy `zc platform install codex` remains useful for development, tests, and migration, but is not the preferred user path.
 - Feature specs must name their runtime boundary before implementation.
 - Context and multi-agent features can ship in stages: skill protocol first, then runtime automation where the platform supports it.

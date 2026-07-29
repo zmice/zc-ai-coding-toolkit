@@ -15,6 +15,9 @@ platforms:
   - claude
   - opencode
 source:
-  upstream: toolkit-original
-  strategy: curated
-  notes: 本仓库围绕串行子代理开发流程整理的原生能力。
+  upstream: superpowers
+  strategy: inspired
+  origin_name: subagent-driven-development
+  origin_path: skills/subagent-driven-development/SKILL.md
+  origin_id: skill:subagent-driven-development
+  notes: 保留本仓库 controller/producer/reviewer 语义和两轮预算，吸收上游 plan-scoped workspace、ledger 恢复、文件交接、恢复原 producer 与 scoped re-review 机制，未复制脚本、目录名和五轮模型升级策略

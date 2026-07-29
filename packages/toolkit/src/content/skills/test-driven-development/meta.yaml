@@ -18,4 +18,4 @@ source:
   origin_name: test-driven-development
   origin_path: skills/test-driven-development/SKILL.md
   origin_id: skill:test-driven-development
-  notes: 测试先行原则沿用上游，并补充中文化流程说明
+  notes: 测试先行原则沿用上游，并补充中文化流程说明；高信号测试参考吸收 Superpowers 2026-07-29 的可证伪断言与 mutation check 机制并重新表述

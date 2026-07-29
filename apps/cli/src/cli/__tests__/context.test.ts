@@ -30,11 +30,12 @@ async function runCli(args: string[]): Promise<{ stdout: string; stderr: string 
 
 async function createTempProject(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), "zc-context-test-"));
-  await writeFile(join(root, "README.md"), "# Context test\n", "utf8");
+  await writeFile(join(root, "README.md"), "# Context test\n\nA compact project used to verify context generation.\n", "utf8");
   await writeFile(
     join(root, "package.json"),
     JSON.stringify({
       name: "context-test",
+      description: "Context generation fixture",
       scripts: {
         test: "vitest run",
         build: "tsc",
@@ -43,6 +44,18 @@ async function createTempProject(): Promise<string> {
     "utf8",
   );
   await writeFile(join(root, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n", "utf8");
+  await mkdir(join(root, "apps", "api"), { recursive: true });
+  await writeFile(
+    join(root, "apps", "api", "package.json"),
+    JSON.stringify({
+      name: "@context-test/api",
+      description: "API module",
+      scripts: {
+        test: "vitest run",
+      },
+    }),
+    "utf8",
+  );
   await mkdir(join(root, "docs", "adr"), { recursive: true });
   await writeFile(join(root, "docs", "README.md"), "# Docs\n", "utf8");
   return root;
@@ -72,6 +85,26 @@ describe("context CLI", () => {
     await expect(readFile(join(root, ".codex/context/project.md"), "utf8")).rejects.toThrow();
   });
 
+  it("does not report generated or missing files as evidence for an empty project", async () => {
+    const root = await mkdtemp(join(tmpdir(), "zc-context-empty-"));
+
+    const result = await runCli(["context", "init", "--dir", root, "--json"]);
+    const payload = JSON.parse(result.stdout) as {
+      artifacts: Array<{ relativePath: string; content: string }>;
+    };
+    const manifest = JSON.parse(
+      payload.artifacts.find((artifact) => artifact.relativePath === ".codex/context/manifest.json")?.content ?? "{}",
+    ) as { sourcePaths?: string[] };
+    const projectContext = payload.artifacts.find(
+      (artifact) => artifact.relativePath === ".codex/context/project.md",
+    )?.content ?? "";
+
+    expect(result.stderr).toBe("");
+    expect(manifest.sourcePaths).toEqual([]);
+    expect(projectContext).toContain("未记录可验证的源码或项目说明文件");
+    expect(projectContext).not.toContain("`package.json`");
+  });
+
   it("writes managed project context files and preserves existing AGENTS.md content", async () => {
     const root = await createTempProject();
     await writeFile(join(root, "AGENTS.md"), "# Existing Rules\n\n- Keep me.\n", "utf8");
@@ -96,6 +129,9 @@ describe("context CLI", () => {
     const projectContext = await readFile(join(root, ".codex/context/project.md"), "utf8");
     expect(projectContext).toContain("<!-- zc-context:managed -->");
     expect(projectContext).toContain("context-test Project Context");
+    expect(projectContext).toContain("Context generation fixture");
+    expect(projectContext).toContain("`apps/api`：package: `@context-test/api`");
+    expect(projectContext).toContain("## 证据来源");
 
     const commandsContext = await readFile(join(root, ".codex/context/commands.md"), "utf8");
     expect(commandsContext).toContain("`pnpm test`: `vitest run`");

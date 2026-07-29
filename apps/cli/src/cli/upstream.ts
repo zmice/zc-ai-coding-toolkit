@@ -476,16 +476,23 @@ function buildImpacts(
     });
   }
 
-  if (hasRemoteContentChanges && !impacts.some((impact) => impact.target === "toolkit")) {
-    impacts.push({
-      target: "toolkit",
-      effect: hasUnregisteredAiAssetPaths
-        ? "远端未登记路径疑似包含 AI asset，需要人工判断是否扩展 source_paths 并吸收 canonical content。"
-        : remoteContent?.source_paths_gap
-          ? "远端有变化但登记 source_paths 未命中，需要人工复核上游路径覆盖。"
-          : "远端登记路径已有内容变化，需要人工判断是否影响 canonical content。",
-      directWrite: false,
-    });
+  if (hasRemoteContentChanges) {
+    const remoteToolkitEffect = hasUnregisteredAiAssetPaths
+      ? "远端未登记路径疑似包含 AI asset，需要人工判断是否扩展 source_paths 并吸收 canonical content。"
+      : remoteContent?.source_paths_gap
+        ? "远端有变化但登记 source_paths 未命中，需要人工复核上游路径覆盖。"
+        : "远端登记路径已有内容变化，需要人工判断是否影响 canonical content。";
+    const existingToolkitImpact = impacts.find((impact) => impact.target === "toolkit");
+
+    if (existingToolkitImpact) {
+      existingToolkitImpact.effect = `${existingToolkitImpact.effect} ${remoteToolkitEffect}`;
+    } else {
+      impacts.push({
+        target: "toolkit",
+        effect: remoteToolkitEffect,
+        directWrite: false,
+      });
+    }
   }
 
   if (hasRemoteContentChanges && !impacts.some((impact) => impact.target === "platform")) {

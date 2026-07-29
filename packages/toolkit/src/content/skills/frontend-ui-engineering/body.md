@@ -284,6 +284,7 @@ function useToggleTask() {
 ## See Also
 
 For detailed accessibility requirements and testing tools, see `references/accessibility-checklist.md`.
+The copied checklist's license notice is distributed beside it as `references/LICENSE-agent-skills.txt`.
 
 ## Common Rationalizations
 

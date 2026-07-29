@@ -1,0 +1,36 @@
+{
+  "upstream": "superpowers",
+  "captured_at": "2026-07-29T06:56:24.635Z",
+  "label": "2026-07-29-review",
+  "metadata": {
+    "title": "Superpowers",
+    "kind": "github-public-repo",
+    "status": "active",
+    "owner": "codex",
+    "source_url": "https://github.com/obra/superpowers.git",
+    "source_paths": [
+      "CLAUDE.md",
+      "README.md",
+      "RELEASE-NOTES.md",
+      "package.json",
+      ".claude-plugin",
+      ".codex-plugin",
+      ".opencode",
+      "docs",
+      "hooks",
+      "skills",
+      "scripts",
+      "tests"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/obra/superpowers.git",
+    "checked_at": "2026-07-29T06:56:24.636Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "44c9b2d6e889982ac18c27d05a19fefe335194e1"
+  },
+  "notes": {
+    "path": "references/notes/superpowers.md",
+    "content": "# Superpowers\n\nSource: `https://github.com/obra/superpowers`\n\n## Status\n\nRegistered from historical upstream tracking. Initial baseline snapshot captured in the new governance layer.\n\n## Historical Role\n\n- Commit history previously tracked it as an architecture reference.\n- It influenced review strategy, role decomposition, and \"role as skill\" thinking.\n\n## Expected Downstream Value\n\n- Review workflow patterns\n- Role boundary design\n- Multi-agent execution heuristics\n\n## Boundaries\n\n- Treat it as an architecture reference, not as a direct content source to mirror.\n\n## Snapshot Baseline\n\n- baseline: `references/snapshots/superpowers/2026-04-18T18-02-14-443Z-2026-04-19-baseline.json`\n- current governance status: `active`\n\n## Latest Reviewed Upstream\n\n- remote head: `f2cbfbefebbfef77321e4c9abc9e949826bea9d7`\n- observed date: 2026-05-15\n- notable upstream change: v5.1.0 refreshes worktree guidance, code-reviewer prompt material, Codex / OpenCode plugin sync surfaces, and release notes. The most relevant delta is still worktree lifecycle clarity and explicit transcript-style verification.\n\n## Latest Remote Evidence\n\n- remote head: `896224c4b1879920ab573417e68fd51d2ccc9072`\n- observed date: 2026-06-29\n- evidence: `pnpm upstream -- report superpowers --format json --with-remote`\n- finding: previous `source_paths` (`prompts`, `instructions`, `agents`) missed all registered-path changes while upstream had 130 changed paths.\n- registry update: track current useful surfaces including `skills`, `docs`, `hooks`, `scripts`, `tests`, `.claude-plugin`, `.codex-plugin`, `.opencode`, `README.md`, `CLAUDE.md`, release notes, and `package.json`.\n\n## Latest Remote Evidence 2026-07-02\n\n- remote head: `f268f7c953744036f0fa7e9d4b73535c04e57cb8`\n- evidence: `pnpm upstream -- report all --format md --with-remote`\n- finding: registered paths changed in 122 files. The most relevant deltas are `writing-skills` guidance, new-harness portability docs, Codex plugin sync surface, and subagent-driven development review package / task brief mechanics.\n\n## Extractable Upgrades\n\n- Worktree setup should select `.worktrees/` before `worktrees/`, then verify project-local directories are ignored.\n- Parallel dispatch should require explicit task independence, file ownership, and fan-in verification.\n- Shutdown is not branch closure; branch/worktree ownership must be resolved separately.\n- Worktree cleanup text must not imply that deleting a worktree is always lossless; inspect status and decide merge / keep / discard first.\n- New-harness or multi-worker work should leave an acceptance transcript: task ownership, changed files, evidence, conflicts, and cleanup state.\n- Skill authoring should treat guidance as behavior-shaping assets: classify the baseline failure first, choose the guidance form that fits, micro-test wording against no-guidance controls, and avoid workflow summaries in discovery descriptions.\n- Cross-harness support should keep skill bodies action-oriented and platform-neutral; platform adapters provide tool mapping and bootstrap/install delivery.\n- Subagent review can reduce context and cost by handing task briefs, reports, review packages, and progress ledgers as files instead of pasting accumulated history into prompts.\n\n## Non-Adoption Boundary\n\n- Do not copy Superpowers commands wholesale.\n- Do not create hidden worktrees without proving ignore safety.\n- Do not import Superpowers scripts or prompts directly; convert the durable mechanics into this repo's `zc agent plan` controller model and toolkit content.\n\n## Recommended Phase\n\n- Phase 1: `zc team plan`, worktree safety checks, fan-in status output, and safer worktree cleanup wording in toolkit content.\n- Phase 2: richer subagent review prompts after the team runtime is stable.\n\n## Latest Remote Evidence 2026-07-29\n\n- remote head: `44c9b2d6e889982ac18c27d05a19fefe335194e1`\n- evidence: `pnpm upstream -- report all --format json --with-remote` plus shallow-clone content review\n- finding: upstream added plan-scoped scratch workspaces, resumable fix loops, scoped re-review, a circuit breaker, and a positive guide for falsifiable tests\n- finding: Codex packaging now declares an explicit empty hook surface when hooks should not be auto-discovered\n\n## Absorbed 2026-07-29\n\n- Compress `subagent-driven-development` around a controller-owned, plan-scoped ledger and file-based handoffs.\n- Resume the original producer only when the next round changes its input; after the local loop budget, adjudicate rather than retry forever.\n- Add a high-signal test reference that requires independently derived expectations, observable behavior, and a mutation check.\n\n## Retained Local Boundary 2026-07-29\n\n- Keep the local default at two fix rounds instead of copying the upstream five-round loop.\n- Do not copy `.superpowers/` paths, scripts, model names, or prompt templates.\n- Preserve platform-neutral role contracts and let each adapter map them to available agent tools.\n"
+  }
+}

@@ -116,6 +116,7 @@ Recommendation: <Approve / Request changes / Defer> because <evidence, risk, and
 
 - 更详细的安全审查指导，请见 `references/security-checklist.md`
 - 更详细的性能审查检查项，请见 `references/performance-checklist.md`
+- 上述上游清单的许可证声明随产物分发于 `references/LICENSE-agent-skills.txt`
 
 ## 常见合理化说辞
 

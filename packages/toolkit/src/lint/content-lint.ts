@@ -40,6 +40,8 @@ const assetReferenceTokenPattern =
 const kindPrefixedAssetReferencePattern =
   /^(?:skill|command|agent):[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const inlineCodeSpanPattern = /`([^`\n]+)`/gu;
+const localSupportFileReferencePattern =
+  /`((?:references|assets|templates|examples|scripts)\/[^`\n]+)`/gu;
 const contextualAssetReferencePattern =
   /`((?:(?:skill|command|agent):)?[a-z][a-z0-9]*(?:-[a-z0-9]+)*)`\s+(?:skill|command|agent|技能|命令|代理)|(?:skill|command|agent|技能|命令|代理)\s+`((?:(?:skill|command|agent):)?[a-z][a-z0-9]*(?:-[a-z0-9]+)*)`/gu;
 const routeArrowReferencePattern =
@@ -191,6 +193,10 @@ function countPatternMatches(text: string, pattern: RegExp): number {
   return [...text.matchAll(pattern)].length;
 }
 
+function stripFencedCodeBlocks(text: string): string {
+  return text.replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1\s*$/gmu, "");
+}
+
 function checkDescriptionDiscoveryScope(assetId: string, meta: ToolkitAssetMeta): ToolkitLintIssue[] {
   const commandMentions = countPatternMatches(meta.description, slashCommandTokenPattern);
   const lifecycleMentions = countPatternMatches(meta.description, lifecyclePhaseTokenPattern);
@@ -211,9 +217,9 @@ function checkDescriptionDiscoveryScope(assetId: string, meta: ToolkitAssetMeta)
 
 function checkBodyStructure(asset: ToolkitAssetUnit): ToolkitLintIssue[] {
   const issues: ToolkitLintIssue[] = [];
-  const body = asset.body.trim();
+  const rawBody = asset.body.trim();
 
-  if (!body) {
+  if (!rawBody) {
     issues.push({
       level: "error",
       assetId: asset.id,
@@ -222,6 +228,8 @@ function checkBodyStructure(asset: ToolkitAssetUnit): ToolkitLintIssue[] {
     });
     return issues;
   }
+
+  const body = stripFencedCodeBlocks(rawBody);
 
   if (asset.meta.kind === "skill" && !markdownSectionHeadingPattern.test(body)) {
     issues.push({
@@ -249,11 +257,13 @@ function checkAgentLoopBoundary(asset: ToolkitAssetUnit): ToolkitLintIssue[] {
     return [];
   }
 
-  if (!agentDispatchSignalPattern.test(asset.body)) {
+  const body = stripFencedCodeBlocks(asset.body);
+
+  if (!agentDispatchSignalPattern.test(body)) {
     return [];
   }
 
-  if (agentLoopBoundaryPattern.test(asset.body)) {
+  if (agentLoopBoundaryPattern.test(body)) {
     return [];
   }
 
@@ -527,7 +537,7 @@ function checkExplicitAssetReferences(manifest: ToolkitManifest): ToolkitLintIss
 
   for (const asset of manifest.assets) {
     const refs = collectExplicitAssetReferences(
-      `${asset.meta.description}\n${asset.body}`,
+      `${asset.meta.description}\n${stripFencedCodeBlocks(asset.body)}`,
       knownReferences
     );
 
@@ -546,6 +556,40 @@ function checkExplicitAssetReferences(manifest: ToolkitManifest): ToolkitLintIss
   }
 
   return issues;
+}
+
+function normalizeLocalSupportFileReference(reference: string): string {
+  return reference.split("#", 1)[0]!.replace(/^\.\//u, "");
+}
+
+function normalizeAttachmentOutputPath(relativePath: string): string {
+  const normalized = relativePath.replaceAll("\\", "/");
+  return normalized.startsWith("assets/")
+    ? normalized.slice("assets/".length)
+    : normalized;
+}
+
+function checkLocalSupportFileReferences(asset: ToolkitAssetUnit): ToolkitLintIssue[] {
+  const availablePaths = new Set(
+    asset.attachments.map((attachment) => normalizeAttachmentOutputPath(attachment.relativePath))
+  );
+  const referencedPaths = new Set<string>();
+
+  for (const match of stripFencedCodeBlocks(asset.body).matchAll(localSupportFileReferencePattern)) {
+    const reference = match[1];
+    if (reference) {
+      referencedPaths.add(normalizeLocalSupportFileReference(reference));
+    }
+  }
+
+  return [...referencedPaths]
+    .filter((reference) => !availablePaths.has(reference))
+    .map((reference) => ({
+      level: "error" as const,
+      assetId: asset.id,
+      rule: "missing-local-support-file",
+      message: `引用的本地支持文件不存在或未纳入附件：${reference}`
+    }));
 }
 
 function checkRelationshipCycles(
@@ -623,7 +667,8 @@ export function lintToolkitManifest(
     ...checkUpstreamRegistryConsistency(asset.id, asset.meta, options.knownUpstreams),
     ...checkSourceTraceability(asset.id, asset.meta),
     ...checkBodyStructure(asset),
-    ...checkAgentLoopBoundary(asset)
+    ...checkAgentLoopBoundary(asset),
+    ...checkLocalSupportFileReferences(asset)
   ]).concat(
     checkDuplicateSummaries(manifest),
     checkExplicitAssetReferences(manifest),

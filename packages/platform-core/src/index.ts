@@ -13,6 +13,11 @@ export type PlatformCapabilitySurface =
   | "agents-dir"
   | "extension-dir";
 
+export interface ToolkitAssetAttachmentLike {
+  readonly relativePath: string;
+  readonly contents: string;
+}
+
 export interface ToolkitAssetLike {
   readonly id: string;
   readonly kind: ToolkitAssetKind;
@@ -21,6 +26,7 @@ export interface ToolkitAssetLike {
   readonly title?: string;
   readonly summary?: string;
   readonly body?: string;
+  readonly attachments?: readonly ToolkitAssetAttachmentLike[];
   readonly tools?: readonly string[];
   readonly requires?: readonly string[];
   readonly tier?: string;
@@ -263,6 +269,36 @@ export function createSkillArtifact(options: {
       body: options.body ?? options.asset.body ?? `# ${describeAsset(options.asset)}\n`,
     }),
   };
+}
+
+function normalizeAttachmentRelativePath(relativePath: string): string {
+  const normalized = relativePath.replaceAll("\\", "/");
+  const outputRelativePath = normalized.startsWith("assets/")
+    ? normalized.slice("assets/".length)
+    : normalized;
+  const segments = outputRelativePath.split("/");
+
+  if (
+    outputRelativePath.length === 0
+    || outputRelativePath.startsWith("/")
+    || segments.some((segment) => segment.length === 0 || segment === "." || segment === "..")
+  ) {
+    throw new Error(`不安全的附件路径：${relativePath}`);
+  }
+
+  return outputRelativePath;
+}
+
+export function createAttachmentArtifacts(options: {
+  readonly directory: string;
+  readonly asset: ToolkitAssetLike;
+}): readonly PlatformArtifact[] {
+  const directory = options.directory.replace(/\/+$/u, "");
+
+  return (options.asset.attachments ?? []).map((attachment) => ({
+    path: `${directory}/${normalizeAttachmentRelativePath(attachment.relativePath)}`,
+    content: attachment.contents,
+  }));
 }
 
 export function renderMarkdownAgentFile(options: {

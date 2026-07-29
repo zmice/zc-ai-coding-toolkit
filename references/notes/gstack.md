@@ -64,3 +64,15 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 
 - Phase 1: extract wording and workflow discipline into documentation only, including plan-mode / stop-gate report shape.
 - Phase 3: revisit PTY/E2E harness ideas if `zc team` needs end-to-end runtime tests.
+
+## Latest Remote Evidence 2026-07-29
+
+- remote head: `a3259400a366593e0c909dd9ac3e59752efd2488`
+- evidence: remote HEAD lookup followed by an independent shallow clone after the governance report's temporary content-fetch failure
+- registry correction: the old `prompts` and `commands` paths no longer exist; tracking now follows current skill, agent, review, QA, context, and documentation surfaces
+- finding: upstream has become a large product runtime with browser, telemetry, memory, document, iOS, deploy, and model-overlay systems
+
+## Current Decision
+
+- Continue absorbing only stop-gate, evidence-artifact, and developer-experience review mechanics.
+- Do not import the browser runtime, telemetry, gbrain sync, model overlays, auto-update, or platform-specific skill catalog.

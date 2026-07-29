@@ -2,7 +2,7 @@ import { Command, InvalidArgumentError } from "commander";
 import { spawn } from "node:child_process";
 import type { Dirent } from "node:fs";
 import { readFileSync } from "node:fs";
-import { readFile, readdir, writeFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import {
@@ -14,6 +14,15 @@ import {
 } from "@zmice/platform-core";
 import { resolvePlatformInstallDoctor } from "../platform-state/doctor.js";
 import { resolvePlatformInstallStatus } from "../platform-state/status.js";
+import {
+  createCodexAgentsReceipt,
+  deleteCodexAgentsReceipt,
+  getCodexAgentsReceiptOwnedPaths,
+  readCodexAgentsReceipt,
+  resolveCodexAgentsReceiptPath,
+  writeCodexAgentsReceipt,
+  type CodexAgentsReceipt,
+} from "../platform-state/codex-agents-receipt.js";
 import type {
   PlatformInstallDoctorResult,
   PlatformInstallStatusResult,
@@ -35,9 +44,18 @@ import {
 } from "../utils/workspace.js";
 import {
   isCodexAgentConfigContent,
+  listZcAgentConfigNames,
   mergeCodexAgentConfig,
-  stripManagedZcAgentSections,
+  mergeOwnedCodexAgentConfig,
 } from "../utils/codex-config-merge.js";
+import {
+  inspectReceiptManagedCodexAgents,
+  stripCodexAgentConfigFile,
+} from "../utils/codex-agents-lifecycle.js";
+import {
+  createCodexCompanionAgentInstallPlan,
+  loadCodexAgentCompanion,
+} from "../utils/codex-agent-companion.js";
 import {
   QwenOfficialCliUnavailableError,
   installQwenExtensionFromOfficialRepoWithCli,
@@ -68,8 +86,12 @@ type PlatformPluginOpts = PlatformTargetSelectorOpts & {
   git?: boolean | string;
   ref?: string;
   register?: boolean;
+  install?: boolean;
+  upgrade?: boolean;
+  status?: boolean;
   uninstall?: boolean;
   includeAgents?: boolean;
+  withAgents?: boolean;
 };
 type PlatformAgentsOpts = PlatformTargetSelectorOpts & {
   plan?: boolean;
@@ -112,6 +134,10 @@ interface ToolkitAssetMetaLike {
 interface ToolkitAssetLike {
   id: string;
   body: string;
+  attachments: readonly {
+    relativePath: string;
+    contents: string;
+  }[];
   meta: ToolkitAssetMetaLike;
 }
 
@@ -129,6 +155,10 @@ interface PlatformAssetLike {
   title?: string;
   summary?: string;
   body?: string;
+  attachments?: readonly {
+    relativePath: string;
+    contents: string;
+  }[];
   tools?: readonly string[];
   requires?: readonly string[];
   tier?: string;
@@ -368,6 +398,7 @@ function normalizeManifest(manifest: ToolkitManifestLike): PlatformManifestLike 
       title: asset.meta.title,
       summary: asset.meta.description,
       body: asset.body,
+      attachments: asset.attachments,
       tools: asset.meta.tools,
       requires: asset.meta.requires,
       tier: asset.meta.tier,
@@ -775,7 +806,7 @@ function resolveGenerateArtifact(outputRoot: string, artifact: { readonly path: 
   };
 }
 
-async function cleanupCodexPluginSkillsForForce(
+async function cleanupCodexPluginContentForForce(
   bundleType: PlatformGenerateBundleType | undefined,
   artifacts: readonly { readonly path: string }[],
   force?: boolean,
@@ -784,12 +815,15 @@ async function cleanupCodexPluginSkillsForForce(
     return;
   }
 
-  const pluginSkillRoots = artifacts
+  const pluginContentRoots = artifacts
     .filter((artifact) => artifact.path.replace(/\\/g, "/").endsWith(codexPluginManifestPath))
-    .map((artifact) => join(dirname(dirname(artifact.path)), "skills"));
+    .flatMap((artifact) => {
+      const pluginRoot = dirname(dirname(artifact.path));
+      return ["commands", "skills", "agents"].map((directory) => join(pluginRoot, directory));
+    });
 
-  if (pluginSkillRoots.length > 0) {
-    await removeManagedPaths(pluginSkillRoots);
+  if (pluginContentRoots.length > 0) {
+    await removeManagedPaths(pluginContentRoots);
   }
 }
 
@@ -807,7 +841,10 @@ function hasNodeErrorCode(error: unknown, code: string): boolean {
   return typeof error === "object" && error !== null && "code" in error && error.code === code;
 }
 
-async function mergeCodexAgentConfigArtifact(artifact: GeneratedArtifact): Promise<GeneratedArtifact> {
+async function mergeCodexAgentConfigArtifact(
+  artifact: GeneratedArtifact,
+  managedAgentNames?: readonly string[],
+): Promise<GeneratedArtifact> {
   let existingContent: string | undefined;
 
   try {
@@ -822,7 +859,9 @@ async function mergeCodexAgentConfigArtifact(artifact: GeneratedArtifact): Promi
 
   return {
     ...artifact,
-    content: mergeCodexAgentConfig(existingContent, artifact.content),
+    content: managedAgentNames === undefined
+      ? mergeCodexAgentConfig(existingContent, artifact.content)
+      : mergeOwnedCodexAgentConfig(existingContent, artifact.content, managedAgentNames),
   };
 }
 
@@ -845,22 +884,30 @@ async function writePlatformArtifacts(
   options: {
     readonly dryRun: boolean;
     readonly overwrite: OverwriteMode;
+    readonly managedAgentNames?: readonly string[];
   },
 ): Promise<WriteArtifactsResult> {
+  const artifactWriteOptions = {
+    dryRun: options.dryRun,
+    overwrite: options.overwrite,
+  };
   const configArtifacts = artifacts.filter((artifact) => isCodexAgentConfigArtifact(target, artifact));
 
   if (configArtifacts.length === 0) {
-    return writeArtifacts(artifacts, options);
+    return writeArtifacts(artifacts, artifactWriteOptions);
   }
 
   const configPaths = new Set(configArtifacts.map((artifact) => artifact.path));
   const regularArtifacts = artifacts.filter((artifact) => !configPaths.has(artifact.path));
-  const mergedConfigArtifacts = await Promise.all(configArtifacts.map(mergeCodexAgentConfigArtifact));
+  const mergedConfigArtifacts = await Promise.all(
+    configArtifacts.map((artifact) =>
+      mergeCodexAgentConfigArtifact(artifact, options.managedAgentNames)),
+  );
 
   if (options.dryRun) {
-    const regularResult = await writeArtifacts(regularArtifacts, options);
+    const regularResult = await writeArtifacts(regularArtifacts, artifactWriteOptions);
     const configResult = await writeArtifacts(mergedConfigArtifacts, {
-      ...options,
+      ...artifactWriteOptions,
       overwrite: "force",
     });
 
@@ -868,13 +915,13 @@ async function writePlatformArtifacts(
   }
 
   await writeArtifacts(regularArtifacts, {
-    ...options,
+    ...artifactWriteOptions,
     dryRun: true,
   });
 
-  const regularResult = await writeArtifacts(regularArtifacts, options);
+  const regularResult = await writeArtifacts(regularArtifacts, artifactWriteOptions);
   const configResult = await writeArtifacts(mergedConfigArtifacts, {
-    ...options,
+    ...artifactWriteOptions,
     overwrite: "force",
   });
 
@@ -891,16 +938,18 @@ interface CodexAgentArtifactStatus {
 }
 
 interface CodexAgentsStatus {
-  readonly kind: "empty" | "not-installed" | "up-to-date" | "needs-sync";
+  readonly kind: "empty" | "not-installed" | "up-to-date" | "needs-sync" | "needs-attention";
   readonly summary: {
     readonly expectedArtifacts: number;
     readonly upToDateArtifacts: number;
     readonly missingArtifacts: number;
     readonly driftedArtifacts: number;
     readonly staleAgentFiles: number;
+    readonly untrackedAgentFiles: number;
   };
   readonly artifacts: readonly CodexAgentArtifactStatus[];
   readonly staleAgentFiles: readonly string[];
+  readonly untrackedAgentFiles: readonly string[];
 }
 
 function resolveCodexAgentsOperation(opts: PlatformAgentsOpts): CodexAgentsOperation {
@@ -1002,7 +1051,10 @@ async function inspectCodexAgentArtifact(artifact: GeneratedArtifact): Promise<C
   };
 }
 
-async function inspectCodexAgentConfigArtifact(artifact: GeneratedArtifact): Promise<CodexAgentArtifactStatus> {
+async function inspectCodexAgentConfigArtifact(
+  artifact: GeneratedArtifact,
+  managedAgentNames: readonly string[],
+): Promise<CodexAgentArtifactStatus> {
   const existing = await readTextIfExists(artifact.path);
 
   if (existing === null || !isCodexAgentConfigContent(existing)) {
@@ -1013,7 +1065,11 @@ async function inspectCodexAgentConfigArtifact(artifact: GeneratedArtifact): Pro
     };
   }
 
-  const merged = mergeCodexAgentConfig(existing, artifact.content);
+  const merged = mergeOwnedCodexAgentConfig(
+    existing,
+    artifact.content,
+    managedAgentNames,
+  );
   return {
     path: artifact.path,
     kind: "config",
@@ -1021,14 +1077,29 @@ async function inspectCodexAgentConfigArtifact(artifact: GeneratedArtifact): Pro
   };
 }
 
-async function inspectCodexAgents(plan: PlatformPlanLike, root: string): Promise<CodexAgentsStatus> {
+async function inspectCodexAgents(
+  plan: PlatformPlanLike,
+  root: string,
+  receipt: CodexAgentsReceipt | null,
+): Promise<CodexAgentsStatus> {
   const configArtifact = getCodexAgentConfigArtifact(plan);
   const agentArtifacts = getCodexAgentFileArtifacts(plan);
   const expectedAgentPaths = new Set(agentArtifacts.map((artifact) => artifact.path));
   const existingAgentFiles = await listExistingZcAgentFiles(resolveCodexAgentsDir(root, plan));
-  const staleAgentFiles = existingAgentFiles.filter((path) => !expectedAgentPaths.has(path));
+  const ownedAgentPaths = new Set(receipt ? getCodexAgentsReceiptOwnedPaths(receipt) : []);
+  const staleAgentFiles = existingAgentFiles.filter(
+    (path) => ownedAgentPaths.has(path) && !expectedAgentPaths.has(path),
+  );
+  const untrackedAgentFiles = existingAgentFiles.filter(
+    (path) => !ownedAgentPaths.has(path) && !expectedAgentPaths.has(path),
+  );
   const artifacts = [
-    ...(configArtifact ? [await inspectCodexAgentConfigArtifact(configArtifact)] : []),
+    ...(configArtifact
+      ? [await inspectCodexAgentConfigArtifact(
+        configArtifact,
+        receipt?.managedAgentNames ?? [],
+      )]
+      : []),
     ...(await Promise.all(agentArtifacts.map(inspectCodexAgentArtifact))),
   ];
   const summary = {
@@ -1037,6 +1108,7 @@ async function inspectCodexAgents(plan: PlatformPlanLike, root: string): Promise
     missingArtifacts: artifacts.filter((artifact) => artifact.state === "missing").length,
     driftedArtifacts: artifacts.filter((artifact) => artifact.state === "drifted").length,
     staleAgentFiles: staleAgentFiles.length,
+    untrackedAgentFiles: untrackedAgentFiles.length,
   };
   const kind = (() => {
     if (artifacts.length === 0) {
@@ -1055,6 +1127,10 @@ async function inspectCodexAgents(plan: PlatformPlanLike, root: string): Promise
       return "needs-sync" as const;
     }
 
+    if (summary.untrackedAgentFiles > 0) {
+      return "needs-attention" as const;
+    }
+
     return "up-to-date" as const;
   })();
 
@@ -1063,45 +1139,7 @@ async function inspectCodexAgents(plan: PlatformPlanLike, root: string): Promise
     summary,
     artifacts,
     staleAgentFiles,
-  };
-}
-
-async function stripCodexAgentConfigFile(path: string, dryRun: boolean): Promise<{
-  readonly changed: boolean;
-  readonly missing: boolean;
-}> {
-  const existing = await readTextIfExists(path);
-
-  if (existing === null) {
-    return {
-      changed: false,
-      missing: true,
-    };
-  }
-
-  const hasManagedContent =
-    isCodexAgentConfigContent(existing) ||
-    existing.includes("# Generated by zc. Merge with existing Codex config before forcing overwrites.") ||
-    existing.includes("# See: https://developers.openai.com/codex/config-reference");
-
-  if (!hasManagedContent) {
-    return {
-      changed: false,
-      missing: false,
-    };
-  }
-
-  const stripped = stripManagedZcAgentSections(existing);
-  const nextContent = stripped.trim().length > 0 ? `${stripped}\n` : "";
-  const changed = existing !== nextContent;
-
-  if (!dryRun && changed) {
-    await writeFile(path, nextContent, "utf8");
-  }
-
-  return {
-    changed,
-    missing: false,
+    untrackedAgentFiles,
   };
 }
 
@@ -1166,7 +1204,7 @@ function summarizeCodexAgents(args: {
   if (args.status) {
     lines.push(
       `状态：${args.status.kind}`,
-      `期望产物：${args.status.summary.expectedArtifacts}，已最新：${args.status.summary.upToDateArtifacts}，缺失：${args.status.summary.missingArtifacts}，漂移：${args.status.summary.driftedArtifacts}，过期 agent：${args.status.summary.staleAgentFiles}`,
+      `期望产物：${args.status.summary.expectedArtifacts}，已最新：${args.status.summary.upToDateArtifacts}，缺失：${args.status.summary.missingArtifacts}，漂移：${args.status.summary.driftedArtifacts}，过期 agent：${args.status.summary.staleAgentFiles}，未登记 agent：${args.status.summary.untrackedAgentFiles}`,
     );
   }
 
@@ -1196,6 +1234,8 @@ function summarizeCodexAgents(args: {
     lines.push("下一步：运行 `zc platform agents codex --status` 复查 custom agents。");
   } else if (args.operation === "status" && args.status?.kind === "needs-sync") {
     lines.push("下一步：运行 `zc platform agents codex --sync --prune` 更新并清理过期 zc agents。");
+  } else if (args.operation === "status" && args.status?.kind === "needs-attention") {
+    lines.push("下一步：未登记的 zc agent 不会自动删除；请人工确认后再处理。");
   }
 
   return lines.join("\n");
@@ -1305,12 +1345,28 @@ function formatShellCommand(command: string, args: readonly string[]): string {
 }
 
 function assertCodexGitMarketplaceOptions(opts: PlatformPluginOpts): void {
-  if (opts.uninstall) {
-    throw new Error("Git marketplace 注册模式不支持 --uninstall；当前 Codex CLI 未提供稳定的 marketplace remove 命令。");
+  const lifecycleOperations = [
+    opts.register,
+    opts.install,
+    opts.upgrade,
+    opts.status,
+    opts.uninstall,
+  ].filter(Boolean).length;
+
+  if (lifecycleOperations > 1) {
+    throw new Error("Codex plugin Git marketplace 模式一次只能选择一个 lifecycle 操作。");
+  }
+
+  if (opts.ref && (opts.upgrade || opts.status || opts.uninstall)) {
+    throw new Error("`--ref` 只适用于 marketplace 注册或插件安装。");
   }
 
   if (opts.includeAgents) {
     throw new Error("Git marketplace 注册模式不处理 custom agents；请改用 `zc platform agents codex`。");
+  }
+
+  if (opts.withAgents && !(opts.install || opts.upgrade || opts.status || opts.uninstall)) {
+    throw new Error("`--with-agents` 必须与 --install、--upgrade、--status 或 --uninstall 一起使用。");
   }
 
   if (opts.dir || opts.project || opts.global) {
@@ -1322,10 +1378,21 @@ function assertCodexGitMarketplaceOptions(opts: PlatformPluginOpts): void {
   }
 }
 
-async function runCodexMarketplaceAdd(args: readonly string[], mirrorOutput: boolean): Promise<{
+interface CodexCliCommandResult {
+  readonly args: readonly string[];
+  readonly code: number | null;
+  readonly signal: NodeJS.Signals | null;
   stdout: string;
   stderr: string;
-}> {
+}
+
+async function runCodexCliCommand(
+  args: readonly string[],
+  options: {
+    readonly mirrorOutput?: boolean;
+    readonly allowFailure?: boolean;
+  } = {},
+): Promise<CodexCliCommandResult> {
   return await new Promise((resolvePromise, rejectPromise) => {
     const child = spawn("codex", args, {
       shell: false,
@@ -1337,14 +1404,14 @@ async function runCodexMarketplaceAdd(args: readonly string[], mirrorOutput: boo
     child.stdout?.on("data", (chunk: Buffer) => {
       const text = chunk.toString();
       stdout += text;
-      if (mirrorOutput) {
+      if (options.mirrorOutput) {
         process.stdout.write(text);
       }
     });
     child.stderr?.on("data", (chunk: Buffer) => {
       const text = chunk.toString();
       stderr += text;
-      if (mirrorOutput) {
+      if (options.mirrorOutput) {
         process.stderr.write(text);
       }
     });
@@ -1357,70 +1424,749 @@ async function runCodexMarketplaceAdd(args: readonly string[], mirrorOutput: boo
       rejectPromise(error);
     });
     child.once("close", (code, signal) => {
-      if (code === 0) {
-        resolvePromise({ stdout, stderr });
+      if (code === 0 || options.allowFailure) {
+        resolvePromise({ args, code, signal, stdout, stderr });
         return;
       }
 
+      const command = formatShellCommand("codex", args);
       rejectPromise(
         new Error(
           signal
-            ? `codex plugin marketplace add 被信号 ${signal} 中断。`
-            : `codex plugin marketplace add 退出码为 ${code ?? "unknown"}。`,
+            ? `${command} 被信号 ${signal} 中断。`
+            : `${command} 退出码为 ${code ?? "unknown"}：${stderr.trim() || stdout.trim() || "无错误输出"}`,
         ),
       );
     });
   });
 }
 
-async function runCodexMarketplaceGitMode(opts: PlatformPluginOpts): Promise<void> {
+type CodexPluginCliMode = "official-plugin" | "legacy-marketplace";
+
+interface CodexPluginCliCapability {
+  readonly mode: CodexPluginCliMode;
+  readonly version: string | null;
+}
+
+function parseCodexCliJsonOutput(result: CodexCliCommandResult): unknown {
+  const stdout = result.stdout.trim();
+  if (!stdout) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(stdout);
+  } catch {
+    return {
+      stdout,
+      stderr: result.stderr.trim() || null,
+    };
+  }
+}
+
+async function detectCodexPluginCliCapability(): Promise<CodexPluginCliCapability> {
+  const versionResult = await runCodexCliCommand(["--version"], { allowFailure: true });
+  const version = versionResult.code === 0
+    ? versionResult.stdout.trim() || versionResult.stderr.trim() || null
+    : null;
+  const officialProbe = await runCodexCliCommand(["plugin", "add", "--help"], {
+    allowFailure: true,
+  });
+
+  if (officialProbe.code === 0) {
+    return {
+      mode: "official-plugin",
+      version,
+    };
+  }
+
+  const legacyProbe = await runCodexCliCommand(["marketplace", "add", "--help"], {
+    allowFailure: true,
+  });
+
+  if (legacyProbe.code === 0) {
+    return {
+      mode: "legacy-marketplace",
+      version,
+    };
+  }
+
+  throw new Error(
+    `当前 Codex CLI${version ? `（${version}）` : ""}既不支持官方 plugin lifecycle，也不支持旧 marketplace 注册命令；请先更新 Codex CLI。`,
+  );
+}
+
+type CodexPluginGitOperation = "register" | "install" | "upgrade" | "status" | "uninstall";
+
+interface CodexPluginLifecycleResult {
+  readonly operation: CodexPluginGitOperation;
+  readonly executed: boolean;
+  readonly payload: Record<string, unknown>;
+  readonly text: string;
+  readonly installedPluginPath: string | null;
+  readonly installedVersion: string | null;
+  readonly availableVersion: string | null;
+  readonly updatePending: boolean;
+}
+
+function isUnknownRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function findCodexPluginRecord(
+  outputs: readonly unknown[],
+  collection: "installed" | "available" | null,
+): Record<string, unknown> | null {
+  for (const output of outputs) {
+    if (!isUnknownRecord(output)) {
+      continue;
+    }
+
+    if (collection === null) {
+      if (
+        output.pluginId === `${codexMarketplacePluginName}@${codexMarketplacePluginName}`
+        || output.name === codexMarketplacePluginName
+      ) {
+        return output;
+      }
+      continue;
+    }
+
+    const entries = output[collection];
+    if (!Array.isArray(entries)) {
+      continue;
+    }
+    const entry = entries.find(
+      (candidate) =>
+        isUnknownRecord(candidate)
+        && (
+          candidate.pluginId === `${codexMarketplacePluginName}@${codexMarketplacePluginName}`
+          || candidate.name === codexMarketplacePluginName
+        ),
+    );
+    if (isUnknownRecord(entry)) {
+      return entry;
+    }
+  }
+  return null;
+}
+
+function resolveCodexPluginPath(plugin: Record<string, unknown> | null): string | null {
+  if (typeof plugin?.installedPath === "string") {
+    return plugin.installedPath;
+  }
+
+  const source = plugin?.source;
+  return isUnknownRecord(source) && typeof source.path === "string"
+    ? source.path
+    : null;
+}
+
+// Official lifecycle and JSON contracts:
+// https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin
+// https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin-marketplace
+function resolveCodexPluginGitOperation(opts: PlatformPluginOpts): CodexPluginGitOperation {
+  if (opts.install) {
+    return "install";
+  }
+  if (opts.upgrade) {
+    return "upgrade";
+  }
+  if (opts.status) {
+    return "status";
+  }
+  if (opts.uninstall) {
+    return "uninstall";
+  }
+  return "register";
+}
+
+async function runCodexMarketplaceGitMode(
+  opts: PlatformPluginOpts,
+  options: { readonly emit?: boolean } = {},
+): Promise<CodexPluginLifecycleResult> {
   const format = resolveOutputFormat(opts.json);
   const source = resolveCodexMarketplaceGitSource(opts.git);
   const addArgs = buildCodexMarketplaceAddArgs(source, opts.ref);
-  const upgradeArgs = ["plugin", "marketplace", "upgrade", codexMarketplacePluginName];
-  const addCommand = formatShellCommand("codex", addArgs);
+  const pluginId = `${codexMarketplacePluginName}@${codexMarketplacePluginName}`;
+  const installArgs = ["plugin", "add", pluginId, "--json"];
+  const upgradeArgs = ["plugin", "marketplace", "upgrade", codexMarketplacePluginName, "--json"];
+  const statusArgs = [
+    "plugin",
+    "list",
+    "--marketplace",
+    codexMarketplacePluginName,
+    "--available",
+    "--json",
+  ];
+  const uninstallArgs = ["plugin", "remove", pluginId, "--json"];
+  const installCommand = formatShellCommand("codex", installArgs);
   const upgradeCommand = formatShellCommand("codex", upgradeArgs);
-  const registered = Boolean(opts.register && !opts.plan);
+  const statusCommand = formatShellCommand("codex", statusArgs);
+  const uninstallCommand = formatShellCommand("codex", uninstallArgs);
+  const operation = resolveCodexPluginGitOperation(opts);
+  const commandArgsByOperation: Record<CodexPluginGitOperation, readonly string[][]> = {
+    register: [addArgs],
+    install: [addArgs, installArgs],
+    upgrade: [upgradeArgs, statusArgs],
+    status: [statusArgs],
+    uninstall: [uninstallArgs],
+  };
+  const plannedArgs = commandArgsByOperation[operation];
+  const plannedCommands = plannedArgs.map((args) => formatShellCommand("codex", args));
+  const execute = !opts.plan && Boolean(
+    opts.register || opts.install || opts.upgrade || opts.status || opts.uninstall,
+  );
+  let cliCapability: CodexPluginCliCapability | null = null;
+  let executedArgs: readonly string[][] = [];
+  let commandResults: readonly CodexCliCommandResult[] = [];
 
-  if (registered) {
-    if (format === "text") {
-      console.log(`正在调用官方命令：${addCommand}`);
+  if (execute) {
+    cliCapability = await detectCodexPluginCliCapability();
+
+    if (cliCapability.mode === "legacy-marketplace") {
+      if (operation !== "register") {
+        throw new Error(
+          `当前 ${cliCapability.version ?? "Codex CLI"} 只有旧 marketplace 注册能力，不支持 ${operation}；请先运行官方 Codex 更新后重试。`,
+        );
+      }
+
+      const legacyArgs = [
+        "marketplace",
+        "add",
+        source,
+        ...(opts.ref ? ["--ref", opts.ref] : []),
+      ];
+      const legacyCommand = formatShellCommand("codex", legacyArgs);
+      if (format === "text" && options.emit !== false) {
+        console.log(`检测到旧版 Codex CLI，使用兼容命令：${legacyCommand}`);
+      }
+      const result = await runCodexCliCommand(legacyArgs, {
+        mirrorOutput: format === "text" && options.emit !== false,
+      });
+      executedArgs = [legacyArgs];
+      commandResults = [result];
+    } else {
+      const results: CodexCliCommandResult[] = [];
+      for (const args of plannedArgs) {
+        const command = formatShellCommand("codex", args);
+        if (format === "text" && options.emit !== false) {
+          console.log(`正在调用官方命令：${command}`);
+        }
+        results.push(await runCodexCliCommand(args, {
+          mirrorOutput: format === "text" && options.emit !== false,
+        }));
+      }
+      executedArgs = plannedArgs;
+      commandResults = results;
     }
-    await runCodexMarketplaceAdd(addArgs, format === "text");
   }
 
-  emitOutput(
-    format,
-    {
-      mode: registered ? "result" : "plan",
-      action: "plugin",
-      target: "codex",
-      distribution: "git-marketplace",
-      source,
-      ref: opts.ref ?? null,
-      register: registered,
-      command: addCommand,
-      args: ["codex", ...addArgs],
-      updateCommand: upgradeCommand,
-      updateArgs: ["codex", ...upgradeArgs],
-      marketplaceName: codexMarketplacePluginName,
-      pluginName: codexMarketplacePluginName,
-      nextSteps: [
-        "在 Codex 的 Plugins 页面安装或启用 zc-toolkit",
-        "新线程中使用 $start 或直接 @zc-toolkit 调用插件 skill",
-        `后续更新运行 ${upgradeCommand}`,
-      ],
-    },
-    [
-      registered ? "Codex Git marketplace 已注册" : "Codex Git marketplace 注册指令",
-      `来源：${source}`,
-      ...(opts.ref ? [`Ref：${opts.ref}`] : []),
-      `注册命令：${addCommand}`,
-      `更新命令：${upgradeCommand}`,
-      "下一步：在 Codex 的 Plugins 页面安装或启用 zc-toolkit，新线程中使用 $start 或 @zc-toolkit。",
-    ].join("\n"),
+  const executed = execute;
+  const operationLabel: Record<CodexPluginGitOperation, string> = {
+    register: "注册 marketplace",
+    install: "注册 marketplace 并安装插件",
+    upgrade: "刷新 marketplace 并检查可用版本",
+    status: "检查插件状态",
+    uninstall: "卸载插件",
+  };
+  const nextSteps = (() => {
+    switch (operation) {
+      case "register":
+        return [
+          `继续运行 ${installCommand}，或在 Codex 的 Plugins 页面安装 zc-toolkit`,
+          "安装后启动新线程，再使用 $start 或直接 @zc-toolkit",
+        ];
+      case "install":
+        return [
+          `运行 ${statusCommand} 核对 installed、enabled 和 version`,
+          "启动新线程后使用 $start 或直接 @zc-toolkit",
+        ];
+      case "upgrade":
+        return [
+          "marketplace 已刷新；如 available version 高于 installed version，请在 Plugins 页面确认更新",
+          "更新后启动新线程，避免旧线程继续使用已加载的旧插件能力",
+        ];
+      case "status":
+        return [
+          `需要刷新目录时运行 ${upgradeCommand}`,
+          `需要安装时运行 ${installCommand}`,
+        ];
+      case "uninstall":
+        return [
+          "插件 bundle 已移除；其 connector 授权需要在 ChatGPT Plugins/Apps 中单独管理",
+          "如不再使用该目录，可另行运行 codex plugin marketplace remove zc-toolkit --json",
+        ];
+    }
+  })();
+
+  const parsedResults = commandResults.map((result) => parseCodexCliJsonOutput(result));
+  const directPlugin = findCodexPluginRecord(parsedResults, null);
+  const installedPlugin = findCodexPluginRecord(parsedResults, "installed") ?? directPlugin;
+  const availablePlugin = findCodexPluginRecord(parsedResults, "available");
+  const installedPluginPath = resolveCodexPluginPath(installedPlugin);
+  const installedVersion = typeof installedPlugin?.version === "string"
+    ? installedPlugin.version
+    : null;
+  const availableVersion = typeof availablePlugin?.version === "string"
+    ? availablePlugin.version
+    : null;
+  const updatePending = Boolean(
+    installedVersion
+    && availableVersion
+    && installedVersion !== availableVersion,
   );
+  const payload = {
+    mode: executed ? "result" : "plan",
+    action: "plugin",
+    target: "codex",
+    distribution: "git-marketplace",
+    operation,
+    source,
+    ref: opts.ref ?? null,
+    register: executed && operation === "register",
+    command: plannedCommands[0],
+    args: ["codex", ...plannedArgs[0]!],
+    commands: plannedCommands,
+    commandArgs: plannedArgs.map((args) => ["codex", ...args]),
+    executedCommands: executedArgs.map((args) => formatShellCommand("codex", args)),
+    cliResults: commandResults.map((result, index) => ({
+      command: formatShellCommand("codex", result.args),
+      output: parsedResults[index],
+    })),
+    cliMode: cliCapability?.mode ?? null,
+    cliVersion: cliCapability?.version ?? null,
+    installedPluginPath,
+    installedVersion,
+    availableVersion,
+    updatePending,
+    installCommand,
+    updateCommand: upgradeCommand,
+    statusCommand,
+    uninstallCommand,
+    marketplaceName: codexMarketplacePluginName,
+    pluginName: codexMarketplacePluginName,
+    pluginId,
+    nextSteps,
+  };
+  const text = [
+    `Codex Git marketplace：${operationLabel[operation]}${executed ? "完成" : "计划"}`,
+    `来源：${source}`,
+    ...(opts.ref ? [`Ref：${opts.ref}`] : []),
+    ...plannedCommands.map((command) => `- ${command}`),
+    ...(cliCapability
+      ? [`CLI：${cliCapability.version ?? "unknown"}（${cliCapability.mode}）`]
+      : []),
+    ...nextSteps.map((step) => `下一步：${step}`),
+  ].join("\n");
+
+  if (options.emit !== false) {
+    emitOutput(format, payload, text);
+  }
+
+  return {
+    operation,
+    executed,
+    payload,
+    text,
+    installedPluginPath,
+    installedVersion,
+    availableVersion,
+    updatePending,
+  };
 }
+
+function buildCodexPluginCompanionPayload(args: {
+  readonly mode: "plan" | "result";
+  readonly overallStatus: "planned" | "complete" | "partial" | "update-pending";
+  readonly pluginResult: CodexPluginLifecycleResult;
+  readonly agents: Record<string, unknown>;
+  readonly phases: readonly Record<string, unknown>[];
+}) {
+  return {
+    mode: args.mode,
+    action: "codex-plugin-companion",
+    target: "codex",
+    operation: args.pluginResult.operation,
+    overallStatus: args.overallStatus,
+    plugin: {
+      status: args.mode === "plan" ? "planned" : "complete",
+      version: args.pluginResult.installedVersion,
+      availableVersion: args.pluginResult.availableVersion,
+      installedPath: args.pluginResult.installedPluginPath,
+      updatePending: args.pluginResult.updatePending,
+      lifecycle: args.pluginResult.payload,
+    },
+    agents: args.agents,
+    phases: args.phases,
+  };
+}
+
+async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void> {
+  const format = resolveOutputFormat(opts.json);
+  const pluginResult = await runCodexMarketplaceGitMode(opts, { emit: false });
+
+  if (!pluginResult.executed) {
+    const payload = buildCodexPluginCompanionPayload({
+      mode: "plan",
+      overallStatus: "planned",
+      pluginResult,
+      agents: {
+        requested: true,
+        scope: "global",
+        status: "planned",
+      },
+      phases: [
+        { name: "plugin-lifecycle", status: "planned" },
+        { name: "agents-lifecycle", status: "planned" },
+      ],
+    });
+    emitOutput(
+      format,
+      payload,
+      [
+        `Codex 插件与 companion agents ${pluginResult.operation}计划`,
+        pluginResult.text,
+        "Companion agents：计划写入 Codex 全局目录",
+      ].join("\n"),
+    );
+    return;
+  }
+
+  const targetResolution = await resolveInstallTarget("codex", {
+    cwd: process.cwd(),
+    global: true,
+  });
+  const root = resolve(targetResolution.root);
+  const receiptPath = resolveCodexAgentsReceiptPath(root, "global");
+  let existingReceipt: CodexAgentsReceipt | null;
+  try {
+    existingReceipt = await readCodexAgentsReceipt(receiptPath, {
+      root,
+      scope: "global",
+    });
+  } catch (error) {
+    process.exitCode = 1;
+    const reason = error instanceof Error ? error.message : "unknown companion receipt error";
+    const payload = buildCodexPluginCompanionPayload({
+      mode: "result",
+      overallStatus: "partial",
+      pluginResult,
+      agents: {
+        requested: true,
+        scope: "global",
+        status: "failed",
+        reason,
+        receiptPath,
+      },
+      phases: [
+        { name: "plugin-lifecycle", status: "complete" },
+        { name: "agents-lifecycle", status: "failed", reason },
+      ],
+    });
+    emitOutput(
+      format,
+      payload,
+      [
+        "Codex 插件处理完成，但 companion agents 回执校验失败",
+        `原因：${reason}`,
+        "请检查或备份损坏回执后，再重试同一命令",
+      ].join("\n"),
+    );
+    return;
+  }
+
+  if (pluginResult.operation === "uninstall") {
+    try {
+      const ownedPaths = existingReceipt
+        ? getCodexAgentsReceiptOwnedPaths(existingReceipt)
+        : [];
+      const removal = await removeManagedPaths(ownedPaths);
+      const configResult = await stripCodexAgentConfigFile(
+        join(root, "config.toml"),
+        false,
+        existingReceipt?.managedAgentNames ?? [],
+      );
+      await deleteCodexAgentsReceipt(receiptPath);
+      const payload = buildCodexPluginCompanionPayload({
+        mode: "result",
+        overallStatus: "complete",
+        pluginResult,
+        agents: {
+          requested: true,
+          scope: "global",
+          status: "complete",
+          receiptInstalled: existingReceipt !== null,
+          receiptPath,
+          receiptRemoved: true,
+          removed: removal.removed,
+          missing: removal.missing,
+          configChanged: configResult.changed,
+          configMissing: configResult.missing,
+        },
+        phases: [
+          { name: "plugin-lifecycle", status: "complete" },
+          { name: "agents-lifecycle", status: "complete" },
+          { name: "postflight", status: "complete" },
+        ],
+      });
+      emitOutput(
+        format,
+        payload,
+        [
+          "Codex 插件与 receipt-owned companion agents 卸载完成",
+          `Agents：移除 ${removal.removed}，原本缺失 ${removal.missing}`,
+          "未受回执管理的本地 zc-*.toml 保持不变",
+        ].join("\n"),
+      );
+    } catch (error) {
+      process.exitCode = 1;
+      const reason = error instanceof Error ? error.message : "unknown companion uninstall error";
+      const payload = buildCodexPluginCompanionPayload({
+        mode: "result",
+        overallStatus: "partial",
+        pluginResult,
+        agents: {
+          requested: true,
+          scope: "global",
+          status: "failed",
+          reason,
+          receiptPath,
+        },
+        phases: [
+          { name: "plugin-lifecycle", status: "complete" },
+          { name: "agents-lifecycle", status: "failed", reason },
+        ],
+      });
+      emitOutput(
+        format,
+        payload,
+        [
+          "Codex 插件已卸载，但 companion agents 清理失败",
+          `原因：${reason}`,
+          "可修复文件权限或配置后单独运行 `zc platform agents codex --uninstall --global`",
+        ].join("\n"),
+      );
+    }
+    return;
+  }
+
+  if (pluginResult.operation === "upgrade" && pluginResult.updatePending) {
+    const payload = buildCodexPluginCompanionPayload({
+      mode: "result",
+      overallStatus: "update-pending",
+      pluginResult,
+      agents: {
+        requested: true,
+        scope: "global",
+        status: "unchanged",
+        reason: "plugin-update-pending",
+        pluginVersion: existingReceipt?.pluginVersion ?? null,
+        receiptInstalled: existingReceipt !== null,
+        receiptPath,
+      },
+      phases: [
+        { name: "plugin-lifecycle", status: "update-pending" },
+        {
+          name: "agents-lifecycle",
+          status: "unchanged",
+          reason: "plugin-update-pending",
+        },
+      ],
+    });
+    emitOutput(
+      format,
+      payload,
+      [
+        "Codex marketplace 已刷新，但插件仍有待应用的新版本",
+        "Companion agents 保持不变，避免先于已安装插件版本更新",
+        "请在 Plugins 页面完成插件更新后重试同一命令",
+      ].join("\n"),
+    );
+    return;
+  }
+
+  const installedPluginPath = pluginResult.installedPluginPath
+    ?? (pluginResult.operation === "status" || pluginResult.operation === "upgrade"
+      ? existingReceipt?.installedPluginPath ?? null
+      : null);
+
+  if (!installedPluginPath) {
+    process.exitCode = 1;
+    const payload = buildCodexPluginCompanionPayload({
+      mode: "result",
+      overallStatus: "partial",
+      pluginResult,
+      agents: {
+        requested: true,
+        scope: "global",
+        status: "skipped",
+        reason: "installed-plugin-path-unavailable",
+        receiptPath,
+      },
+      phases: [
+        { name: "plugin-lifecycle", status: "complete" },
+        {
+          name: "agents-lifecycle",
+          status: "skipped",
+          reason: "installed-plugin-path-unavailable",
+        },
+      ],
+    });
+    emitOutput(
+      format,
+      payload,
+      [
+        "Codex 插件安装完成，但 companion agents 未同步",
+        "原因：官方 CLI 结果未返回 installedPath，无法证明 agent 资产与已安装插件版本一致",
+        "下一步：运行 `zc platform plugin codex --status --with-agents --json` 复查",
+      ].join("\n"),
+    );
+    return;
+  }
+
+  try {
+    const companion = await loadCodexAgentCompanion(installedPluginPath);
+    if (
+      pluginResult.installedVersion
+      && companion.pluginVersion !== pluginResult.installedVersion
+    ) {
+      throw new Error(
+        `companion 版本 ${companion.pluginVersion} 与已安装插件版本 ${pluginResult.installedVersion} 不一致`,
+      );
+    }
+    const plan = createCodexCompanionAgentInstallPlan(companion, {
+      root,
+      scope: "global",
+    });
+
+    if (pluginResult.operation === "status") {
+      const status = await inspectCodexAgents(plan, root, existingReceipt);
+      const payload = buildCodexPluginCompanionPayload({
+        mode: "result",
+        overallStatus: status.kind === "up-to-date" ? "complete" : "partial",
+        pluginResult,
+        agents: {
+          requested: true,
+          scope: "global",
+          status: status.kind,
+          pluginVersion: companion.pluginVersion,
+          installedPluginPath: companion.installedPluginPath,
+          contentFingerprint: companion.contentFingerprint,
+          receiptPath,
+          receiptInstalled: existingReceipt !== null,
+          summary: status.summary,
+          staleAgentFiles: status.staleAgentFiles,
+          untrackedAgentFiles: status.untrackedAgentFiles,
+          artifactStatus: status.artifacts,
+        },
+        phases: [
+          { name: "plugin-lifecycle", status: "complete" },
+          {
+            name: "agents-lifecycle",
+            status: status.kind === "up-to-date" ? "complete" : "needs-attention",
+          },
+          { name: "postflight", status: "complete" },
+        ],
+      });
+      emitOutput(
+        format,
+        payload,
+        [
+          "Codex 插件与 companion agents 状态检查完成",
+          `插件版本：${pluginResult.installedVersion ?? companion.pluginVersion}`,
+          `Agents 状态：${status.kind}`,
+          `Agents 回执：${receiptPath}`,
+        ].join("\n"),
+      );
+      return;
+    }
+
+    const writeResult = await writePlatformArtifacts(
+      "codex",
+      plan.artifacts,
+      {
+        dryRun: false,
+        overwrite: "force",
+        managedAgentNames: existingReceipt?.managedAgentNames ?? [],
+      },
+    );
+    const receipt = createCodexAgentsReceipt({
+      root,
+      scope: "global",
+      pluginId: companion.pluginId,
+      pluginVersion: companion.pluginVersion,
+      installedPluginPath: companion.installedPluginPath,
+      contentFingerprint: companion.contentFingerprint,
+      artifacts: plan.artifacts,
+    });
+    await writeCodexAgentsReceipt(receiptPath, receipt);
+    const payload = buildCodexPluginCompanionPayload({
+      mode: "result",
+      overallStatus: pluginResult.updatePending ? "update-pending" : "complete",
+      pluginResult,
+      agents: {
+        requested: true,
+        scope: "global",
+        status: "complete",
+        pluginVersion: companion.pluginVersion,
+        installedPluginPath: companion.installedPluginPath,
+        contentFingerprint: companion.contentFingerprint,
+        receiptPath,
+        ...writeResult,
+      },
+      phases: [
+        { name: "plugin-lifecycle", status: "complete" },
+        { name: "agents-lifecycle", status: "complete" },
+        { name: "postflight", status: "complete" },
+      ],
+    });
+    emitOutput(
+      format,
+      payload,
+      [
+        "Codex 插件与 companion agents 处理完成",
+        `插件版本：${companion.pluginVersion}`,
+        `Agents 回执：${receiptPath}`,
+        `写入结果：新增 ${writeResult.created}，覆盖 ${writeResult.overwritten}，未变更 ${writeResult.unchanged}`,
+      ].join("\n"),
+    );
+  } catch (error) {
+    process.exitCode = 1;
+    const reason = error instanceof Error ? error.message : "unknown companion error";
+    const payload = buildCodexPluginCompanionPayload({
+      mode: "result",
+      overallStatus: "partial",
+      pluginResult,
+      agents: {
+        requested: true,
+        scope: "global",
+        status: "failed",
+        reason,
+        receiptPath,
+      },
+      phases: [
+        { name: "plugin-lifecycle", status: "complete" },
+        { name: "agents-lifecycle", status: "failed", reason },
+      ],
+    });
+    emitOutput(
+      format,
+      payload,
+      [
+        "Codex 插件处理完成，但 companion agents 同步失败",
+        `原因：${reason}`,
+        "可以修复 agent 资产后幂等重试同一命令；不会自动回滚已安装插件",
+      ].join("\n"),
+    );
+  }
+}
+
+/*
+ * Keep plugin lifecycle execution above separate from local bundle generation:
+ * the official CLI owns installed plugin/cache state, while zc owns only the
+ * generated local marketplace artifacts.
+ */
 
 type CodexPluginUninstallTargetKind = "plugin-dir" | "marketplace-file" | "entry-file" | "agent-file";
 
@@ -1655,6 +2401,9 @@ function buildCodexPluginUninstallPayload(args: {
   readonly missing: number;
   readonly configChanged?: boolean;
   readonly configMissing?: boolean;
+  readonly agentConfigPath?: string;
+  readonly agentsReceiptPath?: string;
+  readonly agentsReceiptInstalled?: boolean;
 }) {
   return {
     mode: args.mode,
@@ -1672,6 +2421,9 @@ function buildCodexPluginUninstallPayload(args: {
     missing: args.missing,
     configChanged: args.configChanged ?? false,
     configMissing: args.configMissing ?? false,
+    agentConfigPath: args.agentConfigPath ?? null,
+    agentsReceiptPath: args.agentsReceiptPath ?? null,
+    agentsReceiptInstalled: args.agentsReceiptInstalled ?? false,
     targets: args.targets,
     skipped: args.skipped,
   };
@@ -1762,26 +2514,28 @@ async function runCodexPluginLocalUninstall(opts: PlatformPluginOpts): Promise<v
   const metadata = outputTarget.metadata;
   const plan = await createCodexMarketplacePlanForPluginOperation(root, metadata.scope ?? "project");
   const includeAgents = Boolean(opts.includeAgents);
-  let targets = [...buildCodexPluginUninstallTargets(plan, { includeAgents })];
-  const configArtifact = includeAgents ? getCodexAgentConfigArtifact(plan) : null;
-
-  if (includeAgents) {
-    const knownPaths = new Set(targets.map((target) => target.path));
-    const existingAgentFiles = await listExistingZcAgentFiles(resolveCodexAgentsDir(root, plan));
-    for (const path of existingAgentFiles) {
-      if (!knownPaths.has(path)) {
-        targets.push({
-          path,
-          kind: "agent-file",
-        });
-      }
-    }
-  }
+  const agents = includeAgents
+    ? await inspectReceiptManagedCodexAgents(root, metadata.scope ?? "project")
+    : null;
+  let targets = [
+    ...buildCodexPluginUninstallTargets(plan, { includeAgents: false }),
+    ...(agents?.ownedPaths.map((path) => ({
+      path,
+      kind: "agent-file" as const,
+    })) ?? []),
+  ];
 
   targets = [...new Map(targets.map((target) => [target.path, target])).values()];
   const resolvedTargets = await resolveCodexPluginRemovableTargets(targets, plan.artifacts, Boolean(opts.force));
 
   if (opts.plan) {
+    const configResult = agents
+      ? await stripCodexAgentConfigFile(
+        agents.configPath,
+        true,
+        agents.receipt?.managedAgentNames ?? [],
+      )
+      : { changed: false, missing: false };
     emitOutput(
       format,
       buildCodexPluginUninstallPayload({
@@ -1794,6 +2548,11 @@ async function runCodexPluginLocalUninstall(opts: PlatformPluginOpts): Promise<v
         skipped: resolvedTargets.skipped,
         removed: 0,
         missing: 0,
+        configChanged: configResult.changed,
+        configMissing: configResult.missing,
+        agentConfigPath: agents?.configPath,
+        agentsReceiptPath: agents?.receiptPath,
+        agentsReceiptInstalled: Boolean(agents?.receipt),
       }),
       summarizeCodexPluginUninstall({
         mode: "plan",
@@ -1804,15 +2563,25 @@ async function runCodexPluginLocalUninstall(opts: PlatformPluginOpts): Promise<v
         skipped: resolvedTargets.skipped,
         removed: 0,
         missing: 0,
+        configChanged: configResult.changed,
+        configMissing: configResult.missing,
       }),
     );
     return;
   }
 
   const removal = await removeManagedPaths(resolvedTargets.removable.map((target) => target.path));
-  const configResult = configArtifact
-    ? await stripCodexAgentConfigFile(configArtifact.path, false)
-    : { changed: false, missing: true };
+  const configResult = agents
+    ? await stripCodexAgentConfigFile(
+      agents.configPath,
+      false,
+      agents.receipt?.managedAgentNames ?? [],
+    )
+    : { changed: false, missing: false };
+
+  if (agents) {
+    await deleteCodexAgentsReceipt(agents.receiptPath);
+  }
 
   emitOutput(
     format,
@@ -1828,6 +2597,9 @@ async function runCodexPluginLocalUninstall(opts: PlatformPluginOpts): Promise<v
       missing: removal.missing,
       configChanged: includeAgents ? configResult.changed : false,
       configMissing: includeAgents ? configResult.missing : false,
+      agentConfigPath: agents?.configPath,
+      agentsReceiptPath: agents?.receiptPath,
+      agentsReceiptInstalled: Boolean(agents?.receipt),
     }),
     summarizeCodexPluginUninstall({
       mode: "result",
@@ -2255,9 +3027,14 @@ export async function runPlatformAgents(
     const manifest = await loadToolkitManifest();
     const platformModule = await loadPlatformModule(target);
     const plan = createCodexAgentInstallPlan(platformModule, manifest, root, scope);
+    const receiptPath = resolveCodexAgentsReceiptPath(root, scope);
+    const receipt = await readCodexAgentsReceipt(receiptPath, {
+      root,
+      scope,
+    });
 
     if (operation === "status") {
-      const status = await inspectCodexAgents(plan, root);
+      const status = await inspectCodexAgents(plan, root, receipt);
       emitOutput(
         format,
         buildCodexAgentsPayload({
@@ -2270,7 +3047,10 @@ export async function runPlatformAgents(
             status: status.kind,
             summary: status.summary,
             staleAgentFiles: status.staleAgentFiles,
+            untrackedAgentFiles: status.untrackedAgentFiles,
             artifactStatus: status.artifacts,
+            receiptPath,
+            receiptInstalled: receipt !== null,
           },
         }),
         summarizeCodexAgents({
@@ -2287,20 +3067,31 @@ export async function runPlatformAgents(
     if (operation === "uninstall") {
       const configArtifact = getCodexAgentConfigArtifact(plan);
       const expectedAgentPaths = getCodexAgentFileArtifacts(plan).map((artifact) => artifact.path);
-      const existingAgentPaths = await listExistingZcAgentFiles(resolveCodexAgentsDir(root, plan));
-      const pathsToRemove = uniquePaths([...expectedAgentPaths, ...existingAgentPaths]);
+      const pathsToRemove = uniquePaths(
+        receipt ? getCodexAgentsReceiptOwnedPaths(receipt) : expectedAgentPaths,
+      );
       const removal = opts.plan
         ? await estimateRemovedPaths(pathsToRemove)
         : await removeManagedPaths(pathsToRemove);
       const configResult = configArtifact
-        ? await stripCodexAgentConfigFile(configArtifact.path, Boolean(opts.plan))
+        ? await stripCodexAgentConfigFile(
+          configArtifact.path,
+          Boolean(opts.plan),
+          receipt?.managedAgentNames ?? listZcAgentConfigNames(configArtifact.content),
+        )
         : { changed: false, missing: true };
       const result = {
         removed: removal.removed,
         missing: removal.missing,
         configChanged: configResult.changed,
         configMissing: configResult.missing,
+        receiptPath,
+        receiptRemoved: !opts.plan,
       };
+
+      if (!opts.plan) {
+        await deleteCodexAgentsReceipt(receiptPath);
+      }
 
       emitOutput(
         format,
@@ -2338,7 +3129,8 @@ export async function runPlatformAgents(
 
     const staleAgentFiles = await listExistingZcAgentFiles(resolveCodexAgentsDir(root, plan)).then((paths) => {
       const expected = new Set(getCodexAgentFileArtifacts(plan).map((artifact) => artifact.path));
-      return paths.filter((path) => !expected.has(path));
+      const owned = new Set(receipt ? getCodexAgentsReceiptOwnedPaths(receipt) : []);
+      return paths.filter((path) => owned.has(path) && !expected.has(path));
     });
     const writeResult = await writePlatformArtifacts(
       target,
@@ -2346,6 +3138,7 @@ export async function runPlatformAgents(
       {
         dryRun: Boolean(opts.plan),
         overwrite: "force",
+        managedAgentNames: receipt?.managedAgentNames ?? [],
       },
     );
     const pruneResult = opts.prune
@@ -2357,7 +3150,20 @@ export async function runPlatformAgents(
       ...writeResult,
       staleRemoved: pruneResult.removed,
       staleMissing: pruneResult.missing,
+      receiptPath,
     };
+
+    if (!opts.plan) {
+      const nextReceipt = createCodexAgentsReceipt({
+        root,
+        scope,
+        pluginId: `${codexMarketplacePluginName}@${codexMarketplacePluginName}`,
+        pluginVersion: getCliVersion(),
+        contentFingerprint: plan.metadata?.fingerprint.value ?? getCliVersion(),
+        artifacts: plan.artifacts,
+      });
+      await writeCodexAgentsReceipt(receiptPath, nextReceipt);
+    }
 
     emitOutput(
       format,
@@ -2479,7 +3285,7 @@ export async function runPlatformGenerate(
     }
 
     const resolvedArtifacts = plan.artifacts.map((artifact) => resolveGenerateArtifact(outputRoot, artifact));
-    await cleanupCodexPluginSkillsForForce(bundleType, resolvedArtifacts, opts.force);
+    await cleanupCodexPluginContentForForce(bundleType, resolvedArtifacts, opts.force);
 
     const result = await writePlatformArtifacts(
       target,
@@ -2525,9 +3331,21 @@ export async function runPlatformPlugin(
       throw new Error("当前仅 Codex 支持插件 marketplace 快捷安装。");
     }
 
-    if (opts.git !== undefined || opts.register) {
+    if (
+      opts.withAgents ||
+      opts.git !== undefined ||
+      opts.register ||
+      opts.install ||
+      opts.upgrade ||
+      opts.status ||
+      (opts.uninstall && opts.withAgents)
+    ) {
       assertCodexGitMarketplaceOptions(opts);
-      await runCodexMarketplaceGitMode(opts);
+      if (opts.withAgents) {
+        await runCodexPluginWithAgents(opts);
+      } else {
+        await runCodexMarketplaceGitMode(opts);
+      }
       return;
     }
 
@@ -3748,17 +4566,21 @@ export function registerPlatformCommand(program: Command): void {
   platform
     .command("plugin")
     .alias("p")
-    .description("生成 Codex 插件 marketplace")
+    .description("管理 Codex 官方插件 lifecycle，或生成本地 marketplace")
     .argument("<target>", "目标平台（当前支持 codex）", parsePlatformName)
     .option("-d, --dir <dir>", "使用指定 marketplace bundle root，不是 Codex home")
     .option("-p, --project", "使用当前目录向上解析出的最近项目根")
     .option("-g, --global", "使用用户级 personal marketplace")
-    .option("--git [source]", "输出 Git marketplace 注册指令；未给 source 时使用 zc 官方 Codex marketplace 仓库")
-    .option("--ref <ref>", "Git marketplace ref（仅 --git/--register）")
+    .option("--git [source]", "使用 Git marketplace；未给 source 时使用 zc 官方 Codex marketplace 仓库")
+    .option("--ref <ref>", "Git marketplace ref（仅注册/安装）")
     .option("--register", "直接调用 codex plugin marketplace add 注册 Git marketplace")
-    .option("--uninstall", "卸载 zc 生成的本地 Codex plugin marketplace bundle")
+    .option("--install", "注册 marketplace 并调用 codex plugin add 安装 zc-toolkit")
+    .option("--upgrade", "调用 codex plugin marketplace upgrade 刷新目录并检查插件状态")
+    .option("--status", "调用 codex plugin list --available 检查插件状态")
+    .option("--uninstall", "与 --git 合用时调用 codex plugin remove；否则卸载本地 marketplace bundle")
+    .option("--with-agents", "组合管理官方插件与全局 companion custom agents")
     .option("--include-agents", "卸载本地 plugin bundle 时同时清理 zc-managed custom agents")
-    .option("--plan", "只查看生成/卸载计划，不写文件")
+    .option("--plan", "只查看 lifecycle、生成或卸载计划，不写文件")
     .option("-j, --json", "输出 JSON")
     .option("-f, --force", "生成时覆盖漂移产物；卸载时忽略漂移/未知文件保护")
     .action(runPlatformPlugin);

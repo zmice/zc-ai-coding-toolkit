@@ -33,6 +33,7 @@
 - `meta.yaml.description`：只负责自动发现和触发条件，说明什么时候用，不复述完整流程。
 - `body.md`：只保留当前阶段的 quick path、决策门、输出格式和验证要求。
 - `assets/` 或专项 skill：承载长 checklist、模板、示例和平台细节，只有进入深挖阶段才读取。
+- `assets/` 是内容源包装目录；平台生成时会把其子文件输出到主资产旁边并去掉 `assets/` 前缀。例如源文件 `assets/references/checklist.md` 在 `body.md` 中引用为 `references/checklist.md`。
 
 `agents` 保持角色卡定位：说明职责、介入时机、关注点和交付物，不承载完整教程。决策型 skill / agent 的推荐结论应写成：
 
@@ -111,6 +112,7 @@ Recommendation: <action> because <specific evidence, trade-off, and rejected alt
 - `incremental-implementation`：增量实现 — 以薄切片循环持续交付变更，保持系统始终可运行、可验证。
 - `multi-perspective-review`：多视角评审 — 在实现前从产品、工程、设计和开发者体验四个视角审视 Spec 或 Plan。
 - `parallel-agent-dispatch`：并行调度 — 在多个独立任务可并行时，通过上下文隔离和结果汇总实现 fan-out/fan-in。
+- `observability-and-instrumentation`：可观测性与埋点 — 从值班问题出发设计结构化日志、RED/USE 指标、跨服务追踪和症状告警。
 - `performance-optimization`：性能优化 — 在 profiling 或性能指标提示存在瓶颈时，用数据驱动方式优化性能。
 - `planning-and-task-breakdown`：任务拆解 — 将规格或清晰需求拆成有依赖、有验证步骤的实现任务。
 - `release-documentation-sync`：发布后文档同步 — 在发布后核对 README、升级说明和行为变更记录，避免文档 drift。
@@ -119,6 +121,7 @@ Recommendation: <action> because <specific evidence, trade-off, and rejected alt
 - `sdd-tdd-workflow`：SDD+TDD 工作流 — 编排从 Brainstorm 到 Commit 的完整开发生命周期，并带门控推进。
 - `security-and-hardening`：安全加固 — 处理用户输入、认证、数据存储和外部集成时的安全风险与加固策略。
 - `shipping-and-launch`：发布上线 — 为部署前检查、监控、灰度发布和回滚方案做准备。
+- `skill-authoring-and-evaluation`：Skill 创作与评测 — 创建、改写或评估 Agent Skill，并用触发契约、基线对照和代表性场景验证行为改善。
 - `source-driven-development`：官方文档实现 — 要求实现决策以官方文档为依据，避免凭记忆编码。
 - `spec-driven-development`：规格驱动开发 — 在实现前先把需求收敛成结构化规格和验收标准。
 - `sprint-retrospective`：迭代回顾 — 在开发周期结束后做结构化回顾，输出可执行改进项。

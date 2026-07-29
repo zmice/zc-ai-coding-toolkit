@@ -3,6 +3,7 @@ import { describe, it } from "vitest";
 
 import {
   isCodexAgentConfigContent,
+  mergeOwnedCodexAgentConfig,
   mergeCodexAgentConfig,
 } from "./codex-config-merge.js";
 
@@ -70,5 +71,49 @@ describe("codex config merge", () => {
     assert.match(merged, /\[agents\.custom\]/);
     assert.match(merged, /description = "new"/);
     assert.equal(mergedAgain, merged);
+  });
+
+  it("replaces only receipt-owned and newly generated zc agent sections", () => {
+    const existing = [
+      "[agents.zc_code_reviewer]",
+      'description = "old owned"',
+      "",
+      "[agents.zc_removed_role]",
+      'description = "stale owned"',
+      "",
+      "[agents.zc_local_role]",
+      'description = "local"',
+      "",
+    ].join("\n");
+    const generated = [
+      "[agents.zc_code_reviewer]",
+      'description = "new owned"',
+      "",
+    ].join("\n");
+
+    const merged = mergeOwnedCodexAgentConfig(
+      existing,
+      generated,
+      ["zc_code_reviewer", "zc_removed_role"],
+    );
+
+    assert.doesNotMatch(merged, /old owned|stale owned/);
+    assert.match(merged, /\[agents\.zc_local_role\]\n(?:description = "local")/);
+    assert.match(merged, /description = "new owned"/);
+  });
+
+  it("preserves TOML array tables after a managed zc agent section", () => {
+    const existing = [
+      "[agents.zc_code_reviewer]",
+      'config_file = "agents/zc-code-reviewer.toml"',
+      "",
+      "[[mcp_servers]]",
+      'name = "keep-me"',
+      "",
+    ].join("\n");
+
+    const merged = mergeOwnedCodexAgentConfig(existing, "", ["zc_code_reviewer"]);
+
+    assert.equal(merged, '[[mcp_servers]]\nname = "keep-me"\n');
   });
 });

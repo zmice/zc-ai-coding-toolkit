@@ -15,22 +15,27 @@
 
 | 平台 | Entry / Memory | Commands | Skills | Agents | Extension / Plugin | 用户级 | 项目级 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Codex | `AGENTS.md` | 未见官方目录模型 | `~/.codex/skills` | 本轮未重新确认官方目录模型 | 本轮未重新确认官方 plugin 安装模型 | Yes | Yes |
+| Codex | `AGENTS.md` | plugin-level `commands/` | `~/.codex/skills` + plugin skills | plugin-level `agents/`；传统直装可用 `[agents.*]` + `.toml` | 通用 Plugins Directory + Git/local marketplace + `codex plugin` CLI | Yes | Yes |
 | Claude Code | `CLAUDE.md` | `~/.claude/commands` / `.claude/commands` | 未见官方 skills 目录模型 | `~/.claude/agents` / `.claude/agents` | 未见官方 plugin 安装模型 | Yes | Yes |
 | Qwen | `QWEN.md` | extension 内支持 | `~/.qwen/skills` / `.qwen/skills` | extension 内支持 | `~/.qwen/extensions` / `.qwen/extensions` + 官方 `qwen extensions` CLI | Yes | Yes |
 | OpenCode | `AGENTS.md` | `~/.config/opencode/commands` / `.opencode/commands` | `~/.config/opencode/skills` / `.opencode/skills` | `~/.config/opencode/agents` / `.opencode/agents` | 未见独立 plugin 安装模型 | Yes | Yes |
 
 ## 平台分型
 
-### 1. Entry File + Skills
+### 1. Entry File + Skills + Plugin Lifecycle
 
 - 平台：`Codex`
 - 推荐安装面：
   - `AGENTS.md`
   - `skills/`
+  - `.codex-plugin/plugin.json`
+  - repo / personal / Git marketplace
 - 处理原则：
-  - 不发明没有官方依据的 `commands/` 目录
-  - `zc` 可以生成 custom agent 配置和 plugin / marketplace bundle，但必须在文档中标注为 `zc` 的打包路径，而不是官方通用命令面
+  - plugin 优先交给官方 `codex plugin add/list/remove` 与 `codex plugin marketplace add/list/upgrade/remove`
+  - 插件目录可携带 `skills/`、`commands/`、`agents/`、`hooks.json`、MCP servers/connectors 和安装面元数据
+  - `.codex-plugin/plugin.json` 提供稳定身份；agent / command 文件可按官方示例作为同级自动发现 surface，不要求虚构 manifest 字段
+  - 传统直装仍可通过 `.codex/config.toml` 和 `.codex/agents/*.toml` 注册 custom agent
+  - `zc --with-agents` 的 receipt-backed companion 仅保留为旧直装兼容，不是新插件的首选 agent 路线
 
 ### 2. Entry File + Native Directories
 
@@ -60,13 +65,24 @@
 - 全局级 / 项目级说明入口：`AGENTS.md`
 - 全局级默认位置：`~/.codex/AGENTS.md`
 - Skills 目录：`~/.codex/skills`
-- 当前没有可靠官方依据表明 Codex 支持 `commands/` 目录模型
-- 本轮只把 custom agents / plugin marketplace 作为当前 `zc` 实现事实记录，不把它们写入官方能力矩阵的 commands 面
+- 官方 `openai/plugins` 已提供 plugin-level `commands/`、`agents/` 和 `hooks.json` 实例
+- ChatGPT 和 Codex 共享通用 Plugins Directory；本地和 Git marketplace 用于开发、测试和团队分发
+- Codex CLI 稳定命令面：
+  - `codex plugin add|list|remove`
+  - `codex plugin marketplace add|list|upgrade|remove`
+- plugin manifest 可声明 `skills`、`mcpServers`、兼容 `apps` 和 `interface`；commands / agents / hooks 作为插件目录 surface
+- 插件支持面是 ChatGPT Work web、ChatGPT/Codex desktop 和 Codex CLI；不包括 IDE extension、Chat、mobile
+- plugin-native agents 随插件目录分发；传统 `[agents.*]` roles 继续支持独立同步
+- `zc-toolkit` 暂时保留带哈希的 companion payload，供旧直装或需要显式 config role 的场景选择，不再作为插件 agent 的唯一实现
 
 来源：
 
-- OpenAI Developers `AGENTS.md` 指南
-- OpenAI `openai/skills`
+- <https://learn.chatgpt.com/docs/plugins>
+- <https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin>
+- <https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin-marketplace>
+- <https://learn.chatgpt.com/docs/agent-configuration/subagents>
+- <https://developers.openai.com/plugins/build/plugins>
+- <https://github.com/openai/plugins>
 
 ### Claude Code
 
@@ -144,7 +160,7 @@
 
 | 平台 | 目标实现 | 覆盖评价 |
 | --- | --- | --- |
-| Codex | 项目级安装 `AGENTS.md` + `.codex/config.toml` + `.codex/skills/zc-<command>/SKILL.md` + `.codex/skills/zc-<skill>/SKILL.md` + `.codex/agents/zc-<agent>.toml`；用户级 / 自定义目录安装对应的 `AGENTS.md` + `config.toml` + `skills/` + `agents/`；另支持 `zc platform plugin codex` 生成 personal/repo marketplace bundle，插件路线生成薄 `AGENTS.md` / `.codex/AGENTS.md` 入口，插件内 skills 使用无前缀 `<command-or-skill>/SKILL.md`；`zc platform agents codex` 独立维护 custom agents | 官方面保持保守，`agents` 和 plugin / marketplace 明确标注为 `zc` 的打包与配置实现；传统直装入口指向 `$zc-*`，插件入口指向 `$*` |
+| Codex | 项目级传统安装仍支持 `AGENTS.md` + `.codex/config.toml` + skills + agents；推荐分发使用 Git marketplace plugin。插件包原生携带 commands / skills / agents，`zc platform plugin codex --install/status/upgrade` 编排官方 CLI；`--with-agents` 和 `zc platform agents codex` 仅保留传统 config-role 兼容 | plugin lifecycle 与官方目录 surface 对齐，避免 marketplace 安装后再强制写用户 config |
 | Claude Code | `CLAUDE.md` + `commands/zc-*.md` + `agents/zc-*.md`；不覆盖 `enterprise policy`、`CLAUDE.local.md`、`@imports` 目标文件 | 目录化原生安装 |
 | Qwen | 优先通过官方 `qwen extensions` CLI 管理 `zc-toolkit` 的发布态 extension bundle；扩展内容为 `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md` + `qwen-extension.json` + `commands` + `skills` + `agents` | extension 原生安装 |
 | OpenCode | `AGENTS.md` + `.opencode/commands/zc-*.md` + `.opencode/skills/zc-*/SKILL.md` + `.opencode/agents/zc-*.md` + 全局对应目录 | 目录化原生安装 |
@@ -153,7 +169,7 @@
 
 当前阶段结论：
 
-- `Codex`：官方 commands 面继续保守；当前 `zc` 已额外提供 custom agent 配置和 plugin / marketplace bundle
+- `Codex`：官方 plugin lifecycle 已成熟，优先使用 marketplace 安装；plugin-level commands / skills / agents 随包分发，传统 TOML agents 作为兼容路径
 - `Claude Code`：走官方目录结构，不做插件抽象
 - `Qwen`：走官方 extension 生命周期
 - `OpenCode`：走官方目录结构，覆盖 `AGENTS.md + commands + skills + agents`
@@ -183,4 +199,4 @@
 
 1. 用 `pnpm audit:context` 定期检查各平台生成内容体量
 2. 如果上下文预算继续增长，按 `tier / audience / platform_exposure` 收紧默认安装集
-3. 若要扩大 Codex custom agents 或 marketplace 叙述，先重新核对官方文档；在官方 marketplace 支持 agent 声明前，custom agents 继续走 `zc platform agents codex`
+3. Codex plugin 能力继续以官方 `openai/plugins` 实例、manifest 和 CLI reference 交叉验证；目录 surface 与用户级 config role 分开治理

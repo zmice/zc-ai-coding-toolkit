@@ -24,10 +24,10 @@
 ## 三分钟上手
 
 ```bash
-codex plugin marketplace add zmice/zc-codex-marketplace
+zc platform plugin codex --install
 ```
 
-然后在 Codex 的 **Plugins** 页面安装或启用 `zc-toolkit`，新线程中从 `$start` 开始。
+它会注册官方 Git marketplace 并安装 `zc-toolkit`。安装后启动新线程，从 `$zc-toolkit:start` 开始。
 
 如果已经安装 `@zmice/zc`，也可以让 CLI 输出或执行同一条官方注册命令：
 
@@ -35,6 +35,10 @@ codex plugin marketplace add zmice/zc-codex-marketplace
 npm install -g @zmice/zc
 zc platform plugin codex --git
 zc platform plugin codex --register
+zc platform plugin codex --status
+zc platform plugin codex --upgrade
+zc platform plugin codex --install --with-agents
+zc platform plugin codex --status --with-agents
 zc platform agents codex --global --sync --prune
 zc platform agents codex --global --status
 zc platform plugin codex --global --uninstall --plan
@@ -68,16 +72,17 @@ zc platform plugin codex --global --uninstall --plan
 
 | 平台 | 入口文件 | Commands | Skills | Agents | Extension / Plugin | 统一入口适配 |
 | --- | --- | --- | --- | --- | --- | --- |
-| Codex | `AGENTS.md` | Skill alias | Yes | zc-managed custom agents | Git marketplace plugin / zc-managed local bundle | `zc:start -> $start` / `$zc-start` |
+| Codex | `AGENTS.md` | Plugin commands + skill alias | Yes | Plugin agents + zc-managed direct-install agents | Git marketplace plugin / zc-managed local bundle | `zc:start -> $zc-toolkit:start` / `$zc-start` |
 | Claude Code | `CLAUDE.md` | Yes | - | Yes | - | `zc:start -> /zc-start` |
 | OpenCode | `AGENTS.md` | Yes | Yes | Yes | - | `zc:start -> /zc-start` |
 | Qwen | `QWEN.md` | Yes | Yes | Yes | Yes | `zc:start -> zc:start` |
 
 补充说明：
 
-- Codex 推荐通过官方 Git marketplace 安装插件，插件 skill 用 `$start` 这类无前缀入口
+- Codex 推荐通过官方 Git marketplace 安装插件，插件 skill 用 `$zc-toolkit:start` 这类 namespace 限定入口
 - Codex 传统直装通过 `$zc-*` skill 别名承接统一语义
-- Codex 的 custom agents 仍是 `zc` 管理的配置路径，不等同于插件自动安装的通用能力；使用 `zc platform agents codex` 独立同步、检查和卸载
+- Codex 插件原生携带 `commands/`、`skills/` 和 `agents/`；官方 marketplace 安装不需要额外修改用户 config
+- `--with-agents` 与 `zc platform agents codex` 保留给传统 `[agents.*]` TOML role 兼容，前者用独立回执约束 status、升级和卸载
 - Claude Code 和 OpenCode 通过 `/zc-*` 命令承接统一语义
 - Qwen 通过 `zc:*` namespaced command 承接统一语义
 - 这样做是为了避免和平台内置命令、社区插件或未来扩展冲突
@@ -263,3 +268,4 @@ CLI 和安装语义还参考：
 ## License
 
 - [MIT](LICENSE)
+- 第三方材料与随产物分发的许可证声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)

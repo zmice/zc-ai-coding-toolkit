@@ -44,6 +44,37 @@ const manifest: ToolkitManifestLike = {
 };
 
 describe("@zmice/platform-qwen scaffold", () => {
+  it("includes supporting files beside generated skills", () => {
+    const attachmentManifest: ToolkitManifestLike = {
+      source: "toolkit-manifest",
+      assets: [
+        {
+          id: "skill:alpha",
+          kind: "skill",
+          platforms: ["qwen"],
+          title: "Alpha skill",
+          body: "See `references/guide.md`.",
+          attachments: [
+            {
+              relativePath: "assets/references/guide.md",
+              contents: "# Guide\n",
+            },
+          ],
+        },
+      ],
+    };
+
+    const plan = createQwenGenerationPlan(attachmentManifest);
+
+    assert.ok(
+      plan.artifacts.some(
+        (artifact) =>
+          artifact.path === ".qwen/extensions/zc-toolkit/skills/zc-alpha/references/guide.md"
+          && artifact.content === "# Guide\n",
+      ),
+    );
+  });
+
   it("creates a project-scope extension generation plan from toolkit assets", () => {
     const plan = createQwenGenerationPlan(manifest);
 

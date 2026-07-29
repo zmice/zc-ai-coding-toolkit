@@ -1,193 +1,82 @@
-# Using Agent Skills
+# 技能发现
 
-## Overview
+## 何时使用
 
-Agent Skills is a collection of engineering workflow skills organized by development phase. Each skill encodes a specific process that senior engineers follow. This meta-skill helps you discover and apply the right skill for your current task.
+会话开始或不确定入口时使用。用最少上下文选中当前阶段真正需要的 skill：先读 metadata，选中后再读正文；不要把整个技能目录加载进会话。
 
-## Skill Discovery
+## 路由
 
-When a task arrives, identify the development phase and apply the corresponding skill:
+| 当前任务 | 首选 skill |
+|---|---|
+| 想法模糊，需要收敛 | `idea-refine` |
+| 新功能或重大变更，需要规格 | `spec-driven-development` |
+| 已有规格，需要拆任务 | `planning-and-task-breakdown` |
+| 编写或修改代码 | `incremental-implementation` |
+| 需要官方文档依据 | `source-driven-development` |
+| UI / API 专项实现 | `frontend-ui-engineering` / `api-and-interface-design` |
+| 写测试或修 bug | `test-driven-development` / `debugging-and-error-recovery` |
+| 真实浏览器流程 | `browser-qa-testing` |
+| 代码、安全或性能审查 | `code-review-and-quality`，按风险追加专项 skill |
+| 创建、改写或评估 skill | `skill-authoring-and-evaluation` |
+| 上下文膨胀 | `context-budget-audit` |
+| 提交、发布或文档同步 | 对应 Git、shipping、release documentation skill |
 
-```
-Task arrives
-    │
-    ├── Vague idea/need refinement? ──→ idea-refine
-    ├── New project/feature/change? ──→ spec-driven-development
-    ├── Have a spec, need tasks? ──────→ planning-and-task-breakdown
-    ├── Implementing code? ────────────→ incremental-implementation
-    │   ├── UI work? ─────────────────→ frontend-ui-engineering
-    │   ├── API work? ────────────────→ api-and-interface-design
-    │   ├── Need better context? ─────→ context-engineering
-    │   └── Need doc-verified code? ───→ source-driven-development
-    ├── Writing/running tests? ────────→ test-driven-development
-    │   └── Browser-based? ───────────→ browser-qa-testing
-    ├── Something broke? ──────────────→ debugging-and-error-recovery
-    ├── Reviewing code? ───────────────→ code-review-and-quality
-    │   ├── Security concerns? ───────→ security-and-hardening
-    │   └── Performance concerns? ────→ performance-optimization
-    ├── Committing/branching? ─────────→ git-workflow-and-versioning
-    ├── CI/CD pipeline work? ──────────→ ci-cd-and-automation
-    ├── Writing docs/ADRs? ───────────→ documentation-and-adrs
-    └── Deploying/launching? ─────────→ shipping-and-launch
-```
+任务跨阶段时按需切换，不把前一阶段的完整正文继续留作当前规则。
 
-## Routing Metadata and Context Loading
+## Discovery Contract
 
-Skill discovery depends on short metadata before the full skill is loaded. Treat each
-skill description as an activation contract:
+判断候选 skill 时只看：
 
-- It must say what capability the skill provides.
-- It must say when to activate it.
-- It should include exclusions when a nearby skill would be a better fit.
-- It should not summarize the entire workflow; the agent should read the full skill
-  only after the skill is selected.
+1. WHAT：它提供什么能力
+2. WHEN：当前任务是否命中具体触发场景
+3. BOUNDARY：相邻 skill 是否更合适
+4. PLATFORM：当前平台是否真正支持需要的工具或安装面
 
-Prefer on-demand skill loading over always-on context. Persistent files such as
-`AGENTS.md`, `GEMINI.md`, `CLAUDE.md`, or platform rules should contain stable project
-conventions and canonical routing only. Do not load every skill into every session;
-that wastes context and makes phase-specific rules compete with each other.
+不要从 skill 名称猜完整能力，也不要把兼容语义、旧命令名或生成产物误当成平台原生功能。
 
-When a platform has native skill discovery, use its native directory or metadata model.
-When it does not, use agent-driven routing through the project entry file. Do not imply
-native plugin or slash-command behavior that the platform does not actually support.
+## 选择规则
 
-## Core Operating Behaviors
+- 只加载能改变当前动作的 skill。
+- 两个 skill 顺序相关时，先用定义/诊断类，再用实现/验证类。
+- 多个 skill 只是重复通用原则时，保留最具体的一个。
+- 可从代码和配置推断的低风险事实直接验证；只有会改变路线的高风险歧义才询问用户。
+- skill 缺失或平台能力不足时，说明降级，并保留同一输出与验证契约。
 
-These behaviors apply at all times, across all skills. They are non-negotiable.
+## 常见序列
 
-### 1. Surface Assumptions
+```text
+Feature:
+idea-refine
+→ spec-driven-development
+→ planning-and-task-breakdown
+→ incremental-implementation
+→ test-driven-development
+→ code-review-and-quality
+→ verification-before-completion
 
-Before implementing anything non-trivial, explicitly state your assumptions:
+Bug:
+debugging-and-error-recovery
+→ test-driven-development
+→ code-review-and-quality
+→ verification-before-completion
 
-```
-ASSUMPTIONS I'M MAKING:
-1. [assumption about requirements]
-2. [assumption about architecture]
-3. [assumption about scope]
-→ Correct me now or I'll proceed with these.
-```
-
-Don't silently fill in ambiguous requirements. The most common failure mode is making wrong assumptions and running with them unchecked. Surface uncertainty early — it's cheaper than rework.
-
-### 2. Manage Confusion Actively
-
-When you encounter inconsistencies, conflicting requirements, or unclear specifications:
-
-1. **STOP.** Do not proceed with a guess.
-2. Name the specific confusion.
-3. Present the tradeoff or ask the clarifying question.
-4. Wait for resolution before continuing.
-
-**Bad:** Silently picking one interpretation and hoping it's right.
-**Good:** "I see X in the spec but Y in the existing code. Which takes precedence?"
-
-### 3. Push Back When Warranted
-
-You are not a yes-machine. When an approach has clear problems:
-
-- Point out the issue directly
-- Explain the concrete downside (quantify when possible — "this adds ~200ms latency" not "this might be slower")
-- Propose an alternative
-- Accept the human's decision if they override with full information
-
-Sycophancy is a failure mode. "Of course!" followed by implementing a bad idea helps no one. Honest technical disagreement is more valuable than false agreement.
-
-### 4. Enforce Simplicity
-
-Your natural tendency is to overcomplicate. Actively resist it.
-
-Before finishing any implementation, ask:
-- Can this be done in fewer lines?
-- Are these abstractions earning their complexity?
-- Would a staff engineer look at this and say "why didn't you just..."?
-
-If you build 1000 lines and 100 would suffice, you have failed. Prefer the boring, obvious solution. Cleverness is expensive.
-
-### 5. Maintain Scope Discipline
-
-Touch only what you're asked to touch.
-
-Do NOT:
-- Remove comments you don't understand
-- "Clean up" code orthogonal to the task
-- Refactor adjacent systems as a side effect
-- Delete code that seems unused without explicit approval
-- Add features not in the spec because they "seem useful"
-
-Your job is surgical precision, not unsolicited renovation.
-
-### 6. Verify, Don't Assume
-
-Every skill includes a verification step. A task is not complete until verification passes. "Seems right" is never sufficient — there must be evidence (passing tests, build output, runtime data).
-
-## Failure Modes to Avoid
-
-These are the subtle errors that look like productivity but create problems:
-
-1. Making wrong assumptions without checking
-2. Not managing your own confusion — plowing ahead when lost
-3. Not surfacing inconsistencies you notice
-4. Not presenting tradeoffs on non-obvious decisions
-5. Being sycophantic ("Of course!") to approaches with clear problems
-6. Overcomplicating code and APIs
-7. Modifying code or comments orthogonal to the task
-8. Removing things you don't fully understand
-9. Building without a spec because "it's obvious"
-10. Skipping verification because "it looks right"
-
-## Skill Rules
-
-1. **Check for an applicable skill before starting work.** Skills encode processes that prevent common mistakes.
-
-2. **Skills are workflows, not suggestions.** Follow the steps in order. Don't skip verification steps.
-
-3. **Load only the skills needed for the current phase.** If a task moves from planning to implementation, switch skills instead of carrying the entire planning context forward.
-
-4. **Multiple skills can apply in sequence.** A feature implementation might involve `idea-refine` → `spec-driven-development` → `planning-and-task-breakdown` → `incremental-implementation` → `test-driven-development` → `code-review-and-quality` → `shipping-and-launch`.
-
-5. **When in doubt, start with a spec.** If the task is non-trivial and there's no spec, begin with `spec-driven-development`.
-
-6. **Ask only when it changes the route.** If the correct skill can be inferred from evidence, select it and state the assumption. Ask only for high-stakes ambiguity, conflicting goals, or missing context that would change the workflow.
-
-## Lifecycle Sequence
-
-For a complete feature, the typical skill sequence is:
-
-```
-1. idea-refine                 → Refine vague ideas
-2. spec-driven-development     → Define what we're building
-3. planning-and-task-breakdown → Break into verifiable chunks
-4. context-engineering         → Load the right context
-5. source-driven-development   → Verify against official docs
-6. incremental-implementation  → Build slice by slice
-7. test-driven-development     → Prove each slice works
-8. code-review-and-quality     → Review before merge
-9. git-workflow-and-versioning → Clean commit history
-10. documentation-and-adrs     → Document decisions
-11. shipping-and-launch        → Deploy safely
+Skill asset:
+skill-authoring-and-evaluation
+→ context-budget-audit
+→ verification-before-completion
 ```
 
-Not every task needs every skill. A bug fix might only need: `debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`.
+## 输出
 
-## Quick Reference
+开始工作前只需记录：
 
-| Phase | Skill | One-Line Summary |
-|-------|-------|-----------------|
-| Define | idea-refine | Refine ideas through structured divergent and convergent thinking |
-| Define | spec-driven-development | Requirements and acceptance criteria before code |
-| Plan | planning-and-task-breakdown | Decompose into small, verifiable tasks |
-| Build | incremental-implementation | Thin vertical slices, test each before expanding |
-| Build | source-driven-development | Verify against official docs before implementing |
-| Build | context-engineering | Right context at the right time |
-| Build | frontend-ui-engineering | Production-quality UI with accessibility |
-| Build | api-and-interface-design | Stable interfaces with clear contracts |
-| Verify | test-driven-development | Failing test first, then make it pass |
-| Verify | browser-qa-testing | Real-browser runtime verification for user-facing flows |
-| Verify | debugging-and-error-recovery | Reproduce → localize → fix → guard |
-| Review | code-review-and-quality | Five-axis review with quality gates |
-| Review | security-and-hardening | OWASP prevention, input validation, least privilege |
-| Review | performance-optimization | Measure first, optimize only what matters |
-| Ship | git-workflow-and-versioning | Atomic commits, clean history |
-| Ship | ci-cd-and-automation | Automated quality gates on every change |
-| Ship | documentation-and-adrs | Document the why, not just the what |
-| Ship | shipping-and-launch | Pre-launch checklist, monitoring, rollback plan |
+```text
+Skill route:
+- Current phase:
+- Selected:
+- Why:
+- Deferred:
+- Platform fallback:
+```
+
+选择完成后立即进入目标 skill，不继续扩写路由说明。

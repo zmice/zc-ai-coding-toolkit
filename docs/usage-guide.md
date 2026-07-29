@@ -229,7 +229,7 @@ npm install -g @qwen-code/qwen-code@latest
 
 | 平台 | 安装后的入口形式 | 示例 |
 | --- | --- | --- |
-| `codex` | 传统安装为 `$zc-*` skill；插件安装为插件命名空间下的无前缀 skill | `zc:start -> $zc-start` / `zc:start -> $start` |
+| `codex` | 传统安装为 `$zc-*` skill；插件安装为插件命名空间限定 skill | `zc:start -> $zc-start` / `zc:start -> $zc-toolkit:start` |
 | `claude` | `/zc-*` command | `zc:start -> /zc-start` |
 | `opencode` | `/zc-*` command | `zc:start -> /zc-start` |
 | `qwen` | `zc:*` namespaced command | `zc:start -> zc:start` |
@@ -238,13 +238,13 @@ npm install -g @qwen-code/qwen-code@latest
 
 - 传统文件系统安装的 workflow / 专项 skill 会带 `zc-` 前缀
 - Codex 插件安装不再给 skill 额外加 `zc-` 前缀，因为插件自身已经提供 `zc-toolkit` 命名空间
-- custom agents 仍保留 `zc-` / `zc_` 前缀，因为它们写入 `.codex/agents` 和 `config.toml`，不属于 plugin skills 命名空间
+- plugin-native agents 使用插件自己的命名空间；传统直装 TOML agents 继续保留 `zc-` / `zc_` 前缀
 
 ### 产物矩阵
 
 | 平台 | 产物 |
 | --- | --- |
-| `codex` | 推荐通过官方 Git marketplace 从 `zmice/zc-codex-marketplace` 安装和更新 `zc-toolkit`；传统安装：`AGENTS.md`、`config.toml`、`skills/zc-<command>/SKILL.md`、`skills/zc-<skill>/SKILL.md`、`agents/zc-<agent>.toml`；本地插件生成：薄入口 `AGENTS.md` / `.codex/AGENTS.md` + `plugins/zc-toolkit/skills/<command-or-skill>/SKILL.md` / `.codex/plugins/zc-toolkit/skills/<command-or-skill>/SKILL.md` + `.codex/agents/zc-<agent>.toml` |
+| `codex` | 推荐通过官方 Git marketplace 从 `zmice/zc-codex-marketplace` 安装和更新 `zc-toolkit`；插件原生包含 `commands/`、`skills/`、`agents/`；传统安装仍生成 `AGENTS.md`、`config.toml`、`skills/zc-*/SKILL.md`、`agents/zc-*.toml` |
 | `claude` | `CLAUDE.md`、`.claude/commands`、`.claude/agents` |
 | `opencode` | `AGENTS.md`、`.opencode/commands`、`.opencode/skills`、`.opencode/agents` |
 | `qwen` | 用户级优先通过官方 `qwen extensions` CLI 从 `https://github.com/zmice/zc-qwen-extension.git` 安装和更新 `zc-toolkit`；扩展目录位于 `.qwen/extensions/zc-toolkit/`，其中包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/`、`skills/`、`agents/` |
@@ -315,9 +315,18 @@ zc platform install codex --project
 
 ```bash
 codex plugin marketplace add zmice/zc-codex-marketplace
+codex plugin add zc-toolkit@zc-toolkit --json
 codex plugin marketplace upgrade zc-toolkit
 zc platform plugin codex --git
 zc platform plugin codex --register
+zc platform plugin codex --install
+zc platform plugin codex --status
+zc platform plugin codex --upgrade
+zc platform plugin codex --install --with-agents
+zc platform plugin codex --status --with-agents
+zc platform plugin codex --upgrade --with-agents
+zc platform plugin codex --uninstall --with-agents
+zc platform plugin codex --git --uninstall --plan
 zc platform plugin codex --global
 zc platform plugin codex --global --uninstall --plan
 zc platform plugin codex --global --uninstall --include-agents --plan
@@ -341,25 +350,34 @@ zc platform where qwen --global --json
 当前行为：
 
 - `platform plugin codex`
-  - 推荐使用 `--git` 输出官方 `codex plugin marketplace add` 注册命令，不写本地文件
-  - `--register` 会直接调用 Codex 官方 CLI，默认 Git 源为 `zmice/zc-codex-marketplace`
+  - 推荐使用 `--install` 注册 marketplace 并通过官方 `codex plugin add` 安装插件
+  - `--git` 只输出官方 lifecycle 命令，不写本地文件
+  - `--register` 会注册默认 Git 源 `zmice/zc-codex-marketplace`；旧 CLI 兼容顶层 `codex marketplace add`
+  - `--status` 使用官方 JSON 输出检查 installed、available、version 和 enabled
+  - `--upgrade` 刷新 Git marketplace 后检查插件状态，不自动覆盖用户启用状态
+  - `--git --uninstall` 使用官方 `codex plugin remove` 移除插件 bundle；connector 授权需单独管理
+  - `--with-agents` 只能与 `--install`、`--status`、`--upgrade`、`--uninstall` 一起使用，将官方插件和全局 companion agents 合并成一个 JSON/text 结果
+  - 组合安装从官方 CLI 返回的 `installedPath` 或 `source.path` 定位插件根并加载 `assets/zc-agents/manifest.json`，校验 plugin version、内容指纹和各文件哈希后再写入
+  - 组合 status 不写文件；官方输出同时缺少这两个路径字段时可由已有 agent 回执续接，首次安装缺少路径则返回 partial
+  - 组合 upgrade 在 available version 尚未真正成为 installed version 时返回 `update-pending`，agents 保持不变
+  - 组合 uninstall 只移除回执拥有的 agent 文件和受管 config 段，保留未跟踪的本地 agent
   - `--ref <ref>` 可用于 pin Git marketplace 分支或 tag
   - 不传 selector 时默认解析最近项目根，生成 repo-local marketplace
   - 项目级插件路线生成薄入口到 `<project>/AGENTS.md`
   - 显式 `--global` 时生成 Codex personal marketplace 到 `~/.agents/plugins/marketplace.json`
   - 显式 `--global` 时生成薄入口到 `~/.codex/AGENTS.md`
-  - 显式 `--global` 时生成插件到 `~/.codex/plugins/zc-toolkit/`，并生成 custom agents 到 `~/.codex/agents/`
+  - 显式 `--global` 时生成插件到 `~/.codex/plugins/zc-toolkit/`，plugin-native agents 位于插件自己的 `agents/`
   - 插件内 skill 使用无前缀目录和 frontmatter，例如 `skills/start/SKILL.md`、`skills/sdd-tdd-workflow/SKILL.md`
-  - 插件路线的 `AGENTS.md` 只保留全局规则、入口映射和文件索引，入口写成 `$start` / `$sdd-tdd`；传统直装的 `AGENTS.md` 继续写成 `$zc-start` / `$zc-sdd-tdd`
-  - 追加 `--force` 时会先清理目标插件的 `skills/` 目录，再写入当前版本，避免旧命名残留
-  - 生成 `.codex/config.toml` / `~/.codex/config.toml`，作为 `zc` 管理的 custom agent role 注册配置
+  - 插件同时生成 `commands/<command>.md` 和 `agents/<agent>.md`
+  - 插件路线的 `AGENTS.md` 只保留全局规则、入口映射和文件索引，入口写成 `$zc-toolkit:start` / `$zc-toolkit:sdd-tdd`；传统直装的 `AGENTS.md` 继续写成 `$zc-start` / `$zc-sdd-tdd`
+  - 追加 `--force` 时会先清理目标插件的 `commands/`、`skills/`、`agents/` 受管目录，再写入当前版本，避免旧命名残留
   - `--uninstall` 删除 zc 生成的本地 plugin marketplace bundle，包括 `marketplace.json`、薄入口 `AGENTS.md` 和 `plugins/zc-toolkit/`
-  - `--uninstall` 默认保留 custom agents；如果需要一起清理，显式追加 `--include-agents`
+  - `--include-agents` 只用于清理传统直装或兼容流程留下的 TOML agents
   - 不加 `--force` 时，内容已经被用户改过的薄入口、marketplace 文件或插件目录内文件会跳过；插件目录内存在未知文件时也会跳过，避免误删手工维护内容
-  - Git marketplace 注册模式不支持 `--uninstall`；官方 CLI 暂无稳定 remove 命令时，仍应在 Codex 插件界面或官方命令面处理注册状态
+  - 当前 Codex CLI 缺少稳定 `plugin` 子命令时，只有注册动作会降级到旧 marketplace 命令；安装、状态、刷新和卸载会提示先升级 Codex
   - 也可以显式使用 `--project` 或 `--dir <marketplace-root>`；`platform plugin codex --dir` 指向 repo/personal marketplace bundle root，不是 Codex home。如果要直接维护 custom agents，使用 `platform agents codex --dir <codex-home-or-project-root>`
 - `platform agents codex`
-  - 独立维护 Codex custom agents，不依赖官方 marketplace 是否支持 agent 安装
+  - 独立维护传统 `[agents.*]` TOML roles，不替代 plugin-native agents
   - 默认动作是 `--sync`，会更新当前清单内的 `zc-*.toml` 和 `config.toml` 中的 `[agents.zc_*]`
   - `--status` 检查缺失、漂移和过期 `zc-*.toml`
   - `--prune` 在同步时删除当前清单外的过期 zc agent 文件

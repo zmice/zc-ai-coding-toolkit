@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import {
   attachPlanMetadata,
+  createAttachmentArtifacts,
   createMarkdownAgentArtifact,
   createMarkdownCommandArtifact,
   createArtifactMetadata,
@@ -192,6 +193,52 @@ describe("@zmice/platform-core", () => {
         tools: asset.tools,
       }).content,
       '---\nname: "zc-alpha"\ndescription: "Alpha summary"\ntools:\n  - "read"\n---\n\nAlpha body\n',
+    );
+  });
+
+  it("creates supporting-file artifacts beside a generated skill", () => {
+    const asset = {
+      id: "skill:alpha",
+      kind: "skill",
+      platforms: ["codex"],
+      attachments: [
+        {
+          relativePath: "assets/references/guide.md",
+          contents: "# Guide\n",
+        },
+      ],
+    } as const;
+
+    assert.deepEqual(
+      createAttachmentArtifacts({
+        directory: "skills/alpha",
+        asset,
+      }),
+      [
+        {
+          path: "skills/alpha/references/guide.md",
+          content: "# Guide\n",
+        },
+      ],
+    );
+  });
+
+  it("rejects supporting-file paths that escape the generated skill directory", () => {
+    const asset = {
+      id: "skill:alpha",
+      kind: "skill",
+      platforms: ["codex"],
+      attachments: [
+        {
+          relativePath: "assets/../outside.md",
+          contents: "unsafe",
+        },
+      ],
+    } as const;
+
+    assert.throws(
+      () => createAttachmentArtifacts({ directory: "skills/alpha", asset }),
+      /不安全的附件路径/,
     );
   });
 });

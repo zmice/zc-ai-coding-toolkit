@@ -21,6 +21,7 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 
 - Do not mirror the upstream layout directly into `packages/toolkit`.
 - Prefer absorbing durable workflow patterns over copying prompt wording verbatim.
+- Exact or substantial copied material must retain the upstream MIT notice in generated skill attachments; repository-level attribution is recorded in `THIRD_PARTY_NOTICES.md`.
 
 ## Snapshot Baseline
 
@@ -35,10 +36,38 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 
 ## Latest Remote Evidence
 
-- remote head: `aba7c4e9695c363e65cb59effe926c7f1d1abe3d`
-- observed date: 2026-07-02
-- evidence: `pnpm upstream -- report all --format md --with-remote`
-- finding: registered `skills` / `commands` paths changed in 12 files, with notable updates to code review, planning, spec-driven development, using-agent-skills, and observability wording.
+- remote head: `7829ffd90d973b6325f5f12f1b1226dcace74443`
+- observed date: 2026-07-28
+- evidence: `references/snapshots/agent-skills/2026-07-28T08-27-50-843Z-2026-07-28-review.json`
+- comparison baseline: `d187883b7d761265309cdcc0f202cc76b4b3fb06`
+- finding: registered content and adjacent governance assets changed across 101 files, including 24 deterministic/behavioral eval cases, 45 fixtures, a three-tier eval runner, Definition of Done guidance, validator hardening, dependency upgrade discipline, observability guidance, and ecosystem-neutral command examples.
+
+## 2026-07-28 Review Outcome
+
+Already absorbed in this review:
+
+- Restored the upstream accessibility, security, and performance checklists as per-skill supporting assets instead of always-loaded body content.
+- Added the upstream MIT notice beside every copied checklist so Codex, Qwen, OpenCode, and vendored CLI outputs carry attribution with the material.
+- Preserved progressive disclosure by emitting those assets beside each generated `SKILL.md`.
+- Added a manifest lint error for missing local supporting-file references so broken `references/*.md` links block release.
+- Propagated toolkit attachments through Codex, Qwen, and OpenCode skill-directory generation.
+- Absorbed the latest ecosystem-aware dependency installation boundary and install-script gate through the restored security checklist.
+- Added a localized `observability-and-instrumentation` skill and progressive-disclosure checklist covering on-call questions, structured logs, RED/USE metrics, trace continuity, bounded cardinality, symptom alerts, and induced-failure verification.
+- Hardened `toolkit lint` so headings and asset/support-file references inside fenced examples no longer satisfy governance checks or create false dead-reference findings.
+
+High-value follow-up candidates:
+
+- Adopt the three-tier eval model: structural lint in CI, deterministic trigger/routing checks in CI, and fixture-backed behavioral evals on demand.
+- Add deterministic trigger/routing checks as the next layer above structural lint, including positive prompts, negative ownership, collision thresholds, and a ratcheted rank-1 floor.
+- Continue `toolkit lint` hardening for negated activation phrases; keep policy logic testable and separate from filesystem traversal.
+- Extend code review dependency discipline so upgrades require changelog review, one-package-at-a-time isolation, lockfile diff review, and before/after behavior tests.
+
+Already covered locally:
+
+- Definition of Done is already separated from per-task acceptance criteria in `planning-and-task-breakdown`.
+- Structural remedies are already present in `code-review-and-quality`, including explicit fixes for repeated branching, feature leakage into shared modules, and complexity relocation.
+- Doubt handling is already covered by engineering principles plus bounded reviewer/agent loops; a separate recursive orchestration skill is unnecessary.
+- Interview-style clarification remains covered by `idea-refine` and `product-analysis`.
 
 ## Extractable Upgrades
 
@@ -64,6 +93,7 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 
 ## Recommended Phase
 
-- Phase 1: start/workflow routing wording plus meta-skill/context-engineering documentation heuristics and local skill-name consistency.
-- Phase 2: manifest-aware toolkit lint coverage for discovery budgets, activation sections, body presence, and explicit asset references.
-- Phase 3: evaluate a dedicated Gemini platform adapter if there is user demand.
+- Phase 1: complete the supporting-asset distribution and dead local-reference gate.
+- Phase 2: design a platform-neutral trigger/routing eval schema and CI-safe deterministic runner before importing behavioral execution machinery.
+- Phase 3: add fixture-backed behavioral evals for the highest-risk workflow skills after the deterministic routing layer is stable.
+- Phase 4: evaluate a dedicated Gemini platform adapter only if there is user demand.

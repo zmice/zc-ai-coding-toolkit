@@ -80,6 +80,65 @@ describe("loadToolkitAssetUnit", () => {
     assert.ok(unit.attachments.length >= 0);
     assert.deepEqual(unit.meta.platforms, ["qwen", "codex", "claude", "opencode"]);
   });
+
+  it("loads supporting reference files from the asset directory", async () => {
+    const contentRoot = resolveToolkitContentRoot();
+    const unit = await loadToolkitAssetUnit(
+      join(contentRoot, "skills", "frontend-ui-engineering")
+    );
+
+    assert.deepEqual(
+      unit.attachments.map((attachment) => attachment.relativePath),
+      [
+        "assets/references/accessibility-checklist.md",
+        "assets/references/LICENSE-agent-skills.txt",
+      ]
+    );
+    assert.match(
+      unit.attachments.find((attachment) =>
+        attachment.relativePath.endsWith("accessibility-checklist.md"))?.contents ?? "",
+      /# Accessibility Checklist/,
+    );
+    assert.match(
+      unit.attachments.find((attachment) =>
+        attachment.relativePath.endsWith("LICENSE-agent-skills.txt"))?.contents ?? "",
+      /Copyright \(c\) 2025 Addy Osmani/,
+    );
+  });
+
+  it("ships the upstream license beside every copied agent-skills checklist", async () => {
+    const contentRoot = resolveToolkitContentRoot();
+
+    for (const skillName of [
+      "frontend-ui-engineering",
+      "code-review-and-quality",
+      "security-and-hardening",
+    ]) {
+      const unit = await loadToolkitAssetUnit(
+        join(contentRoot, "skills", skillName),
+      );
+      const notice = unit.attachments.find(
+        (attachment) =>
+          attachment.relativePath === "assets/references/LICENSE-agent-skills.txt",
+      );
+
+      assert.match(notice?.contents ?? "", /Copyright \(c\) 2025 Addy Osmani/);
+    }
+  });
+
+  it("loads observability guidance through a progressive-disclosure attachment", async () => {
+    const contentRoot = resolveToolkitContentRoot();
+    const unit = await loadToolkitAssetUnit(
+      join(contentRoot, "skills", "observability-and-instrumentation")
+    );
+
+    assert.equal(unit.meta.source?.upstream, "agent-skills");
+    assert.deepEqual(
+      unit.attachments.map((attachment) => attachment.relativePath),
+      ["assets/references/observability-checklist.md"]
+    );
+    assert.match(unit.body, /references\/observability-checklist\.md/);
+  });
 });
 
 describe("loadToolkitContentTree", () => {

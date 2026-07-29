@@ -7,6 +7,7 @@ interface ManifestAssetInput {
   id?: string;
   meta?: Partial<ToolkitManifest["assets"][number]["meta"]>;
   body?: string;
+  attachments?: ToolkitManifest["assets"][number]["attachments"];
 }
 
 const adaptedAgentSkillsSource = {
@@ -45,7 +46,7 @@ function makeManifestWithAssets(
         ...asset.meta
       },
       body: asset.body ?? "## 何时使用\n\n- 测试场景\n",
-      attachments: [],
+      attachments: asset.attachments ?? [],
       source: {
         directory: `/tmp/toolkit/${assetId}`,
         meta: `/tmp/toolkit/${assetId}/meta.yaml`,
@@ -211,6 +212,28 @@ describe("lintToolkitManifest", () => {
     assert.equal(result.issues[0]?.rule, "missing-activation-section");
   });
 
+  it("does not let headings inside fenced examples satisfy skill structure checks", () => {
+    const result = lintToolkitManifest(
+      makeManifestWithAssets([
+        {
+          body: "```md\n## 何时使用\n\n这里只是示例\n```\n",
+          meta: {
+            tier: "core",
+            audience: "default",
+            stability: "stable",
+            description: "中文摘要",
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        }
+      ])
+    );
+
+    assert.deepEqual(
+      result.issues.map((issue) => issue.rule),
+      ["missing-body-sections", "missing-activation-section"]
+    );
+  });
+
   it("warns when explicit cross-asset references point nowhere", () => {
     const result = lintToolkitManifest(
       makeManifestWithAssets([
@@ -232,6 +255,88 @@ describe("lintToolkitManifest", () => {
     assert.equal(result.issues[0]?.rule, "unknown-explicit-asset-reference");
   });
 
+  it("errors when a local supporting-file reference has no matching attachment", () => {
+    const result = lintToolkitManifest(
+      makeManifestWithAssets([
+        {
+          body: [
+            "## 何时使用",
+            "",
+            "详细清单见 `references/accessibility-checklist.md`。"
+          ].join("\n"),
+          meta: {
+            tier: "core",
+            audience: "default",
+            stability: "stable",
+            description: "中文摘要",
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        }
+      ])
+    );
+
+    assert.equal(result.summary.errors, 1);
+    assert.equal(result.issues[0]?.rule, "missing-local-support-file");
+  });
+
+  it("ignores asset and supporting-file references inside fenced examples", () => {
+    const result = lintToolkitManifest(
+      makeManifestWithAssets([
+        {
+          body: [
+            "## 何时使用",
+            "",
+            "```md",
+            "Use `missing-skill` skill.",
+            "Read `references/missing.md`.",
+            "```",
+            ""
+          ].join("\n"),
+          meta: {
+            tier: "core",
+            audience: "default",
+            stability: "stable",
+            description: "中文摘要",
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        }
+      ])
+    );
+
+    assert.equal(result.summary.warnings, 0);
+    assert.equal(result.summary.errors, 0);
+  });
+
+  it("accepts a local supporting-file reference backed by an attachment", () => {
+    const result = lintToolkitManifest(
+      makeManifestWithAssets([
+        {
+          body: [
+            "## 何时使用",
+            "",
+            "详细清单见 `references/accessibility-checklist.md`。"
+          ].join("\n"),
+          attachments: [
+            {
+              relativePath: "assets/references/accessibility-checklist.md",
+              contents: "# Accessibility Checklist\n"
+            }
+          ],
+          meta: {
+            tier: "core",
+            audience: "default",
+            stability: "stable",
+            description: "中文摘要",
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        }
+      ])
+    );
+
+    assert.equal(result.summary.warnings, 0);
+    assert.equal(result.summary.errors, 0);
+  });
+
   it("warns when route graph targets point nowhere", () => {
     const result = lintToolkitManifest(
       makeManifestWithAssets([
@@ -240,10 +345,8 @@ describe("lintToolkitManifest", () => {
           body: [
             "## 何时使用",
             "",
-            "```",
             "Task arrives",
-            "  └── Browser-based? ───────────→ missing-skill",
-            "```"
+            "  └── Browser-based? ───────────→ missing-skill"
           ].join("\n"),
           meta: {
             tier: "core",

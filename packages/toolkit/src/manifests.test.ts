@@ -196,9 +196,17 @@ describe("loadToolkitManifest", () => {
       manifest.byId["skill:parallel-agent-dispatch"]?.body ?? "",
       /dispatch_contract[\s\S]*Bounded Loop[\s\S]*Loop budget/
     );
+    const subagentSkill = manifest.byId["skill:subagent-driven-development"];
     assert.match(
-      manifest.byId["skill:subagent-driven-development"]?.body ?? "",
-      /Bounded Loop[\s\S]*Loop budget:[\s\S]*controller decision/
+      subagentSkill?.body ?? "",
+      /references\/execution-protocol\.md[\s\S]*Bounded Fix Loop/
+    );
+    const executionProtocol = subagentSkill?.attachments.find(
+      (attachment) => attachment.relativePath === "assets/references/execution-protocol.md"
+    );
+    assert.match(
+      executionProtocol?.contents ?? "",
+      /loop budget:[\s\S]*controller decision/i
     );
     assert.match(
       manifest.byId["skill:team-orchestration"]?.body ?? "",

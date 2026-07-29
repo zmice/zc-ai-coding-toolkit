@@ -1,0 +1,23 @@
+kind: skill
+name: observability-and-instrumentation
+title: 可观测性与埋点
+description: 为生产代码设计结构化日志、指标、追踪与告警。适用于新增服务、接口、任务、外部调用或重试链路，也适用于事故后发现现有遥测无法解释系统行为的场景。
+tier: recommended
+audience: advanced
+stability: stable
+suggests:
+  - skill:security-and-hardening
+  - skill:shipping-and-launch
+  - skill:verification-before-completion
+platforms:
+  - qwen
+  - codex
+  - claude
+  - opencode
+source:
+  upstream: agent-skills
+  strategy: adapted
+  origin_name: observability-and-instrumentation
+  origin_path: skills/observability-and-instrumentation/SKILL.md
+  origin_id: skill:observability-and-instrumentation
+  notes: 吸收上游从值班问题出发、RED/USE、低基数标签、症状告警和故障注入验证方法，并按本仓中文化与渐进披露规则整理。

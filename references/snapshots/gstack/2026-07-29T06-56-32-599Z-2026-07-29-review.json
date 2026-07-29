@@ -1,0 +1,40 @@
+{
+  "upstream": "gstack",
+  "captured_at": "2026-07-29T06:56:32.599Z",
+  "label": "2026-07-29-review",
+  "metadata": {
+    "title": "GStack",
+    "kind": "github-public-repo",
+    "status": "active",
+    "owner": "codex",
+    "source_url": "https://github.com/garrytan/gstack.git",
+    "source_paths": [
+      "README.md",
+      "CLAUDE.md",
+      "package.json",
+      "agents",
+      "browser-skills",
+      "careful",
+      "context-restore",
+      "context-save",
+      "devex-review",
+      "docs",
+      "investigate",
+      "plan-devex-review",
+      "qa",
+      "review",
+      "skillify",
+      "spec"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/garrytan/gstack.git",
+    "checked_at": "2026-07-29T06:56:32.601Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "a3259400a366593e0c909dd9ac3e59752efd2488"
+  },
+  "notes": {
+    "path": "references/notes/gstack.md",
+    "content": "# GStack\n\nSource: `https://github.com/garrytan/gstack`\n\n## Status\n\nRegistered from historical upstream tracking. Initial baseline snapshot captured in the new governance layer.\n\n## Historical Role\n\n- Commit history previously tracked it as an architecture reference.\n- It influenced strategic filtering, UX review, and \"role embedded in command\" style decisions.\n\n## Expected Downstream Value\n\n- UX and workflow review heuristics\n- Command-layer product framing\n- Prompt architecture references for design-heavy tasks\n\n## Boundaries\n\n- Treat it as a reference for behavior and architecture, not as a direct source tree to replicate.\n\n## Snapshot Baseline\n\n- baseline: `references/snapshots/gstack/2026-04-18T18-02-14-539Z-2026-04-19-baseline.json`\n- current governance status: `active`\n\n## Latest Reviewed Upstream\n\n- remote head: `026751ea2012ec7cbedc149ba615929a20026501`\n- observed date: 2026-05-18\n- notable upstream change: upstream advanced through v1.40.x with plan-mode `EXIT PLAN MODE` gating, Implementation Tasks aggregation, stronger stop-gate tests, browser sanitization, and additional gbrain hardening.\n\n## Latest Remote Evidence\n\n- remote head: `11de390be1be6849eb9a15f91ff4922dd16c589a`\n- observed date: 2026-07-02\n- evidence: `pnpm upstream -- report all --format md --with-remote`\n- finding: registered `docs` paths changed in 2 files, mainly documenting offline diagram rendering, Mermaid / Excalidraw output, HTML / DOCX export, and strict placeholder failure behavior.\n\n## Extractable Upgrades\n\n- Keep plan-mode questions few, outcome-framed, and preference-aware.\n- Treat review/eval evidence as a plan artifact before claiming readiness.\n- Diff-based test selection and real PTY E2E are useful as future verification architecture references.\n- Add `command:start` tie-breakers for when to ask versus when to proceed: ask only for high-stakes ambiguity, otherwise choose the conservative workflow and state the assumption.\n- Add a privacy / persistence stop-gate rule: anything that would write cross-session memory, sync across machines, or mutate project routing files must be explicit and opt-in.\n- Extend plan-review and task-planning content so review findings become plan artifacts with evidence, risks, and verification gates.\n- Adopt the useful part of document-generation work: choose the document type first, then write; do not mix tutorial, how-to, reference, explanation, and ADR purposes in one artifact.\n- Keep gbrain as a reference for memory architecture tradeoffs only; cross-machine memory sync remains opt-in and out of the default toolkit runtime.\n- Upgrade `planning-and-task-breakdown`, `multi-perspective-review`, and `plan-review` wording so route-changing findings trigger explicit stop gates and review findings become P1/P2/P3 Implementation Tasks.\n- Diagram/document export ideas are useful for a future doc-generation surface: keep source diagrams editable, render offline, fail loudly in CI for broken assets, and preserve accessibility labels.\n\n## Non-Adoption Boundary\n\n- Do not import gstack telemetry, auto-upgrade, browser runtime, heavy preambles, or paid eval harness into `zc`.\n- Do not make plan-mode writes part of default `zc` behavior.\n- Do not adopt gbrain-style cross-machine memory sync or question-preference storage as a default runtime capability.\n- Do not import the document-generation skill wholesale; this repo already has `documentation-and-adrs` and `release-documentation-sync`.\n- Do not copy gstack's exact plan-mode phrasing; this repo keeps the behavior in toolkit content as `stop gate` and `Implementation Tasks` artifacts.\n\n## Recommended Phase\n\n- Phase 1: extract wording and workflow discipline into documentation only, including plan-mode / stop-gate report shape.\n- Phase 3: revisit PTY/E2E harness ideas if `zc team` needs end-to-end runtime tests.\n\n## Latest Remote Evidence 2026-07-29\n\n- remote head: `a3259400a366593e0c909dd9ac3e59752efd2488`\n- evidence: remote HEAD lookup followed by an independent shallow clone after the governance report's temporary content-fetch failure\n- registry correction: the old `prompts` and `commands` paths no longer exist; tracking now follows current skill, agent, review, QA, context, and documentation surfaces\n- finding: upstream has become a large product runtime with browser, telemetry, memory, document, iOS, deploy, and model-overlay systems\n\n## Current Decision\n\n- Continue absorbing only stop-gate, evidence-artifact, and developer-experience review mechanics.\n- Do not import the browser runtime, telemetry, gbrain sync, model overlays, auto-update, or platform-specific skill catalog.\n"
+  }
+}

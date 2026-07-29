@@ -263,3 +263,38 @@ source:
   - 它依赖谁
   - 它和什么冲突
   - 它是不是核心内容
+
+## 2026-07-29 Upstream Review
+
+本轮对全部已登记 upstream 执行远端 HEAD 与登记路径 diff，并为发生变化或新增候选的项目追加不可变 snapshot。结论：
+
+- `agent-skills`、`andrej-karpathy-skills`：远端 HEAD 未变化，保留现有基线
+- `superpowers`：吸收 plan-scoped scratch / ledger、原 producer 优先返工、scoped re-review、bounded circuit breaker 和 high-signal test 机制
+- `everything-claude-code`：仅吸收大目录治理、平台边界与渐进式披露经验，不复制整套运行时
+- `gstack`：修正已经失效的 `source_paths`，保留产品化入口和 DevEx 视角，不引入其浏览器运行时
+
+联网候选按“维护主体、活跃度、可验证来源、许可证边界、与当前缺口的互补性”筛选：
+
+| Upstream | 采用状态 | 吸收内容 | 边界 |
+|---|---|---|---|
+| `openai/plugins` | active | Codex plugin 原生 `commands / skills / agents` 结构，skill/plugin 评测闭环 | 不复制 connector、凭据、MCP 二进制或第三方插件内容 |
+| `anthropics/skills` | active | baseline/candidate 行为对照、客观断言与人工判断分离 | 每个目录单独核对许可证，不复制文档类 skill |
+| `github/awesome-copilot` | active | metadata、链接、目录身份和资产体量的机器校验 | 不镜像社区 prompt 大目录，不套用 Copilot 路径约定 |
+| `vercel-labs/agent-skills` | reference-only content | 渐进式披露、脚本 stdout/stderr、清理与失败契约 | reviewed snapshot 无统一顶层许可证，具体内容不复制 |
+
+明确拒绝：
+
+- `openai/skills` 已被官方标为 deprecated，并指向 `openai/plugins`，不再登记为 active upstream
+- `wshobson/agents` 虽然目录规模和社区关注度较高，但与现有资产重叠且会显著增加发现噪声，只作为市场观察，不纳入 registry
+- 热度不是内容准入条件；不能确认许可证或需要平台专属运行时的内容，只吸收抽象机制或保留观察记录
+
+### Delivered Upgrade
+
+- 新增 `skill-authoring-and-evaluation`，把结构 lint 扩展为 baseline/candidate 行为评测
+- `using-agent-skills` 与 `subagent-driven-development` 缩短常驻正文，把完整协议移入一层 reference
+- TDD 增加高信号测试清单：可证伪、独立期望和 mutation sanity check
+- Codex plugin bundle 原生生成 `commands/*.md`、`skills/*/SKILL.md`、`agents/*.md`
+- local marketplace 不再通过 `.codex/config.toml` 注册 plugin agent；传统 direct install 仍保留 TOML companion 兼容路径
+- `--force` 更新同时清理受管的 plugin `commands / skills / agents` 目录，避免旧资产残留
+
+后续若要引入可执行 benchmark harness，必须先固定跨模型报告 schema、成本上限和维护责任人；当前只交付可移植的评测契约。

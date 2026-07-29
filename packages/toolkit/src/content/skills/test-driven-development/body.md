@@ -49,6 +49,8 @@ Bug report -> Reproduction test fails -> Fix -> Reproduction test passes -> Regr
 - mock 只用于慢、不可控或有副作用的外部依赖。
 - 每个测试失败时应指向一个清晰原因。
 
+写复杂断言、mock 或测试 helper 前，读取 `references/high-signal-tests.md`，先命名测试要捕获的真实 break，并做独立期望与 mutation check。
+
 ## 反模式
 
 - 先写实现，再补一个永远会过的测试。

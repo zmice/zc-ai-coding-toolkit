@@ -10,6 +10,7 @@ suggests:
   - skill:spec-driven-development
   - skill:debugging-and-error-recovery
   - skill:code-review-and-quality
+  - skill:skill-authoring-and-evaluation
 platforms:
   - qwen
   - codex

@@ -5,14 +5,28 @@ export interface CodexContextExistingFile {
   readonly content: string | null;
 }
 
+export interface CodexContextModuleSummary {
+  readonly path: string;
+  readonly name?: string;
+  readonly description?: string;
+  readonly scripts?: readonly string[];
+}
+
 export interface CodexContextInitSnapshot {
   readonly root: string;
   readonly projectName: string;
+  readonly projectSummary?: string;
+  readonly readmeTitle?: string;
+  readonly readmeSummary?: string;
   readonly packageManager: string;
   readonly scripts: Readonly<Record<string, string>>;
   readonly directories: readonly string[];
+  readonly moduleSummaries?: readonly CodexContextModuleSummary[];
   readonly docPaths?: readonly string[];
   readonly entryFiles?: readonly string[];
+  readonly generatedPaths?: readonly string[];
+  readonly sourcePaths?: readonly string[];
+  readonly unresolvedQuestions?: readonly string[];
   readonly existingFiles?: readonly CodexContextExistingFile[];
   readonly initializedAt?: string;
   readonly previousGeneratedAt?: string;
@@ -56,6 +70,35 @@ function normalizePathForDisplay(path: string): string {
   return path.split("\\").join("/");
 }
 
+function truncateText(value: string, maxLength = 220): string {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+function formatInlineList(values: readonly string[], emptyFallback: string): string {
+  if (values.length === 0) {
+    return emptyFallback;
+  }
+
+  return values.map((value) => `\`${value}\``).join(", ");
+}
+
+function formatProjectSummary(input: CodexContextInitSnapshot): string {
+  const candidates = [
+    input.projectSummary,
+    input.readmeSummary,
+    input.readmeTitle ? `${input.readmeTitle} 项目` : undefined,
+  ].filter((value): value is string => Boolean(value && value.trim().length > 0));
+
+  return candidates.length > 0
+    ? truncateText(candidates[0]!)
+    : "尚未从 README 或 package metadata 提取到稳定项目定位；先读 `.codex/context/project.md` 的证据和待确认项。";
+}
+
 function getInitializedAt(input: CodexContextInitSnapshot): string {
   return input.initializedAt ?? input.previousGeneratedAt ?? input.generatedAt;
 }
@@ -94,11 +137,13 @@ function renderCliVerificationHint(packageManager: string): string {
   return "- CLI 改动：进入 `apps/cli` 后按该包的 `test` script 运行定向测试。";
 }
 
-function renderAgentsContextBlock(): string {
+function renderAgentsContextBlock(input: CodexContextInitSnapshot): string {
   return [
     agentsBlockStart,
-    "## zc 项目上下文",
+    "## 项目上下文",
     "",
+    `- 项目：\`${input.projectName}\``,
+    `- 速览：${formatProjectSummary(input)}`,
     "- 项目上下文索引：`.codex/context/project.md`",
     "- 命令与验证索引：`.codex/context/commands.md`",
     "- 模块入口索引：`.codex/context/modules/README.md`",
@@ -109,8 +154,8 @@ function renderAgentsContextBlock(): string {
   ].join("\n");
 }
 
-function mergeAgentsContextBlock(existing: string | null): string {
-  const block = renderAgentsContextBlock();
+function mergeAgentsContextBlock(existing: string | null, input: CodexContextInitSnapshot): string {
+  const block = renderAgentsContextBlock(input);
   if (!existing || existing.trim().length === 0) {
     return `${block}\n`;
   }
@@ -134,6 +179,35 @@ function renderProjectContext(input: CodexContextInitSnapshot): string {
   const entryFileLines = (input.entryFiles ?? []).length > 0
     ? (input.entryFiles ?? []).map((path) => `- \`${path}\``)
     : ["- 未检测到常见入口文件；先读根目录文件和任务相关源码。"];
+  const moduleLines = (input.moduleSummaries ?? []).length > 0
+    ? (input.moduleSummaries ?? []).map((module) => {
+      const details = [
+        module.name ? `package: \`${module.name}\`` : null,
+        module.description ? truncateText(module.description, 140) : null,
+        module.scripts && module.scripts.length > 0
+          ? `scripts: ${formatInlineList(module.scripts, "")}`
+          : null,
+      ].filter(Boolean).join("；");
+
+      return details.length > 0
+        ? `- \`${module.path}\`：${details}`
+        : `- \`${module.path}\``;
+    })
+    : ["- 未检测到带 package metadata 的模块；按目录入口和任务相关文件继续。"];
+  const evidenceLines = (input.sourcePaths ?? []).length > 0
+    ? (input.sourcePaths ?? []).map((path) => `- \`${path}\``)
+    : [
+      ...new Set([
+        ...(input.entryFiles ?? []),
+        ...(input.docPaths ?? []),
+      ]),
+    ].map((path) => `- \`${path}\``);
+  const generatedPathLines = (input.generatedPaths ?? []).length > 0
+    ? (input.generatedPaths ?? []).map((path) => `- \`${path}\``)
+    : ["- 未检测到常见 generated/dist 目录；仍按具体任务确认真实源码边界。"];
+  const questionLines = (input.unresolvedQuestions ?? []).length > 0
+    ? (input.unresolvedQuestions ?? []).map((question) => `- ${question}`)
+    : ["- 暂无自动识别的待确认项；遇到缺失信息时先查 README/docs/package metadata。"];
   const initializedAt = getInitializedAt(input);
 
   return `${codexContextManagedMarker}
@@ -141,6 +215,13 @@ function renderProjectContext(input: CodexContextInitSnapshot): string {
 
 Initialized by \`zc context init\` at ${initializedAt}.
 Last refreshed at ${input.generatedAt}.
+
+## 项目速览
+
+- 项目：\`${input.projectName}\`
+- 定位：${formatProjectSummary(input)}
+- README 标题：${input.readmeTitle ? `\`${input.readmeTitle}\`` : "未检测到"}
+- README 摘要：${input.readmeSummary ? truncateText(input.readmeSummary) : "未检测到稳定摘要"}
 
 ## 读取顺序
 
@@ -153,6 +234,10 @@ Last refreshed at ${input.generatedAt}.
 - root: \`${normalizePathForDisplay(input.root)}\`
 - package manager: \`${input.packageManager}\`
 
+## 主要模块
+
+${moduleLines.join("\n")}
+
 ## 入口文件
 
 ${entryFileLines.join("\n")}
@@ -160,6 +245,18 @@ ${entryFileLines.join("\n")}
 ## 检测到的入口目录
 
 ${directoryLines.join("\n")}
+
+## 证据来源
+
+${evidenceLines.length > 0 ? evidenceLines.join("\n") : "- 未记录可验证的源码或项目说明文件。"}
+
+## 默认避开
+
+${generatedPathLines.join("\n")}
+
+## 待确认项
+
+${questionLines.join("\n")}
 
 ## 上下文边界
 
@@ -204,9 +301,23 @@ ${renderCliVerificationHint(input.packageManager)}
 }
 
 function renderModulesContext(input: CodexContextInitSnapshot): string {
-  const moduleLines = input.directories.length > 0
-    ? input.directories.map((dir) => `- \`${dir}\`：按任务进入后只读取相关子目录、README 和测试。`)
-    : ["- 当前未检测到常见模块目录；从根 README / AGENTS.md 继续。"];
+  const moduleLines = (input.moduleSummaries ?? []).length > 0
+    ? (input.moduleSummaries ?? []).map((module) => {
+      const details = [
+        module.name ? `package: \`${module.name}\`` : null,
+        module.description ? truncateText(module.description, 140) : null,
+        module.scripts && module.scripts.length > 0
+          ? `scripts: ${formatInlineList(module.scripts, "")}`
+          : null,
+      ].filter(Boolean).join("；");
+
+      return details.length > 0
+        ? `- \`${module.path}\`：${details}`
+        : `- \`${module.path}\`：按任务进入后只读取相关子目录、README 和测试。`;
+    })
+    : input.directories.length > 0
+      ? input.directories.map((dir) => `- \`${dir}\`：按任务进入后只读取相关子目录、README 和测试。`)
+      : ["- 当前未检测到常见模块目录；从根 README / AGENTS.md 继续。"];
   const initializedAt = getInitializedAt(input);
 
   return `${codexContextManagedMarker}
@@ -283,10 +394,13 @@ function renderManifest(input: CodexContextInitSnapshot, artifacts: readonly str
     root: normalizePathForDisplay(input.root),
     disclosure: "progressive",
     artifacts,
-    sourcePaths: [
+    sourcePaths: [...new Set([
+      ...(input.sourcePaths ?? []),
       ...(input.entryFiles ?? []),
       ...(input.docPaths ?? []),
-    ],
+    ])],
+    generatedPaths: input.generatedPaths ?? [],
+    unresolvedQuestions: input.unresolvedQuestions ?? [],
     maintenanceTriggers: [
       "module layout changed",
       "verification command changed",
@@ -355,7 +469,7 @@ function createContextArtifacts(
   snapshot: CodexContextInitSnapshot,
   existingFileMap: ReadonlyMap<string, string | null>,
 ): readonly CodexContextArtifact[] {
-  const agentsContent = mergeAgentsContextBlock(existingFileMap.get("AGENTS.md") ?? null);
+  const agentsContent = mergeAgentsContextBlock(existingFileMap.get("AGENTS.md") ?? null, snapshot);
   const contextArtifacts: CodexContextArtifact[] = [
     {
       relativePath: "AGENTS.md",

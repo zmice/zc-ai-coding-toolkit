@@ -11,10 +11,10 @@
 - `skills/zc-<skill>/SKILL.md`
 - `agents/zc-<agent>.toml`
 - Codex 项目上下文初始化计划：`AGENTS.md` managed block + `.codex/context/*`
-- 可选 Codex plugin bundle：`.codex-plugin/plugin.json` + `skills/<command-or-skill>/`
-- 可选 Codex marketplace bundle：`.agents/plugins/marketplace.json` + `AGENTS.md` / `.codex/AGENTS.md` + `plugins/zc-toolkit/` / `.codex/plugins/zc-toolkit/` + `.codex/agents/`
+- 可选 Codex plugin bundle：`.codex-plugin/plugin.json` + `commands/` + `skills/` + `agents/` + `assets/zc-agents/`
+- 可选 Codex marketplace bundle：`.agents/plugins/marketplace.json` + `AGENTS.md` / `.codex/AGENTS.md` + `plugins/zc-toolkit/` / `.codex/plugins/zc-toolkit/`
 
-这里的 `.codex/config.toml`、`.codex/agents/`、plugin 和 marketplace bundle 都是 `zc` 当前安装模型的一部分；文档中不要把它们描述成 Codex 的通用 command surface。
+传统 `.codex/config.toml` / `.codex/agents/` 与 plugin-native `commands/` / `agents/` 是两条不同安装面；不要把用户级 TOML role 误写成插件必需步骤。
 
 ## 边界
 
@@ -32,6 +32,12 @@ zc platform install codex
 zc platform install codex --global
 zc platform plugin codex --git
 zc platform plugin codex --register
+zc platform plugin codex --install
+zc platform plugin codex --status
+zc platform plugin codex --upgrade
+zc platform plugin codex --install --with-agents
+zc platform plugin codex --status --with-agents
+zc platform plugin codex --git --uninstall
 zc platform plugin codex
 zc platform plugin codex --global
 zc platform p codex
@@ -64,43 +70,55 @@ zc platform install codex --plan --json
   - 同时安装 `<path>/agents/zc-<agent>.toml`
 - `generate --bundle codex-plugin --dir <path>`
   - 生成 `<path>/.codex-plugin/plugin.json`
+  - 生成 `<path>/commands/<command>.md`
   - 生成 `<path>/skills/<command>/SKILL.md`
   - 生成 `<path>/skills/<skill>/SKILL.md`
+  - 生成 `<path>/agents/<agent>.md`
   - 插件自身已经提供 `zc-toolkit` 命名空间，因此 skill 名不再额外加 `zc-` 前缀
   - 用于 Codex plugin marketplace / 本地 plugin 打包场景，不替代项目级 `AGENTS.md`
-  - Codex plugin manifest 当前只声明 skills / apps / MCP，不直接打包 custom agents
+  - plugin-level commands / agents 是 manifest 的同级自动发现 surface，不额外虚构 manifest 字段
+  - `assets/zc-agents/manifest.json`、`config/agents.toml` 和 `agents/*.toml` 仅是传统 config-role 兼容 payload；只有显式 `--with-agents` 会消费
 - `plugin codex`
-  - 推荐消费路径是 `plugin codex --git` / `plugin codex --register`，对齐官方 `codex plugin marketplace add`
+  - 推荐消费路径是 `plugin codex --install`，对齐官方 `codex plugin marketplace add` + `codex plugin add`
   - `plugin codex --git` 默认输出 `codex plugin marketplace add zmice/zc-codex-marketplace`
-  - `plugin codex --register` 直接调用 Codex CLI 注册默认 Git marketplace
+  - `plugin codex --register` 直接调用 Codex CLI 注册默认 Git marketplace；旧 CLI 自动兼容 `codex marketplace add`
+  - `plugin codex --install` 注册 marketplace 后安装 `zc-toolkit`
+  - `plugin codex --status` 使用 `codex plugin list --available --json` 检查 installed/available/version/enabled
+  - `plugin codex --upgrade` 刷新 Git marketplace 后检查插件状态，不擅自重装或覆盖用户启用状态
+  - `plugin codex --git --uninstall` 使用 `codex plugin remove` 移除官方安装的 bundle；connector 授权仍需在 ChatGPT Plugins/Apps 中单独处理
+  - plugin-native agents 随官方 lifecycle 安装；`--with-agents` 只为传统 TOML roles 提供兼容编排
+  - 组合安装只从官方 CLI 返回的 `installedPath` 或 `source.path` 精确定位本地插件根并读取 companion；status 可用既有回执续接，升级待应用时 agents 保持不变
+  - companion 回执只拥有 `zc` 写入的 agent 文件；组合卸载不会删除未跟踪的本地 `zc-*.toml`
   - `plugin codex --ref <ref>` 可 pin Git marketplace 分支或 tag
-  - 不使用 `--git` / `--register` 时，才进入本地 marketplace 生成路径
+  - 不使用 Git lifecycle 参数时，才进入本地 marketplace 生成路径
   - 本地生成等价于 `generate codex --bundle codex-marketplace --project` 的短入口
   - 不传 selector 时默认解析最近项目根，生成 repo-local marketplace
   - 项目级插件路线生成薄入口到 `<project>/AGENTS.md`
   - `plugin codex --global` 生成 personal marketplace 到 `~/.agents/plugins/marketplace.json`
   - `plugin codex --global` 生成薄入口到 `~/.codex/AGENTS.md`
-  - `plugin codex --global` 生成插件到 `~/.codex/plugins/zc-toolkit/`，并生成 custom agents 到 `~/.codex/agents/`
-  - 追加 `--force` 时会先清理目标插件的 `skills/` 目录，再写入当前版本，避免旧命名残留
+  - `plugin codex --global` 生成插件到 `~/.codex/plugins/zc-toolkit/`，agents 保留在插件自身目录
+  - 追加 `--force` 时会先清理目标插件的 `commands/`、`skills/`、`agents/` 受管目录，再写入当前版本，避免旧命名残留
   - 也可以显式使用 `plugin codex --project` 或 `plugin codex --dir <repo>`
   - 常用别名是 `p codex`
 - `generate --bundle codex-marketplace --dir <path>`
   - 生成 `<path>/.agents/plugins/marketplace.json`
   - 生成 `<path>/AGENTS.md`
   - 生成 `<path>/plugins/zc-toolkit/.codex-plugin/plugin.json`
+  - 生成 `<path>/plugins/zc-toolkit/commands/<command>.md`
   - 生成 `<path>/plugins/zc-toolkit/skills/<command>/SKILL.md`
   - 生成 `<path>/plugins/zc-toolkit/skills/<skill>/SKILL.md`
-  - 生成 `<path>/.codex/agents/zc-<agent>.toml`
-  - 用于 repo-local marketplace 或后续 git-subdir marketplace 分发；`AGENTS.md` 只保留全局规则、入口映射和文件索引，custom agents 作为 `zc` 管理的 Codex 配置随仓库安装
+  - 生成 `<path>/plugins/zc-toolkit/agents/<agent>.md`
+  - 用于 repo-local marketplace 或后续 git-subdir marketplace 分发；`AGENTS.md` 只保留全局规则、入口映射和文件索引
 - `generate --bundle codex-marketplace --project`
   - 与 `--dir <project-root>` 布局一致，但目录由当前 cwd 向上解析最近项目根得到
 - `generate --bundle codex-marketplace --global`
   - 生成 `~/.agents/plugins/marketplace.json`
   - 生成 `~/.codex/AGENTS.md`
   - 生成 `~/.codex/plugins/zc-toolkit/.codex-plugin/plugin.json`
+  - 生成 `~/.codex/plugins/zc-toolkit/commands/<command>.md`
   - 生成 `~/.codex/plugins/zc-toolkit/skills/<command>/SKILL.md`
   - 生成 `~/.codex/plugins/zc-toolkit/skills/<skill>/SKILL.md`
-  - 生成 `~/.codex/agents/zc-<agent>.toml`
+  - 生成 `~/.codex/plugins/zc-toolkit/agents/<agent>.md`
   - 用于个人级 Codex marketplace；`~/.codex/AGENTS.md` 保留全局默认规则，插件内容保留在 `~/.codex/plugins/zc-toolkit/skills/`
 
 在 Codex 中：
@@ -111,25 +129,25 @@ zc platform install codex --plan --json
   - `$zc-task-plan`
   - `$zc-build`
 - 更完整的方法和专题能力继续通过 `$zc-<skill>` 使用
-- 插件路径通过 `zc-toolkit` 插件命名空间承接，skill 自身使用无前缀名称，例如：
-  - `$start`
-  - `$spec`
-  - `$task-plan`
-  - `$build`
+- 插件路径通过 `zc-toolkit` 插件命名空间承接；skill 目录和 frontmatter 保持无前缀，调用时使用 namespace 限定名，例如：
+  - `$zc-toolkit:start`
+  - `$zc-toolkit:spec`
+  - `$zc-toolkit:task-plan`
+  - `$zc-toolkit:build`
 
 命名空间规则：
 
 - 传统直装保留 `zc-` 前缀，避免污染 Codex 全局 skill 名称
 - 插件安装不再给 skill 额外加 `zc-` 前缀，因为插件本身已经是命名空间
-- custom agents 仍保留 `zc-` / `zc_` 前缀，因为它们写入 `.codex/agents` 和 `config.toml`，不在 plugin skills 命名空间内
+- plugin-native agents 使用插件命名空间；只有传统 TOML agents 保留 `zc-` / `zc_` 前缀
 - 传统直装示例：
   - `zc:start -> $zc-start`
   - `zc:product-analysis -> $zc-product-analysis`
   - `zc:sdd-tdd -> $zc-sdd-tdd`
 - 插件安装示例：
-  - `zc:start -> $start`
-  - `zc:product-analysis -> $product-analysis`
-  - `zc:sdd-tdd -> $sdd-tdd`
+  - `zc:start -> $zc-toolkit:start`
+  - `zc:product-analysis -> $zc-toolkit:product-analysis`
+  - `zc:sdd-tdd -> $zc-toolkit:sdd-tdd`
 
 项目安装 / 全局安装的详细步骤见：
 
@@ -141,8 +159,17 @@ zc platform install codex --plan --json
 
 1. 发布态同步：`scripts/export-codex-marketplace-bundle.mjs` 导出 marketplace 仓库根。
 2. Git 仓库分发：`.github/workflows/publish-codex-marketplace-repo.yml` 同步到 `zmice/zc-codex-marketplace`。
-3. 用户注册：`codex plugin marketplace add zmice/zc-codex-marketplace` 或 `zc platform plugin codex --register`。
-4. 用户更新：`codex plugin marketplace upgrade zc-toolkit`。
+3. 用户安装：`zc platform plugin codex --install`，或依次运行 `codex plugin marketplace add ...` 与 `codex plugin add zc-toolkit@zc-toolkit`。plugin-native agents 随包安装。
+4. 状态检查：`zc platform plugin codex --status`；只有传统 TOML role 兼容场景才使用 `--status --with-agents`。
+5. 目录刷新：`zc platform plugin codex --upgrade`；根据 installed/available 结果在 Plugins 页面确认版本更新。
+
+官方能力依据：
+
+- <https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin>
+- <https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin-marketplace>
+- <https://learn.chatgpt.com/docs/agent-configuration/subagents>
+- <https://developers.openai.com/plugins/build/plugins>
+- <https://github.com/openai/plugins>
 
 本地生成仍保留，用途是开发验证、项目级 curated marketplace 或离线调试：
 
@@ -150,7 +177,7 @@ zc platform install codex --plan --json
 2. 个人级验证：`platform plugin codex --global` 生成 personal marketplace 和 `~/.codex/AGENTS.md` 薄入口。
 3. 仓库内验证：`--bundle codex-marketplace --dir <repo>` 生成 repo-local marketplace 和仓库根 `AGENTS.md` 薄入口。
 
-注意：Codex plugin manifest 当前承载 skills / apps / MCP。`zc` 的 custom agents 仍由 `.codex/config.toml` 和 `.codex/agents/*.toml` 管理，不能假设会随插件安装自动成为 Codex subagent role。
+注意：官方插件仓已给出 plugin-level `commands/`、`agents/` 和 `hooks.json` 实例。`assets/zc-agents/` 不是 native agent 的来源，只是显式 `--with-agents` 消费的传统 config-role 兼容 payload。
 
 ## 验证
 

@@ -45,6 +45,38 @@ const manifest = {
 } as unknown as ToolkitManifestLike;
 
 describe("@zmice/platform-opencode scaffold", () => {
+  it("includes supporting files beside generated skills", () => {
+    const attachmentManifest = {
+      source: "toolkit-manifest",
+      assets: [
+        {
+          id: "skill:alpha",
+          kind: "skill",
+          platforms: ["opencode"],
+          name: "alpha",
+          title: "Alpha skill",
+          body: "See `references/guide.md`.",
+          attachments: [
+            {
+              relativePath: "assets/references/guide.md",
+              contents: "# Guide\n",
+            },
+          ],
+        },
+      ],
+    } as unknown as ToolkitManifestLike;
+
+    const plan = createOpenCodeGenerationPlan(attachmentManifest);
+
+    assert.ok(
+      plan.artifacts.some(
+        (artifact) =>
+          artifact.path === ".opencode/skills/zc-alpha/references/guide.md"
+          && artifact.content === "# Guide\n",
+      ),
+    );
+  });
+
   it("creates a project-scoped generation plan from toolkit assets", () => {
     const plan = createOpenCodeGenerationPlan(manifest);
 

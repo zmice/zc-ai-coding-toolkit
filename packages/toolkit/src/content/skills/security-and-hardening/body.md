@@ -310,6 +310,7 @@ git diff --cached | grep -i "password\|secret\|api_key\|token"
 ## See Also
 
 For detailed security checklists and pre-commit verification steps, see `references/security-checklist.md`.
+The copied checklist's license notice is distributed beside it as `references/LICENSE-agent-skills.txt`.
 
 ## Common Rationalizations
 

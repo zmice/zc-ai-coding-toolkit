@@ -79,7 +79,12 @@
 - 确认没有内部包被误带入发布批次。
 - 确认 CLI 全局安装后仍能执行 `toolkit` / `platform` 相关命令。
 - 确认 GitHub Release 已生成，并包含 Qwen extension release bundle 附件。
-- 确认 `zc-codex-marketplace` 已同步，且 `codex plugin marketplace upgrade zc-toolkit` 可获取最新 marketplace。
+- 确认 `zc-codex-marketplace` 已同步，且 `zc platform plugin codex --upgrade --json` 能刷新 marketplace 并返回 installed/available 状态。
+- 确认 `zc platform plugin codex --install --plan --json` 同时包含 marketplace 注册和 `codex plugin add`。
+- 确认发布 bundle 原生包含 `commands/*.md`、`skills/*/SKILL.md` 和 `agents/*.md`，且本地 marketplace 生成不额外写用户级 agent config。
+- 确认 `zc platform plugin codex --install --with-agents --plan --json` 同时声明 plugin 与 companion agent 两个阶段，但不会写入本机。
+- 确认发布 bundle 的 `assets/zc-agents/manifest.json` 中 plugin version、内容指纹和 artifact hashes 与实际文件一致。
+- 确认 `zc platform plugin codex --status --with-agents --json` 能聚合官方 plugin 状态和 companion 回执，且 status 不写文件。
 - 确认 `zc platform plugin codex --git --json` 输出的默认源仍是 `zmice/zc-codex-marketplace`。
 - 确认 `zc platform plugin codex --global --uninstall --plan --json` 能输出本地 plugin bundle 卸载计划，且默认不删除 custom agents。
 - 确认 `zc platform agents codex --global --status --json` 能识别当前 custom agents 状态；如有过期 zc agent，运行 `zc platform agents codex --global --sync --prune`。

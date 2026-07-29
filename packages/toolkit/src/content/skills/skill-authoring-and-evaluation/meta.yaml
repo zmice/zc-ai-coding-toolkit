@@ -1,0 +1,23 @@
+kind: skill
+name: skill-authoring-and-evaluation
+title: Skill 创作与评测
+description: 创建、改写或评估 Agent Skill 时使用。负责触发契约、渐进式披露、资源分层、来源许可、代表性场景和基线对照，避免只做格式正确但行为无效的 prompt 资产。
+tier: recommended
+audience: advanced
+stability: stable
+suggests:
+  - skill:context-budget-audit
+  - skill:source-driven-development
+  - skill:verification-before-completion
+platforms:
+  - qwen
+  - codex
+  - claude
+  - opencode
+source:
+  upstream: openai-plugins
+  strategy: inspired
+  origin_name: evaluate-skill
+  origin_path: plugins/plugin-eval/skills/evaluate-skill/SKILL.md
+  origin_id: skill:evaluate-skill
+  notes: 以 OpenAI plugin-eval 的分析与基线思路为主线，结合 Anthropic 的迭代评测和 GitHub、Vercel 的渐进式披露与脚本治理约束，重写为平台中立流程

@@ -63,3 +63,15 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 - Phase 1: generate agent registration config and document conflict-safe behavior.
 - Phase 2: implement add-only Codex config merge for global installs.
 - Phase 3: evaluate Zed/platform readiness and release smoke dashboards after manifest-aware lint coverage has settled.
+
+## Latest Remote Evidence 2026-07-29
+
+- remote head: `591ab5cbd3f2f65860ea91c226e410b1502c8e2e`
+- evidence: remote HEAD lookup followed by an independent shallow clone after the governance report's temporary content-fetch failure
+- finding: the repository continues to broaden cross-platform adapters, agents, skills, hooks, and operator surfaces at a scale that would duplicate this toolkit
+
+## Current Decision
+
+- Keep it as a breadth and supply-chain reference.
+- Do not absorb new runtime, prompt packs, hooks, or language catalogs in this cycle.
+- Continue using it to test whether this workspace's registry, install receipts, and platform boundaries remain understandable under large-asset pressure.

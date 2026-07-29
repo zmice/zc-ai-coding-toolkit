@@ -1,5 +1,6 @@
 import {
   attachPlanMetadata,
+  createAttachmentArtifacts,
   createMarkdownAgentArtifact,
   createMarkdownCommandArtifact,
   createNamespacedAssetSlug,
@@ -286,14 +287,18 @@ function renderSkillArtifacts(
 ): readonly PlatformArtifact[] {
   const layout = getScopeLayout(scope);
 
-  return assets.map((asset) => {
+  return assets.flatMap((asset) => {
     const slug = toNamespacedSlug(asset);
+    const directory = `${layout.skillsDir}/${slug}`;
 
-    return createSkillArtifact({
-      path: `${layout.skillsDir}/${slug}/SKILL.md`,
-      asset,
-      name: slug,
-    });
+    return [
+      createSkillArtifact({
+        path: `${directory}/SKILL.md`,
+        asset,
+        name: slug,
+      }),
+      ...createAttachmentArtifacts({ directory, asset }),
+    ];
   });
 }
 

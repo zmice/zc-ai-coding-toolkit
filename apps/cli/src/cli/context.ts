@@ -1,6 +1,6 @@
 import type { Command } from "commander";
 import { existsSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { resolveInstallTarget } from "../utils/install-target.js";
 import { importWorkspaceDistModule } from "../utils/workspace.js";
@@ -33,14 +33,28 @@ interface ContextExistingFile {
   content: string | null;
 }
 
+interface ContextModuleSummary {
+  path: string;
+  name?: string;
+  description?: string;
+  scripts?: readonly string[];
+}
+
 interface ContextInitSnapshot {
   root: string;
   projectName: string;
+  projectSummary?: string;
+  readmeTitle?: string;
+  readmeSummary?: string;
   packageManager: string;
   scripts: Readonly<Record<string, string>>;
   directories: readonly string[];
+  moduleSummaries: readonly ContextModuleSummary[];
   docPaths: readonly string[];
   entryFiles: readonly string[];
+  generatedPaths: readonly string[];
+  sourcePaths: readonly string[];
+  unresolvedQuestions: readonly string[];
   existingFiles: readonly ContextExistingFile[];
   initializedAt: string;
   previousGeneratedAt?: string;
@@ -146,16 +160,97 @@ function collectExistingPaths(root: string, candidates: readonly string[]): stri
   return candidates.filter((candidate) => existsSync(join(root, candidate)));
 }
 
-function collectContextEntryFiles(root: string): string[] {
-  return [
+function unique(values: readonly string[]): string[] {
+  return [...new Set(values)];
+}
+
+function compactText(value: string, maxLength = 260): string {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+function stripMarkdownInline(value: string): string {
+  return value
+    .replace(/!\[[^\]]*\]\([^)]*\)/gu, "")
+    .replace(/\[([^\]]+)\]\([^)]*\)/gu, "$1")
+    .replace(/[`*_>#]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractMarkdownOverview(content: string): { title?: string; summary?: string } {
+  const lines = content.split(/\r?\n/u);
+  const title = lines
+    .map((line) => line.match(/^#\s+(.+?)\s*$/u)?.[1]?.trim())
+    .find((value): value is string => Boolean(value));
+  const paragraphLines: string[] = [];
+  let collecting = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#") || trimmed.startsWith("[!") || trimmed.startsWith("<!--")) {
+      if (collecting && paragraphLines.length > 0) {
+        break;
+      }
+      continue;
+    }
+
+    collecting = true;
+    paragraphLines.push(stripMarkdownInline(trimmed));
+
+    if (paragraphLines.join(" ").length >= 260) {
+      break;
+    }
+  }
+
+  const summary = compactText(paragraphLines.join(" "));
+  return {
+    title: title ? stripMarkdownInline(title) : undefined,
+    summary: summary.length > 0 ? summary : undefined,
+  };
+}
+
+async function readMarkdownOverview(root: string, relativePath: string): Promise<{ title?: string; summary?: string } | null> {
+  const content = await readTextIfExists(join(root, relativePath));
+  if (!content) {
+    return null;
+  }
+
+  return extractMarkdownOverview(content);
+}
+
+function hasUserAuthoredAgentsContent(content: string | null): boolean {
+  if (!content) {
+    return false;
+  }
+
+  return content
+    .replace(
+      /<!-- zc-context:init:start -->[\s\S]*?<!-- zc-context:init:end -->/gu,
+      "",
+    )
+    .trim()
+    .length > 0;
+}
+
+function collectContextEntryFiles(root: string, existingAgentsContent: string | null): string[] {
+  return collectExistingPaths(root, [
     "AGENTS.md",
-    ...collectExistingPaths(root, [
-      "package.json",
-      "pnpm-workspace.yaml",
-      "tsconfig.json",
-      ".gitignore",
-    ]),
-  ];
+    "package.json",
+    "pnpm-workspace.yaml",
+    "tsconfig.json",
+    ".gitignore",
+  ]).filter((path) =>
+    path !== "AGENTS.md" || hasUserAuthoredAgentsContent(existingAgentsContent));
+}
+
+function getStringField(source: Record<string, unknown> | null, field: string): string | undefined {
+  const value = source?.[field];
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
 }
 
 function getPackageScripts(packageJson: Record<string, unknown> | null): Record<string, string> {
@@ -169,6 +264,94 @@ function getPackageScripts(packageJson: Record<string, unknown> | null): Record<
       .filter(([, value]) => typeof value === "string")
       .map(([key, value]) => [key, value as string])
   );
+}
+
+async function collectPackageModuleSummary(root: string, relativePath: string): Promise<ContextModuleSummary> {
+  const packageJson = await readPackageJson(join(root, relativePath));
+  const readme = await readMarkdownOverview(root, join(relativePath, "README.md"));
+  const scripts = Object.keys(getPackageScripts(packageJson));
+
+  return {
+    path: relativePath,
+    name: getStringField(packageJson, "name"),
+    description: getStringField(packageJson, "description") ?? readme?.summary,
+    scripts,
+  };
+}
+
+async function collectModuleSummaries(root: string): Promise<ContextModuleSummary[]> {
+  const modules: ContextModuleSummary[] = [];
+
+  for (const base of ["apps", "packages"]) {
+    if (!existsSync(join(root, base))) {
+      continue;
+    }
+
+    const entries = await readdir(join(root, base), { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory() || entry.name.startsWith(".")) {
+        continue;
+      }
+
+      modules.push(await collectPackageModuleSummary(root, `${base}/${entry.name}`));
+    }
+  }
+
+  if (existsSync(join(root, "src"))) {
+    const srcReadme = await readMarkdownOverview(root, "src/README.md");
+    modules.push({
+      path: "src",
+      description: srcReadme?.summary ?? "主源码目录",
+      scripts: [],
+    });
+  }
+
+  return modules;
+}
+
+function collectGeneratedPaths(root: string): string[] {
+  return collectExistingPaths(root, [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    ".turbo",
+    ".next",
+    "apps/cli/dist",
+    "packages/platform-codex/dist",
+    "packages/platform-core/dist",
+    "packages/toolkit/dist",
+  ]);
+}
+
+function buildProjectSummary(
+  packageJson: Record<string, unknown> | null,
+  readme: { title?: string; summary?: string } | null,
+): string | undefined {
+  return getStringField(packageJson, "description")
+    ?? readme?.summary
+    ?? (readme?.title ? `${readme.title} 项目` : undefined);
+}
+
+function buildUnresolvedQuestions(input: {
+  readonly packageJson: Record<string, unknown> | null;
+  readonly readme: { title?: string; summary?: string } | null;
+  readonly moduleSummaries: readonly ContextModuleSummary[];
+  readonly scripts: Readonly<Record<string, string>>;
+}): string[] {
+  const questions: string[] = [];
+
+  if (!input.readme?.summary && !getStringField(input.packageJson, "description")) {
+    questions.push("缺少可自动提取的项目定位；建议在 README 或 package.json description 中补一句稳定说明。");
+  }
+  if (input.moduleSummaries.length === 0) {
+    questions.push("缺少可识别的模块 metadata；后续可为主要模块补 README 或 package.json description。");
+  }
+  if (Object.keys(input.scripts).length === 0) {
+    questions.push("未检测到 package scripts；验证命令需要从项目文档或实际构建链路确认。");
+  }
+
+  return questions;
 }
 
 function getExistingContextTimestamps(existingManifest: string | null): {
@@ -205,6 +388,8 @@ async function resolveContextRoot(opts: ContextInitOptions): Promise<string> {
 
 async function createContextSnapshot(root: string): Promise<ContextInitSnapshot> {
   const packageJson = await readPackageJson(root);
+  const readme = await readMarkdownOverview(root, "README.md");
+  const moduleSummaries = await collectModuleSummaries(root);
   const existingFiles = await Promise.all(
     contextRelativePaths.map(async (relativePath) => ({
       relativePath,
@@ -215,12 +400,42 @@ async function createContextSnapshot(root: string): Promise<ContextInitSnapshot>
   const timestamps = getExistingContextTimestamps(existingManifest);
   const generatedAt = new Date().toISOString();
   const initializedAt = timestamps.initializedAt ?? timestamps.generatedAt ?? generatedAt;
+  const scripts = getPackageScripts(packageJson);
+  const docPaths = collectExistingPaths(root, [
+    "README.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "docs/README.md",
+    "docs/architecture",
+    "docs/adr",
+    "docs/release-guide.md",
+    "docs/release-checklist.md",
+    "references/README.md",
+  ]);
+  const existingAgentsContent = existingFiles.find(
+    (file) => file.relativePath === "AGENTS.md",
+  )?.content ?? null;
+  const entryFiles = collectContextEntryFiles(root, existingAgentsContent);
+  const generatedPaths = collectGeneratedPaths(root);
+  const sourcePaths = unique([
+    ...entryFiles,
+    ...docPaths,
+    ...moduleSummaries
+      .map((module) => `${module.path}/package.json`)
+      .filter((path) => existsSync(join(root, path))),
+    ...moduleSummaries
+      .map((module) => `${module.path}/README.md`)
+      .filter((path) => existsSync(join(root, path))),
+  ]);
 
   return {
     root,
     projectName: typeof packageJson?.name === "string" ? packageJson.name : root.split(/[\\/]/u).at(-1) ?? "project",
+    projectSummary: buildProjectSummary(packageJson, readme),
+    readmeTitle: readme?.title,
+    readmeSummary: readme?.summary,
     packageManager: detectPackageManager(root),
-    scripts: getPackageScripts(packageJson),
+    scripts,
     directories: collectExistingDirs(root, [
       "apps",
       "packages",
@@ -228,18 +443,17 @@ async function createContextSnapshot(root: string): Promise<ContextInitSnapshot>
       "docs",
       "references",
     ]),
-    docPaths: collectExistingPaths(root, [
-      "README.md",
-      "CONTRIBUTING.md",
-      "CHANGELOG.md",
-      "docs/README.md",
-      "docs/architecture",
-      "docs/adr",
-      "docs/release-guide.md",
-      "docs/release-checklist.md",
-      "references/README.md",
-    ]),
-    entryFiles: collectContextEntryFiles(root),
+    moduleSummaries,
+    docPaths,
+    entryFiles,
+    generatedPaths,
+    sourcePaths,
+    unresolvedQuestions: buildUnresolvedQuestions({
+      packageJson,
+      readme,
+      moduleSummaries,
+      scripts,
+    }),
     existingFiles,
     initializedAt,
     previousGeneratedAt: timestamps.generatedAt,

@@ -1,4 +1,5 @@
 import {
+  createAttachmentArtifacts,
   createMarkdownAgentArtifact,
   createMarkdownCommandArtifact,
   createInstallPlan,
@@ -274,21 +275,25 @@ function renderCommandArtifact(
   });
 }
 
-function renderSkillArtifact(
+function renderSkillArtifacts(
   extensionRoot: string,
   asset: ToolkitAssetLike,
-): PlatformArtifact {
+): readonly PlatformArtifact[] {
   const slug = stripAssetKindPrefix(asset.id);
+  const directory = `${extensionRoot}/skills/zc-${slug}`;
 
-  return createSkillArtifact({
-    path: `${extensionRoot}/skills/zc-${slug}/SKILL.md`,
-    asset,
-    name: `zc-${slug}`,
-    description: describeAsset(asset),
-    body:
-      asset.body ??
-      `这是由工具包资产 \`${asset.id}\` 生成的 Qwen skill，供 extension 目录直接加载。`,
-  });
+  return [
+    createSkillArtifact({
+      path: `${directory}/SKILL.md`,
+      asset,
+      name: `zc-${slug}`,
+      description: describeAsset(asset),
+      body:
+        asset.body ??
+        `这是由工具包资产 \`${asset.id}\` 生成的 Qwen skill，供 extension 目录直接加载。`,
+    }),
+    ...createAttachmentArtifacts({ directory, asset }),
+  ];
 }
 
 function renderAgentArtifact(
@@ -350,7 +355,7 @@ export function createQwenGenerationPlan(
         ),
       },
       ...commands.map((asset: ToolkitAssetLike) => renderCommandArtifact(extensionRoot, asset)),
-      ...skills.map((asset: ToolkitAssetLike) => renderSkillArtifact(extensionRoot, asset)),
+      ...skills.flatMap((asset: ToolkitAssetLike) => renderSkillArtifacts(extensionRoot, asset)),
       ...agents.map((asset: ToolkitAssetLike) => renderAgentArtifact(extensionRoot, asset)),
     ],
   };
