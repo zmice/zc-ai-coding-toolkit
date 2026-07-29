@@ -831,6 +831,62 @@ describe("platform CLI", () => {
     );
   });
 
+  it("reports plugin-qualified Codex skill examples for marketplace plans", async () => {
+    const projectRoot = join("/repo", "project");
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: projectRoot,
+      source: "project-root",
+      marker: "pnpm-workspace.yaml",
+    });
+    platformMocks.createCodexGenerationPlan.mockReturnValue({
+      platform: "codex",
+      packageName: "@zmice/platform-codex",
+      manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
+      matchedAssets: [],
+      artifacts: [],
+    });
+    platformMocks.createCodexMarketplaceGenerationPlan.mockReturnValue({
+      platform: "codex",
+      packageName: "@zmice/platform-codex",
+      manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
+      matchedAssets: [],
+      capability: {
+        namespace: "zc",
+        surfaces: ["entry-file", "skills-dir"],
+        entryFile: "AGENTS.md",
+        commandsDir: null,
+        skillsDir: "plugins/zc-toolkit/skills",
+        agentsDir: null,
+        extensionDir: "plugins/zc-toolkit",
+      },
+      artifacts: [
+        { path: ".agents/plugins/marketplace.json", content: "{}" },
+        { path: "plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
+      ],
+    });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformPlugin("codex", {
+      dir: projectRoot,
+      plan: true,
+      json: true,
+    });
+
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload.capability.exposure).toEqual({
+      style: "plugin-skill",
+      entryPattern: "$zc-toolkit:<skill>",
+      examples: [
+        "zc:start -> $zc-toolkit:start",
+        "zc:product-analysis -> $zc-toolkit:product-analysis",
+        "zc:sdd-tdd -> $zc-toolkit:sdd-tdd",
+      ],
+    });
+    expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
+
+    logSpy.mockRestore();
+  });
+
   it("prints Codex Git marketplace registration without generating local files", async () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -933,6 +989,10 @@ describe("platform CLI", () => {
       commands: [
         "codex plugin marketplace add zmice/zc-codex-marketplace",
         "codex plugin add zc-toolkit@zc-toolkit --json",
+      ],
+      nextSteps: [
+        "运行 codex plugin list --marketplace zc-toolkit --available --json 核对 installed、enabled 和 version",
+        "启动新线程后使用 $zc-toolkit:start 或直接 @zc-toolkit",
       ],
     }));
     expect(platformMocks.resolveInstallTarget).not.toHaveBeenCalled();

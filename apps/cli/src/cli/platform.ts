@@ -270,11 +270,11 @@ function getPlanCapabilitySummary(
         if (metadata?.bundleType === "codex-plugin" || metadata?.bundleType === "codex-marketplace") {
           return {
             style: "plugin-skill",
-            entryPattern: "$<skill>",
+            entryPattern: "$zc-toolkit:<skill>",
             examples: [
-              "zc:start -> $start",
-              "zc:product-analysis -> $product-analysis",
-              "zc:sdd-tdd -> $sdd-tdd",
+              "zc:start -> $zc-toolkit:start",
+              "zc:product-analysis -> $zc-toolkit:product-analysis",
+              "zc:sdd-tdd -> $zc-toolkit:sdd-tdd",
             ],
           };
         }
@@ -1675,12 +1675,12 @@ async function runCodexMarketplaceGitMode(
       case "register":
         return [
           `继续运行 ${installCommand}，或在 Codex 的 Plugins 页面安装 zc-toolkit`,
-          "安装后启动新线程，再使用 $start 或直接 @zc-toolkit",
+          "安装后启动新线程，再使用 $zc-toolkit:start 或直接 @zc-toolkit",
         ];
       case "install":
         return [
           `运行 ${statusCommand} 核对 installed、enabled 和 version`,
-          "启动新线程后使用 $start 或直接 @zc-toolkit",
+          "启动新线程后使用 $zc-toolkit:start 或直接 @zc-toolkit",
         ];
       case "upgrade":
         return [
