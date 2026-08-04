@@ -1288,7 +1288,27 @@ function buildUpstreamCommand(): CommanderCommand {
           return;
         }
 
-        const results = await Promise.all(items.map((item) => createDiffResult(item, undefined, { withRemote: options.withRemote })));
+        const shouldReportRemoteProgress = target === "all" && options.withRemote === true && items.length > 1;
+        let completedRemoteReports = 0;
+
+        if (shouldReportRemoteProgress) {
+          console.error(`[upstream governance] 正在采集远端证据：0/${items.length}`);
+        }
+
+        const results = await Promise.all(
+          items.map(async (item) => {
+            const result = await createDiffResult(item, undefined, { withRemote: options.withRemote });
+
+            if (shouldReportRemoteProgress) {
+              completedRemoteReports += 1;
+              console.error(
+                `[upstream governance] 远端证据采集完成：${completedRemoteReports}/${items.length} (${item.id})`,
+              );
+            }
+
+            return result;
+          }),
+        );
         const format = options.format ?? "text";
 
         if (format === "md") {

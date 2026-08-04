@@ -91,6 +91,10 @@ describe("createToolkitManifest", () => {
     assert.ok(Boolean(getToolkitAssetById(manifest, "skill:branch-finish-and-cleanup")));
     assert.ok(Boolean(getToolkitAssetById(manifest, "skill:release-documentation-sync")));
     assert.ok(Boolean(getToolkitAssetById(manifest, "skill:developer-experience-audit")));
+    assert.equal(
+      getToolkitAssetById(manifest, "skill:ui-ux-review")?.meta.title,
+      "界面与体验审查"
+    );
     assert.deepEqual(manifest.byRelationship.requires["command:product-analysis"], []);
     assert.deepEqual(manifest.byRelationship.suggests["command:product-analysis"], [
       "command:idea",
@@ -119,6 +123,38 @@ describe("createToolkitManifest", () => {
     assert.deepEqual(manifest.byRelationship.suggests["skill:spec-driven-development"], [
       "skill:engineering-principles"
     ]);
+    assert.deepEqual(manifest.byRelationship.suggests["skill:frontend-ui-engineering"], [
+      "skill:ui-ux-review",
+      "skill:browser-qa-testing",
+      "skill:verification-before-completion"
+    ]);
+    assert.deepEqual(manifest.byRelationship.suggests["command:ui"], [
+      "skill:ui-ux-review",
+      "command:qa",
+      "skill:browser-qa-testing"
+    ]);
+    assert.deepEqual(
+      getToolkitAssetById(manifest, "command:ui")?.meta.platformExposure,
+      {
+        codex: "prompt-entry",
+        qwen: "command-style",
+        claude: "command-style",
+        opencode: "command-style"
+      }
+    );
+    assert.deepEqual(
+      getToolkitAssetById(manifest, "skill:ui-ux-review")?.meta.platformExposure,
+      {
+        codex: "primary",
+        qwen: "listed",
+        claude: "listed",
+        opencode: "listed"
+      }
+    );
+    assert.deepEqual(manifest.byRelationship.suggests["agent:frontend-specialist"], [
+      "skill:ui-ux-review",
+      "skill:browser-qa-testing"
+    ]);
     assert.deepEqual(
       getToolkitAssetById(manifest, "command:verify")?.meta.platforms,
       ["qwen", "codex", "claude", "opencode"]
@@ -138,6 +174,7 @@ describe("loadToolkitManifest", () => {
     assert.ok(Boolean(manifest.byId["skill:branch-finish-and-cleanup"]));
     assert.ok(Boolean(manifest.byId["skill:release-documentation-sync"]));
     assert.ok(Boolean(manifest.byId["skill:developer-experience-audit"]));
+    assert.ok(Boolean(manifest.byId["skill:ui-ux-review"]));
     assert.ok(Boolean(manifest.byId["command:start"]));
     assert.ok(Boolean(manifest.byId["command:context-init"]));
     assert.ok(Boolean(manifest.byId["command:product-analysis"]));

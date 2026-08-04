@@ -29,6 +29,12 @@ zc platform plugin codex --install
 
 它会注册官方 Git marketplace 并安装 `zc-toolkit`。安装后启动新线程，从 `$zc-toolkit:start` 开始。
 
+Codex 界面任务可以直接使用：
+
+- `$zc-toolkit:ui`：构建、修复或重构生产级界面
+- `$zc-toolkit:ui-ux-review`：基于设计契约、运行路径和渲染证据执行只读审查
+- `frontend-specialist`：随插件安装的原生 agent，负责在实现、审查和浏览器验证之间分流
+
 如果已经安装 `@zmice/zc`，也可以让 CLI 输出或执行同一条官方注册命令：
 
 ```bash

@@ -116,7 +116,9 @@ describe("upstream governance commands", () => {
     expect(payload.mode).toBe("diff");
     expect(payload.review_status).toBe("pending-manual-review");
     expect(payload.changes.structural).toEqual(
-      expect.arrayContaining([expect.objectContaining({ path: "README.md", kind: "removed" })]),
+      expect.arrayContaining([
+        expect.objectContaining({ path: ".claude-plugin/plugin.json", kind: "added" }),
+      ]),
     );
     expect(payload.changes.metadata).toEqual(
       expect.arrayContaining([expect.objectContaining({ field: "status", before: "evaluating", after: "active" })]),
@@ -171,8 +173,8 @@ describe("upstream governance commands", () => {
     expect(payload.evidence.remote_content.changed_paths).toEqual([
       { status: "M", path: "skills/context-engineering/SKILL.md" },
     ]);
-    expect(payload.evidence.remote_content.unregistered_changed_path_count).toBe(1);
-    expect(payload.evidence.remote_content.unregistered_changed_paths).toEqual(["README.md"]);
+    expect(payload.evidence.remote_content.unregistered_changed_path_count).toBe(0);
+    expect(payload.evidence.remote_content.unregistered_changed_paths).toEqual([]);
     expect(payload.evidence.remote_content.unregistered_ai_asset_path_count).toBe(0);
     expect(payload.evidence.remote_content.unregistered_ai_asset_paths).toEqual([]);
     expect(payload.evidence.remote_content.source_paths_gap).toBe(false);
@@ -196,7 +198,7 @@ describe("upstream governance commands", () => {
 
       if (args.includes("--name-only")) {
         return [
-          ".claude-plugin/plugin.json",
+          ".codex-plugin/plugin.json",
           "agents/reviewer.md",
           "docs/guide.md",
         ].join("\n");
@@ -234,7 +236,7 @@ describe("upstream governance commands", () => {
     expect(payload.evidence.remote_content.unregistered_changed_path_count).toBe(3);
     expect(payload.evidence.remote_content.unregistered_ai_asset_path_count).toBe(2);
     expect(payload.evidence.remote_content.unregistered_ai_asset_paths).toEqual([
-      ".claude-plugin/plugin.json",
+      ".codex-plugin/plugin.json",
       "agents/reviewer.md",
     ]);
     expect(payload.impacts).toEqual(
@@ -269,6 +271,48 @@ describe("upstream governance commands", () => {
     expect(result.stdout).toContain("remote_head: 未采集");
     expect(result.stdout).toContain("`pending-manual-review`");
     expect(result.stdout).toContain("人工审阅");
+  });
+
+  it("report all --with-remote 保持 JSON 聚合完整，并通过 stderr 报告采集进度", async () => {
+    mockGitExecFile((args) => {
+      if (args[0] === "ls-remote") {
+        return "3333333333333333333333333333333333333333\tHEAD\n";
+      }
+
+      return "";
+    });
+
+    const result = await runCli([
+      "report",
+      "all",
+      "--with-remote",
+      "--format",
+      "json",
+    ]);
+
+    const payload = JSON.parse(result.stdout) as {
+      mode: string;
+      results: Array<{ upstream: string }>;
+    };
+
+    expect(payload.mode).toBe("report");
+    expect(payload.results).toHaveLength(12);
+    expect(payload.results.map((entry) => entry.upstream)).toEqual([
+      "agent-skills",
+      "superpowers",
+      "everything-claude-code",
+      "gstack",
+      "andrej-karpathy-skills",
+      "openai-plugins",
+      "anthropic-skills",
+      "github-awesome-copilot",
+      "vercel-agent-skills",
+      "vercel-web-interface-guidelines",
+      "modern-web-guidance",
+      "ui-skills",
+    ]);
+    expect(result.stderr).toContain("正在采集远端证据：0/12");
+    expect(result.stderr).toContain("远端证据采集完成：12/12");
   });
 
   it("snapshot 会追加不可变快照，并输出生成路径", async () => {

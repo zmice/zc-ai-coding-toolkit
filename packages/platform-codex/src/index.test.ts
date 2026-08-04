@@ -65,6 +65,54 @@ const manifest: ToolkitManifestLike = {
   ],
 };
 
+const uiManifest: ToolkitManifestLike = {
+  source: "toolkit-manifest",
+  assets: [
+    {
+      id: "command:ui",
+      kind: "command",
+      platforms: ["codex"],
+      title: "界面",
+      name: "ui",
+      summary: "构建或修改生产级前端界面。",
+      body: "# 界面\n\n实现走 frontend-ui-engineering，审查走 ui-ux-review。\n",
+    },
+    {
+      id: "skill:frontend-ui-engineering",
+      kind: "skill",
+      platforms: ["codex"],
+      title: "前端界面工程",
+      name: "frontend-ui-engineering",
+      summary: "构建生产级前端界面。",
+      body: "# Frontend UI Engineering\n",
+    },
+    {
+      id: "skill:ui-ux-review",
+      kind: "skill",
+      platforms: ["codex"],
+      title: "界面与体验审查",
+      name: "ui-ux-review",
+      summary: "基于证据只读审查 UI、UX 与无障碍质量。",
+      body: "# UI/UX Review\n",
+      attachments: [
+        {
+          relativePath: "assets/references/interface-review-checklist.md",
+          contents: "# Interface Review Checklist\n",
+        },
+      ],
+    },
+    {
+      id: "agent:frontend-specialist",
+      kind: "agent",
+      platforms: ["codex"],
+      title: "前端工程师",
+      name: "frontend-specialist",
+      summary: "实现前端界面，或按证据只读审查 UI/UX。",
+      body: "# 前端工程师\n\n审查使用 ui-ux-review；实现使用 frontend-ui-engineering。\n",
+    },
+  ],
+};
+
 describe("@zmice/platform-codex scaffold", () => {
   it("includes skill supporting files in a Codex marketplace bundle", () => {
     const attachmentManifest: ToolkitManifestLike = {
@@ -505,7 +553,7 @@ describe("@zmice/platform-codex scaffold", () => {
       repository: string;
       author: { name: string; url: string };
       interface: { defaultPrompt: string[] };
-      zc: { commands: number; skills: number; agents: number };
+      zc?: unknown;
     };
     assert.equal(pluginManifest.name, "zc-toolkit");
     assert.equal(pluginManifest.version, "0.2.5");
@@ -517,10 +565,11 @@ describe("@zmice/platform-codex scaffold", () => {
       url: "https://github.com/zmice",
     });
     assert.deepEqual(pluginManifest.interface.defaultPrompt, [
-      "Use start to choose the right workflow for this task.",
-      "Use team-orchestration when multiple agents need coordinated worktree isolation.",
+      "使用 start 为当前任务选择合适的工作流。",
+      "界面实现使用 ui；只读 UI/UX 审查使用 ui-ux-review。",
+      "仅在任务可独立拆分时使用 team-orchestration 组织多代理协作。",
     ]);
-    assert.deepEqual(pluginManifest.zc, { commands: 3, skills: 1, agents: 1 });
+    assert.equal(pluginManifest.zc, undefined);
 
     const companionManifestArtifact = plan.artifacts.find(
       (artifact) => artifact.path === "assets/zc-agents/manifest.json",
@@ -555,6 +604,61 @@ describe("@zmice/platform-codex scaffold", () => {
     );
     assert.ok(companionAgent?.content.includes('name = "zc_code_reviewer"'));
     assert.ok(!companionAgent?.content.includes("tools ="));
+  });
+
+  it("exposes Codex-first UI/UX routes, references, and the frontend agent in the plugin bundle", () => {
+    const plan = createCodexPluginGenerationPlan(uiManifest, {
+      pluginVersion: "0.7.0",
+    });
+
+    assert.ok(plan.artifacts.some((artifact) => artifact.path === "commands/ui.md"));
+    assert.ok(plan.artifacts.some((artifact) => artifact.path === "skills/ui/SKILL.md"));
+    assert.ok(plan.artifacts.some((artifact) => artifact.path === "skills/frontend-ui-engineering/SKILL.md"));
+    assert.ok(plan.artifacts.some((artifact) => artifact.path === "skills/ui-ux-review/SKILL.md"));
+    assert.ok(
+      plan.artifacts.some(
+        (artifact) =>
+          artifact.path === "skills/ui-ux-review/references/interface-review-checklist.md"
+          && artifact.content === "# Interface Review Checklist\n",
+      ),
+    );
+    assert.ok(plan.artifacts.some((artifact) => artifact.path === "agents/frontend-specialist.md"));
+
+    const pluginManifest = JSON.parse(
+      plan.artifacts.find((artifact) => artifact.path === templateFiles.pluginManifest)!.content,
+    ) as {
+      description: string;
+      keywords: string[];
+      interface: {
+        shortDescription: string;
+        longDescription: string;
+        defaultPrompt: string[];
+      };
+    };
+
+    assert.equal(
+      pluginManifest.description,
+      "Codex 工程工作流：规划、实现、审查、验证、多代理协作与 UI/UX。",
+    );
+    assert.deepEqual(pluginManifest.keywords, [
+      "codex",
+      "skills",
+      "workflow",
+      "multi-agent",
+      "ui",
+      "ux",
+      "accessibility",
+    ]);
+    assert.equal(pluginManifest.interface.shortDescription, "Codex 工程与 UI/UX 工作流");
+    assert.equal(
+      pluginManifest.interface.longDescription,
+      "为 Codex 安装规划、实现、审查、验证、多代理协作和 UI/UX 工程能力。",
+    );
+    assert.deepEqual(pluginManifest.interface.defaultPrompt, [
+      "使用 start 为当前任务选择合适的工作流。",
+      "界面实现使用 ui；只读 UI/UX 审查使用 ui-ux-review。",
+      "仅在任务可独立拆分时使用 team-orchestration 组织多代理协作。",
+    ]);
   });
 
   it("creates a Codex repo marketplace generation plan", () => {

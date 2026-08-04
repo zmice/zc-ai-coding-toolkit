@@ -86,6 +86,26 @@ describe("toolkit query helpers", () => {
     assert.ok(matches.some((asset) => asset.id === "agent:code-reviewer"));
   });
 
+  it("discovers the focused UI/UX review capability by Chinese intent", async () => {
+    const manifest = await loadToolkitManifest();
+    const matches = searchToolkitAssets(manifest, "体验审查");
+
+    assert.ok(matches.some((asset) => asset.id === "skill:ui-ux-review"));
+  });
+
+  it("keeps UI implementation and general code review on their neighboring routes", async () => {
+    const manifest = await loadToolkitManifest();
+    const implementationMatches = searchToolkitAssets(manifest, "前端界面");
+    const codeReviewMatches = searchToolkitAssets(manifest, "代码审查");
+
+    assert.ok(
+      implementationMatches.some((asset) => asset.id === "skill:frontend-ui-engineering")
+    );
+    assert.ok(!implementationMatches.some((asset) => asset.id === "skill:ui-ux-review"));
+    assert.ok(codeReviewMatches.some((asset) => asset.id === "skill:code-review-and-quality"));
+    assert.ok(!codeReviewMatches.some((asset) => asset.id === "skill:ui-ux-review"));
+  });
+
   it("builds recommendations from requires and suggests", async () => {
     const manifest = await loadToolkitManifest();
     const recommendation = recommendToolkitAssets(manifest, "build");

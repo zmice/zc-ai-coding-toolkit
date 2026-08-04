@@ -500,17 +500,12 @@ ${compatibilityExamples}
 function renderPluginManifest(options: {
   readonly name: string;
   readonly version: string;
-  readonly matchedAssets: readonly ToolkitAssetLike[];
 }): string {
-  const commandCount = options.matchedAssets.filter((asset) => asset.kind === "command").length;
-  const skillCount = options.matchedAssets.filter((asset) => asset.kind === "skill").length;
-  const agentCount = options.matchedAssets.filter((asset) => asset.kind === "agent").length;
-
   return `${JSON.stringify(
     {
       name: options.name,
       version: options.version,
-      description: "Bundle zc AI coding workflows for Codex.",
+      description: "Codex 工程工作流：规划、实现、审查、验证、多代理协作与 UI/UX。",
       author: {
         name: "zc",
         url: "https://github.com/zmice",
@@ -518,25 +513,29 @@ function renderPluginManifest(options: {
       homepage: "https://github.com/zmice/zc-ai-coding-toolkit",
       repository: "https://github.com/zmice/zc-ai-coding-toolkit",
       license: "MIT",
-      keywords: ["codex", "skills", "workflow", "multi-agent"],
+      keywords: [
+        "codex",
+        "skills",
+        "workflow",
+        "multi-agent",
+        "ui",
+        "ux",
+        "accessibility",
+      ],
       skills: "./skills/",
       interface: {
         displayName: "zc AI Coding Toolkit",
-        shortDescription: "Reusable engineering workflows for Codex.",
+        shortDescription: "Codex 工程与 UI/UX 工作流",
         longDescription:
-          "Installs zc commands, skills, and agents for planning, building, reviewing, verifying, and coordinating agentic coding work in Codex.",
+          "为 Codex 安装规划、实现、审查、验证、多代理协作和 UI/UX 工程能力。",
         developerName: "zc",
         category: "Developer Tools",
         capabilities: ["Read", "Write"],
         defaultPrompt: [
-          "Use start to choose the right workflow for this task.",
-          "Use team-orchestration when multiple agents need coordinated worktree isolation.",
+          "使用 start 为当前任务选择合适的工作流。",
+          "界面实现使用 ui；只读 UI/UX 审查使用 ui-ux-review。",
+          "仅在任务可独立拆分时使用 team-orchestration 组织多代理协作。",
         ],
-      },
-      zc: {
-        commands: commandCount,
-        skills: skillCount,
-        agents: agentCount,
       },
     },
     null,
@@ -875,7 +874,6 @@ export function createCodexPluginGenerationPlan(
         content: renderPluginManifest({
           name: pluginName,
           version: pluginVersion,
-          matchedAssets,
         }),
       },
       ...renderCodexPluginCommandArtifacts(commandAssets),

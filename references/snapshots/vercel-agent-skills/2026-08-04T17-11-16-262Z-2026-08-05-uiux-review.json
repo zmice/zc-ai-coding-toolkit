@@ -1,0 +1,30 @@
+{
+  "upstream": "vercel-agent-skills",
+  "captured_at": "2026-08-04T17:11:16.262Z",
+  "label": "2026-08-05-uiux-review",
+  "metadata": {
+    "title": "Vercel Agent Skills",
+    "kind": "github-public-repo",
+    "status": "active",
+    "owner": "codex",
+    "source_url": "https://github.com/vercel-labs/agent-skills.git",
+    "source_paths": [
+      "README.md",
+      "AGENTS.md",
+      "skills/composition-patterns",
+      "skills/react-best-practices",
+      "skills/web-design-guidelines",
+      "skills/writing-guidelines"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/vercel-labs/agent-skills.git",
+    "checked_at": "2026-08-04T17:11:16.262Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "7c180d9044c9ae2b442b567aad4e42a28dd5ed62"
+  },
+  "notes": {
+    "path": "references/notes/vercel-agent-skills.md",
+    "content": "# Vercel Agent Skills\n\nSource: `https://github.com/vercel-labs/agent-skills`\n\n## Status\n\nActive official Vercel skill collection. Use it as a domain-specific quality reference and for context-efficient script contracts.\n\n## Latest Remote Evidence\n\n- remote head: `7c180d9044c9ae2b442b567aad4e42a28dd5ed62`\n- observed date: 2026-07-29\n- evidence: shallow clone review of `AGENTS.md`, React guidance, composition patterns, web-design guidance, and writing guidance\n\n## Extractable Upgrades\n\n- Keep primary skill bodies below the point where variants dominate; link one level deep to references.\n- Prefer executable scripts to repeated inline code when deterministic behavior matters.\n- Write machine-readable results to stdout and progress / diagnostics to stderr.\n- Clean temporary resources explicitly and make failure states actionable.\n- Keep framework-specific knowledge in optional domain skills instead of global engineering rules.\n\n## License Boundary\n\n- The repository does not expose one top-level license file in the reviewed snapshot.\n- Treat its content as reference-only unless the specific asset's license is confirmed.\n\n## Recommended Phase\n\n- Absorb script I/O and cleanup contracts into authoring quality gates.\n- Revisit React-specific assets only when this toolkit adds an explicit framework pack.\n\n## UI Review Decision 2026-08-05\n\n- remote head remains `7c180d9044c9ae2b442b567aad4e42a28dd5ed62`\n- use `web-design-guidelines` as a review reference, not as a network-fetched mandatory dependency\n- absorb framework-agnostic interaction, form, responsive, and interface-copy checks into progressive references\n- keep React composition and performance rules outside the generic UI skill until a framework-specific optional pack is approved\n"
+  }
+}

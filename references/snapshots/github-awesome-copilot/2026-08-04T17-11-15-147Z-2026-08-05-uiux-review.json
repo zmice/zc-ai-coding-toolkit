@@ -1,0 +1,32 @@
+{
+  "upstream": "github-awesome-copilot",
+  "captured_at": "2026-08-04T17:11:15.147Z",
+  "label": "2026-08-05-uiux-review",
+  "metadata": {
+    "title": "Awesome GitHub Copilot",
+    "kind": "github-public-repo",
+    "status": "active",
+    "owner": "codex",
+    "source_url": "https://github.com/github/awesome-copilot.git",
+    "source_paths": [
+      "README.md",
+      "AGENTS.md",
+      ".schemas",
+      ".github/plugin/marketplace.json",
+      "instructions/agent-skills.instructions.md",
+      "eng/validate-skills.mjs",
+      "eng/lib",
+      "plugins/external.json"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/github/awesome-copilot.git",
+    "checked_at": "2026-08-04T17:11:15.148Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "dab758a392cd6b06e806c1aa0444e2bc463b32f9"
+  },
+  "notes": {
+    "path": "references/notes/github-awesome-copilot.md",
+    "content": "# Awesome GitHub Copilot\n\nSource: `https://github.com/github/awesome-copilot`\n\n## Status\n\nActive GitHub-maintained community collection. Use it primarily as a governance and validation reference rather than a prompt catalog to mirror.\n\n## Latest Remote Evidence\n\n- remote head: `8ae5a99109124c22288eee0254da61741e44d12a`\n- observed date: 2026-07-29\n- evidence: sparse checkout of `README.md`, `AGENTS.md`, schemas, skill-authoring instructions, and validation scripts\n\n## Extractable Upgrades\n\n- Treat discovery metadata as a contract: concise WHAT, WHEN, and high-signal keywords.\n- Distinguish scripts, references, static assets, and editable templates.\n- Put non-obvious gotchas ahead of general explanations.\n- Validate names, descriptions, folder identity, links, and bounded asset sizes with machine checks.\n- Offer a machine-readable catalog surface without injecting the whole catalog into agent context.\n\n## Non-Adoption Boundary\n\n- Community-contributed assets require individual security, provenance, and license review.\n- Do not import hundreds of skills, agents, hooks, or workflows wholesale.\n- Do not assume GitHub Copilot directory conventions are native to Codex.\n\n## Recommended Phase\n\n- Use the repository's validation discipline to strengthen toolkit authoring guidance and future lint rules.\n- Keep cross-platform directory mapping in platform adapters.\n\n## Latest Remote Evidence 2026-08-05\n\n- remote head: `dab758a392cd6b06e806c1aa0444e2bc463b32f9`\n- previous reviewed head: `8ae5a99109124c22288eee0254da61741e44d12a`\n- notable change: the external marketplace added `GoogleChrome/modern-web-guidance` with Apache-2.0 provenance and a pinned release reference\n- validation changes: external plugin metadata validation now covers semver, SPDX identifiers, author fields, and unknown fields more strictly\n- adjacent examples: new canvas extensions and accessibility / Playwright learning-hub material provide evaluation scenarios, not prompt content to copy\n\n## Current Decision 2026-08-05\n\n- Track `.github/plugin/marketplace.json`, `plugins/external.json`, and `eng/lib` as governance inputs.\n- Register `modern-web-guidance` independently instead of importing it through the GitHub marketplace catalog.\n- Continue rejecting wholesale marketplace content absorption.\n"
+  }
+}

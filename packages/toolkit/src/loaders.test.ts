@@ -91,6 +91,7 @@ describe("loadToolkitAssetUnit", () => {
       unit.attachments.map((attachment) => attachment.relativePath),
       [
         "assets/references/accessibility-checklist.md",
+        "assets/references/design-system-contract.md",
         "assets/references/LICENSE-agent-skills.txt",
       ]
     );
@@ -104,6 +105,28 @@ describe("loadToolkitAssetUnit", () => {
         attachment.relativePath.endsWith("LICENSE-agent-skills.txt"))?.contents ?? "",
       /Copyright \(c\) 2025 Addy Osmani/,
     );
+  });
+
+  it("loads focused UI/UX review references without expanding the entry body", async () => {
+    const contentRoot = resolveToolkitContentRoot();
+    const unit = await loadToolkitAssetUnit(
+      join(contentRoot, "skills", "ui-ux-review")
+    );
+
+    assert.deepEqual(
+      unit.attachments.map((attachment) => attachment.relativePath),
+      [
+        "assets/references/design-direction-and-copy.md",
+        "assets/references/interaction-and-motion-checklist.md",
+        "assets/references/interface-review-checklist.md",
+        "assets/references/LICENSE-anthropic-frontend-design.txt",
+        "assets/references/LICENSE-ui-skills.txt",
+        "assets/references/LICENSE-vercel-web-interface-guidelines.txt",
+      ]
+    );
+    assert.match(unit.body, /只读审查|read-only/i);
+    assert.match(unit.body, /最多选择 3 份参考文件/);
+    assert.match(unit.body, /渲染证据/);
   });
 
   it("ships the upstream license beside every copied agent-skills checklist", async () => {

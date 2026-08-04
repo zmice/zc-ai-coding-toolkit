@@ -370,6 +370,8 @@ zc platform where qwen --global --json
   - 显式 `--global` 时生成插件到 `~/.codex/plugins/zc-toolkit/`，plugin-native agents 位于插件自己的 `agents/`
   - 插件内 skill 使用无前缀目录和 frontmatter，例如 `skills/start/SKILL.md`、`skills/sdd-tdd-workflow/SKILL.md`
   - 插件同时生成 `commands/<command>.md` 和 `agents/<agent>.md`
+  - 界面实现使用 `$zc-toolkit:ui`；只读界面审查使用 `$zc-toolkit:ui-ux-review`；`frontend-specialist` 会按任务意图在实现、审查和浏览器验证之间分流
+  - UI/UX 清单、许可证和设计系统参考随 skill 生成到 `skills/<skill>/references/`，运行时不依赖联网下载
   - 插件路线的 `AGENTS.md` 只保留全局规则、入口映射和文件索引，入口写成 `$zc-toolkit:start` / `$zc-toolkit:sdd-tdd`；传统直装的 `AGENTS.md` 继续写成 `$zc-start` / `$zc-sdd-tdd`
   - 追加 `--force` 时会先清理目标插件的 `commands/`、`skills/`、`agents/` 受管目录，再写入当前版本，避免旧命名残留
   - `--uninstall` 删除 zc 生成的本地 plugin marketplace bundle，包括 `marketplace.json`、薄入口 `AGENTS.md` 和 `plugins/zc-toolkit/`

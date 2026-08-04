@@ -1,0 +1,30 @@
+{
+  "upstream": "vercel-web-interface-guidelines",
+  "captured_at": "2026-08-04T17:20:13.772Z",
+  "label": "2026-08-05-uiux-review",
+  "metadata": {
+    "title": "Vercel Web Interface Guidelines",
+    "kind": "github-public-repo",
+    "status": "evaluating",
+    "owner": "codex",
+    "source_url": "https://github.com/vercel-labs/web-interface-guidelines.git",
+    "source_paths": [
+      "LICENSE",
+      "README.md",
+      "AGENTS.md",
+      "command.md",
+      "install.sh"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/vercel-labs/web-interface-guidelines.git",
+    "checked_at": "2026-08-04T17:20:13.773Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": null,
+    "error": "Command failed: git ls-remote https://github.com/vercel-labs/web-interface-guidelines.git HEAD\nfatal: unable to access 'https://github.com/vercel-labs/web-interface-guidelines.git/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server\n"
+  },
+  "notes": {
+    "path": "references/notes/vercel-web-interface-guidelines.md",
+    "content": "# Vercel Web Interface Guidelines\n\nSource: `https://github.com/vercel-labs/web-interface-guidelines`\n\n## Status\n\nVercel Labs 维护的 Web 界面检查清单。当前登记为 `evaluating`，用于按需审查交互、表单、响应式、内容和性能候选问题，不作为项目视觉风格的强制来源。\n\n## Latest Remote Evidence\n\n- remote head: `4e799d45c17aec1498c269287a83b9dba22b966b`\n- observed date: 2026-08-05\n- evidence: shallow clone review of `README.md`, `AGENTS.md`, `command.md`, `install.sh`, and `LICENSE`\n\n## Extractable Upgrades\n\n- 键盘、焦点、点击目标、表单、认证、长文本和状态覆盖可作为框架无关的候选检查项\n- Windows 常显滚动条、移动端输入与跨平台原生控件需要进入真实浏览器验证矩阵\n- 主观视觉建议必须服从项目设计系统；阴影、圆角、大小写和品牌文案不能作为通用 MUST\n- 清单用于发现候选，最终问题仍需运行路径、规范或渲染证据证明\n\n## License Boundary\n\n- repository license: MIT\n- 改写内容旁保留 `LICENSE-vercel-web-interface-guidelines.txt`\n- 本仓库不复制安装脚本，不引入运行时网络依赖\n\n## Current Decision\n\n- 保持 `evaluating`\n- 将框架无关检查改写进 `ui-ux-review` 的渐进式 reference\n- Vercel 品牌专属 copy 和设计偏好仅作上下文示例，不提升为工具包全局规则\n"
+  }
+}

@@ -97,3 +97,16 @@ Already covered locally:
 - Phase 2: design a platform-neutral trigger/routing eval schema and CI-safe deterministic runner before importing behavioral execution machinery.
 - Phase 3: add fixture-backed behavioral evals for the highest-risk workflow skills after the deterministic routing layer is stable.
 - Phase 4: evaluate a dedicated Gemini platform adapter only if there is user demand.
+
+## Latest Remote Evidence 2026-08-05
+
+- remote head: `bdf76c7c6b7b3b3e01bb15c9fdc42ac5351855c1`
+- previous reviewed head: `7829ffd90d973b6325f5f12f1b1226dcace74443`
+- finding: registered `skills` and `commands` did not change; adjacent plugin manifest, installation documentation, workflow, and command-validator regression coverage changed
+- registry update: track `README.md`, `.claude-plugin/plugin.json`, `docs/getting-started.md`, the plugin-install workflow, and command-validator implementation/tests
+
+## Current Decision 2026-08-05
+
+- No frontend skill content sync is required for this head.
+- Absorb the platform-manifest compatibility lesson and validator regression discipline through repository governance and tests.
+- Keep the per-skill reference limitation visible because generated attachments must travel with every platform skill directory.

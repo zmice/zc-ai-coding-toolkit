@@ -75,3 +75,15 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 - Keep it as a breadth and supply-chain reference.
 - Do not absorb new runtime, prompt packs, hooks, or language catalogs in this cycle.
 - Continue using it to test whether this workspace's registry, install receipts, and platform boundaries remain understandable under large-asset pressure.
+
+## Latest Remote Evidence 2026-08-05
+
+- remote head: `2665d48ae604b585d0bafb69c3a8e8dca9a15be5`
+- previous reviewed head: `591ab5cbd3f2f65860ea91c226e410b1502c8e2e`
+- notable changes: safer auto-update root resolution, discoverable generated learning skills, rejection of history-free agents, MCP reserved `_meta` compatibility, shared coordination test runner, dependency security updates
+
+## Current Decision 2026-08-05
+
+- Keep the repository as a runtime and governance reference.
+- Do not import its learning runtime, large skill catalog, hooks, or framework packs.
+- Revisit only the root-resolution and capability-detection patterns when the corresponding local platform code changes.

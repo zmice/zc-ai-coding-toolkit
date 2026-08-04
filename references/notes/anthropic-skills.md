@@ -30,3 +30,17 @@ Active official Agent Skills reference with a public specification pointer, exam
 
 - Fold the baseline / candidate / review loop into the toolkit skill-authoring workflow.
 - Keep full benchmark viewers and provider-specific runners out of the core toolkit until a portable harness exists.
+
+## Frontend Design Review 2026-08-05
+
+- remote head remains `b29e7cf65e5cb78a5ac33d582270551bc74a14eb`
+- reviewed asset: `skills/frontend-design`
+- license: Apache-2.0 at the skill directory level
+- extractable value: ground visual direction in the real subject, treat interface copy as design material, separate design planning from implementation, and critique generic defaults before build and after rendering
+- registry update: track `skills/frontend-design` explicitly so future UI guidance changes are visible
+
+## Frontend Design Boundary
+
+- Do not copy its full prose or make one aesthetic direction globally mandatory.
+- Reuse project design systems and user-provided visual targets before general anti-template advice.
+- Keep visual exploration separate from evidence-based review and implementation verification.

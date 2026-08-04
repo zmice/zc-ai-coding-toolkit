@@ -8,6 +8,7 @@ stability: stable
 requires:
   - skill:frontend-ui-engineering
 suggests:
+  - skill:ui-ux-review
   - command:qa
   - skill:browser-qa-testing
 platforms:
@@ -15,6 +16,11 @@ platforms:
   - codex
   - claude
   - opencode
+platform_exposure:
+  codex: prompt-entry
+  qwen: command-style
+  claude: command-style
+  opencode: command-style
 source:
   upstream: toolkit-original
   strategy: curated

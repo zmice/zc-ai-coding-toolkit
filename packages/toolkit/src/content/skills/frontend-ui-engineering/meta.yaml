@@ -6,6 +6,7 @@ tier: recommended
 audience: advanced
 stability: stable
 suggests:
+  - skill:ui-ux-review
   - skill:browser-qa-testing
   - skill:verification-before-completion
 platforms:
@@ -13,10 +14,15 @@ platforms:
   - codex
   - claude
   - opencode
+platform_exposure:
+  codex: primary
+  qwen: listed
+  claude: listed
+  opencode: listed
 source:
   upstream: agent-skills
   strategy: adapted
   origin_name: frontend-ui-engineering
   origin_path: skills/frontend-ui-engineering/SKILL.md
   origin_id: skill:frontend-ui-engineering
-  notes: 基于上游前端工程能力整理，并结合本仓库的界面设计偏好。
+  notes: 基于上游前端工程能力整理；实现规则保持设计系统优先，审查职责拆分到 ui-ux-review。

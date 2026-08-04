@@ -29,3 +29,11 @@ Active official Vercel skill collection. Use it as a domain-specific quality ref
 
 - Absorb script I/O and cleanup contracts into authoring quality gates.
 - Revisit React-specific assets only when this toolkit adds an explicit framework pack.
+
+## UI Review Decision 2026-08-05
+
+- remote head remains `7c180d9044c9ae2b442b567aad4e42a28dd5ed62`
+- use `web-design-guidelines` as a review reference, not as a network-fetched mandatory dependency
+- absorb framework-agnostic interaction, form, responsive, and interface-copy checks into progressive references
+- keep React composition and performance rules outside the generic UI skill until a framework-specific optional pack is approved
+- track the independently licensed `vercel-labs/web-interface-guidelines` repository as its own upstream instead of conflating the two sources

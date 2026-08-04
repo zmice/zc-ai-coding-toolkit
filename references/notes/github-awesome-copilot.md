@@ -30,3 +30,17 @@ Active GitHub-maintained community collection. Use it primarily as a governance 
 
 - Use the repository's validation discipline to strengthen toolkit authoring guidance and future lint rules.
 - Keep cross-platform directory mapping in platform adapters.
+
+## Latest Remote Evidence 2026-08-05
+
+- remote head: `dab758a392cd6b06e806c1aa0444e2bc463b32f9`
+- previous reviewed head: `8ae5a99109124c22288eee0254da61741e44d12a`
+- notable change: the external marketplace added `GoogleChrome/modern-web-guidance` with Apache-2.0 provenance and a pinned release reference
+- validation changes: external plugin metadata validation now covers semver, SPDX identifiers, author fields, and unknown fields more strictly
+- adjacent examples: new canvas extensions and accessibility / Playwright learning-hub material provide evaluation scenarios, not prompt content to copy
+
+## Current Decision 2026-08-05
+
+- Track `.github/plugin/marketplace.json`, `plugins/external.json`, and `eng/lib` as governance inputs.
+- Register `modern-web-guidance` independently instead of importing it through the GitHub marketplace catalog.
+- Continue rejecting wholesale marketplace content absorption.

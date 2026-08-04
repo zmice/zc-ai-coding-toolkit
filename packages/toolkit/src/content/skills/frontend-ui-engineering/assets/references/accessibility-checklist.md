@@ -1,160 +1,97 @@
-# Accessibility Checklist
+# Accessibility Checklist (WCAG 2.2 AA)
 
-Quick reference for WCAG 2.1 AA compliance. Use alongside the `frontend-ui-engineering` skill.
+面向前端实现的快速检查表，以 [WCAG 2.2](https://www.w3.org/TR/WCAG22/) AA 为基线，并配合 [WAI-ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/) 使用。自动化扫描不能替代键盘、缩放和辅助技术实测。
 
-## Table of Contents
+## Keyboard and Focus
 
-- [Essential Checks](#essential-checks)
-- [Common HTML Patterns](#common-html-patterns)
-- [Testing Tools](#testing-tools)
-- [Quick Reference: ARIA Live Regions](#quick-reference-aria-live-regions)
-- [Common Anti-Patterns](#common-anti-patterns)
+- [ ] 所有操作都能用键盘完成，焦点顺序与视觉和任务顺序一致
+- [ ] 焦点样式清晰；不要移除轮廓，优先用 `:focus-visible`
+- [ ] 聚焦控件不会被 sticky header、footer、cookie banner 或弹层完全遮挡
+- [ ] 模态框打开时移动并约束焦点，关闭后将焦点返回触发点
+- [ ] 不存在键盘陷阱；自定义控件遵循对应 APG 键盘模式
+- [ ] 页面提供可聚焦的跳到主内容入口
 
-## Essential Checks
+## Semantics and Names
 
-### Keyboard Navigation
-- [ ] All interactive elements focusable via Tab key
-- [ ] Focus order follows visual/logical order
-- [ ] Focus is visible (outline/ring on focused elements)
-- [ ] Custom widgets have keyboard support (Enter to activate, Escape to close)
-- [ ] No keyboard traps (user can always Tab away from a component)
-- [ ] Skip-to-content link at top of page - visible (at least) on keyboard focus
-- [ ] Modals trap focus while open, return focus on close
+- [ ] 优先使用原生 `button`、`a`、`label`、`dialog`、`table` 等语义元素
+- [ ] 图片有准确 `alt`，纯装饰图片使用空 `alt`
+- [ ] 表单控件有可见标签，图标按钮有可计算名称
+- [ ] 页面主标题可识别，标题层级表达结构且不无故跳级
+- [ ] 状态更新使用合适的 `role="status"`、`role="alert"` 或 `aria-live`
+- [ ] 表格表头与数据单元关系可被辅助技术识别
 
-### Screen Readers
-- [ ] All images have `alt` text (or `alt=""` for decorative images)
-- [ ] All form inputs have associated labels (`<label>` or `aria-label`)
-- [ ] Buttons and links have descriptive text (not "Click here")
-- [ ] Icon-only buttons have `aria-label`
-- [ ] Page has one `<h1>` and headings don't skip levels
-- [ ] Dynamic content changes announced (`aria-live` regions)
-- [ ] Tables have `<th>` headers with scope
+## Visual and Responsive
 
-### Visual
-- [ ] Text contrast ≥ 4.5:1 (normal text) or ≥ 3:1 (large text, 18px+)
-- [ ] UI components contrast ≥ 3:1 against background
-- [ ] Color is not the only way to convey information
-- [ ] Text resizable to 200% without breaking layout
-- [ ] No content that flashes more than 3 times per second
+- [ ] 普通文本对比度至少 4.5:1，大文本至少 3:1
+- [ ] 控件边界和必要图形对比度至少 3:1
+- [ ] 信息不只依赖颜色、位置、形状或声音表达
+- [ ] 文本放大至 200% 后内容与操作仍可用
+- [ ] 窄屏、长文本和本地化内容不会产生二维滚动或遮挡，必要数据表除外
+- [ ] 内容不会每秒闪烁 3 次以上
+- [ ] 尊重 `prefers-reduced-motion`，停止非必要动画
 
-### Forms
-- [ ] Every input has a visible label
-- [ ] Required fields indicated (not by color alone)
-- [ ] Error messages specific and associated with the field
-- [ ] Error state visible by more than color (icon, text, border)
-- [ ] Form submission errors summarized and focusable
-- [ ] Known fields use autocomplete (for example `type="email" autocomplete="email"`)
+## Pointer, Dragging, and Targets
 
-### Content
-- [ ] Language declared (`<html lang="en">`)
-- [ ] Page has a descriptive `<title>`
-- [ ] Links distinguish from surrounding text (not by color alone)
-- [ ] Touch targets ≥ 44x44px on mobile
-- [ ] Meaningful empty states (not blank screens)
+- [ ] 需要拖拽完成的功能同时提供不依赖拖动的简单指针操作
+- [ ] 指针目标至少 24 × 24 CSS px，或满足 WCAG 2.2 的目标间距/例外条件
+- [ ] 移动端优先采用不小于 44 × 44 CSS px 的舒适触控目标
+- [ ] 控件可点击区域与视觉区域一致，不出现看似可点但无响应的死区
 
-## Common HTML Patterns
+## Forms and Authentication
 
-### Buttons vs. Links
+- [ ] 必填、格式和错误信息不只靠颜色提示，并与字段程序化关联
+- [ ] 提交失败后提供错误摘要，并将焦点移到首个可修复错误
+- [ ] 已知用户信息使用正确 `autocomplete`、`name`、`type` 和 `inputmode`
+- [ ] 登录、密码和一次性验证码兼容密码管理器与粘贴
+- [ ] 认证不只依赖记忆题、识别题或抄写；提供符合 WCAG 2.2 的替代或辅助机制
+- [ ] 多步骤流程避免重复录入已提供的信息，或允许用户确认和修改
 
-```html
-<!-- Use <button> for actions -->
-<button onClick={handleDelete}>Delete Task</button>
+## Help, Content, and States
 
-<!-- Use <a> for navigation -->
-<a href="/tasks/123">View Task</a>
+- [ ] 重复出现的帮助入口在同一流程中保持相对一致的位置
+- [ ] 页面 `<title>`、语言和当前上下文准确
+- [ ] 链接和按钮使用描述结果的文本，避免“点击这里”“提交”等模糊词
+- [ ] 空、加载、错误、离线、禁用和成功状态均有可理解的下一步
+- [ ] 自动播放媒体提供暂停、停止和音量控制
 
-<!-- NEVER use div/span as buttons -->
-<div onClick={handleDelete}>Delete</div>  <!-- BAD -->
-```
-
-### Form Labels
+## Common Patterns
 
 ```html
-<!-- Explicit label association -->
-<label htmlFor="email">Email address</label>
-<input id="email" type="email" required />
+<!-- 行为用 button，导航用 a -->
+<button type="button" aria-label="关闭对话框">…</button>
+<a href="/tasks/123">查看任务</a>
 
-<!-- Implicit wrapping -->
-<label>
-  Email address
-  <input type="email" required />
-</label>
+<!-- 标签与输入关联 -->
+<label for="email">邮箱</label>
+<input id="email" name="email" type="email" autocomplete="email" />
 
-<!-- Hidden label (visible label preferred) -->
-<input type="search" aria-label="Search tasks" />
-```
-
-### ARIA Roles
-
-```html
-<!-- Navigation -->
-<nav aria-label="Main navigation">...</nav>
-<nav aria-label="Footer links">...</nav>
-
-<!-- Status messages -->
-<div role="status" aria-live="polite">Task saved</div>
-
-<!-- Alert messages -->
-<div role="alert">Error: Title is required</div>
-
-<!-- Modal dialogs -->
-<dialog aria-modal="true" aria-labelledby="dialog-title">
-  <h2 id="dialog-title">Confirm Delete</h2>
-  ...
-</dialog>
-
-<!-- Loading states -->
-<div aria-busy="true" aria-label="Loading tasks">
-  <Spinner />
-</div>
-```
-
-### Accessible Lists
-
-```html
-<ul role="list" aria-label="Tasks">
-  <li>
-    <input type="checkbox" id="task-1" aria-label="Complete: Buy groceries" />
-    <label htmlFor="task-1">Buy groceries</label>
-  </li>
-</ul>
+<!-- 非打断式状态与错误 -->
+<p role="status" aria-live="polite">已保存</p>
+<p role="alert">标题不能为空</p>
 ```
 
 ## Testing Tools
 
 ```bash
-# Automated audit
-npx axe-core          # Programmatic accessibility testing
-npx pa11y             # CLI accessibility checker
-
-# In browser
-# Chrome DevTools → Lighthouse → Accessibility
-# Chrome DevTools → Elements → Accessibility tree
-
-# Screen reader testing
-# macOS: VoiceOver (Cmd + F5)
-# Windows: NVDA (free) or JAWS
-# Linux: Orca
+# 自动化初筛；将 URL 替换为待测页面
+npx @axe-core/cli http://127.0.0.1:3000
+npx pa11y http://127.0.0.1:3000
 ```
 
-## Quick Reference: ARIA Live Regions
+还应执行：
 
-| Value | Behavior | Use For |
-|-------|----------|---------|
-| `aria-live="polite"` | Announced at next pause | Status updates, saved confirmations |
-| `aria-live="assertive"` | Announced immediately | Errors, time-sensitive alerts |
-| `role="status"` | Same as `polite` | Status messages |
-| `role="alert"` | Same as `assertive` | Error messages |
+- 仅用键盘走完主流程和异常恢复流程
+- 浏览器缩放至 200%，检查窄屏、横屏与长文本
+- 在 Chrome/Edge Accessibility Tree 中核对名称、角色与状态
+- macOS 使用 VoiceOver；Windows 至少使用 NVDA 进行代表性流程测试
 
 ## Common Anti-Patterns
 
-| Anti-Pattern | Problem | Fix |
+| Anti-pattern | Problem | Correction |
 |---|---|---|
-| `div` as button | Not focusable, no keyboard support | Use `<button>` |
-| Missing `alt` text | Images invisible to screen readers | Add descriptive `alt` |
-| Color-only states | Invisible to color-blind users | Add icons, text, or patterns |
-| Autoplaying media | Disorienting, can't be stopped | Add controls, don't autoplay |
-| Custom dropdown with no ARIA | Unusable by keyboard/screen reader | Use native `<select>` or proper ARIA listbox |
-| Removing focus outlines | Users can't see where they are | Style outlines, don't remove them |
-| Empty links/buttons | "Link" announced with no description | Add text or `aria-label` |
-| `tabindex > 0` | Breaks natural tab order | Use `tabindex="0"` or `-1` only |
+| `div` 模拟按钮 | 缺少原生语义和键盘行为 | 使用 `<button>` |
+| 移除 focus outline | 键盘用户失去当前位置 | 设计可见的 `:focus-visible` 样式 |
+| 只支持拖拽 | 部分用户无法完成操作 | 增加按钮、菜单或点击式替代 |
+| 禁止粘贴或密码管理器 | 阻碍可访问认证 | 保留粘贴和自动填充能力 |
+| `tabindex` 大于 0 | 破坏自然焦点顺序 | 只使用 `0` 或 `-1` |
+| 仅显示颜色错误态 | 色觉或非视觉用户无法识别 | 同时提供文本、图标和程序化状态 |

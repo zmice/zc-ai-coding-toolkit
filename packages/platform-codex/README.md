@@ -135,6 +135,13 @@ zc platform install codex --plan --json
   - `$zc-toolkit:task-plan`
   - `$zc-toolkit:build`
 
+Codex UI/UX 入口：
+
+- `$zc-toolkit:ui`：构建、修复或重构界面，并路由到前端工程能力
+- `$zc-toolkit:ui-ux-review`：基于设计契约、运行路径和渲染证据执行只读审查
+- `frontend-specialist`：plugin-native agent；先区分实现与审查，再调用对应 skill
+- UI/UX 清单和许可证作为 skill attachments 生成到 `skills/<skill>/references/`，不依赖运行时联网下载
+
 命名空间规则：
 
 - 传统直装保留 `zc-` 前缀，避免污染 Codex 全局 skill 名称

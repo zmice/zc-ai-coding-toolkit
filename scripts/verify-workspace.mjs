@@ -1,6 +1,7 @@
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { join, resolve } from "node:path";
+import { createRequire } from "node:module";
+import { dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 
 const root = process.cwd();
@@ -20,18 +21,66 @@ function resolveTscBin() {
   return match;
 }
 
-function resolveCommanderPackageRoot() {
-  const candidates = [
-    "node_modules/commander",
-    "apps/cli/node_modules/commander"
-  ].map((relativePath) => resolve(root, relativePath));
+function resolveInstalledPackageRoot(dependencyName, requiringPackageJsonPath) {
+  const requireFromPackage = createRequire(requiringPackageJsonPath);
+  let candidate = dirname(requireFromPackage.resolve(dependencyName));
 
-  const match = candidates.find((candidate) => existsSync(candidate));
-  if (!match) {
-    throw new Error(`Commander package not found. Tried:\n${candidates.join("\n")}`);
+  while (candidate !== dirname(candidate)) {
+    const packageJsonPath = join(candidate, "package.json");
+    if (existsSync(packageJsonPath)) {
+      const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+      if (packageJson.name === dependencyName) {
+        return candidate;
+      }
+    }
+    candidate = dirname(candidate);
   }
 
-  return match;
+  throw new Error(`Cannot resolve package root for runtime dependency: ${dependencyName}`);
+}
+
+function copyRuntimeDependency(dependencyName, requiringPackageJsonPath, targetNodeModules, copiedTargets) {
+  const dependencyRoot = resolveInstalledPackageRoot(dependencyName, requiringPackageJsonPath);
+  const targetRoot = join(targetNodeModules, dependencyName);
+
+  if (copiedTargets.has(targetRoot)) {
+    return;
+  }
+  copiedTargets.add(targetRoot);
+  mkdirSync(dirname(targetRoot), { recursive: true });
+  cpSync(dependencyRoot, targetRoot, { recursive: true, dereference: true });
+
+  const dependencyPackageJsonPath = join(dependencyRoot, "package.json");
+  const dependencyPackageJson = JSON.parse(readFileSync(dependencyPackageJsonPath, "utf8"));
+  const transitiveDependencies = Object.keys(dependencyPackageJson.dependencies ?? {});
+  if (transitiveDependencies.length === 0) {
+    return;
+  }
+
+  const nestedNodeModules = join(targetRoot, "node_modules");
+  mkdirSync(nestedNodeModules, { recursive: true });
+  for (const transitiveDependency of transitiveDependencies) {
+    copyRuntimeDependency(
+      transitiveDependency,
+      dependencyPackageJsonPath,
+      nestedNodeModules,
+      copiedTargets
+    );
+  }
+}
+
+function copyPublishedRuntimeDependencies(publishedRoot) {
+  const cliPackageJsonPath = resolve(root, "apps/cli/package.json");
+  const cliPackageJson = JSON.parse(readFileSync(cliPackageJsonPath, "utf8"));
+  const runtimeDependencies = Object.keys(cliPackageJson.dependencies ?? {});
+  const targetNodeModules = join(publishedRoot, "node_modules");
+  const copiedTargets = new Set();
+
+  mkdirSync(targetNodeModules, { recursive: true });
+
+  for (const dependencyName of runtimeDependencies) {
+    copyRuntimeDependency(dependencyName, cliPackageJsonPath, targetNodeModules, copiedTargets);
+  }
 }
 
 function run(command, args, label) {
@@ -62,7 +111,6 @@ function assertFile(filePath, pattern) {
 
 function main() {
   const tscBin = resolveTscBin();
-  const commanderRoot = resolveCommanderPackageRoot();
 
   run("node", [tscBin, "-p", "packages/toolkit/tsconfig.json"], "build toolkit");
   run("node", [tscBin, "-p", "packages/platform-core/tsconfig.json"], "build platform-core");
@@ -137,7 +185,7 @@ function main() {
       cpSync(resolve(root, "apps/cli/dist"), join(publishedRoot, "dist"), { recursive: true });
       cpSync(resolve(root, "apps/cli/vendor"), join(publishedRoot, "vendor"), { recursive: true });
       cpSync(resolve(root, "apps/cli/package.json"), join(publishedRoot, "package.json"));
-      cpSync(commanderRoot, join(publishedRoot, "node_modules", "commander"), { recursive: true });
+      copyPublishedRuntimeDependencies(publishedRoot);
 
       run("node", [join(publishedRoot, "dist/cli/index.js"), "toolkit", "validate"], "smoke published zc toolkit validate");
       run(

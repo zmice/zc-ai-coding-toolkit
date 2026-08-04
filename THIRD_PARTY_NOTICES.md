@@ -34,3 +34,27 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## UI/UX Review References
+
+The following progressive-disclosure references adapt material from public
+UI and frontend guidance projects:
+
+- `interaction-and-motion-checklist.md` adapts interaction and motion review
+  methods from [`ibelick/ui-skills`](https://github.com/ibelick/ui-skills).
+  The complete MIT license is distributed beside the reference as
+  `LICENSE-ui-skills.txt`.
+- `design-direction-and-copy.md` adapts design-direction guidance from
+  [`anthropics/skills`](https://github.com/anthropics/skills/tree/main/skills/frontend-design).
+  The complete Apache-2.0 license is distributed beside the reference as
+  `LICENSE-anthropic-frontend-design.txt`.
+- `interface-review-checklist.md` adapts framework-independent checks from
+  [`vercel-labs/web-interface-guidelines`](https://github.com/vercel-labs/web-interface-guidelines).
+  The complete MIT license is distributed beside the reference as
+  `LICENSE-vercel-web-interface-guidelines.txt`.
+
+All of these license files are generated into
+`skills/ui-ux-review/references/` with the adapted content. Google Chrome's
+[`modern-web-guidance`](https://github.com/GoogleChrome/modern-web-guidance)
+was consulted as a factual browser-platform source; its complete guide data
+is not copied into this repository.

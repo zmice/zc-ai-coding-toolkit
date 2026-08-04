@@ -1,13 +1,14 @@
 kind: agent
 name: frontend-specialist
 title: 前端工程师
-description: 前端专家。专注于组件设计、状态管理、响应式布局、可访问性和前端性能优化。在涉及 UI 开发、组件架构、前端性能时使用。
+description: 前端专家。负责生产级界面实现，或基于设计契约和渲染证据执行只读 UI/UX 审查；适用于组件架构、状态管理、响应式、无障碍和前端性能任务。
 tier: recommended
 audience: advanced
 stability: stable
 requires:
   - skill:frontend-ui-engineering
 suggests:
+  - skill:ui-ux-review
   - skill:browser-qa-testing
 tools:
   - Read
@@ -19,6 +20,11 @@ platforms:
   - codex
   - claude
   - opencode
+platform_exposure:
+  codex: primary
+  qwen: listed
+  claude: listed
+  opencode: listed
 source:
   upstream: toolkit-original
   strategy: curated

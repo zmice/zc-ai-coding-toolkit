@@ -1,0 +1,28 @@
+{
+  "upstream": "ui-skills",
+  "captured_at": "2026-08-04T17:10:37.189Z",
+  "label": "2026-08-05-uiux-review",
+  "metadata": {
+    "title": "UI Skills",
+    "kind": "github-public-repo",
+    "status": "evaluating",
+    "owner": "codex",
+    "source_url": "https://github.com/ibelick/ui-skills.git",
+    "source_paths": [
+      "LICENSE",
+      "README.md",
+      "DESIGN.md",
+      "skills"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/ibelick/ui-skills.git",
+    "checked_at": "2026-08-04T17:10:37.190Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "2b3a114a3fcff079d73639a21710c595d4700a74"
+  },
+  "notes": {
+    "path": "references/notes/ui-skills.md",
+    "content": "# UI Skills\n\nSource: `https://github.com/ibelick/ui-skills`\n\n## Status\n\n面向 Design Engineer 的社区 UI skill 集合。登记为 `evaluating`，用于研究窄技能路由、证据驱动审查和渐进式 UI 上下文加载。\n\n## Latest Remote Evidence\n\n- remote head: `2b3a114a3fcff079d73639a21710c595d4700a74`\n- observed date: 2026-08-05\n- evidence: shallow clone review of the root router, baseline UI, improve UI, accessibility, metadata, and motion-performance skills\n\n## Extractable Upgrades\n\n- UI 路由默认选择 1 个专项 skill，宽泛审查最多选择 3 个，避免上下文膨胀\n- 设计审查先证明设计契约、运行时关联和确定性修正，再保留 finding\n- 将 accessibility、motion performance、metadata 和快速 UI cleanup 分成窄能力，而不是堆在一个万能 prompt 中\n- 审查和实现分离；只读审查不顺手修改产品源码\n\n## License Boundary\n\n- repository license: MIT\n- 复制或实质改写时保留 MIT notice\n- 本仓库以 adapted / inspired 方式吸收方法，不镜像其 CLI 和完整 skill catalog\n\n## Non-Adoption Boundary\n\n- 不强制 Tailwind、Motion、Base UI、React Aria 或 Radix 等具体技术选型\n- 不把单一审美偏好升级为跨项目 MUST\n- 不复制 `npx ui-skills` 运行时；当前 toolkit 继续使用 manifest 和 requires/suggests 路由\n\n## Current Decision\n\n- 保持 `evaluating`\n- 吸收最小上下文路由和证据门禁到新的 `ui-ux-review`\n- 通过 micro-eval 证明路由改善后，再决定是否升级为 active upstream\n"
+  }
+}

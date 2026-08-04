@@ -128,6 +128,7 @@ Recommendation: <action> because <specific evidence, trade-off, and rejected alt
 - `subagent-driven-development`：子代理驱动开发 — 在任务彼此独立时为每个任务派发全新子代理，并配套两阶段审查。
 - `team-orchestration`：团队编排 — 使用 zc CLI 结合 tmux 和 git worktree 组织多个 AI CLI 并行协作。
 - `test-driven-development`：测试驱动开发 — 先写失败测试，再让测试变绿，并在过程中持续重构。
+- `ui-ux-review`：界面与体验审查 — 基于设计契约、运行路径和渲染证据，只读审查现有界面的 UI、UX 与无障碍质量。
 - `using-agent-skills`：技能发现 — 在会话开始或不确定该用哪个 skill 时，负责发现、选择并调用合适技能。
 - `verification-before-completion`：完成前验证 — 在声明完成、修复成立或结果通过前，先运行验证命令并读取输出。
 
@@ -136,7 +137,7 @@ Recommendation: <action> because <specific evidence, trade-off, and rejected alt
 - `architect`：架构师 — 负责系统设计决策、技术选型评估、模块边界划分和架构权衡分析。
 - `backend-specialist`：后端工程师 — 专注服务端实现模式、中间件设计、数据访问层、错误处理和缓存策略。
 - `code-reviewer`：代码审查 — 在代码完成后进行七维度代码审查，并给出重构建议与 DX 评估。
-- `frontend-specialist`：前端工程师 — 专注组件设计、状态管理、响应式布局、可访问性和前端性能优化。
+- `frontend-specialist`：前端工程师 — 负责生产级界面实现，或基于设计契约和渲染证据执行只读 UI/UX 审查。
 - `performance-engineer`：性能工程师 — 专注性能剖析、瓶颈定位、优化方案设计和 benchmark 验证。
 - `product-owner`：产品负责人 — 负责需求洞察、功能优先级、需求拆解和验收标准定义。
 - `security-auditor`：安全审计 — 专注漏洞检测、威胁建模和安全编码实践。

@@ -1,0 +1,27 @@
+kind: skill
+name: ui-ux-review
+title: 界面与体验审查
+description: 审查现有界面的 UI、UX 与无障碍质量。适用于审计、点评、改善或清理页面时，基于设计契约、运行路径和渲染证据识别问题并输出可执行建议；默认只读，不代替实现。
+tier: recommended
+audience: advanced
+stability: stable
+suggests:
+  - skill:browser-qa-testing
+  - skill:verification-before-completion
+platforms:
+  - qwen
+  - codex
+  - claude
+  - opencode
+platform_exposure:
+  codex: primary
+  qwen: listed
+  claude: listed
+  opencode: listed
+source:
+  upstream: ui-skills
+  strategy: adapted
+  origin_name: improve-ui
+  origin_path: skills/improve-ui/SKILL.md
+  origin_id: skill:improve-ui
+  notes: 保留证据门与只读审查边界，并吸收 Vercel Web Interface Guidelines、Anthropic frontend-design 和 WCAG 2.2 的可迁移内容；不绑定框架或在线依赖。
