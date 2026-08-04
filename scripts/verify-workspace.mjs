@@ -112,6 +112,15 @@ function assertFile(filePath, pattern) {
 function main() {
   const tscBin = resolveTscBin();
 
+  assertFile(
+    resolve(root, ".github/workflows/publish-codex-marketplace-repo.yml"),
+    /rsync -a --checksum --delete --exclude '\.git\/'/
+  );
+  assertFile(
+    resolve(root, ".github/workflows/publish-qwen-extension-repo.yml"),
+    /rsync -a --checksum --delete --exclude '\.git\/'/
+  );
+
   run("node", [tscBin, "-p", "packages/toolkit/tsconfig.json"], "build toolkit");
   run("node", [tscBin, "-p", "packages/platform-core/tsconfig.json"], "build platform-core");
   run("node", [tscBin, "-p", "packages/platform-qwen/tsconfig.json"], "build platform-qwen");

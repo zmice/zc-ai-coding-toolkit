@@ -81,7 +81,7 @@ jobs:
 
       - name: Sync bundle to target repository
         run: |
-          rsync -a --delete --exclude '.git/' "$RUNNER_TEMP/codex-marketplace/" ".codex-marketplace-repo/"
+          rsync -a --checksum --delete --exclude '.git/' "$RUNNER_TEMP/codex-marketplace/" ".codex-marketplace-repo/"
 
       - name: Commit and push if changed
         working-directory: .codex-marketplace-repo
