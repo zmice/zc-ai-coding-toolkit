@@ -1430,14 +1430,13 @@ async function runCodexCliCommand(
         return;
       }
 
-      const command = formatShellCommand("codex", args);
-      rejectPromise(
-        new Error(
-          signal
-            ? `${command} 被信号 ${signal} 中断。`
-            : `${command} 退出码为 ${code ?? "unknown"}：${stderr.trim() || stdout.trim() || "无错误输出"}`,
-        ),
-      );
+      rejectPromise(createCodexCliCommandFailure({
+        args,
+        code,
+        signal,
+        stdout,
+        stderr,
+      }));
     });
   });
 }
@@ -1590,6 +1589,25 @@ function resolveCodexMarketplaceRollbackSource(marketplace: Record<string, unkno
   return typeof marketplace.root === "string" ? marketplace.root : null;
 }
 
+function isCodexMarketplaceAlreadyAbsent(result: CodexCliCommandResult): boolean {
+  if (result.code === 0 || result.signal) {
+    return false;
+  }
+
+  return `${result.stderr}\n${result.stdout}`
+    .toLowerCase()
+    .includes("is not configured or installed");
+}
+
+function createCodexCliCommandFailure(result: CodexCliCommandResult): Error {
+  const command = formatShellCommand("codex", result.args);
+  return new Error(
+    result.signal
+      ? `${command} 被信号 ${result.signal} 中断。`
+      : `${command} 退出码为 ${result.code ?? "unknown"}：${result.stderr.trim() || result.stdout.trim() || "无错误输出"}`,
+  );
+}
+
 // Official lifecycle and JSON contracts:
 // https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin
 // https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin-marketplace
@@ -1719,7 +1737,15 @@ async function runCodexMarketplaceGitMode(
           }
 
           marketplaceMigration = `${previousSourceType}-to-git`;
-          await runOfficialCommand(removeMarketplaceArgs);
+          const removeMarketplaceResult = await runOfficialCommand(removeMarketplaceArgs, {
+            allowFailure: true,
+          });
+          if (
+            removeMarketplaceResult.code !== 0
+            && !isCodexMarketplaceAlreadyAbsent(removeMarketplaceResult)
+          ) {
+            throw createCodexCliCommandFailure(removeMarketplaceResult);
+          }
           try {
             await runOfficialCommand(addArgs);
             await runOfficialCommand(installArgs);

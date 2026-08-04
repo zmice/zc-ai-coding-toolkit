@@ -1097,6 +1097,86 @@ describe("platform CLI", () => {
     logSpy.mockRestore();
   });
 
+  it("recovers when a stale non-Git marketplace is already absent on Windows", async () => {
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.146.0\n" },
+      { code: 0, stdout: "Usage: codex plugin add\n" },
+      {
+        code: 0,
+        stdout: "{\"marketplaces\":[{\"name\":\"zc-toolkit\",\"root\":\"C:\\\\Users\\\\zmice\\\\.codex\\\\plugins\\\\zc-toolkit\",\"marketplaceSource\":{\"sourceType\":\"local\",\"source\":\"C:\\\\Users\\\\zmice\\\\.codex\\\\plugins\\\\zc-toolkit\"}}]}\n",
+      },
+      {
+        code: 1,
+        stderr: "Error: marketplace 'zc-toolkit' is not configured or installed\n",
+      },
+      { code: 0, stdout: "{\"marketplaceName\":\"zc-toolkit\",\"alreadyAdded\":false}\n" },
+      {
+        code: 0,
+        stdout: "{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.8.1\",\"installedPath\":\"C:\\\\Users\\\\zmice\\\\.codex\\\\plugins\\\\cache\\\\zc-toolkit\"}\n",
+      },
+      {
+        code: 0,
+        stdout: "{\"installed\":[{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.8.1\",\"installedPath\":\"C:\\\\Users\\\\zmice\\\\.codex\\\\plugins\\\\cache\\\\zc-toolkit\"}],\"available\":[]}\n",
+      },
+    ]);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await runPlatformPlugin("codex", {
+      upgrade: true,
+      json: true,
+    });
+
+    expect(errorSpy).not.toHaveBeenCalled();
+    expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
+      ["--version"],
+      ["plugin", "add", "--help"],
+      ["plugin", "marketplace", "list", "--json"],
+      ["plugin", "marketplace", "remove", "zc-toolkit", "--json"],
+      ["plugin", "marketplace", "add", "zmice/zc-codex-marketplace", "--json"],
+      ["plugin", "add", "zc-toolkit@zc-toolkit", "--json"],
+      ["plugin", "list", "--marketplace", "zc-toolkit", "--available", "--json"],
+    ]);
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload).toEqual(expect.objectContaining({
+      mode: "result",
+      operation: "upgrade",
+      marketplaceMigration: "local-to-git",
+      installedVersion: "0.8.1",
+      updatePending: false,
+    }));
+
+    errorSpy.mockRestore();
+    logSpy.mockRestore();
+  });
+
+  it("does not hide other failures while removing a non-Git Codex marketplace", async () => {
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.146.0\n" },
+      { code: 0, stdout: "Usage: codex plugin add\n" },
+      {
+        code: 0,
+        stdout: "{\"marketplaces\":[{\"name\":\"zc-toolkit\",\"root\":\"C:\\\\Users\\\\zmice\\\\.codex\\\\plugins\\\\zc-toolkit\",\"marketplaceSource\":{\"sourceType\":\"local\",\"source\":\"C:\\\\Users\\\\zmice\\\\.codex\\\\plugins\\\\zc-toolkit\"}}]}\n",
+      },
+      { code: 1, stderr: "Error: permission denied\n" },
+    ]);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await runPlatformPlugin("codex", {
+      upgrade: true,
+      json: true,
+    });
+
+    expect(logSpy).not.toHaveBeenCalled();
+    const payload = JSON.parse(errorSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload.error).toContain("permission denied");
+    expect(platformMocks.spawn).toHaveBeenCalledTimes(4);
+
+    errorSpy.mockRestore();
+    logSpy.mockRestore();
+  });
+
   it("registers the Git marketplace when upgrade finds no existing source", async () => {
     mockCodexSpawnResults([
       { code: 0, stdout: "codex-cli 0.146.0\n" },

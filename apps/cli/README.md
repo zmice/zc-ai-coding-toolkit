@@ -39,7 +39,7 @@ zc platform plugin codex --upgrade
 
 `--upgrade` 会先识别已配置 marketplace：Git 来源会刷新后重新安装当前快照，缺失来源会自动注册；旧版 Desktop / 本地来源会事务式迁移到 Git marketplace，迁移失败时恢复原来源和旧插件。随后立即列出 installed/available 状态。`zc` 会先探测当前 Codex CLI：新版使用稳定的 `codex plugin ...` 命令，旧版注册时兼容 `codex marketplace add`，但安装、状态和卸载会要求先升级 Codex。
 
-Windows 上通过 npm 安装的 `codex.cmd` / `qwen.cmd` 会由跨平台启动器直接解析，不需要把用户输入拼进 `cmd.exe`。Codex 全局直装回执写到 `%USERPROFILE%\.codex\platform-state\`，并兼容识别旧版本误写的 `%USERPROFILE%\.codex\.codex\platform-state\`。
+Windows 上通过 npm 安装的 `codex.cmd` / `qwen.cmd` 会由跨平台启动器直接解析，不需要把用户输入拼进 `cmd.exe`。Codex 全局直装回执写到 `%USERPROFILE%\.codex\platform-state\`，并兼容识别旧版本误写的 `%USERPROFILE%\.codex\.codex\platform-state\`。如果 Codex 返回了残留的本地 marketplace 记录，但删除时确认该记录已经不存在，`--upgrade` 会继续注册 Git marketplace 并完成自愈；其他删除错误仍会中断迁移。
 
 插件包已经原生携带 agents。只有还需要传统 `[agents.*]` TOML role 时，才把官方插件 lifecycle 和 companion agents 合并为一个兼容流程：
 
