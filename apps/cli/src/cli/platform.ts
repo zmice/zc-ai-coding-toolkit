@@ -35,8 +35,9 @@ import {
 } from "../utils/platform-install-receipt.js";
 import { pathExists, removeManagedPaths } from "../utils/platform-install-cleanup.js";
 import {
+  backupCodexLegacyDirectPlugin,
+  detachCodexLegacyDirectPlugin,
   isCodexLegacyDirectPluginPath,
-  quarantineCodexLegacyDirectPlugin,
   restoreCodexLegacyDirectPlugin,
 } from "../utils/codex-legacy-plugin.js";
 import {
@@ -1804,16 +1805,22 @@ async function runCodexMarketplaceGitMode(
           const legacyPluginVersion = typeof installedAfterUpgrade?.version === "string"
             ? installedAfterUpgrade.version
             : null;
-          const quarantine = await quarantineCodexLegacyDirectPlugin(
+          const backup = await backupCodexLegacyDirectPlugin(
             legacyPluginPath,
             legacyPluginVersion,
           );
-          legacyPluginBackupPath = quarantine.backupPath;
+          if (!backup.copied || !backup.backupPath) {
+            throw new Error(
+              `Codex 返回了旧直装记录，但目录不存在，无法创建可恢复备份：${legacyPluginPath}`,
+            );
+          }
+          legacyPluginBackupPath = backup.backupPath;
           try {
             const uninstallResult = await runOfficialCommand(uninstallArgs, { allowFailure: true });
             if (uninstallResult.code !== 0 && !isCodexPluginAlreadyAbsent(uninstallResult)) {
               throw createCodexCliCommandFailure(uninstallResult);
             }
+            await detachCodexLegacyDirectPlugin(backup);
             await runOfficialCommand(installArgs);
             const repairedStatusResult = await runOfficialCommand(statusArgs);
             const repairedPlugin = findCodexPluginRecord(
@@ -1829,23 +1836,20 @@ async function runCodexMarketplaceGitMode(
             const repairMessage = repairError instanceof Error
               ? repairError.message
               : "未知修复错误";
-            if (!quarantine.moved) {
-              throw repairError;
-            }
             let restoreFailure: unknown = null;
             try {
-              await restoreCodexLegacyDirectPlugin(quarantine);
+              await restoreCodexLegacyDirectPlugin(backup);
             } catch (restoreError) {
               restoreFailure = restoreError;
             }
             if (!restoreFailure) {
-              throw new Error(`${repairMessage}；已从 ${quarantine.backupPath} 恢复旧插件目录。`);
+              throw new Error(`${repairMessage}；已从 ${backup.backupPath} 恢复旧插件目录。`);
             }
             const restoreMessage = restoreFailure instanceof Error
               ? restoreFailure.message
               : "未知恢复错误";
             throw new Error(
-              `${repairMessage}；旧插件备份位于 ${quarantine.backupPath}，自动恢复失败：${restoreMessage}`,
+              `${repairMessage}；旧插件备份位于 ${backup.backupPath}，自动恢复失败：${restoreMessage}`,
             );
           }
         }

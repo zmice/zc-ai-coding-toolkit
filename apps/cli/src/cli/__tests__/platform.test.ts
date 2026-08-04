@@ -29,7 +29,8 @@ const platformMocks = vi.hoisted(() => ({
   importWorkspaceDistModule: vi.fn(),
   normalizeInstallSelector: vi.fn(),
   pathExists: vi.fn(),
-  quarantineCodexLegacyDirectPlugin: vi.fn(),
+  backupCodexLegacyDirectPlugin: vi.fn(),
+  detachCodexLegacyDirectPlugin: vi.fn(),
   restoreCodexLegacyDirectPlugin: vi.fn(),
   resolveInstallTarget: vi.fn(),
   resolvePlatformInstallDoctor: vi.fn(),
@@ -97,7 +98,8 @@ vi.mock("../../utils/codex-legacy-plugin.js", () => ({
     .replace(/\/+$/, "")
     .toLowerCase()
     .endsWith("/.codex/plugins/zc-toolkit")),
-  quarantineCodexLegacyDirectPlugin: platformMocks.quarantineCodexLegacyDirectPlugin,
+  backupCodexLegacyDirectPlugin: platformMocks.backupCodexLegacyDirectPlugin,
+  detachCodexLegacyDirectPlugin: platformMocks.detachCodexLegacyDirectPlugin,
   restoreCodexLegacyDirectPlugin: platformMocks.restoreCodexLegacyDirectPlugin,
 }));
 
@@ -261,8 +263,9 @@ function mockCodexSpawnResults(results: Array<{
   code: number;
   stdout?: string;
   stderr?: string;
-}>): void {
-  platformMocks.spawn.mockImplementation(() => {
+}>, onSpawn?: (args: string[]) => void): void {
+  platformMocks.spawn.mockImplementation((_command: string, args: string[]) => {
+    onSpawn?.(args);
     const result = results.shift();
     if (!result) {
       throw new Error("unexpected codex spawn");
@@ -306,7 +309,8 @@ describe("platform CLI", () => {
     platformMocks.importWorkspaceDistModule.mockReset();
     platformMocks.normalizeInstallSelector.mockReset();
     platformMocks.pathExists.mockReset();
-    platformMocks.quarantineCodexLegacyDirectPlugin.mockReset();
+    platformMocks.backupCodexLegacyDirectPlugin.mockReset();
+    platformMocks.detachCodexLegacyDirectPlugin.mockReset();
     platformMocks.restoreCodexLegacyDirectPlugin.mockReset();
     platformMocks.resolveInstallTarget.mockReset();
     platformMocks.resolvePlatformInstallDoctor.mockReset();
@@ -433,11 +437,12 @@ describe("platform CLI", () => {
       issues: [],
     });
     platformMocks.pathExists.mockResolvedValue(true);
-    platformMocks.quarantineCodexLegacyDirectPlugin.mockImplementation(async (path: string) => ({
+    platformMocks.backupCodexLegacyDirectPlugin.mockImplementation(async (path: string) => ({
       originalPath: path,
       backupPath: `${path}.backup`,
-      moved: true,
+      copied: true,
     }));
+    platformMocks.detachCodexLegacyDirectPlugin.mockResolvedValue(true);
     platformMocks.restoreCodexLegacyDirectPlugin.mockResolvedValue(undefined);
     platformMocks.removeManagedPaths.mockResolvedValue({
       removed: 1,
@@ -1234,13 +1239,21 @@ describe("platform CLI", () => {
   });
 
   it("reinstalls a legacy direct plugin that shadows the refreshed Git marketplace on Windows", async () => {
+    const migrationOrder: string[] = [];
     const legacyPluginPath = "C:\\Users\\zmice\\.codex\\plugins\\zc-toolkit";
     const legacyPluginBackupPath = "C:\\Users\\zmice\\.codex\\platform-state\\legacy-plugin-backups\\zc-toolkit-0.5.0";
     const currentPluginPath = "C:\\Users\\zmice\\.codex\\plugins\\cache\\zc-toolkit\\zc-toolkit\\0.8.2";
-    platformMocks.quarantineCodexLegacyDirectPlugin.mockResolvedValue({
-      originalPath: legacyPluginPath,
-      backupPath: legacyPluginBackupPath,
-      moved: true,
+    platformMocks.backupCodexLegacyDirectPlugin.mockImplementation(async () => {
+      migrationOrder.push("backup");
+      return {
+        originalPath: legacyPluginPath,
+        backupPath: legacyPluginBackupPath,
+        copied: true,
+      };
+    });
+    platformMocks.detachCodexLegacyDirectPlugin.mockImplementation(async () => {
+      migrationOrder.push("detach");
+      return true;
     });
     platformMocks.writeArtifacts.mockResolvedValue({
       created: 1,
@@ -1279,7 +1292,7 @@ describe("platform CLI", () => {
         code: 0,
         stdout: `${JSON.stringify({ installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "0.5.0", installedPath: legacyPluginPath }], available: [] })}\n`,
       },
-      { code: 1, stderr: "Error: plugin 'zc-toolkit@zc-toolkit' is not installed\n" },
+      { code: 0, stdout: "{\"pluginId\":\"zc-toolkit@zc-toolkit\"}\n" },
       {
         code: 0,
         stdout: `${JSON.stringify({ pluginId: "zc-toolkit@zc-toolkit", version: "0.8.2", installedPath: currentPluginPath })}\n`,
@@ -1288,7 +1301,11 @@ describe("platform CLI", () => {
         code: 0,
         stdout: `${JSON.stringify({ installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "0.8.2", installedPath: currentPluginPath }], available: [] })}\n`,
       },
-    ]);
+    ], (args) => {
+      if (args.join(" ") === "plugin remove zc-toolkit@zc-toolkit --json") {
+        migrationOrder.push("official-remove");
+      }
+    });
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
     await runPlatformPlugin("codex", {
@@ -1308,10 +1325,16 @@ describe("platform CLI", () => {
       ["plugin", "add", "zc-toolkit@zc-toolkit", "--json"],
       ["plugin", "list", "--marketplace", "zc-toolkit", "--available", "--json"],
     ]);
-    expect(platformMocks.quarantineCodexLegacyDirectPlugin).toHaveBeenCalledWith(
+    expect(platformMocks.backupCodexLegacyDirectPlugin).toHaveBeenCalledWith(
       legacyPluginPath,
       "0.5.0",
     );
+    expect(platformMocks.detachCodexLegacyDirectPlugin).toHaveBeenCalledWith({
+      originalPath: legacyPluginPath,
+      backupPath: legacyPluginBackupPath,
+      copied: true,
+    });
+    expect(migrationOrder).toEqual(["backup", "official-remove", "detach"]);
     expect(platformMocks.loadCodexAgentCompanion).toHaveBeenCalledWith(currentPluginPath);
     const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
     expect(payload).toEqual(expect.objectContaining({
@@ -1335,13 +1358,13 @@ describe("platform CLI", () => {
     logSpy.mockRestore();
   });
 
-  it("restores the quarantined legacy plugin when the replacement install fails", async () => {
+  it("restores the backed-up legacy plugin when the replacement install fails", async () => {
     const legacyPluginPath = "C:\\Users\\zmice\\.codex\\plugins\\zc-toolkit";
     const legacyPluginBackupPath = "C:\\Users\\zmice\\.codex\\platform-state\\legacy-plugin-backups\\zc-toolkit-0.5.0";
-    platformMocks.quarantineCodexLegacyDirectPlugin.mockResolvedValue({
+    platformMocks.backupCodexLegacyDirectPlugin.mockResolvedValue({
       originalPath: legacyPluginPath,
       backupPath: legacyPluginBackupPath,
-      moved: true,
+      copied: true,
     });
     mockCodexSpawnResults([
       { code: 0, stdout: "codex-cli 0.146.0\n" },
@@ -1374,7 +1397,7 @@ describe("platform CLI", () => {
     expect(platformMocks.restoreCodexLegacyDirectPlugin).toHaveBeenCalledWith({
       originalPath: legacyPluginPath,
       backupPath: legacyPluginBackupPath,
-      moved: true,
+      copied: true,
     });
     expect(platformMocks.loadCodexAgentCompanion).not.toHaveBeenCalled();
     const payload = JSON.parse(errorSpy.mock.calls[0]?.[0] ?? "{}");

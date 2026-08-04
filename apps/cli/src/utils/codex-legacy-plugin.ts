@@ -1,10 +1,10 @@
-import { lstat, mkdir, rename } from "node:fs/promises";
+import { cp, lstat, mkdir, rename, rm } from "node:fs/promises";
 import { posix, win32 } from "node:path";
 
-export interface CodexLegacyPluginQuarantine {
+export interface CodexLegacyPluginBackup {
   readonly originalPath: string;
   readonly backupPath: string | null;
-  readonly moved: boolean;
+  readonly copied: boolean;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -36,6 +36,25 @@ function sanitizeVersion(version: string | null): string {
   return normalized || "unknown";
 }
 
+function resolveBackupRoot(pluginPath: string): string {
+  const paths = pathApi(pluginPath);
+  const codexHome = paths.dirname(paths.dirname(pluginPath));
+  return paths.join(codexHome, "platform-state", "legacy-plugin-backups");
+}
+
+function isOwnedBackupPath(originalPath: string, backupPath: string): boolean {
+  const paths = pathApi(originalPath);
+  return paths.dirname(backupPath).toLowerCase() === resolveBackupRoot(originalPath).toLowerCase()
+    && paths.basename(backupPath).toLowerCase().startsWith("zc-toolkit-");
+}
+
+async function assertDirectory(path: string, label: string): Promise<void> {
+  const stats = await lstat(path);
+  if (!stats.isDirectory()) {
+    throw new Error(`${label}不是目录：${path}`);
+  }
+}
+
 export function isCodexLegacyDirectPluginPath(pluginPath: string): boolean {
   return pluginPath
     .replaceAll("\\", "/")
@@ -44,11 +63,11 @@ export function isCodexLegacyDirectPluginPath(pluginPath: string): boolean {
     .endsWith("/.codex/plugins/zc-toolkit");
 }
 
-export async function quarantineCodexLegacyDirectPlugin(
+export async function backupCodexLegacyDirectPlugin(
   pluginPath: string,
   version: string | null,
   now = new Date(),
-): Promise<CodexLegacyPluginQuarantine> {
+): Promise<CodexLegacyPluginBackup> {
   if (!isCodexLegacyDirectPluginPath(pluginPath)) {
     throw new Error(`拒绝迁移非 Codex 旧直装目录：${pluginPath}`);
   }
@@ -57,13 +76,13 @@ export async function quarantineCodexLegacyDirectPlugin(
     return {
       originalPath: pluginPath,
       backupPath: null,
-      moved: false,
+      copied: false,
     };
   }
 
+  await assertDirectory(pluginPath, "Codex 旧插件路径");
   const paths = pathApi(pluginPath);
-  const codexHome = paths.dirname(paths.dirname(pluginPath));
-  const backupRoot = paths.join(codexHome, "platform-state", "legacy-plugin-backups");
+  const backupRoot = resolveBackupRoot(pluginPath);
   const backupBaseName = `zc-toolkit-${sanitizeVersion(version)}-${formatBackupTimestamp(now)}`;
   await mkdir(backupRoot, { recursive: true });
 
@@ -74,26 +93,62 @@ export async function quarantineCodexLegacyDirectPlugin(
     suffix += 1;
   }
 
-  await rename(pluginPath, backupPath);
+  await cp(pluginPath, backupPath, {
+    errorOnExist: true,
+    force: false,
+    recursive: true,
+  });
+  await assertDirectory(backupPath, "Codex 旧插件备份路径");
   return {
     originalPath: pluginPath,
     backupPath,
-    moved: true,
+    copied: true,
   };
 }
 
+export async function detachCodexLegacyDirectPlugin(
+  backup: CodexLegacyPluginBackup,
+): Promise<boolean> {
+  if (!backup.copied || !backup.backupPath) {
+    return false;
+  }
+  if (!isCodexLegacyDirectPluginPath(backup.originalPath)) {
+    throw new Error(`拒绝移除非 Codex 旧直装目录：${backup.originalPath}`);
+  }
+  if (!isOwnedBackupPath(backup.originalPath, backup.backupPath)) {
+    throw new Error(`拒绝使用非受管 Codex 旧插件备份：${backup.backupPath}`);
+  }
+  if (!(await pathExists(backup.backupPath))) {
+    throw new Error(`拒绝移除 Codex 旧插件：备份目录不存在 ${backup.backupPath}`);
+  }
+  await assertDirectory(backup.backupPath, "Codex 旧插件备份路径");
+  if (!(await pathExists(backup.originalPath))) {
+    return false;
+  }
+  await assertDirectory(backup.originalPath, "Codex 旧插件路径");
+  await rm(backup.originalPath, { recursive: true, force: false });
+  return true;
+}
+
 export async function restoreCodexLegacyDirectPlugin(
-  quarantine: CodexLegacyPluginQuarantine,
+  backup: CodexLegacyPluginBackup,
 ): Promise<void> {
-  if (!quarantine.moved || !quarantine.backupPath) {
+  if (!backup.copied || !backup.backupPath) {
     return;
   }
-  if (!(await pathExists(quarantine.backupPath))) {
-    throw new Error(`无法恢复 Codex 旧插件：备份目录不存在 ${quarantine.backupPath}`);
+  if (!isCodexLegacyDirectPluginPath(backup.originalPath)) {
+    throw new Error(`拒绝恢复到非 Codex 旧直装目录：${backup.originalPath}`);
   }
-  if (await pathExists(quarantine.originalPath)) {
-    throw new Error(`无法恢复 Codex 旧插件：原目录已重新出现 ${quarantine.originalPath}`);
+  if (!isOwnedBackupPath(backup.originalPath, backup.backupPath)) {
+    throw new Error(`拒绝使用非受管 Codex 旧插件备份：${backup.backupPath}`);
+  }
+  if (!(await pathExists(backup.backupPath))) {
+    throw new Error(`无法恢复 Codex 旧插件：备份目录不存在 ${backup.backupPath}`);
+  }
+  await assertDirectory(backup.backupPath, "Codex 旧插件备份路径");
+  if (await pathExists(backup.originalPath)) {
+    throw new Error(`无法恢复 Codex 旧插件：原目录已重新出现 ${backup.originalPath}`);
   }
 
-  await rename(quarantine.backupPath, quarantine.originalPath);
+  await rename(backup.backupPath, backup.originalPath);
 }
