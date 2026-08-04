@@ -1517,7 +1517,8 @@ function findCodexPluginRecord(
   outputs: readonly unknown[],
   collection: "installed" | "available" | null,
 ): Record<string, unknown> | null {
-  for (const output of outputs) {
+  for (let index = outputs.length - 1; index >= 0; index -= 1) {
+    const output = outputs[index];
     if (!isUnknownRecord(output)) {
       continue;
     }
@@ -1560,6 +1561,19 @@ function resolveCodexPluginPath(plugin: Record<string, unknown> | null): string 
   return isUnknownRecord(source) && typeof source.path === "string"
     ? source.path
     : null;
+}
+
+function isLegacyCodexDirectPlugin(plugin: Record<string, unknown> | null): boolean {
+  const pluginPath = resolveCodexPluginPath(plugin);
+  if (!pluginPath) {
+    return false;
+  }
+
+  return pluginPath
+    .replaceAll("\\", "/")
+    .replace(/\/+$/, "")
+    .toLowerCase()
+    .endsWith("/.codex/plugins/zc-toolkit");
 }
 
 function findCodexMarketplaceRecord(output: unknown): Record<string, unknown> | null {
@@ -1770,7 +1784,19 @@ async function runCodexMarketplaceGitMode(
           }
         }
 
-        await runOfficialCommand(statusArgs);
+        const statusResult = await runOfficialCommand(statusArgs);
+        const installedAfterUpgrade = findCodexPluginRecord(
+          [parseCodexCliJsonOutput(statusResult)],
+          "installed",
+        );
+        if (isLegacyCodexDirectPlugin(installedAfterUpgrade)) {
+          marketplaceMigration = marketplaceMigration === "none"
+            ? "legacy-plugin-to-git"
+            : `${marketplaceMigration}+legacy-plugin-to-git`;
+          await runOfficialCommand(uninstallArgs);
+          await runOfficialCommand(installArgs);
+          await runOfficialCommand(statusArgs);
+        }
       } else {
         for (const args of plannedArgs) {
           await runOfficialCommand(args);
@@ -1851,6 +1877,10 @@ async function runCodexMarketplaceGitMode(
     commandArgs: plannedArgs.map((args) => ["codex", ...args]),
     migrationCommands: operation === "upgrade"
       ? [marketplaceListArgs, removeMarketplaceArgs, addArgs, installArgs, statusArgs]
+        .map((args) => formatShellCommand("codex", args))
+      : [],
+    legacyPluginRepairCommands: operation === "upgrade"
+      ? [uninstallArgs, installArgs, statusArgs]
         .map((args) => formatShellCommand("codex", args))
       : [],
     executedCommands: executedArgs.map((args) => formatShellCommand("codex", args)),

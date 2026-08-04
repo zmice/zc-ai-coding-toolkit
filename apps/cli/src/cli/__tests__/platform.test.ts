@@ -1213,6 +1213,97 @@ describe("platform CLI", () => {
     logSpy.mockRestore();
   });
 
+  it("reinstalls a legacy direct plugin that shadows the refreshed Git marketplace on Windows", async () => {
+    const legacyPluginPath = "C:\\Users\\zmice\\.codex\\plugins\\zc-toolkit";
+    const currentPluginPath = "C:\\Users\\zmice\\.codex\\plugins\\cache\\zc-toolkit\\zc-toolkit\\0.8.2";
+    platformMocks.writeArtifacts.mockResolvedValue({
+      created: 1,
+      overwritten: 0,
+      unchanged: 1,
+      skipped: 0,
+      dryRun: false,
+    });
+    platformMocks.loadCodexAgentCompanion.mockResolvedValue({
+      pluginId: "zc-toolkit@zc-toolkit",
+      pluginVersion: "0.8.2",
+      installedPluginPath: currentPluginPath,
+      contentFingerprint: "current-companion-fingerprint",
+      configContent: "[agents.zc_code_reviewer]\n",
+      agents: [
+        {
+          name: "zc_code_reviewer",
+          relativePath: "agents/zc-code-reviewer.toml",
+          content: "name = \"zc_code_reviewer\"\n",
+        },
+      ],
+    });
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.146.0\n" },
+      { code: 0, stdout: "Usage: codex plugin add\n" },
+      {
+        code: 0,
+        stdout: "{\"marketplaces\":[{\"name\":\"zc-toolkit\",\"marketplaceSource\":{\"sourceType\":\"git\",\"source\":\"https://github.com/zmice/zc-codex-marketplace.git\"}}]}\n",
+      },
+      { code: 0, stdout: "{\"marketplaceName\":\"zc-toolkit\"}\n" },
+      {
+        code: 0,
+        stdout: `${JSON.stringify({ pluginId: "zc-toolkit@zc-toolkit", version: "0.5.0", installedPath: legacyPluginPath })}\n`,
+      },
+      {
+        code: 0,
+        stdout: `${JSON.stringify({ installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "0.5.0", installedPath: legacyPluginPath }], available: [] })}\n`,
+      },
+      { code: 0, stdout: "{\"pluginId\":\"zc-toolkit@zc-toolkit\"}\n" },
+      {
+        code: 0,
+        stdout: `${JSON.stringify({ pluginId: "zc-toolkit@zc-toolkit", version: "0.8.2", installedPath: currentPluginPath })}\n`,
+      },
+      {
+        code: 0,
+        stdout: `${JSON.stringify({ installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "0.8.2", installedPath: currentPluginPath }], available: [] })}\n`,
+      },
+    ]);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformPlugin("codex", {
+      upgrade: true,
+      withAgents: true,
+      json: true,
+    });
+
+    expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
+      ["--version"],
+      ["plugin", "add", "--help"],
+      ["plugin", "marketplace", "list", "--json"],
+      ["plugin", "marketplace", "upgrade", "zc-toolkit", "--json"],
+      ["plugin", "add", "zc-toolkit@zc-toolkit", "--json"],
+      ["plugin", "list", "--marketplace", "zc-toolkit", "--available", "--json"],
+      ["plugin", "remove", "zc-toolkit@zc-toolkit", "--json"],
+      ["plugin", "add", "zc-toolkit@zc-toolkit", "--json"],
+      ["plugin", "list", "--marketplace", "zc-toolkit", "--available", "--json"],
+    ]);
+    expect(platformMocks.loadCodexAgentCompanion).toHaveBeenCalledWith(currentPluginPath);
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload).toEqual(expect.objectContaining({
+      overallStatus: "complete",
+      plugin: expect.objectContaining({
+        version: "0.8.2",
+        installedPath: currentPluginPath,
+        updatePending: false,
+        lifecycle: expect.objectContaining({
+          marketplaceMigration: "legacy-plugin-to-git",
+        }),
+      }),
+      agents: expect.objectContaining({
+        status: "complete",
+        pluginVersion: "0.8.2",
+        installedPluginPath: currentPluginPath,
+      }),
+    }));
+
+    logSpy.mockRestore();
+  });
+
   it("restores the previous marketplace when a non-Git migration fails", async () => {
     const previousSource = "C:\\Users\\zmice\\.codex\\plugins\\zc-toolkit";
     mockCodexSpawnResults([
