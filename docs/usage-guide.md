@@ -354,7 +354,8 @@ zc platform where qwen --global --json
   - `--git` 只输出官方 lifecycle 命令，不写本地文件
   - `--register` 会注册默认 Git 源 `zmice/zc-codex-marketplace`；旧 CLI 兼容顶层 `codex marketplace add`
   - `--status` 使用官方 JSON 输出检查 installed、available、version 和 enabled
-  - `--upgrade` 刷新 Git marketplace 后检查插件状态，不自动覆盖用户启用状态
+  - `--upgrade` 先检查 marketplace 来源：Git 来源刷新后重新安装当前快照，缺失来源自动注册；非 Git 旧来源通过带回滚的迁移切换到 Git marketplace
+  - Windows npm `.cmd` shim 通过跨平台安全启动器调用；Codex Git source / ref 和 runtime spawn 参数不经过 shell 拼接
   - `--git --uninstall` 使用官方 `codex plugin remove` 移除插件 bundle；connector 授权需单独管理
   - `--with-agents` 只能与 `--install`、`--status`、`--upgrade`、`--uninstall` 一起使用，将官方插件和全局 companion agents 合并成一个 JSON/text 结果
   - 组合安装从官方 CLI 返回的 `installedPath` 或 `source.path` 定位插件根并加载 `assets/zc-agents/manifest.json`，校验 plugin version、内容指纹和各文件哈希后再写入
@@ -384,6 +385,7 @@ zc platform where qwen --global --json
   - `--uninstall` 删除 zc-managed agent 文件，并只移除 `config.toml` 中的 `[agents.zc_*]`，保留用户自己的 agent 配置
 - `codex --global`
   - 默认安装到 `~/.codex/AGENTS.md`
+  - 安装回执位于 `~/.codex/platform-state/codex.install-receipt.json`；旧版重复 `.codex/.codex` 路径仍可被识别并在下次写入时清理
   - 同时安装 `~/.codex/config.toml` 作为 `zc` 管理的 custom agent role 注册配置
   - 同时安装 `~/.codex/skills/zc-<command>/SKILL.md`
   - 同时安装 `~/.codex/skills/zc-<skill>/SKILL.md`

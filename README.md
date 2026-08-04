@@ -82,6 +82,7 @@ zc platform plugin codex --global --uninstall --plan
 - Codex 推荐通过官方 Git marketplace 安装插件，插件 skill 用 `$zc-toolkit:start` 这类 namespace 限定入口
 - Codex 传统直装通过 `$zc-*` skill 别名承接统一语义
 - Codex 插件原生携带 `commands/`、`skills/` 和 `agents/`；官方 marketplace 安装不需要额外修改用户 config
+- Codex `--upgrade` 能把旧 Desktop / 本地 marketplace 安装事务式迁移到 Git marketplace；Windows npm `.cmd` shim 由跨平台安全启动器处理
 - `--with-agents` 与 `zc platform agents codex` 保留给传统 `[agents.*]` TOML role 兼容，前者用独立回执约束 status、升级和卸载
 - Claude Code 和 OpenCode 通过 `/zc-*` 命令承接统一语义
 - Qwen 通过 `zc:*` namespaced command 承接统一语义

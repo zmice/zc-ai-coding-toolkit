@@ -44,7 +44,8 @@
     "prepublishOnly": "pnpm lint && pnpm test && pnpm build"
   },
   "dependencies": {
-    "commander": "^13.0.0"
+    "commander": "^13.0.0",
+    "cross-spawn": "^7.0.6"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

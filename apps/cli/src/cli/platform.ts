@@ -1,5 +1,4 @@
 import { Command, InvalidArgumentError } from "commander";
-import { spawn } from "node:child_process";
 import type { Dirent } from "node:fs";
 import { readFileSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
@@ -28,6 +27,7 @@ import type {
   PlatformInstallStatusResult,
 } from "../platform-state/types.js";
 import { normalizeInstallSelector, resolveInstallTarget } from "../utils/install-target.js";
+import { spawnCommand } from "../utils/cross-platform-spawn.js";
 import {
   deletePlatformInstallReceipt,
   resolvePlatformInstallReceiptPath,
@@ -1329,6 +1329,7 @@ function buildCodexMarketplaceAddArgs(source: string, ref: string | undefined): 
     "add",
     source,
     ...(ref ? ["--ref", ref] : []),
+    "--json",
   ];
 }
 
@@ -1394,7 +1395,7 @@ async function runCodexCliCommand(
   } = {},
 ): Promise<CodexCliCommandResult> {
   return await new Promise((resolvePromise, rejectPromise) => {
-    const child = spawn("codex", args, {
+    const child = spawnCommand("codex", args, {
       shell: false,
       stdio: ["inherit", "pipe", "pipe"],
     });
@@ -1562,6 +1563,33 @@ function resolveCodexPluginPath(plugin: Record<string, unknown> | null): string 
     : null;
 }
 
+function findCodexMarketplaceRecord(output: unknown): Record<string, unknown> | null {
+  if (!isUnknownRecord(output) || !Array.isArray(output.marketplaces)) {
+    return null;
+  }
+
+  const marketplace = output.marketplaces.find(
+    (candidate) => isUnknownRecord(candidate) && candidate.name === codexMarketplacePluginName,
+  );
+  return isUnknownRecord(marketplace) ? marketplace : null;
+}
+
+function resolveCodexMarketplaceSourceType(marketplace: Record<string, unknown>): string | null {
+  const marketplaceSource = marketplace.marketplaceSource;
+  return isUnknownRecord(marketplaceSource) && typeof marketplaceSource.sourceType === "string"
+    ? marketplaceSource.sourceType
+    : null;
+}
+
+function resolveCodexMarketplaceRollbackSource(marketplace: Record<string, unknown>): string | null {
+  const marketplaceSource = marketplace.marketplaceSource;
+  if (isUnknownRecord(marketplaceSource) && typeof marketplaceSource.source === "string") {
+    return marketplaceSource.source;
+  }
+
+  return typeof marketplace.root === "string" ? marketplace.root : null;
+}
+
 // Official lifecycle and JSON contracts:
 // https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin
 // https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin-marketplace
@@ -1590,7 +1618,9 @@ async function runCodexMarketplaceGitMode(
   const addArgs = buildCodexMarketplaceAddArgs(source, opts.ref);
   const pluginId = `${codexMarketplacePluginName}@${codexMarketplacePluginName}`;
   const installArgs = ["plugin", "add", pluginId, "--json"];
+  const marketplaceListArgs = ["plugin", "marketplace", "list", "--json"];
   const upgradeArgs = ["plugin", "marketplace", "upgrade", codexMarketplacePluginName, "--json"];
+  const removeMarketplaceArgs = ["plugin", "marketplace", "remove", codexMarketplacePluginName, "--json"];
   const statusArgs = [
     "plugin",
     "list",
@@ -1608,7 +1638,7 @@ async function runCodexMarketplaceGitMode(
   const commandArgsByOperation: Record<CodexPluginGitOperation, readonly string[][]> = {
     register: [addArgs],
     install: [addArgs, installArgs],
-    upgrade: [upgradeArgs, statusArgs],
+    upgrade: [marketplaceListArgs, upgradeArgs, installArgs, statusArgs],
     status: [statusArgs],
     uninstall: [uninstallArgs],
   };
@@ -1620,6 +1650,7 @@ async function runCodexMarketplaceGitMode(
   let cliCapability: CodexPluginCliCapability | null = null;
   let executedArgs: readonly string[][] = [];
   let commandResults: readonly CodexCliCommandResult[] = [];
+  let marketplaceMigration = operation === "upgrade" && !execute ? "conditional" : "none";
 
   if (execute) {
     cliCapability = await detectCodexPluginCliCapability();
@@ -1648,16 +1679,79 @@ async function runCodexMarketplaceGitMode(
       commandResults = [result];
     } else {
       const results: CodexCliCommandResult[] = [];
-      for (const args of plannedArgs) {
+      const executed: string[][] = [];
+      const runOfficialCommand = async (
+        args: readonly string[],
+        commandOptions: { readonly allowFailure?: boolean } = {},
+      ): Promise<CodexCliCommandResult> => {
         const command = formatShellCommand("codex", args);
         if (format === "text" && options.emit !== false) {
           console.log(`正在调用官方命令：${command}`);
         }
-        results.push(await runCodexCliCommand(args, {
+
+        const result = await runCodexCliCommand(args, {
           mirrorOutput: format === "text" && options.emit !== false,
-        }));
+          allowFailure: commandOptions.allowFailure,
+        });
+        executed.push([...args]);
+        results.push(result);
+        return result;
+      };
+
+      if (operation === "upgrade") {
+        const marketplaceListResult = await runOfficialCommand(marketplaceListArgs);
+        const marketplace = findCodexMarketplaceRecord(parseCodexCliJsonOutput(marketplaceListResult));
+
+        if (!marketplace) {
+          marketplaceMigration = "registered-git";
+          await runOfficialCommand(addArgs);
+          await runOfficialCommand(installArgs);
+        } else if (resolveCodexMarketplaceSourceType(marketplace) === "git") {
+          await runOfficialCommand(upgradeArgs);
+          await runOfficialCommand(installArgs);
+        } else {
+          const previousSourceType = resolveCodexMarketplaceSourceType(marketplace) ?? "unknown";
+          const rollbackSource = resolveCodexMarketplaceRollbackSource(marketplace);
+          if (!rollbackSource) {
+            throw new Error(
+              `marketplace ${codexMarketplacePluginName} 不是 Git 来源，且无法识别可回滚的旧来源；请先备份并手动迁移。`,
+            );
+          }
+
+          marketplaceMigration = `${previousSourceType}-to-git`;
+          await runOfficialCommand(removeMarketplaceArgs);
+          try {
+            await runOfficialCommand(addArgs);
+            await runOfficialCommand(installArgs);
+          } catch (migrationError) {
+            await runOfficialCommand(removeMarketplaceArgs, { allowFailure: true });
+            const rollbackAddArgs = buildCodexMarketplaceAddArgs(rollbackSource, undefined);
+            const restoreMarketplaceResult = await runOfficialCommand(rollbackAddArgs, { allowFailure: true });
+            const restorePluginResult = restoreMarketplaceResult.code === 0
+              ? await runOfficialCommand(installArgs, { allowFailure: true })
+              : null;
+            const rollbackSucceeded = restoreMarketplaceResult.code === 0
+              && restorePluginResult?.code === 0;
+            const migrationMessage = migrationError instanceof Error
+              ? migrationError.message
+              : "未知迁移错误";
+
+            throw new Error(
+              rollbackSucceeded
+                ? `${migrationMessage}；已恢复原 ${previousSourceType} marketplace 和旧版插件。`
+                : `${migrationMessage}；自动回滚未完整成功，请使用旧来源 ${rollbackSource} 手动恢复。`,
+            );
+          }
+        }
+
+        await runOfficialCommand(statusArgs);
+      } else {
+        for (const args of plannedArgs) {
+          await runOfficialCommand(args);
+        }
       }
-      executedArgs = plannedArgs;
+
+      executedArgs = executed;
       commandResults = results;
     }
   }
@@ -1666,7 +1760,7 @@ async function runCodexMarketplaceGitMode(
   const operationLabel: Record<CodexPluginGitOperation, string> = {
     register: "注册 marketplace",
     install: "注册 marketplace 并安装插件",
-    upgrade: "刷新 marketplace 并检查可用版本",
+    upgrade: "迁移或刷新 marketplace 并升级插件",
     status: "检查插件状态",
     uninstall: "卸载插件",
   };
@@ -1684,7 +1778,7 @@ async function runCodexMarketplaceGitMode(
         ];
       case "upgrade":
         return [
-          "marketplace 已刷新；如 available version 高于 installed version，请在 Plugins 页面确认更新",
+          "marketplace 已迁移或刷新，插件已从当前快照重新安装；请核对 installed version",
           "更新后启动新线程，避免旧线程继续使用已加载的旧插件能力",
         ];
       case "status":
@@ -1729,6 +1823,10 @@ async function runCodexMarketplaceGitMode(
     args: ["codex", ...plannedArgs[0]!],
     commands: plannedCommands,
     commandArgs: plannedArgs.map((args) => ["codex", ...args]),
+    migrationCommands: operation === "upgrade"
+      ? [marketplaceListArgs, removeMarketplaceArgs, addArgs, installArgs, statusArgs]
+        .map((args) => formatShellCommand("codex", args))
+      : [],
     executedCommands: executedArgs.map((args) => formatShellCommand("codex", args)),
     cliResults: commandResults.map((result, index) => ({
       command: formatShellCommand("codex", result.args),
@@ -1740,6 +1838,7 @@ async function runCodexMarketplaceGitMode(
     installedVersion,
     availableVersion,
     updatePending,
+    marketplaceMigration,
     installCommand,
     updateCommand: upgradeCommand,
     statusCommand,

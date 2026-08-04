@@ -54,8 +54,8 @@ const platformMocks = vi.hoisted(() => ({
   spawn: vi.fn(),
 }));
 
-vi.mock("node:child_process", () => ({
-  spawn: platformMocks.spawn,
+vi.mock("../../utils/cross-platform-spawn.js", () => ({
+  spawnCommand: platformMocks.spawn,
 }));
 
 vi.mock("../../utils/workspace.js", () => ({
@@ -904,7 +904,7 @@ describe("platform CLI", () => {
       source: "zmice/zc-codex-marketplace",
       ref: null,
       register: false,
-      command: "codex plugin marketplace add zmice/zc-codex-marketplace",
+      command: "codex plugin marketplace add zmice/zc-codex-marketplace --json",
       installCommand: "codex plugin add zc-toolkit@zc-toolkit --json",
       updateCommand: "codex plugin marketplace upgrade zc-toolkit --json",
       statusCommand: "codex plugin list --marketplace zc-toolkit --available --json",
@@ -933,7 +933,7 @@ describe("platform CLI", () => {
       mode: "plan",
       source: "https://github.com/example/plugins.git",
       ref: "main",
-      command: "codex plugin marketplace add https://github.com/example/plugins.git --ref main",
+      command: "codex plugin marketplace add https://github.com/example/plugins.git --ref main --json",
       args: [
         "codex",
         "plugin",
@@ -942,6 +942,7 @@ describe("platform CLI", () => {
         "https://github.com/example/plugins.git",
         "--ref",
         "main",
+        "--json",
       ],
     }));
     expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
@@ -987,7 +988,7 @@ describe("platform CLI", () => {
       target: "codex",
       operation: "install",
       commands: [
-        "codex plugin marketplace add zmice/zc-codex-marketplace",
+        "codex plugin marketplace add zmice/zc-codex-marketplace --json",
         "codex plugin add zc-toolkit@zc-toolkit --json",
       ],
       nextSteps: [
@@ -1016,7 +1017,16 @@ describe("platform CLI", () => {
       mode: "plan",
       operation: "upgrade",
       commands: [
+        "codex plugin marketplace list --json",
         "codex plugin marketplace upgrade zc-toolkit --json",
+        "codex plugin add zc-toolkit@zc-toolkit --json",
+        "codex plugin list --marketplace zc-toolkit --available --json",
+      ],
+      migrationCommands: [
+        "codex plugin marketplace list --json",
+        "codex plugin marketplace remove zc-toolkit --json",
+        "codex plugin marketplace add zmice/zc-codex-marketplace --json",
+        "codex plugin add zc-toolkit@zc-toolkit --json",
         "codex plugin list --marketplace zc-toolkit --available --json",
       ],
     }));
@@ -1039,6 +1049,126 @@ describe("platform CLI", () => {
     }));
 
     logSpy.mockRestore();
+  });
+
+  it("migrates a non-Git Codex marketplace before upgrading the installed plugin", async () => {
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.146.0\n" },
+      { code: 0, stdout: "Usage: codex plugin add\n" },
+      {
+        code: 0,
+        stdout: "{\"marketplaces\":[{\"name\":\"zc-toolkit\",\"root\":\"C:\\\\Users\\\\zmice\\\\.codex\\\\plugins\\\\zc-toolkit\",\"marketplaceSource\":{\"sourceType\":\"local\",\"source\":\"C:\\\\Users\\\\zmice\\\\.codex\\\\plugins\\\\zc-toolkit\"}}]}\n",
+      },
+      { code: 0, stdout: "{\"marketplaceName\":\"zc-toolkit\"}\n" },
+      { code: 0, stdout: "{\"marketplaceName\":\"zc-toolkit\",\"alreadyAdded\":false}\n" },
+      {
+        code: 0,
+        stdout: "{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.7.1\",\"installedPath\":\"C:\\\\Users\\\\zmice\\\\.codex\\\\plugins\\\\cache\\\\zc-toolkit\"}\n",
+      },
+      {
+        code: 0,
+        stdout: "{\"installed\":[{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.7.1\",\"installedPath\":\"C:\\\\Users\\\\zmice\\\\.codex\\\\plugins\\\\cache\\\\zc-toolkit\"}],\"available\":[]}\n",
+      },
+    ]);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformPlugin("codex", {
+      upgrade: true,
+      json: true,
+    });
+
+    expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
+      ["--version"],
+      ["plugin", "add", "--help"],
+      ["plugin", "marketplace", "list", "--json"],
+      ["plugin", "marketplace", "remove", "zc-toolkit", "--json"],
+      ["plugin", "marketplace", "add", "zmice/zc-codex-marketplace", "--json"],
+      ["plugin", "add", "zc-toolkit@zc-toolkit", "--json"],
+      ["plugin", "list", "--marketplace", "zc-toolkit", "--available", "--json"],
+    ]);
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload).toEqual(expect.objectContaining({
+      operation: "upgrade",
+      marketplaceMigration: "local-to-git",
+      installedVersion: "0.7.1",
+      updatePending: false,
+    }));
+
+    logSpy.mockRestore();
+  });
+
+  it("registers the Git marketplace when upgrade finds no existing source", async () => {
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.146.0\n" },
+      { code: 0, stdout: "Usage: codex plugin add\n" },
+      { code: 0, stdout: "{\"marketplaces\":[]}\n" },
+      { code: 0, stdout: "{\"marketplaceName\":\"zc-toolkit\",\"alreadyAdded\":false}\n" },
+      {
+        code: 0,
+        stdout: "{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.7.1\",\"installedPath\":\"/cache/zc-toolkit\"}\n",
+      },
+      {
+        code: 0,
+        stdout: "{\"installed\":[{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.7.1\",\"installedPath\":\"/cache/zc-toolkit\"}],\"available\":[]}\n",
+      },
+    ]);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformPlugin("codex", {
+      upgrade: true,
+      json: true,
+    });
+
+    expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
+      ["--version"],
+      ["plugin", "add", "--help"],
+      ["plugin", "marketplace", "list", "--json"],
+      ["plugin", "marketplace", "add", "zmice/zc-codex-marketplace", "--json"],
+      ["plugin", "add", "zc-toolkit@zc-toolkit", "--json"],
+      ["plugin", "list", "--marketplace", "zc-toolkit", "--available", "--json"],
+    ]);
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload.marketplaceMigration).toBe("registered-git");
+
+    logSpy.mockRestore();
+  });
+
+  it("restores the previous marketplace when a non-Git migration fails", async () => {
+    const previousSource = "C:\\Users\\zmice\\.codex\\plugins\\zc-toolkit";
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.146.0\n" },
+      { code: 0, stdout: "Usage: codex plugin add\n" },
+      {
+        code: 0,
+        stdout: `{\"marketplaces\":[{\"name\":\"zc-toolkit\",\"root\":${JSON.stringify(previousSource)},\"marketplaceSource\":{\"sourceType\":\"local\",\"source\":${JSON.stringify(previousSource)}}}]}\n`,
+      },
+      { code: 0, stdout: "{\"marketplaceName\":\"zc-toolkit\"}\n" },
+      { code: 1, stderr: "Git marketplace download failed\n" },
+      { code: 1, stderr: "marketplace not configured\n" },
+      { code: 0, stdout: "{\"marketplaceName\":\"zc-toolkit\"}\n" },
+      { code: 0, stdout: "{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.5.0\"}\n" },
+    ]);
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await runPlatformPlugin("codex", {
+      upgrade: true,
+      json: true,
+    });
+
+    expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
+      ["--version"],
+      ["plugin", "add", "--help"],
+      ["plugin", "marketplace", "list", "--json"],
+      ["plugin", "marketplace", "remove", "zc-toolkit", "--json"],
+      ["plugin", "marketplace", "add", "zmice/zc-codex-marketplace", "--json"],
+      ["plugin", "marketplace", "remove", "zc-toolkit", "--json"],
+      ["plugin", "marketplace", "add", previousSource, "--json"],
+      ["plugin", "add", "zc-toolkit@zc-toolkit", "--json"],
+    ]);
+    const payload = JSON.parse(errorSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload.error).toContain("已恢复原 local marketplace 和旧版插件");
+
+    errorSpy.mockRestore();
   });
 
   it("plans official Codex plugin removal when --git and --uninstall are combined", async () => {
@@ -1118,12 +1248,12 @@ describe("platform CLI", () => {
       operation: "install",
       cliMode: "official-plugin",
       executedCommands: [
-        "codex plugin marketplace add zmice/zc-codex-marketplace",
+        "codex plugin marketplace add zmice/zc-codex-marketplace --json",
         "codex plugin add zc-toolkit@zc-toolkit --json",
       ],
       cliResults: [
         {
-          command: "codex plugin marketplace add zmice/zc-codex-marketplace",
+          command: "codex plugin marketplace add zmice/zc-codex-marketplace --json",
           output: { alreadyAdded: true },
         },
         {
@@ -1308,7 +1438,15 @@ describe("platform CLI", () => {
     mockCodexSpawnResults([
       { code: 0, stdout: "codex-cli 0.140.0\n" },
       { code: 0, stdout: "Usage: codex plugin add\n" },
+      {
+        code: 0,
+        stdout: "{\"marketplaces\":[{\"name\":\"zc-toolkit\",\"marketplaceSource\":{\"sourceType\":\"git\",\"source\":\"https://github.com/zmice/zc-codex-marketplace.git\"}}]}\n",
+      },
       { code: 0, stdout: "{\"marketplaceName\":\"zc-toolkit\"}\n" },
+      {
+        code: 0,
+        stdout: "{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.6.0\"}\n",
+      },
       {
         code: 0,
         stdout: "{\"installed\":[{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.6.0\"}],\"available\":[{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.7.0\"}]}\n",
@@ -1364,7 +1502,15 @@ describe("platform CLI", () => {
     mockCodexSpawnResults([
       { code: 0, stdout: "codex-cli 0.140.0\n" },
       { code: 0, stdout: "Usage: codex plugin add\n" },
+      {
+        code: 0,
+        stdout: "{\"marketplaces\":[{\"name\":\"zc-toolkit\",\"marketplaceSource\":{\"sourceType\":\"git\",\"source\":\"https://github.com/zmice/zc-codex-marketplace.git\"}}]}\n",
+      },
       { code: 0, stdout: "{\"marketplaceName\":\"zc-toolkit\"}\n" },
+      {
+        code: 0,
+        stdout: "{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.6.0\",\"installedPath\":\"/cache/zc-toolkit\"}\n",
+      },
       {
         code: 0,
         stdout: "{\"installed\":[{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.6.0\"}],\"available\":[{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.6.0\"}]}\n",

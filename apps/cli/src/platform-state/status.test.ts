@@ -5,8 +5,12 @@ import { tmpdir } from "node:os";
 import { afterEach, describe, it } from "vitest";
 
 import { hashPlatformArtifactContent } from "./receipt.js";
+import { createPlatformInstallReceipt } from "./receipt.js";
 import { resolvePlatformInstallStatus } from "./status.js";
-import { writePlatformInstallReceiptForPlan } from "../utils/platform-install-receipt.js";
+import {
+  writePlatformInstallReceipt,
+  writePlatformInstallReceiptForPlan,
+} from "../utils/platform-install-receipt.js";
 
 const tempDirs: string[] = [];
 
@@ -77,6 +81,33 @@ describe("resolvePlatformInstallStatus", () => {
         differsFromPlan: false,
       },
     ]);
+  });
+
+  it("recognizes receipts written to the legacy duplicated codex home path", async () => {
+    const codexRoot = join(await createTempDir(), ".codex");
+    const plan = {
+      platform: "codex" as const,
+      destinationRoot: codexRoot,
+      manifestSource: "packages/toolkit/src/content",
+      overwrite: "error" as const,
+      artifacts: [{ path: join(codexRoot, "AGENTS.md"), content: "# agents\n" }],
+    };
+    await writeArtifact(plan.artifacts[0]!.path, plan.artifacts[0]!.content);
+    const legacyReceiptPath = join(
+      codexRoot,
+      ".codex",
+      "platform-state",
+      "codex.install-receipt.json",
+    );
+    await writePlatformInstallReceipt(
+      legacyReceiptPath,
+      createPlatformInstallReceipt(plan, { installedAt: "2026-04-19T10:11:12.000Z" }),
+    );
+
+    const status = await resolvePlatformInstallStatus(plan);
+
+    assert.equal(status.kind, "up-to-date");
+    assert.equal(status.receiptPath, legacyReceiptPath);
   });
 
   it("reports update-available when the installed files still match the receipt but the current plan changed", async () => {

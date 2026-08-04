@@ -16,8 +16,8 @@ const spawnMock = vi.fn<(command: string, args: readonly string[], options: obje
   stderr: PassThrough;
 }>();
 
-vi.mock("node:child_process", () => ({
-  spawn: spawnMock,
+vi.mock("./cross-platform-spawn.js", () => ({
+  spawnCommand: spawnMock,
 }));
 
 function createFakeChild(behavior: SpawnBehavior) {

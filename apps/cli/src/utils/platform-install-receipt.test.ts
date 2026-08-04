@@ -4,11 +4,15 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, it } from "vitest";
 
-import { hashPlatformArtifactContent } from "../platform-state/receipt.js";
+import {
+  createPlatformInstallReceipt,
+  hashPlatformArtifactContent,
+} from "../platform-state/receipt.js";
 import {
   deletePlatformInstallReceipt,
   readPlatformInstallReceipt,
   resolvePlatformInstallReceiptPath,
+  writePlatformInstallReceipt,
   writePlatformInstallReceiptForPlan,
 } from "./platform-install-receipt.js";
 
@@ -34,6 +38,17 @@ describe("platform install receipt store", () => {
     });
 
     assert.equal(receiptPath, join(root, ".codex", "platform-state", "codex.install-receipt.json"));
+  });
+
+  it("does not duplicate the codex home segment for a global codex root", async () => {
+    const root = join(await createTempDir(), ".codex");
+
+    const receiptPath = resolvePlatformInstallReceiptPath({
+      platform: "codex",
+      destinationRoot: root,
+    });
+
+    assert.equal(receiptPath, join(root, "platform-state", "codex.install-receipt.json"));
   });
 
   it("keeps non-codex receipts on the legacy shared platform path", async () => {
@@ -94,6 +109,36 @@ describe("platform install receipt store", () => {
         },
       ],
     });
+  });
+
+  it("cleans the legacy duplicated codex receipt after writing the canonical global receipt", async () => {
+    const root = join(await createTempDir(), ".codex");
+    const plan = {
+      platform: "codex" as const,
+      destinationRoot: root,
+      manifestSource: "packages/toolkit/src/content",
+      overwrite: "error" as const,
+      artifacts: [{ path: join(root, "AGENTS.md"), content: "# agents\n" }],
+    };
+    const legacyReceiptPath = join(
+      root,
+      ".codex",
+      "platform-state",
+      "codex.install-receipt.json",
+    );
+    await writePlatformInstallReceipt(
+      legacyReceiptPath,
+      createPlatformInstallReceipt(plan),
+    );
+    assert.notEqual(await readPlatformInstallReceipt(legacyReceiptPath), null);
+
+    await writePlatformInstallReceiptForPlan(plan);
+
+    assert.equal(await readPlatformInstallReceipt(legacyReceiptPath), null);
+    assert.notEqual(
+      await readPlatformInstallReceipt(resolvePlatformInstallReceiptPath(plan)),
+      null,
+    );
   });
 
   it("returns null when a receipt has not been written yet", async () => {

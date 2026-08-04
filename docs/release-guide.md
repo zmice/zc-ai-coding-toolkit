@@ -79,7 +79,8 @@
 - 确认没有内部包被误带入发布批次。
 - 确认 CLI 全局安装后仍能执行 `toolkit` / `platform` 相关命令。
 - 确认 GitHub Release 已生成，并包含 Qwen extension release bundle 附件。
-- 确认 `zc-codex-marketplace` 已同步，且 `zc platform plugin codex --upgrade --json` 能刷新 marketplace 并返回 installed/available 状态。
+- 确认 `zc-codex-marketplace` 已同步，且 `zc platform plugin codex --upgrade --json` 能识别 Git / 非 Git / 缺失 marketplace，完成刷新或带回滚迁移后重新安装插件并返回 installed/available 状态。
+- 确认 Windows CI 的 CLI job 实际执行 npm `.cmd` shim 回归用例，且 Codex 全局回执没有重复 `.codex` 目录。
 - 确认 `zc platform plugin codex --install --plan --json` 同时包含 marketplace 注册和 `codex plugin add`。
 - 确认发布 bundle 原生包含 `commands/*.md`、`skills/*/SKILL.md` 和 `agents/*.md`，且本地 marketplace 生成不额外写用户级 agent config。
 - 确认 `zc platform plugin codex --install --with-agents --plan --json` 同时声明 plugin 与 companion agent 两个阶段，但不会写入本机。

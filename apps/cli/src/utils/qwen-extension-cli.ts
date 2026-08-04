@@ -1,9 +1,9 @@
-import { spawn } from "node:child_process";
 import { rm } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import type { ChildProcessWithoutNullStreams } from "node:child_process";
 
 import { writeArtifacts, type GeneratedArtifact } from "./workspace.js";
+import { spawnCommand } from "./cross-platform-spawn.js";
 
 export class QwenOfficialCliUnavailableError extends Error {
   constructor(message: string = "未检测到 qwen CLI，无法通过官方扩展命令安装。") {
@@ -173,7 +173,7 @@ async function runQwenExtensionsCommand(args: readonly string[]): Promise<void> 
   const command = `qwen ${args.join(" ")}`;
 
   await new Promise<void>((resolvePromise, rejectPromise) => {
-    const child = spawn("qwen", args, {
+    const child = spawnCommand("qwen", args, {
       stdio: "pipe",
     }) as ChildProcessWithoutNullStreams;
     let stdout = "";

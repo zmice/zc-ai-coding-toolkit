@@ -1,6 +1,7 @@
-import { exec, spawn } from "node:child_process";
+import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import type { CLIAdapter, SpawnOptions, WorkerProcess } from "./types.js";
+import { spawnCommand } from "../utils/cross-platform-spawn.js";
 
 const execAsync = promisify(exec);
 
@@ -31,7 +32,7 @@ export class CodexAdapter implements CLIAdapter {
     if (opts.prompt) args.push(opts.prompt);
     if (opts.args) args.push(...opts.args);
 
-    const proc = spawn("codex", args, {
+    const proc = spawnCommand("codex", args, {
       cwd: opts.workdir,
       stdio: ["pipe", "pipe", "pipe"],
       env: { ...process.env, ...opts.env },

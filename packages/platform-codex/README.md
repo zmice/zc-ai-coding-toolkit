@@ -161,7 +161,7 @@ zc platform install codex --plan --json
 2. Git 仓库分发：`.github/workflows/publish-codex-marketplace-repo.yml` 同步到 `zmice/zc-codex-marketplace`。
 3. 用户安装：`zc platform plugin codex --install`，或依次运行 `codex plugin marketplace add ...` 与 `codex plugin add zc-toolkit@zc-toolkit`。plugin-native agents 随包安装。
 4. 状态检查：`zc platform plugin codex --status`；只有传统 TOML role 兼容场景才使用 `--status --with-agents`。
-5. 目录刷新：`zc platform plugin codex --upgrade`；根据 installed/available 结果在 Plugins 页面确认版本更新。
+5. 插件升级：`zc platform plugin codex --upgrade`；Git 来源会刷新并重新安装当前快照，旧版非 Git 来源会在可回滚保护下迁移到 Git marketplace。
 
 官方能力依据：
 

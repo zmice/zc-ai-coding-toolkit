@@ -19,6 +19,11 @@ function getReceiptDirectorySegments(platform: PlatformName): readonly string[] 
   return [".zc", "platform-state"];
 }
 
+function isCodexHomeRoot(destinationRoot: string): boolean {
+  const normalizedRoot = destinationRoot.replace(/[\\/]+$/, "");
+  return normalizedRoot.split(/[\\/]/).at(-1)?.toLowerCase() === ".codex";
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -65,7 +70,27 @@ export function resolvePlatformInstallReceiptPath(input: {
   readonly platform: PlatformName;
   readonly destinationRoot: string;
 }): string {
+  if (input.platform === "codex" && isCodexHomeRoot(input.destinationRoot)) {
+    return join(input.destinationRoot, "platform-state", `${input.platform}.install-receipt.json`);
+  }
+
   return join(input.destinationRoot, ...getReceiptDirectorySegments(input.platform), `${input.platform}.install-receipt.json`);
+}
+
+export function resolveLegacyPlatformInstallReceiptPath(input: {
+  readonly platform: PlatformName;
+  readonly destinationRoot: string;
+}): string | null {
+  if (input.platform !== "codex" || !isCodexHomeRoot(input.destinationRoot)) {
+    return null;
+  }
+
+  return join(
+    input.destinationRoot,
+    ".codex",
+    "platform-state",
+    `${input.platform}.install-receipt.json`,
+  );
 }
 
 export async function readPlatformInstallReceipt(receiptPath: string): Promise<PlatformInstallReceipt | null> {
@@ -101,6 +126,11 @@ export async function writePlatformInstallReceiptForPlan(
   options: CreatePlatformInstallReceiptOptions = {},
 ): Promise<PlatformInstallReceipt> {
   const receipt = createPlatformInstallReceipt(plan, options);
-  await writePlatformInstallReceipt(resolvePlatformInstallReceiptPath(plan), receipt);
+  const receiptPath = resolvePlatformInstallReceiptPath(plan);
+  await writePlatformInstallReceipt(receiptPath, receipt);
+  const legacyReceiptPath = resolveLegacyPlatformInstallReceiptPath(plan);
+  if (legacyReceiptPath && legacyReceiptPath !== receiptPath) {
+    await deletePlatformInstallReceipt(legacyReceiptPath);
+  }
   return receipt;
 }

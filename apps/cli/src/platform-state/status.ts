@@ -8,6 +8,7 @@ import type {
 } from "./types.js";
 import {
   readPlatformInstallReceipt,
+  resolveLegacyPlatformInstallReceiptPath,
   resolvePlatformInstallReceiptPath,
 } from "../utils/platform-install-receipt.js";
 
@@ -31,8 +32,16 @@ async function readArtifactDigest(path: string): Promise<string | null> {
 export async function resolvePlatformInstallStatus(
   plan: PlatformInstallPlanLike,
 ): Promise<PlatformInstallStatusResult> {
-  const receiptPath = resolvePlatformInstallReceiptPath(plan);
-  const receipt = await readPlatformInstallReceipt(receiptPath);
+  const currentReceiptPath = resolvePlatformInstallReceiptPath(plan);
+  const currentReceipt = await readPlatformInstallReceipt(currentReceiptPath);
+  const legacyReceiptPath = currentReceipt
+    ? null
+    : resolveLegacyPlatformInstallReceiptPath(plan);
+  const legacyReceipt = legacyReceiptPath
+    ? await readPlatformInstallReceipt(legacyReceiptPath)
+    : null;
+  const receiptPath = legacyReceipt ? legacyReceiptPath! : currentReceiptPath;
+  const receipt = currentReceipt ?? legacyReceipt;
 
   if (!receipt) {
     const artifacts = await Promise.all(
