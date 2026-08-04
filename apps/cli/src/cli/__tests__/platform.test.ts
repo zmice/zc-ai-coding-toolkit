@@ -29,6 +29,8 @@ const platformMocks = vi.hoisted(() => ({
   importWorkspaceDistModule: vi.fn(),
   normalizeInstallSelector: vi.fn(),
   pathExists: vi.fn(),
+  quarantineCodexLegacyDirectPlugin: vi.fn(),
+  restoreCodexLegacyDirectPlugin: vi.fn(),
   resolveInstallTarget: vi.fn(),
   resolvePlatformInstallDoctor: vi.fn(),
   resolvePlatformInstallReceiptPath: vi.fn(),
@@ -87,6 +89,16 @@ vi.mock("../../utils/platform-install-receipt.js", () => ({
 vi.mock("../../utils/platform-install-cleanup.js", () => ({
   pathExists: platformMocks.pathExists,
   removeManagedPaths: platformMocks.removeManagedPaths,
+}));
+
+vi.mock("../../utils/codex-legacy-plugin.js", () => ({
+  isCodexLegacyDirectPluginPath: vi.fn((path: string) => path
+    .replaceAll("\\", "/")
+    .replace(/\/+$/, "")
+    .toLowerCase()
+    .endsWith("/.codex/plugins/zc-toolkit")),
+  quarantineCodexLegacyDirectPlugin: platformMocks.quarantineCodexLegacyDirectPlugin,
+  restoreCodexLegacyDirectPlugin: platformMocks.restoreCodexLegacyDirectPlugin,
 }));
 
 vi.mock("../../platform-state/codex-agents-receipt.js", () => ({
@@ -294,6 +306,8 @@ describe("platform CLI", () => {
     platformMocks.importWorkspaceDistModule.mockReset();
     platformMocks.normalizeInstallSelector.mockReset();
     platformMocks.pathExists.mockReset();
+    platformMocks.quarantineCodexLegacyDirectPlugin.mockReset();
+    platformMocks.restoreCodexLegacyDirectPlugin.mockReset();
     platformMocks.resolveInstallTarget.mockReset();
     platformMocks.resolvePlatformInstallDoctor.mockReset();
     platformMocks.resolvePlatformInstallReceiptPath.mockReset();
@@ -419,6 +433,12 @@ describe("platform CLI", () => {
       issues: [],
     });
     platformMocks.pathExists.mockResolvedValue(true);
+    platformMocks.quarantineCodexLegacyDirectPlugin.mockImplementation(async (path: string) => ({
+      originalPath: path,
+      backupPath: `${path}.backup`,
+      moved: true,
+    }));
+    platformMocks.restoreCodexLegacyDirectPlugin.mockResolvedValue(undefined);
     platformMocks.removeManagedPaths.mockResolvedValue({
       removed: 1,
       missing: 0,
@@ -1215,7 +1235,13 @@ describe("platform CLI", () => {
 
   it("reinstalls a legacy direct plugin that shadows the refreshed Git marketplace on Windows", async () => {
     const legacyPluginPath = "C:\\Users\\zmice\\.codex\\plugins\\zc-toolkit";
+    const legacyPluginBackupPath = "C:\\Users\\zmice\\.codex\\platform-state\\legacy-plugin-backups\\zc-toolkit-0.5.0";
     const currentPluginPath = "C:\\Users\\zmice\\.codex\\plugins\\cache\\zc-toolkit\\zc-toolkit\\0.8.2";
+    platformMocks.quarantineCodexLegacyDirectPlugin.mockResolvedValue({
+      originalPath: legacyPluginPath,
+      backupPath: legacyPluginBackupPath,
+      moved: true,
+    });
     platformMocks.writeArtifacts.mockResolvedValue({
       created: 1,
       overwritten: 0,
@@ -1253,7 +1279,7 @@ describe("platform CLI", () => {
         code: 0,
         stdout: `${JSON.stringify({ installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "0.5.0", installedPath: legacyPluginPath }], available: [] })}\n`,
       },
-      { code: 0, stdout: "{\"pluginId\":\"zc-toolkit@zc-toolkit\"}\n" },
+      { code: 1, stderr: "Error: plugin 'zc-toolkit@zc-toolkit' is not installed\n" },
       {
         code: 0,
         stdout: `${JSON.stringify({ pluginId: "zc-toolkit@zc-toolkit", version: "0.8.2", installedPath: currentPluginPath })}\n`,
@@ -1282,6 +1308,10 @@ describe("platform CLI", () => {
       ["plugin", "add", "zc-toolkit@zc-toolkit", "--json"],
       ["plugin", "list", "--marketplace", "zc-toolkit", "--available", "--json"],
     ]);
+    expect(platformMocks.quarantineCodexLegacyDirectPlugin).toHaveBeenCalledWith(
+      legacyPluginPath,
+      "0.5.0",
+    );
     expect(platformMocks.loadCodexAgentCompanion).toHaveBeenCalledWith(currentPluginPath);
     const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
     expect(payload).toEqual(expect.objectContaining({
@@ -1292,6 +1322,7 @@ describe("platform CLI", () => {
         updatePending: false,
         lifecycle: expect.objectContaining({
           marketplaceMigration: "legacy-plugin-to-git",
+          legacyPluginBackupPath,
         }),
       }),
       agents: expect.objectContaining({
@@ -1301,6 +1332,57 @@ describe("platform CLI", () => {
       }),
     }));
 
+    logSpy.mockRestore();
+  });
+
+  it("restores the quarantined legacy plugin when the replacement install fails", async () => {
+    const legacyPluginPath = "C:\\Users\\zmice\\.codex\\plugins\\zc-toolkit";
+    const legacyPluginBackupPath = "C:\\Users\\zmice\\.codex\\platform-state\\legacy-plugin-backups\\zc-toolkit-0.5.0";
+    platformMocks.quarantineCodexLegacyDirectPlugin.mockResolvedValue({
+      originalPath: legacyPluginPath,
+      backupPath: legacyPluginBackupPath,
+      moved: true,
+    });
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.146.0\n" },
+      { code: 0, stdout: "Usage: codex plugin add\n" },
+      {
+        code: 0,
+        stdout: "{\"marketplaces\":[{\"name\":\"zc-toolkit\",\"marketplaceSource\":{\"sourceType\":\"git\",\"source\":\"https://github.com/zmice/zc-codex-marketplace.git\"}}]}\n",
+      },
+      { code: 0, stdout: "{\"marketplaceName\":\"zc-toolkit\"}\n" },
+      {
+        code: 0,
+        stdout: `${JSON.stringify({ pluginId: "zc-toolkit@zc-toolkit", version: "0.5.0", installedPath: legacyPluginPath })}\n`,
+      },
+      {
+        code: 0,
+        stdout: `${JSON.stringify({ installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "0.5.0", installedPath: legacyPluginPath }], available: [] })}\n`,
+      },
+      { code: 0, stdout: "{\"pluginId\":\"zc-toolkit@zc-toolkit\"}\n" },
+      { code: 1, stderr: "Error: replacement install failed\n" },
+    ]);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await runPlatformPlugin("codex", {
+      upgrade: true,
+      withAgents: true,
+      json: true,
+    });
+
+    expect(platformMocks.restoreCodexLegacyDirectPlugin).toHaveBeenCalledWith({
+      originalPath: legacyPluginPath,
+      backupPath: legacyPluginBackupPath,
+      moved: true,
+    });
+    expect(platformMocks.loadCodexAgentCompanion).not.toHaveBeenCalled();
+    const payload = JSON.parse(errorSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload.error).toContain("replacement install failed");
+    expect(payload.error).toContain("已从");
+    expect(payload.error).toContain("恢复旧插件目录");
+
+    errorSpy.mockRestore();
     logSpy.mockRestore();
   });
 

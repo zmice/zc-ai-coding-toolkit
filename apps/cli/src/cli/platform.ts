@@ -35,6 +35,11 @@ import {
 } from "../utils/platform-install-receipt.js";
 import { pathExists, removeManagedPaths } from "../utils/platform-install-cleanup.js";
 import {
+  isCodexLegacyDirectPluginPath,
+  quarantineCodexLegacyDirectPlugin,
+  restoreCodexLegacyDirectPlugin,
+} from "../utils/codex-legacy-plugin.js";
+import {
   ArtifactConflictError,
   type GeneratedArtifact,
   type WriteArtifactsResult,
@@ -1565,15 +1570,7 @@ function resolveCodexPluginPath(plugin: Record<string, unknown> | null): string 
 
 function isLegacyCodexDirectPlugin(plugin: Record<string, unknown> | null): boolean {
   const pluginPath = resolveCodexPluginPath(plugin);
-  if (!pluginPath) {
-    return false;
-  }
-
-  return pluginPath
-    .replaceAll("\\", "/")
-    .replace(/\/+$/, "")
-    .toLowerCase()
-    .endsWith("/.codex/plugins/zc-toolkit");
+  return pluginPath ? isCodexLegacyDirectPluginPath(pluginPath) : false;
 }
 
 function findCodexMarketplaceRecord(output: unknown): Record<string, unknown> | null {
@@ -1611,6 +1608,15 @@ function isCodexMarketplaceAlreadyAbsent(result: CodexCliCommandResult): boolean
   return `${result.stderr}\n${result.stdout}`
     .toLowerCase()
     .includes("is not configured or installed");
+}
+
+function isCodexPluginAlreadyAbsent(result: CodexCliCommandResult): boolean {
+  if (result.code === 0 || result.signal) {
+    return false;
+  }
+
+  const message = `${result.stderr}\n${result.stdout}`.toLowerCase();
+  return message.includes("plugin") && message.includes("not installed");
 }
 
 function createCodexCliCommandFailure(result: CodexCliCommandResult): Error {
@@ -1683,6 +1689,7 @@ async function runCodexMarketplaceGitMode(
   let executedArgs: readonly string[][] = [];
   let commandResults: readonly CodexCliCommandResult[] = [];
   let marketplaceMigration = operation === "upgrade" && !execute ? "conditional" : "none";
+  let legacyPluginBackupPath: string | null = null;
 
   if (execute) {
     cliCapability = await detectCodexPluginCliCapability();
@@ -1793,9 +1800,54 @@ async function runCodexMarketplaceGitMode(
           marketplaceMigration = marketplaceMigration === "none"
             ? "legacy-plugin-to-git"
             : `${marketplaceMigration}+legacy-plugin-to-git`;
-          await runOfficialCommand(uninstallArgs);
-          await runOfficialCommand(installArgs);
-          await runOfficialCommand(statusArgs);
+          const legacyPluginPath = resolveCodexPluginPath(installedAfterUpgrade)!;
+          const legacyPluginVersion = typeof installedAfterUpgrade?.version === "string"
+            ? installedAfterUpgrade.version
+            : null;
+          const quarantine = await quarantineCodexLegacyDirectPlugin(
+            legacyPluginPath,
+            legacyPluginVersion,
+          );
+          legacyPluginBackupPath = quarantine.backupPath;
+          try {
+            const uninstallResult = await runOfficialCommand(uninstallArgs, { allowFailure: true });
+            if (uninstallResult.code !== 0 && !isCodexPluginAlreadyAbsent(uninstallResult)) {
+              throw createCodexCliCommandFailure(uninstallResult);
+            }
+            await runOfficialCommand(installArgs);
+            const repairedStatusResult = await runOfficialCommand(statusArgs);
+            const repairedPlugin = findCodexPluginRecord(
+              [parseCodexCliJsonOutput(repairedStatusResult)],
+              "installed",
+            );
+            if (isLegacyCodexDirectPlugin(repairedPlugin)) {
+              throw new Error(
+                `Codex 仍从旧直装目录加载 zc-toolkit：${resolveCodexPluginPath(repairedPlugin)}`,
+              );
+            }
+          } catch (repairError) {
+            const repairMessage = repairError instanceof Error
+              ? repairError.message
+              : "未知修复错误";
+            if (!quarantine.moved) {
+              throw repairError;
+            }
+            let restoreFailure: unknown = null;
+            try {
+              await restoreCodexLegacyDirectPlugin(quarantine);
+            } catch (restoreError) {
+              restoreFailure = restoreError;
+            }
+            if (!restoreFailure) {
+              throw new Error(`${repairMessage}；已从 ${quarantine.backupPath} 恢复旧插件目录。`);
+            }
+            const restoreMessage = restoreFailure instanceof Error
+              ? restoreFailure.message
+              : "未知恢复错误";
+            throw new Error(
+              `${repairMessage}；旧插件备份位于 ${quarantine.backupPath}，自动恢复失败：${restoreMessage}`,
+            );
+          }
         }
       } else {
         for (const args of plannedArgs) {
@@ -1895,6 +1947,7 @@ async function runCodexMarketplaceGitMode(
     availableVersion,
     updatePending,
     marketplaceMigration,
+    legacyPluginBackupPath,
     installCommand,
     updateCommand: upgradeCommand,
     statusCommand,
