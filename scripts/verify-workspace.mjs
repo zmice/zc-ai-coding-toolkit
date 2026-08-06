@@ -168,6 +168,7 @@ function main() {
       ["scripts/export-codex-marketplace-bundle.mjs", "--out", codexMarketplaceRoot],
       "smoke export codex marketplace bundle"
     );
+    assertFile(join(codexMarketplaceRoot, ".gitattributes"), /assets\/zc-agents\/\*\* text eol=lf/);
     assertFile(join(codexMarketplaceRoot, ".agents", "plugins", "marketplace.json"), /"path": "\.\/plugins\/zc-toolkit"/);
     assertFile(join(codexMarketplaceRoot, "plugins", "zc-toolkit", ".codex-plugin", "plugin.json"), /"name": "zc-toolkit"/);
     assertFile(join(codexMarketplaceRoot, "plugins", "zc-toolkit", "skills", "start", "SKILL.md"));

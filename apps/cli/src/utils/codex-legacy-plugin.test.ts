@@ -8,6 +8,7 @@ import {
   backupCodexLegacyDirectPlugin,
   detachCodexLegacyDirectPlugin,
   isCodexLegacyDirectPluginPath,
+  resolveCodexLegacyPersonalMarketplacePath,
   restoreCodexLegacyDirectPlugin,
 } from "./codex-legacy-plugin.js";
 
@@ -36,6 +37,12 @@ describe("Codex legacy direct plugin migration", () => {
     assert.equal(
       isCodexLegacyDirectPluginPath("C:\\Users\\zmice\\.codex\\plugins\\zc-toolkit-copy"),
       false,
+    );
+    assert.equal(
+      resolveCodexLegacyPersonalMarketplacePath(
+        "C:\\Users\\zmice\\.codex\\plugins\\zc-toolkit",
+      ),
+      "C:\\Users\\zmice\\.agents\\plugins\\marketplace.json",
     );
   });
 
@@ -92,6 +99,79 @@ describe("Codex legacy direct plugin migration", () => {
     assert.equal(await readFile(join(backup.backupPath!, "legacy.txt"), "utf8"), "preserve me\n");
   });
 
+  it("detaches the auto-discovered personal marketplace entry that shadows the Git source", async () => {
+    const root = await createTempDir();
+    const pluginPath = join(root, ".codex", "plugins", "zc-toolkit");
+    const marketplacePath = join(root, ".agents", "plugins", "marketplace.json");
+    const marketplaceContent = `${JSON.stringify({
+      name: "zc-toolkit",
+      plugins: [
+        {
+          name: "zc-toolkit",
+          source: {
+            source: "local",
+            path: "./.codex/plugins/zc-toolkit",
+          },
+        },
+      ],
+    }, null, 2)}\n`;
+    await mkdir(pluginPath, { recursive: true });
+    await mkdir(join(root, ".agents", "plugins"), { recursive: true });
+    await writeFile(join(pluginPath, "legacy.txt"), "preserve me\n", "utf8");
+    await writeFile(marketplacePath, marketplaceContent, "utf8");
+
+    const backup = await backupCodexLegacyDirectPlugin(
+      pluginPath,
+      "0.5.0",
+      new Date("2026-08-05T03:15:30.000Z"),
+    );
+
+    assert.deepEqual(backup.personalMarketplace, {
+      originalPath: marketplacePath,
+      backupPath: `${backup.backupPath}.personal-marketplace.json`,
+      legacyEntryCount: 1,
+    });
+    assert.equal(
+      await readFile(backup.personalMarketplace!.backupPath, "utf8"),
+      marketplaceContent,
+    );
+
+    await detachCodexLegacyDirectPlugin(backup);
+
+    await assert.rejects(readFile(marketplacePath, "utf8"), { code: "ENOENT" });
+    await assert.rejects(readFile(join(pluginPath, "legacy.txt"), "utf8"), { code: "ENOENT" });
+  });
+
+  it("removes only the owned legacy entry from a shared personal marketplace", async () => {
+    const root = await createTempDir();
+    const pluginPath = join(root, ".codex", "plugins", "zc-toolkit");
+    const marketplacePath = join(root, ".agents", "plugins", "marketplace.json");
+    await mkdir(pluginPath, { recursive: true });
+    await mkdir(join(root, ".agents", "plugins"), { recursive: true });
+    await writeFile(join(pluginPath, "legacy.txt"), "preserve me\n", "utf8");
+    await writeFile(marketplacePath, `${JSON.stringify({
+      name: "zc-toolkit",
+      plugins: [
+        {
+          name: "zc-toolkit",
+          source: { source: "local", path: "./.codex/plugins/zc-toolkit" },
+        },
+        {
+          name: "other-plugin",
+          source: { source: "local", path: "./plugins/other-plugin" },
+        },
+      ],
+    }, null, 2)}\n`, "utf8");
+    const backup = await backupCodexLegacyDirectPlugin(pluginPath, "0.5.0");
+
+    await detachCodexLegacyDirectPlugin(backup);
+
+    const remaining = JSON.parse(await readFile(marketplacePath, "utf8")) as {
+      plugins: Array<{ name: string }>;
+    };
+    assert.deepEqual(remaining.plugins.map((plugin) => plugin.name), ["other-plugin"]);
+  });
+
   it("refuses to detach the old source when the backup is outside the managed backup directory", async () => {
     const root = await createTempDir();
     const pluginPath = join(root, ".codex", "plugins", "zc-toolkit");
@@ -107,6 +187,37 @@ describe("Codex legacy direct plugin migration", () => {
         copied: true,
       }),
       /拒绝使用非受管 Codex 旧插件备份/,
+    );
+
+    assert.equal(await readFile(join(pluginPath, "legacy.txt"), "utf8"), "preserve me\n");
+  });
+
+  it("refuses an unowned personal marketplace backup before removing the legacy plugin", async () => {
+    const root = await createTempDir();
+    const pluginPath = join(root, ".codex", "plugins", "zc-toolkit");
+    const backupPath = join(
+      root,
+      ".codex",
+      "platform-state",
+      "legacy-plugin-backups",
+      "zc-toolkit-0.5.0",
+    );
+    await mkdir(pluginPath, { recursive: true });
+    await mkdir(backupPath, { recursive: true });
+    await writeFile(join(pluginPath, "legacy.txt"), "preserve me\n", "utf8");
+
+    await assert.rejects(
+      detachCodexLegacyDirectPlugin({
+        originalPath: pluginPath,
+        backupPath,
+        copied: true,
+        personalMarketplace: {
+          originalPath: join(root, ".agents", "plugins", "marketplace.json"),
+          backupPath: join(root, "unmanaged", "marketplace.json"),
+          legacyEntryCount: 1,
+        },
+      }),
+      /拒绝使用非受管 Codex personal marketplace 备份/,
     );
 
     assert.equal(await readFile(join(pluginPath, "legacy.txt"), "utf8"), "preserve me\n");
@@ -128,5 +239,36 @@ describe("Codex legacy direct plugin migration", () => {
 
     assert.equal(await readFile(join(pluginPath, "legacy.txt"), "utf8"), "preserve me\n");
     await assert.rejects(readFile(join(backup.backupPath!, "legacy.txt"), "utf8"), { code: "ENOENT" });
+  });
+
+  it("restores the exact personal marketplace after a replacement install failure", async () => {
+    const root = await createTempDir();
+    const pluginPath = join(root, ".codex", "plugins", "zc-toolkit");
+    const marketplacePath = join(root, ".agents", "plugins", "marketplace.json");
+    const marketplaceContent = `${JSON.stringify({
+      name: "zc-toolkit",
+      interface: { displayName: "Legacy marketplace" },
+      plugins: [
+        {
+          name: "zc-toolkit",
+          source: { source: "local", path: "./.codex/plugins/zc-toolkit" },
+        },
+        {
+          name: "other-plugin",
+          source: { source: "local", path: "./plugins/other-plugin" },
+        },
+      ],
+    }, null, 2)}\n`;
+    await mkdir(pluginPath, { recursive: true });
+    await mkdir(join(root, ".agents", "plugins"), { recursive: true });
+    await writeFile(join(pluginPath, "legacy.txt"), "preserve me\n", "utf8");
+    await writeFile(marketplacePath, marketplaceContent, "utf8");
+    const backup = await backupCodexLegacyDirectPlugin(pluginPath, "0.5.0");
+    await detachCodexLegacyDirectPlugin(backup);
+
+    await restoreCodexLegacyDirectPlugin(backup);
+
+    assert.equal(await readFile(marketplacePath, "utf8"), marketplaceContent);
+    assert.equal(await readFile(join(pluginPath, "legacy.txt"), "utf8"), "preserve me\n");
   });
 });

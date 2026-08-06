@@ -73,6 +73,10 @@ function sha256(content: string): string {
   return createHash("sha256").update(content, "utf8").digest("hex");
 }
 
+function normalizeCompanionText(content: string): string {
+  return content.replaceAll("\r\n", "\n");
+}
+
 function isManifestEntry(value: unknown): value is CodexAgentCompanionManifestEntry {
   return (
     isRecord(value)
@@ -119,7 +123,9 @@ async function readVerifiedCompanionFile(
   entry: { readonly path: string; readonly sha256: string },
   label: string,
 ): Promise<string> {
-  const content = await readFile(resolveCompanionFile(companionRoot, entry.path), "utf8");
+  const content = normalizeCompanionText(
+    await readFile(resolveCompanionFile(companionRoot, entry.path), "utf8"),
+  );
   if (sha256(content) !== entry.sha256) {
     throw new Error(`${label}哈希不匹配：${entry.path}`);
   }

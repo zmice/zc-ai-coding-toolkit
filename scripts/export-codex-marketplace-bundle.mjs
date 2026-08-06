@@ -127,6 +127,14 @@ codex plugin marketplace upgrade zc-toolkit
 `;
 }
 
+function renderGitAttributes() {
+  return [
+    "# Keep companion integrity hashes stable across Windows, macOS, and Linux checkouts.",
+    "plugins/zc-toolkit/assets/zc-agents/** text eol=lf",
+    "",
+  ].join("\n");
+}
+
 async function main() {
   const { out } = parseArgs(process.argv.slice(2));
   await mkdir(dirname(out), { recursive: true });
@@ -143,6 +151,7 @@ async function main() {
   ]);
 
   const license = await readFile("LICENSE", "utf8");
+  await writeFile(join(out, ".gitattributes"), renderGitAttributes(), "utf8");
   await writeFile(join(out, "LICENSE"), license, "utf8");
   await writeFile(join(out, "README.md"), renderReadme(), "utf8");
 }

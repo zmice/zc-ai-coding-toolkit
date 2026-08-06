@@ -354,11 +354,11 @@ zc platform where qwen --global --json
   - `--git` 只输出官方 lifecycle 命令，不写本地文件
   - `--register` 会注册默认 Git 源 `zmice/zc-codex-marketplace`；旧 CLI 兼容顶层 `codex marketplace add`
   - `--status` 使用官方 JSON 输出检查 installed、available、version 和 enabled
-  - `--upgrade` 先检查 marketplace 来源：Git 来源刷新后重新安装当前快照，缺失来源自动注册；非 Git 旧来源通过带回滚的迁移切换到 Git marketplace
+  - `--upgrade` 先检查 marketplace 来源：Git 来源刷新后重新安装当前快照，缺失来源自动注册；非 Git 旧来源通过带回滚的迁移切换到 Git marketplace；旧 personal marketplace 条目会在备份后精确移除，失败时恢复
   - Windows npm `.cmd` shim 通过跨平台安全启动器调用；Codex Git source / ref 和 runtime spawn 参数不经过 shell 拼接
   - `--git --uninstall` 使用官方 `codex plugin remove` 移除插件 bundle；connector 授权需单独管理
   - `--with-agents` 只能与 `--install`、`--status`、`--upgrade`、`--uninstall` 一起使用，将官方插件和全局 companion agents 合并成一个 JSON/text 结果
-  - 组合安装从官方 CLI 返回的 `installedPath` 或 `source.path` 定位插件根并加载 `assets/zc-agents/manifest.json`，校验 plugin version、内容指纹和各文件哈希后再写入
+  - 组合安装从官方 CLI 返回的 `installedPath` 或 `source.path` 定位插件根并加载 `assets/zc-agents/manifest.json`，把 Windows CRLF 文本归一化为 LF 后校验 plugin version、内容指纹和各文件哈希，再写入 companion agents
   - 组合 status 不写文件；官方输出同时缺少这两个路径字段时可由已有 agent 回执续接，首次安装缺少路径则返回 partial
   - 组合 upgrade 在 available version 尚未真正成为 installed version 时返回 `update-pending`，agents 保持不变
   - 组合 uninstall 只移除回执拥有的 agent 文件和受管 config 段，保留未跟踪的本地 agent

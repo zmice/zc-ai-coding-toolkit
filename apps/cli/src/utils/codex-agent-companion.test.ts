@@ -111,4 +111,41 @@ describe("Codex agent companion", () => {
       "companion agent 文件哈希不匹配",
     );
   });
+
+  it("accepts Git CRLF checkout content when the manifest hashes canonical LF text", async () => {
+    const pluginRoot = await mkdtemp(join(tmpdir(), "zc-codex-plugin-crlf-"));
+    const companionRoot = join(pluginRoot, "assets/zc-agents");
+    const configContent = "[agents.zc_code_reviewer]\nconfig_file = \"agents/zc-code-reviewer.toml\"\n";
+    const agentContent = "name = \"zc_code_reviewer\"\ndescription = \"Review code\"\n";
+    const agentEntries = [
+      {
+        name: "zc_code_reviewer",
+        path: "agents/zc-code-reviewer.toml",
+        sha256: sha256(agentContent),
+      },
+    ];
+    await mkdir(join(companionRoot, "config"), { recursive: true });
+    await mkdir(join(companionRoot, "agents"), { recursive: true });
+    await writeFile(join(companionRoot, "config/agents.toml"), configContent.replaceAll("\n", "\r\n"));
+    await writeFile(
+      join(companionRoot, "agents/zc-code-reviewer.toml"),
+      agentContent.replaceAll("\n", "\r\n"),
+    );
+    await writeFile(join(companionRoot, "manifest.json"), `${JSON.stringify({
+      schemaVersion: 1,
+      pluginId: "zc-toolkit@zc-toolkit",
+      pluginVersion: "0.8.5",
+      contentFingerprint: sha256(JSON.stringify(agentEntries)),
+      config: {
+        path: "config/agents.toml",
+        sha256: sha256(configContent),
+      },
+      agents: agentEntries,
+    }, null, 2)}\n`);
+
+    const companion = await loadCodexAgentCompanion(pluginRoot);
+
+    expect(companion.configContent).toBe(configContent);
+    expect(companion.agents[0]?.content).toBe(agentContent);
+  });
 });
