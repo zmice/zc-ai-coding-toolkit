@@ -238,7 +238,7 @@ npm install -g @qwen-code/qwen-code@latest
 
 - 传统文件系统安装的 workflow / 专项 skill 会带 `zc-` 前缀
 - Codex 插件安装不再给 skill 额外加 `zc-` 前缀，因为插件自身已经提供 `zc-toolkit` 命名空间
-- plugin-native agents 使用插件自己的命名空间；传统直装 TOML agents 继续保留 `zc-` / `zc_` 前缀
+- 插件 Markdown agents 使用插件自己的命名空间；带明确 session settings 的 standalone TOML agents 继续保留 `zc-` / `zc_` 前缀
 
 ### 产物矩阵
 
@@ -367,7 +367,7 @@ zc platform where qwen --global --json
   - 项目级插件路线生成薄入口到 `<project>/AGENTS.md`
   - 显式 `--global` 时生成 Codex personal marketplace 到 `~/.agents/plugins/marketplace.json`
   - 显式 `--global` 时生成薄入口到 `~/.codex/AGENTS.md`
-  - 显式 `--global` 时生成插件到 `~/.codex/plugins/zc-toolkit/`，plugin-native agents 位于插件自己的 `agents/`
+  - 显式 `--global` 时生成插件到 `~/.codex/plugins/zc-toolkit/`，插件 Markdown agents 位于插件自己的 `agents/`
   - 插件内 skill 使用无前缀目录和 frontmatter，例如 `skills/start/SKILL.md`、`skills/sdd-tdd-workflow/SKILL.md`
   - 插件同时生成 `commands/<command>.md` 和 `agents/<agent>.md`
   - 界面实现使用 `$zc-toolkit:ui`；只读界面审查使用 `$zc-toolkit:ui-ux-review`；`frontend-specialist` 会按任务意图在实现、审查和浏览器验证之间分流
@@ -380,7 +380,7 @@ zc platform where qwen --global --json
   - 当前 Codex CLI 缺少稳定 `plugin` 子命令时，只有注册动作会降级到旧 marketplace 命令；安装、状态、刷新和卸载会提示先升级 Codex
   - 也可以显式使用 `--project` 或 `--dir <marketplace-root>`；`platform plugin codex --dir` 指向 repo/personal marketplace bundle root，不是 Codex home。如果要直接维护 custom agents，使用 `platform agents codex --dir <codex-home-or-project-root>`
 - `platform agents codex`
-  - 独立维护传统 `[agents.*]` TOML roles，不替代 plugin-native agents
+  - 独立维护官方 standalone custom-agent TOML roles；插件 Markdown agents 提供角色说明，TOML roles 提供逐角色 session settings
   - 默认动作是 `--sync`，会更新当前清单内的 `zc-*.toml` 和 `config.toml` 中的 `[agents.zc_*]`
   - `--status` 检查缺失、漂移和过期 `zc-*.toml`
   - `--prune` 在同步时删除当前清单外的过期 zc agent 文件
@@ -553,11 +553,20 @@ zc platform where codex --global
 
 ### 4.7 Codex 原生子代理与临时 worktree
 
-Codex agent 资产会把内容清单中的平台专属配置渲染到原生产物：
+Codex agent 资产会把内容清单中的平台专属配置渲染到 standalone / companion TOML。插件 `agents/*.md` 只包含 `name`、`description` 和角色正文，不承载下列 session settings：
 
 - `model`：按角色复杂度选择 `gpt-5.6-sol`、`gpt-5.6-terra` 或 `gpt-5.6-luna`
 - `model_reasoning_effort`：按风险和任务类型分配 `medium` / `high`
 - `sandbox_mode`：只读角色使用 `read-only`，实现型角色使用 `workspace-write`
+
+需要明确档位时运行：
+
+```bash
+zc platform plugin codex --upgrade --with-agents --json
+zc platform plugin codex --status --with-agents --json
+```
+
+第二条命令必须同时返回 `overallStatus=complete`、`roleConfiguration.explicitRuntimeConfigSurface=standalone-custom-agent-toml`、`agents.status=up-to-date`，并且 missing / drifted artifacts 都为 `0`。插件 `--status` 单独显示 installed / enabled / version，只能证明插件可用，不能证明模型档位已应用。同步完成后启动新的 Codex 任务以重新加载 custom agents。
 
 `parallel-agent-dispatch` 会根据 host 当前 session limit、正在运行的 child threads 和 ready task 数决定派发数量。有两个互不依赖的问题即可派发；写入型子代理仍必须声明不重叠的文件所有权，并由主线程完成 fan-in 验证。
 

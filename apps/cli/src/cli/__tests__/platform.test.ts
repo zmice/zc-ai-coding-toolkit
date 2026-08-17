@@ -1568,6 +1568,11 @@ describe("platform CLI", () => {
       action: "codex-plugin-companion",
       operation: "install",
       overallStatus: "planned",
+      roleConfiguration: {
+        explicitRuntimeConfigSurface: "standalone-custom-agent-toml",
+        fields: ["model", "model_reasoning_effort", "sandbox_mode"],
+        requiresCompanion: true,
+      },
       plugin: expect.objectContaining({
         status: "planned",
       }),
@@ -1870,6 +1875,11 @@ describe("platform CLI", () => {
     expect(payload).toEqual(expect.objectContaining({
       operation: "status",
       overallStatus: "complete",
+      roleConfiguration: {
+        explicitRuntimeConfigSurface: "standalone-custom-agent-toml",
+        fields: ["model", "model_reasoning_effort", "sandbox_mode"],
+        requiresCompanion: true,
+      },
       agents: expect.objectContaining({
         status: "up-to-date",
         receiptInstalled: true,

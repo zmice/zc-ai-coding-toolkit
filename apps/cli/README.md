@@ -41,7 +41,7 @@ zc platform plugin codex --upgrade
 
 Windows 上通过 npm 安装的 `codex.cmd` / `qwen.cmd` 会由跨平台启动器直接解析，不需要把用户输入拼进 `cmd.exe`。Codex 全局直装回执写到 `%USERPROFILE%\.codex\platform-state\`，并兼容识别旧版本误写的 `%USERPROFILE%\.codex\.codex\platform-state\`。如果 Codex 返回了残留的本地 marketplace 记录，但删除时确认该记录已经不存在，`--upgrade` 会继续注册 Git marketplace 并完成自愈；其他删除错误仍会中断迁移。如果刷新 Git marketplace 后，已安装插件仍指向旧直装目录 `%USERPROFILE%\.codex\plugins\zc-toolkit`，`--upgrade` 会先把旧目录和 `%USERPROFILE%\.agents\plugins\marketplace.json` 中受管的旧 source 条目复制到 `%USERPROFILE%\.codex\platform-state\legacy-plugin-backups\`，保持旧 source 可读并完成官方 `plugin remove`，再精确移除残留目录与旧条目，通过官方 `plugin add` 从 Git marketplace 重新安装和同步 companion agents；替换安装失败时会恢复原目录和 marketplace，不直接删除用户资产。companion 完整性校验会把 Windows Git checkout 的 CRLF 文本归一化为 LF，发布 bundle 也通过 `.gitattributes` 固定这些文件为 LF。
 
-插件包已经原生携带 agents。只有还需要传统 `[agents.*]` TOML role 时，才把官方插件 lifecycle 和 companion agents 合并为一个兼容流程：
+插件包携带 `agents/*.md` 角色说明，但 Markdown 角色不证明逐角色的模型、推理和 sandbox 配置已经生效。需要固定 `model`、`model_reasoning_effort` 或 `sandbox_mode` 时，把官方插件 lifecycle 和 standalone custom-agent companion 合并为一个流程：
 
 ```bash
 zc platform plugin codex --install --with-agents
@@ -50,7 +50,16 @@ zc platform plugin codex --upgrade --with-agents
 zc platform plugin codex --uninstall --with-agents
 ```
 
-插件目录原生包含 `agents/` 与 `commands/`，不需要额外 manifest 字段。`assets/zc-agents/` 只保留传统 config-role 兼容：`zc` 从官方 CLI 返回的 `installedPath` 或 `source.path` 精确定位插件根，再按回执写入 `~/.codex/config.toml` 和 `~/.codex/agents/`。升级仍显示 `updatePending` 时不会提前覆盖兼容 agents；卸载只删除回执明确拥有的文件。
+插件目录包含 `agents/` 与 `commands/`，不需要额外 manifest 字段。`assets/zc-agents/` 是显式运行时配置桥：`zc` 从官方 CLI 返回的 `installedPath` 或 `source.path` 精确定位插件根，再按回执写入 `~/.codex/config.toml` 和 `~/.codex/agents/`。升级仍显示 `updatePending` 时不会提前覆盖 agents；卸载只删除回执明确拥有的文件。
+
+确认标准不是只看插件已安装。运行 `zc platform plugin codex --status --with-agents --json`，应同时满足：
+
+- `overallStatus` 为 `complete`
+- `roleConfiguration.explicitRuntimeConfigSurface` 为 `standalone-custom-agent-toml`
+- `agents.status` 为 `up-to-date`
+- `agents.summary.missingArtifacts` 和 `agents.summary.driftedArtifacts` 都为 `0`
+
+同步后启动一个新的 Codex 任务，让运行时重新加载 `~/.codex/agents/zc-*.toml`。
 
 `plugin` 子命令当前只支持 Codex。Codex 本地生成/开发态验证仍可使用 `zc platform plugin codex --project|--global|--dir <repo>`。其他平台使用 install 路线，可按需追加 `--global`：
 

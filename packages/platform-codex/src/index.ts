@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import {
   attachPlanMetadata,
   createAttachmentArtifacts,
+  createMarkdownAgentArtifact,
   createMarkdownCommandArtifact,
   createSkillArtifact,
   createInstallPlan,
@@ -801,7 +802,9 @@ function renderCodexPluginAgentArtifacts(
   return assets.map((asset) => {
     const slug = toCodexSkillSlug(asset);
 
-    return createMarkdownCommandArtifact({
+    // Plugin Markdown carries role discovery and instructions. Codex session
+    // overrides remain in standalone / companion TOML custom-agent files.
+    return createMarkdownAgentArtifact({
       path: `agents/${slug}.md`,
       asset,
       name: slug,

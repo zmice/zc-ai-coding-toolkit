@@ -39,17 +39,17 @@ Runtime-requiring features must choose one of these execution homes:
 
 Static skill text must not pretend it can perform remote fetches, install updates, spawn writable agents, or validate fan-in without a real runtime.
 
-Plugin-native agents are the default packaged boundary:
+Plugin Markdown agents are a packaged discovery and instruction boundary, not the explicit session-configuration boundary:
 
 - the plugin bundle contains `agents/*.md`; no user config mutation is required for the native surface
 - `commands/`, `agents/`, and `hooks.json` are sibling plugin surfaces shown by the official `openai/plugins` repository, not invented manifest fields
-- the bundle may additionally carry inert, hash-addressed TOML agents under `assets/zc-agents/` for traditional config-role compatibility
-- only explicit `--with-agents` consumes that compatibility payload; writes and removals remain receipt-owned
+- the bundle additionally carries inert, hash-addressed TOML agents under `assets/zc-agents/` for documented standalone custom-agent session settings
+- only explicit `--with-agents` consumes that runtime-configuration payload; writes and removals remain receipt-owned
 
 ## Consequences
 
 - Codex docs and release flow should prioritize marketplace install/update.
-- Codex plugin agents ship with the marketplace bundle. `zc platform agents codex` and `--with-agents` remain compatibility paths for traditional `[agents.*]` TOML roles.
+- Codex plugin Markdown agents ship with the marketplace bundle. `zc platform agents codex` and `--with-agents` remain the supported path for explicit per-role `model`, `model_reasoning_effort`, and `sandbox_mode` settings.
 - Legacy `zc platform install codex` remains useful for development, tests, and migration, but is not the preferred user path.
 - Feature specs must name their runtime boundary before implementation.
 - Context and multi-agent features can ship in stages: skill protocol first, then runtime automation where the platform supports it.

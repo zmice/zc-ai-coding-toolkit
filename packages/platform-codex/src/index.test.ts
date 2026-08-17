@@ -552,6 +552,9 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.ok(apiSkill?.content.includes("$api"));
     assert.ok(nativeAgent?.content.startsWith('---\nname: "code-reviewer"'));
     assert.ok(nativeAgent?.content.includes("Review code like an owner"));
+    assert.ok(!nativeAgent?.content.includes("model:"));
+    assert.ok(!nativeAgent?.content.includes("model_reasoning_effort:"));
+    assert.ok(!nativeAgent?.content.includes("sandbox_mode:"));
 
     const pluginManifest = JSON.parse(plan.artifacts[0]!.content) as {
       name: string;

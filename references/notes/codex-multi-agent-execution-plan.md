@@ -182,7 +182,7 @@ The T1-T8 checklist above describes the delivered first phase: easier opportunit
 | Area | Status | Current Project State | Gap |
 |---|---|---|---|
 | Role catalog | aligned | nine `zc_*` roles exist; canonical metadata and standalone/companion TOML carry model, reasoning effort and sandbox defaults | nested MCP/skills configuration and runtime compatibility smoke remain |
-| Distribution | aligned with compatibility path | Git marketplace plugin, commands, skills, agents, companion manifest, receipt and lifecycle checks exist | native agent discovery and config precedence need end-to-end runtime smoke |
+| Distribution | aligned with explicit config bridge | Git marketplace plugin, commands, skills, Markdown agents, companion manifest, receipt and lifecycle checks exist | Markdown-agent discovery and standalone TOML effective-config smoke remain distinct runtime checks |
 | Trigger policy | aligned at policy layer | `dispatch_now`, native lifecycle mapping, direct read-only dispatch and runtime-capacity fan-out exist | automated host behavioral smoke is still missing |
 | Safety and fan-in | aligned at policy level | file ownership, loop budget, runtime state vocabulary, interruption handling and controller-owned fan-in gates exist | standalone controller artifacts do not ingest host thread state automatically; runtime smoke remains |
 | Controller artifacts | aligned with native boundary | `zc agent plan` is optional for write-heavy, resumable or audited runs and does not spawn workers | persistent host transcript ingestion remains open |
@@ -190,7 +190,7 @@ The T1-T8 checklist above describes the delivered first phase: easier opportunit
 | Context fork | aligned at policy layer | `none` / recent-N / full-history selection follows minimum sufficient context | host smoke must prove supported fork values |
 | Agent reuse | aligned at policy layer | independent task starts fresh; same-task clarification, rework and regression resume the owning thread | behavioral eval remains |
 | Concurrency | aligned at policy layer | fixed counts were replaced by live available-slot batching with controller capacity preserved | top-level `[agents]` config remains user-owned |
-| Model and permissions | partially aligned | nine roles render model, effort and sandbox into standalone/companion TOML | nested MCP/skills config, approval-failure smoke and live override verification remain |
+| Model and permissions | partially aligned | nine roles render model, effort and sandbox into standalone/companion TOML; plugin Markdown intentionally omits these unsupported session fields | nested MCP/skills config, effective-model smoke, approval-failure smoke and live override verification remain |
 | Temporary worktree | implemented | Codex-only OS temp lease, dirty-source acknowledgement, receipt ownership, non-force cleanup, TOCTOU guard, stale-lock recovery and receipt-driven recover/finalize are covered by tests | host worker workdir smoke remains |
 | Nested delegation | aligned at policy level | one extra layer, live-capacity use, ownership narrowing, shared budget and parent/global fan-in are explicit | host nested-dispatch smoke remains |
 | Verification | package-level only | generation, companion and CLI tests validate artifacts | no runtime smoke for spawn, reuse, steer, interrupt, nested delegation or approval failure |

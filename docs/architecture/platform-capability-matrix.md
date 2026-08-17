@@ -35,7 +35,7 @@
   - 插件目录可携带 `skills/`、`commands/`、`agents/`、`hooks.json`、MCP servers/connectors 和安装面元数据
   - `.codex-plugin/plugin.json` 提供稳定身份；agent / command 文件可按官方示例作为同级自动发现 surface，不要求虚构 manifest 字段
   - 当前官方 Subagents 文档以 `.codex/agents/*.toml` 和 `[agents]` 作为 custom agent 配置面，支持 model、reasoning、sandbox、MCP、skills 和并发控制
-  - `zc --with-agents` 的 receipt-backed companion 继续承担已安装插件与 standalone custom-agent 配置之间的桥接，不应在完成原生运行验证前删除
+  - `zc --with-agents` 的 receipt-backed companion 承担已安装插件与 standalone custom-agent 显式 session settings 之间的桥接；不能在官方为插件 Markdown agent 提供同等配置契约前删除
 
 ### 2. Entry File + Native Directories
 
@@ -74,8 +74,8 @@
 - 插件支持面是 ChatGPT Work web、ChatGPT/Codex desktop 和 Codex CLI；不包括 IDE extension、Chat、mobile
 - 当前 Codex releases 默认启用 subagent workflow，可由用户请求或 `AGENTS.md` / skill 指令触发，并在 Desktop、CLI 和 IDE 中显示 agent threads
 - standalone custom agent 支持 `model`、`model_reasoning_effort`、`sandbox_mode`、`mcp_servers` 和 `skills.config`；model / reasoning 可形成 role hard pin，sandbox 仍受 parent turn live override 约束；`[agents]` 提供动态并发、默认模型和 interrupt 配置
-- plugin-level agents 随插件目录分发；standalone TOML roles 与 `[agents.*] config_file` 继续支持显式配置和 companion 同步
-- `zc-toolkit` 保留带哈希的 companion payload，直到 plugin agent discovery、配置覆盖和升级回滚都有真实 smoke 证据
+- plugin-level Markdown agents 随插件目录分发，但当前不作为 `model`、`model_reasoning_effort`、`sandbox_mode` 的配置面；standalone TOML roles 与 `[agents.*] config_file` 负责显式配置和 companion 同步
+- `zc-toolkit` 保留带哈希的 companion payload，并用结构化 status 区分“插件已安装”和“逐角色配置已同步”
 
 来源：
 

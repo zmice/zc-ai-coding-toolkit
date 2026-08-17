@@ -2005,6 +2005,11 @@ function buildCodexPluginCompanionPayload(args: {
     target: "codex",
     operation: args.pluginResult.operation,
     overallStatus: args.overallStatus,
+    roleConfiguration: {
+      explicitRuntimeConfigSurface: "standalone-custom-agent-toml",
+      fields: ["model", "model_reasoning_effort", "sandbox_mode"],
+      requiresCompanion: true,
+    },
     plugin: {
       status: args.mode === "plan" ? "planned" : "complete",
       version: args.pluginResult.installedVersion,
@@ -2043,7 +2048,7 @@ async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void>
       [
         `Codex 插件与 companion agents ${pluginResult.operation}计划`,
         pluginResult.text,
-        "Companion agents：计划写入 Codex 全局目录",
+        "Companion agents：计划写入 Codex 全局目录，承载显式 model / reasoning / sandbox 配置",
       ].join("\n"),
     );
     return;
@@ -2292,6 +2297,7 @@ async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void>
           "Codex 插件与 companion agents 状态检查完成",
           `插件版本：${pluginResult.installedVersion ?? companion.pluginVersion}`,
           `Agents 状态：${status.kind}`,
+          "显式角色配置：standalone custom-agent TOML",
           `Agents 回执：${receiptPath}`,
         ].join("\n"),
       );
@@ -2343,6 +2349,7 @@ async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void>
       [
         "Codex 插件与 companion agents 处理完成",
         `插件版本：${companion.pluginVersion}`,
+        "显式角色配置：standalone custom-agent TOML",
         `Agents 回执：${receiptPath}`,
         `写入结果：新增 ${writeResult.created}，覆盖 ${writeResult.overwritten}，未变更 ${writeResult.unchanged}`,
       ].join("\n"),
@@ -4794,7 +4801,7 @@ export function registerPlatformCommand(program: Command): void {
     .option("--upgrade", "调用 codex plugin marketplace upgrade 刷新目录并检查插件状态")
     .option("--status", "调用 codex plugin list --available 检查插件状态")
     .option("--uninstall", "与 --git 合用时调用 codex plugin remove；否则卸载本地 marketplace bundle")
-    .option("--with-agents", "组合管理官方插件与全局 companion custom agents")
+    .option("--with-agents", "组合管理官方插件与承载显式运行时配置的全局 companion custom agents")
     .option("--include-agents", "卸载本地 plugin bundle 时同时清理 zc-managed custom agents")
     .option("--plan", "只查看 lifecycle、生成或卸载计划，不写文件")
     .option("-j, --json", "输出 JSON")

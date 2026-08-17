@@ -14,7 +14,7 @@
 - 可选 Codex plugin bundle：`.codex-plugin/plugin.json` + `commands/` + `skills/` + `agents/` + `assets/zc-agents/`
 - 可选 Codex marketplace bundle：`.agents/plugins/marketplace.json` + `AGENTS.md` / `.codex/AGENTS.md` + `plugins/zc-toolkit/` / `.codex/plugins/zc-toolkit/`
 
-传统 `.codex/config.toml` / `.codex/agents/` 与 plugin-native `commands/` / `agents/` 是两条不同安装面；不要把用户级 TOML role 误写成插件必需步骤。
+`.codex/config.toml` / `.codex/agents/` 与插件内 `commands/` / `agents/` 是两条不同安装面。插件 Markdown agent 提供角色说明；需要逐角色覆盖 Codex session settings 时，standalone TOML 是官方配置面。
 
 standalone / companion `agents/zc-<agent>.toml` 会从 canonical `codex_agent` 元数据生成 `model`、`model_reasoning_effort` 和 `sandbox_mode`。其中 model / reasoning 是有意的 role hard pin；sandbox 只是请求的默认隔离档位，parent turn 的 live sandbox / approval override 仍是实际权限边界。`mcp_servers`、`skills.config` 与顶层 `[agents]` 默认值尚未由本包生成。
 
@@ -79,7 +79,7 @@ zc platform install codex --plan --json
   - 插件自身已经提供 `zc-toolkit` 命名空间，因此 skill 名不再额外加 `zc-` 前缀
   - 用于 Codex plugin marketplace / 本地 plugin 打包场景，不替代项目级 `AGENTS.md`
   - plugin-level commands / agents 是 manifest 的同级自动发现 surface，不额外虚构 manifest 字段
-  - `assets/zc-agents/manifest.json`、`config/agents.toml` 和 `agents/*.toml` 仅是传统 config-role 兼容 payload；只有显式 `--with-agents` 会消费
+  - `assets/zc-agents/manifest.json`、`config/agents.toml` 和 `agents/*.toml` 是逐角色显式运行时配置 payload；只有显式 `--with-agents` 会消费
 - `plugin codex`
   - 推荐消费路径是 `plugin codex --install`，对齐官方 `codex plugin marketplace add` + `codex plugin add`
   - `plugin codex --git` 默认输出 `codex plugin marketplace add zmice/zc-codex-marketplace`
@@ -88,7 +88,7 @@ zc platform install codex --plan --json
   - `plugin codex --status` 使用 `codex plugin list --available --json` 检查 installed/available/version/enabled
   - `plugin codex --upgrade` 刷新 Git marketplace 后检查插件状态，不擅自重装或覆盖用户启用状态
   - `plugin codex --git --uninstall` 使用 `codex plugin remove` 移除官方安装的 bundle；connector 授权仍需在 ChatGPT Plugins/Apps 中单独处理
-  - plugin-native agents 随官方 lifecycle 安装；`--with-agents` 只为传统 TOML roles 提供兼容编排
+  - 插件 Markdown agents 随官方 lifecycle 安装，但不承载 `model`、`model_reasoning_effort` 或 `sandbox_mode`；`--with-agents` 编排官方 standalone TOML 配置面
   - 组合安装只从官方 CLI 返回的 `installedPath` 或 `source.path` 精确定位本地插件根并读取 companion；status 可用既有回执续接，升级待应用时 agents 保持不变
   - companion 回执只拥有 `zc` 写入的 agent 文件；组合卸载不会删除未跟踪的本地 `zc-*.toml`
   - `plugin codex --ref <ref>` 可 pin Git marketplace 分支或 tag
@@ -148,7 +148,7 @@ Codex UI/UX 入口：
 
 - 传统直装保留 `zc-` 前缀，避免污染 Codex 全局 skill 名称
 - 插件安装不再给 skill 额外加 `zc-` 前缀，因为插件本身已经是命名空间
-- plugin-native agents 使用插件命名空间；只有传统 TOML agents 保留 `zc-` / `zc_` 前缀
+- 插件 Markdown agents 使用插件命名空间；带明确 session settings 的 standalone TOML agents 保留 `zc-` / `zc_` 前缀
 - 传统直装示例：
   - `zc:start -> $zc-start`
   - `zc:product-analysis -> $zc-product-analysis`
@@ -168,8 +168,8 @@ Codex UI/UX 入口：
 
 1. 发布态同步：`scripts/export-codex-marketplace-bundle.mjs` 导出 marketplace 仓库根。
 2. Git 仓库分发：`.github/workflows/publish-codex-marketplace-repo.yml` 同步到 `zmice/zc-codex-marketplace`。
-3. 用户安装：`zc platform plugin codex --install`，或依次运行 `codex plugin marketplace add ...` 与 `codex plugin add zc-toolkit@zc-toolkit`。plugin-native agents 随包安装。
-4. 状态检查：`zc platform plugin codex --status`；只有传统 TOML role 兼容场景才使用 `--status --with-agents`。
+3. 用户安装：只需要 skills / 插件角色说明时运行 `zc platform plugin codex --install`；需要逐角色显式档位时运行 `zc platform plugin codex --install --with-agents`。
+4. 状态检查：`zc platform plugin codex --status` 只证明插件 installed / enabled / version；逐角色档位必须用 `zc platform plugin codex --status --with-agents --json` 检查 companion 回执和 artifacts。
 5. 插件升级：`zc platform plugin codex --upgrade`；Git 来源会刷新并重新安装当前快照，旧版非 Git 来源会在可回滚保护下迁移到 Git marketplace。
 
 官方能力依据：
@@ -186,7 +186,7 @@ Codex UI/UX 入口：
 2. 个人级验证：`platform plugin codex --global` 生成 personal marketplace 和 `~/.codex/AGENTS.md` 薄入口。
 3. 仓库内验证：`--bundle codex-marketplace --dir <repo>` 生成 repo-local marketplace 和仓库根 `AGENTS.md` 薄入口。
 
-注意：官方插件仓已给出 plugin-level `commands/`、`agents/` 和 `hooks.json` 实例。`assets/zc-agents/` 不是 native agent 的来源，只是显式 `--with-agents` 消费的传统 config-role 兼容 payload。
+注意：已归档的官方 `openai/plugins` 仓库给出过 plugin-level `commands/`、`agents/` 和 `hooks.json` 实例；当前官方 Subagents 文档只承诺 standalone TOML 可以覆盖 session settings。插件 Markdown agent 与 TOML companion 使用同一份角色正文，但只有后者携带显式模型、推理和 sandbox 配置。
 
 ## 验证
 

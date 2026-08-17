@@ -89,7 +89,7 @@ zc platform plugin codex --global --uninstall --plan
 - Codex 传统直装通过 `$zc-*` skill 别名承接统一语义
 - Codex 插件原生携带 `commands/`、`skills/` 和 `agents/`；官方 marketplace 安装不需要额外修改用户 config
 - Codex `--upgrade` 能把旧 Desktop / 本地 marketplace 安装事务式迁移到 Git marketplace，并清理会遮蔽 Git source 的旧 personal marketplace 条目；Windows npm `.cmd` shim 和 CRLF companion 文件由跨平台兼容层处理
-- `--with-agents` 与 `zc platform agents codex` 保留给传统 `[agents.*]` TOML role 兼容，前者用独立回执约束 status、升级和卸载
+- `--with-agents` 与 `zc platform agents codex` 负责 Codex 官方 standalone custom-agent TOML；需要逐角色固定 `model`、`model_reasoning_effort` 或 `sandbox_mode` 时必须保留这条配置面，前者用独立回执约束 status、升级和卸载
 - Claude Code 和 OpenCode 通过 `/zc-*` 命令承接统一语义
 - Qwen 通过 `zc:*` namespaced command 承接统一语义
 - 这样做是为了避免和平台内置命令、社区插件或未来扩展冲突
@@ -193,7 +193,7 @@ zc agent worktree recover ... --json
 
 目录默认位于系统临时目录的 `zc-codex-worktrees/`，不写入仓库 `.worktrees/` 或 `$CODEX_HOME/worktrees`。prepare、cleanup、recover 都是 dry-run 优先；dirty source、未收集 fan-in、非终态 agent、receipt/branch/path 不匹配会阻止不安全操作。
 
-Codex plugin-native agents 与传统 `[agents.*]` companion 共享同一套角色分档：内容清单声明 `model`、`model_reasoning_effort` 和 `sandbox_mode`，生成器不会再丢失这些 Codex 专属配置。调度以 host 实际 capacity 和任务独立性为准，不使用固定的保守数量上限。
+Codex 插件内 `agents/*.md` 负责角色说明与插件侧发现，不承载逐角色会话配置。内容清单中的 `model`、`model_reasoning_effort` 和 `sandbox_mode` 只渲染到官方 standalone / companion TOML；需要明确档位时使用 `zc platform plugin codex --upgrade --with-agents`，并以 `--status --with-agents --json` 返回 `overallStatus=complete`、`agents.status=up-to-date` 且无 missing / drifted artifacts 为准。调度仍以 host 实际 capacity 和任务独立性为准，不使用固定的保守数量上限。
 
 ## 如果你在维护这个仓库
 
