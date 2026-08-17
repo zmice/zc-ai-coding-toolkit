@@ -61,6 +61,11 @@ const manifest: ToolkitManifestLike = {
       summary: "Review code changes for correctness and risk.",
       body: "Review code like an owner. Prioritize correctness, security, behavior regressions, and missing tests.",
       tools: ["Read", "Edit"],
+      codexAgent: {
+        model: "gpt-5.6-terra",
+        modelReasoningEffort: "high",
+        sandboxMode: "read-only",
+      },
     },
   ],
 };
@@ -432,6 +437,9 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.ok(plan.artifacts[4]?.content.includes("$zc-api"));
     assert.ok(plan.artifacts[5]?.content.includes("Alpha skill"));
     assert.ok(plan.artifacts[6]?.content.includes('name = "zc_code_reviewer"'));
+    assert.ok(plan.artifacts[6]?.content.includes('model = "gpt-5.6-terra"'));
+    assert.ok(plan.artifacts[6]?.content.includes('model_reasoning_effort = "high"'));
+    assert.ok(plan.artifacts[6]?.content.includes('sandbox_mode = "read-only"'));
     assert.ok(!plan.artifacts[6]?.content.includes("tools ="));
     assert.ok(plan.artifacts[6]?.content.includes("developer_instructions"));
   });
@@ -603,6 +611,9 @@ describe("@zmice/platform-codex scaffold", () => {
       (artifact) => artifact.path === "assets/zc-agents/agents/zc-code-reviewer.toml",
     );
     assert.ok(companionAgent?.content.includes('name = "zc_code_reviewer"'));
+    assert.ok(companionAgent?.content.includes('model = "gpt-5.6-terra"'));
+    assert.ok(companionAgent?.content.includes('model_reasoning_effort = "high"'));
+    assert.ok(companionAgent?.content.includes('sandbox_mode = "read-only"'));
     assert.ok(!companionAgent?.content.includes("tools ="));
   });
 

@@ -20,6 +20,11 @@ interface ToolkitAssetMetaLike {
   routingWorkflows?: readonly string[];
   taskTypes?: readonly string[];
   platformExposure?: Partial<Record<"qwen" | "codex" | "claude" | "opencode", string>>;
+  codexAgent?: {
+    model?: string;
+    modelReasoningEffort?: string;
+    sandboxMode?: string;
+  };
   source?: {
     upstream: string;
     strategy: string;
@@ -140,6 +145,13 @@ function printAssetDetails(asset: ToolkitAssetLike): void {
   console.log(`任务类型：${asset.meta.taskTypes?.join(", ") ?? "-"}`);
   console.log(
     `平台暴露：${asset.meta.platformExposure ? Object.entries(asset.meta.platformExposure).map(([platform, mode]) => `${platform}=${mode}`).join(", ") : "-"}`
+  );
+  console.log(
+    `Codex agent：${asset.meta.codexAgent ? [
+      `model=${asset.meta.codexAgent.model ?? "inherit"}`,
+      `effort=${asset.meta.codexAgent.modelReasoningEffort ?? "inherit"}`,
+      `sandbox=${asset.meta.codexAgent.sandboxMode ?? "inherit"}`,
+    ].join(", ") : "-"}`
   );
   console.log(
     `来源：${asset.meta.source ? `${asset.meta.source.upstream} (${asset.meta.source.strategy})` : "-"}`

@@ -7,6 +7,7 @@ import {
   loadToolkitContentTree
 } from "./loaders/asset-unit.js";
 import { resolveToolkitContentRoot } from "./loaders/fs.js";
+import { validateToolkitAssetMeta } from "./schema/asset-meta.js";
 
 describe("parseSimpleYaml", () => {
   it("parses the metadata subset used by toolkit assets", () => {
@@ -56,6 +57,130 @@ source:
         notes: "governance baseline"
       }
     });
+  });
+});
+
+describe("validateToolkitAssetMeta", () => {
+  it("normalizes supported Codex custom-agent scalar configuration", () => {
+    const meta = validateToolkitAssetMeta({
+      kind: "agent",
+      name: "code-reviewer",
+      title: "代码审查",
+      description: "审查代码正确性、风险与回归。",
+      platforms: ["codex"],
+      codex_agent: {
+        model: "gpt-5.6-terra",
+        model_reasoning_effort: "high",
+        sandbox_mode: "read-only"
+      }
+    });
+
+    assert.deepEqual(meta.codexAgent, {
+      model: "gpt-5.6-terra",
+      modelReasoningEffort: "high",
+      sandboxMode: "read-only"
+    });
+  });
+
+  it("rejects Codex custom-agent configuration on non-agent assets", () => {
+    assert.throws(
+      () => validateToolkitAssetMeta({
+        kind: "skill",
+        name: "review",
+        title: "审查",
+        description: "审查代码。",
+        platforms: ["codex"],
+        codex_agent: {
+          sandbox_mode: "read-only"
+        }
+      }),
+      /codex_agent is only valid for agent assets/
+    );
+  });
+
+  it("accepts the full Codex reasoning range and rejects unsupported values", () => {
+    const base = {
+      kind: "agent",
+      name: "reviewer",
+      title: "审查",
+      description: "审查代码。",
+      platforms: ["codex"]
+    };
+
+    for (const modelReasoningEffort of ["max", "ultra"] as const) {
+      assert.equal(
+        validateToolkitAssetMeta({
+          ...base,
+          codex_agent: { model_reasoning_effort: modelReasoningEffort }
+        }).codexAgent?.modelReasoningEffort,
+        modelReasoningEffort
+      );
+    }
+    assert.throws(
+      () => validateToolkitAssetMeta({
+        ...base,
+        codex_agent: { model_reasoning_effort: "extreme" }
+      }),
+      /codex_agent\.model_reasoning_effort must be one of/
+    );
+    assert.throws(
+      () => validateToolkitAssetMeta({
+        ...base,
+        codex_agent: { sandbox_mode: "repo-write" }
+      }),
+      /codex_agent\.sandbox_mode must be one of/
+    );
+  });
+
+  it("rejects unknown Codex agent fields instead of silently inheriting runtime defaults", () => {
+    assert.throws(
+      () => validateToolkitAssetMeta({
+        kind: "agent",
+        name: "reviewer",
+        title: "审查",
+        description: "审查代码。",
+        platforms: ["codex"],
+        codex_agent: {
+          model: "gpt-5.6-terra",
+          sandbox_mod: "read-only"
+        }
+      }),
+      /codex_agent contains unsupported field: sandbox_mod/
+    );
+  });
+
+  it("rejects incomplete or non-Codex custom-agent configuration", () => {
+    const base = {
+      kind: "agent",
+      name: "reviewer",
+      title: "审查",
+      description: "审查代码。"
+    };
+
+    assert.throws(
+      () => validateToolkitAssetMeta({
+        ...base,
+        platforms: ["codex"],
+        codex_agent: {}
+      }),
+      /codex_agent must configure at least one supported field/
+    );
+    assert.throws(
+      () => validateToolkitAssetMeta({
+        ...base,
+        platforms: ["codex"],
+        codex_agent: { model: " " }
+      }),
+      /codex_agent\.model must be a non-empty string/
+    );
+    assert.throws(
+      () => validateToolkitAssetMeta({
+        ...base,
+        platforms: ["qwen"],
+        codex_agent: { sandbox_mode: "read-only" }
+      }),
+      /codex_agent requires codex in platforms/
+    );
   });
 });
 

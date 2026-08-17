@@ -298,3 +298,9 @@ source:
 - `--force` 更新同时清理受管的 plugin `commands / skills / agents` 目录，避免旧资产残留
 
 后续若要引入可执行 benchmark harness，必须先固定跨模型报告 schema、成本上限和维护责任人；当前只交付可移植的评测契约。
+
+### 2026-08-17 Lifecycle Correction
+
+`openai/plugins` 已由 OpenAI 于 2026-08-16 归档，远端 HEAD 仍为 `11c74d6ba24d3a6d48f54a194cd00ef3beea18f9`。上表保留 2026-07-29 当次审阅结论，但从本次起该仓库降为历史 plugin-layout reference；当前 Codex plugin、custom agent、subagent runtime 和权限行为以官方 Plugins、Subagents、Config Reference 及实际 runtime smoke 为准。
+
+当前项目对齐状态和 Multi-agent V2 升级任务见 `references/notes/codex-multi-agent-execution-plan.md`。

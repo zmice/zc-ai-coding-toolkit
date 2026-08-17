@@ -130,7 +130,7 @@ upstreams:
   - id: openai-plugins
     title: OpenAI Plugins
     kind: github-public-repo
-    status: active
+    status: archived
     owner: codex
     source_url: https://github.com/openai/plugins.git
     source_paths:

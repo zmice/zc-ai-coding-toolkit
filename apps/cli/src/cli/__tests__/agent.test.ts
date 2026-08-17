@@ -1,10 +1,30 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { access, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { promisify } from "node:util";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createProgram } from "../index.js";
 
 const cleanupPaths = new Set<string>();
+const execFileAsync = promisify(execFile);
+
+async function git(cwd: string, ...args: string[]): Promise<string> {
+  const result = await execFileAsync("git", ["-C", cwd, ...args], { encoding: "utf8" });
+  return result.stdout.trim();
+}
+
+async function createRepository(): Promise<string> {
+  const root = await mkdtemp(join(tmpdir(), "zc-agent-worktree-cli-repo-"));
+  cleanupPaths.add(root);
+  await git(root, "init", "-b", "main");
+  await git(root, "config", "user.name", "zc test");
+  await git(root, "config", "user.email", "zc-test@example.invalid");
+  await writeFile(join(root, "README.md"), "# fixture\n", "utf8");
+  await git(root, "add", "README.md");
+  await git(root, "commit", "-m", "test: init");
+  return root;
+}
 
 async function runCli(args: string[]): Promise<{ stdout: string; stderr: string }> {
   const stdoutLines: string[] = [];
@@ -185,5 +205,63 @@ describe("agent controller CLI", () => {
     expect(reviewPackage).toContain("do not re-run implementer tests unless");
     expect(fanIn).toContain("controller runs final verification before completion");
     expect(fanIn).toContain("review package exists for each task before reviewer handoff");
+  });
+
+  it("keeps Codex worktree preparation dry-run by default and safely cleans an applied lease", async () => {
+    const root = await createRepository();
+    const tempRoot = await mkdtemp(join(tmpdir(), "zc-agent-worktree-cli-temp-"));
+    cleanupPaths.add(tempRoot);
+    const baseArgs = [
+      "--dir",
+      root,
+      "--temp-root",
+      tempRoot,
+      "--run-id",
+      "run-cli",
+      "--task-id",
+      "task-cli",
+      "--json",
+    ];
+
+    const dryRunResult = await runCli(["agent", "worktree", "prepare", ...baseArgs]);
+    const dryRun = JSON.parse(dryRunResult.stdout) as {
+      dryRun: boolean;
+      path: string;
+      receiptPath: string;
+    };
+    expect(dryRunResult.stderr).toBe("");
+    expect(dryRun.dryRun).toBe(true);
+    await expect(access(dryRun.path)).rejects.toThrow();
+    await expect(access(dryRun.receiptPath)).rejects.toThrow();
+
+    const prepareResult = await runCli(["agent", "worktree", "prepare", ...baseArgs, "--apply"]);
+    const lease = JSON.parse(prepareResult.stdout) as {
+      path: string;
+      receiptPath: string;
+      branch: string;
+    };
+    expect(prepareResult.stderr).toBe("");
+    await access(lease.path);
+    await access(lease.receiptPath);
+
+    const cleanupResult = await runCli([
+      "agent",
+      "worktree",
+      "cleanup",
+      ...baseArgs,
+      "--agent-state",
+      "completed",
+      "--fan-in-collected",
+      "--apply",
+    ]);
+    const cleanup = JSON.parse(cleanupResult.stdout) as {
+      status: string;
+      branchPreserved: boolean;
+    };
+    expect(cleanupResult.stderr).toBe("");
+    expect(cleanup.status).toBe("released");
+    expect(cleanup.branchPreserved).toBe(false);
+    await expect(access(lease.path)).rejects.toThrow();
+    await expect(access(lease.receiptPath)).rejects.toThrow();
   });
 });

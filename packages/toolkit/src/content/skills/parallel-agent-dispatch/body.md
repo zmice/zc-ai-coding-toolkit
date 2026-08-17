@@ -2,7 +2,7 @@
 
 ## 角色定位
 
-把彼此独立的任务做上下文级 fan-out，并在结束时做 fan-in、冲突检测和集成验证。只读 fan-out 只有在用户已授权本会话或项目默认启用只读 agent 时，才可通知式启动；写入型 fan-out 默认先确认文件所有权、验证命令和 fan-in gate。若用户已接受包含这些边界的计划，低风险写入 fan-out 可通知式启动。
+把彼此独立的任务做上下文级 fan-out，并在结束时做 fan-in、冲突检测和集成验证。在 Codex 中，用户请求多 agent、`AGENTS.md` 的 `dispatch_now: yes` 或本 skill 的适用条件命中后，只读 fan-out 可通知式直接启动；低风险写入 fan-out 在任务授权和所有权边界明确时也可直接作为实现步骤推进。
 
 这个 skill 不是默认加速器。能并行不等于应该并行；并行会增加 token、延迟、集成和验证成本。
 
@@ -41,12 +41,12 @@
 |---|---|---|
 | Readonly Consult | 多个只读 agent 分别评估架构、测试、安全、性能、产品、上游吸收、Codex 适配、安装/更新或 review 风险 | 需要主线程判断哪些结论成立 |
 | Context Fan-Out | 只需要多个子代理分别分析或修改互不重叠文件 | 共享同一 worktree，fan-in 需谨慎检查 |
-| Worktree Parallel | 任务可能触及相邻区域，或需要独立构建环境 | 需要分支和 worktree 清理 |
+| Codex Temp Worktree | 需要独立构建环境或相邻目录隔离，但不需要 tmux / 多 CLI | OS temp lease、branch 与 receipt 需要 fan-in 清理 |
 | Cascade | 任务有层级依赖，但每层内可并行 | 每层都要验证后再进下一层 |
 | Agent Controller | 需要先生成 task brief、report、ledger 和 fan-in gate，但暂不启动真实 worker | 只生成 `.codex/work/agent-runs/<run-id>/` artifacts |
 | Team Orchestration | 需要 tmux + git worktree + 多 CLI worker | 运行时成本最高，需 `zc team` 收尾 |
 
-普通 Codex 多 agent 先用 `zc agent plan` 生成 controller artifacts。如果需要文件系统级隔离，切到 `team-orchestration`；不要在本 skill 内展开完整 `zc team` 教程。
+普通 Codex 只读 fan-out 直接使用 host 原生 lifecycle，不强制先生成 controller artifacts。线程、容量、context fork、复用、中断和临时 worktree 的精确映射见 `references/codex-native-lifecycle.md`。`zc agent plan` 只用于写入较重、需要恢复或审计 transcript 的运行；需要 tmux / 多 CLI 才切到 `team-orchestration`。
 
 ## 通知与授权
 
@@ -58,7 +58,7 @@ Agent assist:
 fan-in：主线程汇总结论后再决定是否改代码
 ```
 
-如果当前会话或项目没有只读 agent 默认授权，只输出上面的 `Agent assist` 预告并等待确认。
+只读检查属于当前任务范围、且 host 暴露真实 subagent 能力时，提示后立即派发；只有任务会扩大外部影响、读取未授权范围或平台没有 dispatch 能力时才停下。
 
 写入型 fan-out 启动前必须让用户看到这段信息的等价内容。若这些信息已经在本轮已接受计划中出现，可通知式启动，不必重复等待确认：
 
@@ -103,23 +103,22 @@ ownership：.codex/context/** + AGENTS.md managed block
 fan-in：主线程读取写入证据；冲突、越界或来源不明时再决策
 ```
 
-低风险写入 fan-out 预授权条件：
+低风险写入 fan-out 条件：
 
 - 任务非生产、非敏感、非破坏性。
 - 每个 worker 的修改文件或目录不重叠。
-- worker 不超过 2 个。
-- 计划已列出文件所有权、验证命令和 fan-in gate，并已被用户接受。
+- 当前请求或已接受计划已授权实现，且计划列出文件所有权、验证命令和 fan-in gate。
+- 派发数量不超过当前 runtime capacity，主线程保留 controller 职责。
 - 启动时用通知式提示复述 worker、文件边界和验证。
 
-默认上限：
+runtime capacity 策略：
 
-- 普通复杂任务默认 1-3 个只读 agent。
-- 用户明确要求多 agent、且任务天然可按来源、模块、风险面或验证面拆分时，只读 agent 最多 5 个；主线程必须保留 controller 角色。
-- 写入型并行默认最多 2 个 worker。
-- 文件所有权完全不重叠、计划已接受、验证明确时，写入 worker 最多 3 个。
-- 超过默认数量必须说明收益、fan-in 成本、冲突风险和降级路径。
-- `zc agent plan` 是默认 controller artifact 入口。
-- `zc team` 必须用户明确要求或确认。
+- 先读取 host session limit、正在运行的 child threads 和 ready task 数，不写死 1-3 / 5 的跨版本上限。
+- 有两个独立问题即可派发；首批可使用全部有收益的 available child slots，完成一个再补一个。
+- 写入 worker 仍要求互斥文件所有权；容量允许不等于允许同文件并写。
+- 达到 capacity 时分批执行或串行降级，保留主线程做 controller / integrator。
+- `zc agent plan` 是可选审计 artifact 入口，不是 native dispatch 前置条件。
+- `zc team` 仍需用户明确要求或确认。
 
 ## 执行契约
 
@@ -137,9 +136,16 @@ dispatch_contract:
 ```
 
 - Codex 可用时优先使用真实 custom agent / subagent，如 `zc_code_reviewer`、`zc_test_engineer`、`zc_security_auditor`、`zc_performance_engineer`、`zc_architect`、`zc_product_owner`。
+- 每次 native dispatch 记录 thread id、context fork、实际 role/model、状态和 fallback；同一任务 rework 复用 owning thread。
 - 只读 agent 必须明确“不改文件”。
 - 写入 worker 必须收到完整任务文本、文件所有权、验证命令和返回格式。
 - 平台没有可用 dispatch tool 时，记录 `fallback=main-thread`，不要把未执行的 agent assist 当成已执行。
+
+## Codex 临时 Worktree
+
+共享树文件所有权难以隔离、或 worker 需要独立构建环境时，先运行 `zc agent worktree prepare` dry-run，再用 `--apply` 创建 OS 临时 worktree。它不使用仓库 `.worktrees/`，不占用 `$CODEX_HOME/worktrees`，也不等同于 `zc team`。
+
+worker 收到绝对 worktree path；fan-in 收集完成且 agent 进入终态后，用 `zc agent worktree cleanup` 先看 plan，再 `--apply`。dirty、missing、receipt/branch mismatch 或 plan 后状态变化都会阻止清理。有未合入 commit 时只保留恢复 branch 与 receipt，不保留无用工作目录。
 
 ## Worker 合约
 
@@ -191,6 +197,7 @@ dispatch_contract:
 并行完成不等于任务完成。fan-in 必须检查：
 
 - 所有子代理结果是否到齐。
+- runtime thread 是否明确为 completed / failed / interrupted / blocked / missing，部分成功是否已保留。
 - 是否出现同文件修改、命名冲突或接口冲突。
 - 局部验证是否可信。
 - review finding 是否由提出方完成回归。

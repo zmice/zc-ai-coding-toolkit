@@ -223,6 +223,7 @@ pnpm verify
 
 - `zc run`
 - `zc agent plan`
+- `zc agent worktree prepare|cleanup|recover`
 - `zc team ...`
 - `zc task ...`
 - `zc msg ...`
@@ -243,6 +244,37 @@ zc agent plan \
 ```
 
 `zc agent plan` 会选择 `readonly-consult / serial-subagent / context-fanout / worktree-team`，检查文件所有权、验证命令、冲突和 fan-in gate。`--write` 只写 `.codex/work/agent-runs/<run-id>/` 下的 `plan.json`、task brief、report、review、ledger 和 fan-in 模板；不会启动真实 worker。
+
+Codex host-native worker 需要文件系统隔离、但不需要 tmux / 多 CLI team 时，使用 OS 临时 worktree。两条命令都默认只输出 plan：
+
+```bash
+zc agent worktree prepare \
+  --dir <repo> \
+  --run-id <run> \
+  --task-id <task> \
+  --json
+
+zc agent worktree prepare ... --apply --json
+
+zc agent worktree cleanup \
+  --dir <repo> \
+  --run-id <run> \
+  --task-id <task> \
+  --agent-state completed \
+  --fan-in-collected \
+  --json
+
+zc agent worktree cleanup ... --apply --json
+
+zc agent worktree recover --dir <repo> --run-id <run> --task-id <task> --json
+zc agent worktree recover ... --apply --json
+```
+
+实际目录位于 OS temp 的 `zc-codex-worktrees/`，不使用仓库 `.worktrees/` 或 `$CODEX_HOME/worktrees`。cleanup 不使用 force：dirty / missing / receipt mismatch / thread 未终态 / fan-in 未收集都会阻止删除；有未合入 commit 时删除工作目录但保留恢复 branch 和 receipt，无独立提交时连同临时空目录与 branch 一起清理。
+
+源仓库 dirty 时默认阻止 prepare，因为临时 worktree 只从已提交 `HEAD` 创建，不包含未提交文件。仅当 controller 已确认这些改动与子任务无关时追加 `--allow-dirty-source`；dirty paths 和确认状态会进入 receipt。
+
+进程中断后使用 `recover` 复核精确 receipt：已完成注册的 allocating/orphaned lease 会恢复为 ready；无 worktree / branch 的 orphan metadata 会删除；先前保留且后来已合入的 branch 会用非 force 删除并清掉 receipt；未合入 branch 或不匹配路径继续保留。worktree 和 receipt 的全部已存在父级都拒绝 symlink，并在创建、恢复、清理前复核真实路径归属。lease lock 写入 PID 与时间；健康 owner 的普通等待只读轮询，不写 recovery object，只有 stale / malformed 候选才进入原子回收。
 
 重型团队并行先 dry-run，再启动：
 

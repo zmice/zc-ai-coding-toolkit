@@ -551,6 +551,50 @@ zc platform where codex --global
 - `platform uninstall` 只删除 receipt 跟踪的受管对象，不清理未受管文件
 - `platform where` 只解析目录和来源，不执行写入
 
+### 4.7 Codex 原生子代理与临时 worktree
+
+Codex agent 资产会把内容清单中的平台专属配置渲染到原生产物：
+
+- `model`：按角色复杂度选择 `gpt-5.6-sol`、`gpt-5.6-terra` 或 `gpt-5.6-luna`
+- `model_reasoning_effort`：按风险和任务类型分配 `medium` / `high`
+- `sandbox_mode`：只读角色使用 `read-only`，实现型角色使用 `workspace-write`
+
+`parallel-agent-dispatch` 会根据 host 当前 session limit、正在运行的 child threads 和 ready task 数决定派发数量。有两个互不依赖的问题即可派发；写入型子代理仍必须声明不重叠的文件所有权，并由主线程完成 fan-in 验证。
+
+当 Codex 原生子代理需要隔离写入、但不需要 tmux 多 CLI 团队时，使用 `zc agent worktree`：
+
+```bash
+zc agent worktree prepare \
+  --dir <repo> \
+  --run-id <run> \
+  --task-id <task> \
+  --json
+
+zc agent worktree prepare ... --apply --json
+
+zc agent worktree cleanup \
+  --dir <repo> \
+  --run-id <run> \
+  --task-id <task> \
+  --agent-state completed \
+  --fan-in-collected \
+  --json
+
+zc agent worktree cleanup ... --apply --json
+zc agent worktree recover --dir <repo> --run-id <run> --task-id <task> --json
+zc agent worktree recover ... --apply --json
+```
+
+默认根目录是 OS temp 下的 `zc-codex-worktrees/`。该入口不使用项目 `.worktrees/`，也不会进入 `$CODEX_HOME/worktrees`；需要测试隔离时才显式传 `--temp-root`。三个动作默认只输出 plan，只有 `--apply` 才写入。
+
+安全边界：
+
+- source dirty 时默认阻止 prepare；确认未提交改动与子任务无关后才使用 `--allow-dirty-source`
+- cleanup 要求 agent 已终态且 fan-in 已收集，不使用 force
+- 未合入提交会保留恢复 branch 和 receipt，但清掉无用工作目录
+- recover 只按精确 receipt 收敛中断状态，不扫描或删除无关 worktree
+- worktree、receipt 和临时根的既有父级都拒绝 symlink，避免路径逃逸和遗留文件落入非受管目录
+
 ## 5. 团队并行工作流
 
 `zc team` 是 tmux + git worktree 的多 CLI worker 编排入口。它默认采用保守并行策略：无法证明任务独立时，不盲目启动多个 worker。

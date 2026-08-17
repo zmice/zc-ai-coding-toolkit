@@ -22,13 +22,16 @@ In scope:
 - Codex-first multi-agent routing semantics.
 - Read-only agent trigger threshold.
 - Fan-out, fan-in, review, regression, and worktree safety rules.
+- Codex custom-agent scalar configuration and OS temporary worktree lifecycle.
 
 Out of scope:
 
-- CLI runtime changes.
+- Emulating host-injected thread lifecycle in the standalone CLI.
 - New hooks.
 - New platform surfaces.
 - Automatic `zc team start`.
+- Silent top-level `[agents]` config mutation.
+- Nested `mcp_servers` / `skills.config` rendering in the first implementation slice.
 - Importing upstream prompt catalogs wholesale.
 
 ## Target Execution Contract
@@ -159,3 +162,96 @@ Before claiming done:
 - Confirm `zc team` remains opt-in and dry-run first.
 - Run the three verification commands in T8.
 - Summarize changes by behavior, not just file names.
+
+## 2026-08-17 Alignment Review
+
+The T1-T8 checklist above describes the delivered first phase: easier opportunity detection, safer role selection, ownership, bounded loops, and fan-in discipline. It does not describe full alignment with the current Codex subagent runtime.
+
+### Current Evidence
+
+- `pnpm upstream -- report all --format md --with-remote` refreshed all 12 registered upstreams on 2026-08-17.
+- `openai/plugins` remains at `11c74d6ba24d3a6d48f54a194cd00ef3beea18f9`, but OpenAI archived it on 2026-08-16. It is now a historical plugin-layout reference.
+- current Codex Subagents documentation says subagent workflows are enabled by default and can be triggered by direct requests or applicable `AGENTS.md` / skill instructions.
+- the documented runtime owns spawning, follow-up routing, waiting, steering, interruption, thread visibility, and closure.
+- standalone custom-agent TOML can set `model`, `model_reasoning_effort`, `sandbox_mode`, `mcp_servers`, and `skills.config`.
+- `[agents]` supports `enabled`, `max_concurrent_threads_per_session`, default subagent model / reasoning effort, and `interrupt_message`.
+- local verification used `codex-cli 0.146.0`: `multi_agent` reports `stable=true`; `multi_agent_v2` is present but `stable=false`. The current Desktop host nevertheless exposes the newer collaboration lifecycle. Internal feature labels must not be treated as the public stability contract.
+
+### Project Alignment Status
+
+| Area | Status | Current Project State | Gap |
+|---|---|---|---|
+| Role catalog | aligned | nine `zc_*` roles exist; canonical metadata and standalone/companion TOML carry model, reasoning effort and sandbox defaults | nested MCP/skills configuration and runtime compatibility smoke remain |
+| Distribution | aligned with compatibility path | Git marketplace plugin, commands, skills, agents, companion manifest, receipt and lifecycle checks exist | native agent discovery and config precedence need end-to-end runtime smoke |
+| Trigger policy | aligned at policy layer | `dispatch_now`, native lifecycle mapping, direct read-only dispatch and runtime-capacity fan-out exist | automated host behavioral smoke is still missing |
+| Safety and fan-in | aligned at policy level | file ownership, loop budget, runtime state vocabulary, interruption handling and controller-owned fan-in gates exist | standalone controller artifacts do not ingest host thread state automatically; runtime smoke remains |
+| Controller artifacts | aligned with native boundary | `zc agent plan` is optional for write-heavy, resumable or audited runs and does not spawn workers | persistent host transcript ingestion remains open |
+| Thread lifecycle | aligned at policy layer | spawn, follow-up, message injection, wait, list, interrupt, terminal states and fallback are mapped | runtime eval and persistent thread transcript remain |
+| Context fork | aligned at policy layer | `none` / recent-N / full-history selection follows minimum sufficient context | host smoke must prove supported fork values |
+| Agent reuse | aligned at policy layer | independent task starts fresh; same-task clarification, rework and regression resume the owning thread | behavioral eval remains |
+| Concurrency | aligned at policy layer | fixed counts were replaced by live available-slot batching with controller capacity preserved | top-level `[agents]` config remains user-owned |
+| Model and permissions | partially aligned | nine roles render model, effort and sandbox into standalone/companion TOML | nested MCP/skills config, approval-failure smoke and live override verification remain |
+| Temporary worktree | implemented | Codex-only OS temp lease, dirty-source acknowledgement, receipt ownership, non-force cleanup, TOCTOU guard, stale-lock recovery and receipt-driven recover/finalize are covered by tests | host worker workdir smoke remains |
+| Nested delegation | aligned at policy level | one extra layer, live-capacity use, ownership narrowing, shared budget and parent/global fan-in are explicit | host nested-dispatch smoke remains |
+| Verification | package-level only | generation, companion and CLI tests validate artifacts | no runtime smoke for spawn, reuse, steer, interrupt, nested delegation or approval failure |
+
+### Upgrade Decision
+
+Native Multi-agent V2 alignment is the next Codex platform priority. Keep the existing safety rules, role catalog, companion rollback path, and `zc agent plan`; replace the assumption that every Codex multi-agent run starts from dry-run artifacts.
+
+The architecture boundary is:
+
+- toolkit canonical content defines platform-neutral opportunity, ownership, budget, safety, and fan-in semantics
+- a Codex-specific reference maps those semantics to host-provided collaboration tools and thread states
+- `packages/platform-codex` generates supported custom-agent configuration and plugin artifacts
+- `zc agent plan` remains an optional plan/artifact generator for write-heavy, resumable, or audited work
+- the standalone Node CLI does not emulate host-injected agent lifecycle tools
+
+### Upgrade Backlog
+
+- [x] V2-01 (P0) - Add a Codex-native lifecycle reference covering spawn, list/status, wait, context injection, follow-up, steering/interruption, reuse, closure boundary, fallback, and fan-in.
+  - likely surfaces: `parallel-agent-dispatch`, `subagent-driven-development`, `start`, planning and full-delivery workflows
+  - acceptance: `dispatch_now: yes` maps to a real host action when available and records the actual result state
+
+- [x] V2-02 (P0) - Remove stale mandatory `zc agent plan` wording for ordinary read-only fan-out.
+  - acceptance: native read-only consult can dispatch directly; write-heavy or resumable work can still choose controller artifacts
+
+- [x] V2-03 (P0) - Replace fixed agent-count assumptions with runtime-capacity policy.
+  - acceptance: the controller honors current session limits, accounts for already-open threads, and explains serial degradation
+
+- [x] V2-04 (P1) - Define thread identity, reuse, and bounded rework semantics.
+  - acceptance: independent task starts fresh; same-task clarification or fix resumes the owning thread; message injection does not accidentally start a new turn
+
+- [x] V2-05 (P1) - Define context-fork policy.
+  - acceptance: read-heavy explorers receive minimal context by default; reviewers and fix owners receive only the required recent history or task package; full history requires justification
+
+- [ ] V2-06 (P1) - Extend agent metadata and Codex rendering for supported role configuration.
+  - likely surfaces: toolkit schema/types, agent `meta.yaml`, `packages/platform-codex`, generation and companion tests
+  - acceptance: model, reasoning effort, sandbox, MCP and skills overrides follow documented precedence without inventing unsupported TOML keys
+  - status: scalar model / reasoning / sandbox support is complete; nested MCP and skills config remains open
+
+- [ ] V2-07 (P1) - Add runtime thread state to controller fan-in.
+  - acceptance: missing, running, completed, interrupted, failed and blocked agent outcomes are distinguishable; partial success is preserved
+
+- [ ] V2-08 (P1) - Add permission and approval failure rules.
+  - acceptance: live parent permission overrides win; read-only roles stay constrained; non-interactive approval failures return to the controller instead of being reported as worker completion
+
+- [x] V2-09 (P2) - Bound nested delegation.
+  - acceptance: maximum depth, child concurrency, ownership inheritance, token/loop budget and parent fan-in are explicit
+
+- [ ] V2-10 (P1) - Add end-to-end Codex smoke and behavioral evals.
+  - acceptance: cover named-role spawn, status visibility, follow-up reuse, message injection, interruption, context-fork choice, nested child dispatch, permission inheritance, approval failure, and write-conflict rejection
+
+- [ ] V2-11 (P2) - Update user-facing CLI/platform documentation after behavior is implemented.
+  - acceptance: README, usage guide, capability matrix, upgrade/rollback notes and release checklist describe verified behavior only
+
+- [x] V2-12 (P1) - Add Codex-only OS temporary worktree leases.
+  - acceptance: default dry-run, exact receipt ownership, no repo / `$CODEX_HOME/worktrees` placement, dirty-source acknowledgement, non-force cleanup, dirty/TOCTOU gates, automatic removal of unnecessary dirs/branches, stale-lock recovery, recovery anchors for unmerged commits and receipt-driven finalize after merge
+
+### Implementation Stop Gates
+
+- STOP if a tool-level field is available only in the current Desktop host but not documented or reproducible in the supported Codex release; keep it in the Codex-specific reference and mark it evolving.
+- STOP if adding role configuration would serialize unsupported keys into standalone TOML or plugin Markdown.
+- STOP if plugin-agent discovery cannot be proven after install/upgrade; retain the companion path and report the runtime gap.
+- STOP if parallel writes cannot establish non-overlapping ownership and a fresh fan-in verification command.
+- STOP if the implementation would make the standalone `zc` CLI responsible for a host-owned thread lifecycle.

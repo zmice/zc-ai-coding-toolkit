@@ -645,7 +645,7 @@ describe("platform CLI", () => {
       contentRoot: "/repo/packages/toolkit/src/content",
       assets: [
         {
-          id: "skill:alpha",
+          id: "agent:code-reviewer",
           body: "See `references/guide.md`.",
           attachments: [
             {
@@ -654,11 +654,16 @@ describe("platform CLI", () => {
             },
           ],
           meta: {
-            kind: "skill",
-            name: "alpha",
+            kind: "agent",
+            name: "code-reviewer",
             title: "Alpha",
             description: "desc",
             platforms: ["codex"],
+            codexAgent: {
+              model: "gpt-5.6-terra",
+              modelReasoningEffort: "high",
+              sandboxMode: "read-only",
+            },
           },
         },
       ],
@@ -687,6 +692,11 @@ describe("platform CLI", () => {
                 contents: "# Guide\n",
               },
             ],
+            codexAgent: {
+              model: "gpt-5.6-terra",
+              modelReasoningEffort: "high",
+              sandboxMode: "read-only",
+            },
           }),
         ],
       }),

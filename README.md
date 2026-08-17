@@ -174,6 +174,27 @@ zc toolkit show command:start
 zc toolkit recommend build
 ```
 
+### 5. 隔离 Codex 子代理写入
+
+Codex 原生子代理需要独立文件系统时，可以先预演，再在 OS 临时目录创建 worktree：
+
+```bash
+zc agent worktree prepare \
+  --dir /path/to/repo \
+  --run-id <run> \
+  --task-id <task> \
+  --json
+
+zc agent worktree prepare ... --apply --json
+zc agent worktree cleanup ... --agent-state completed --fan-in-collected --json
+zc agent worktree cleanup ... --agent-state completed --fan-in-collected --apply --json
+zc agent worktree recover ... --json
+```
+
+目录默认位于系统临时目录的 `zc-codex-worktrees/`，不写入仓库 `.worktrees/` 或 `$CODEX_HOME/worktrees`。prepare、cleanup、recover 都是 dry-run 优先；dirty source、未收集 fan-in、非终态 agent、receipt/branch/path 不匹配会阻止不安全操作。
+
+Codex plugin-native agents 与传统 `[agents.*]` companion 共享同一套角色分档：内容清单声明 `model`、`model_reasoning_effort` 和 `sandbox_mode`，生成器不会再丢失这些 Codex 专属配置。调度以 host 实际 capacity 和任务独立性为准，不使用固定的保守数量上限。
+
 ## 如果你在维护这个仓库
 
 常用命令：

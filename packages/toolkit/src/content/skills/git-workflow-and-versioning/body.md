@@ -140,7 +140,7 @@ refactor/<简短描述>  → refactor/auth-module
 
 ## Git Worktree 并行开发
 
-当多个 AI Agent 需要并行工作时，使用 git worktree 同时运行多个分支。优先使用已被 `.gitignore` 覆盖的项目内 `.worktrees/`；如果无法证明项目内目录会被忽略，就使用仓库外的兄弟目录。
+当多个 AI Agent 需要并行工作时，使用 git worktree 同时运行多个分支。通用 / `zc team` 流程优先使用已被 `.gitignore` 覆盖的项目内 `.worktrees/`；如果无法证明项目内目录会被忽略，就使用仓库外的兄弟目录。Codex native subagent 的临时隔离是例外：使用 `zc agent worktree` 分配 OS temp lease，不写入仓库 `.worktrees/`，也不占用 Codex Desktop 的 `$CODEX_HOME/worktrees` namespace。
 
 ```bash
 # 为 feature 分支创建 worktree

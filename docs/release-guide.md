@@ -89,3 +89,5 @@
 - 确认 `zc platform plugin codex --git --json` 输出的默认源仍是 `zmice/zc-codex-marketplace`。
 - 确认 `zc platform plugin codex --global --uninstall --plan --json` 能输出本地 plugin bundle 卸载计划，且默认不删除 custom agents。
 - 确认 `zc platform agents codex --global --status --json` 能识别当前 custom agents 状态；如有过期 zc agent，运行 `zc platform agents codex --global --sync --prune`。
+- 确认 Codex plugin-native agents 和 companion agents 都保留角色清单中的 `model`、`model_reasoning_effort` 与 `sandbox_mode`。
+- 确认 `zc agent worktree prepare|cleanup|recover` 默认 dry-run，实际目录位于 OS temp 的 `zc-codex-worktrees/`，并且 cleanup 后没有遗留 worktree、恢复 ref 或空临时目录。

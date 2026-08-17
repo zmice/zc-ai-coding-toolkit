@@ -26,8 +26,8 @@ controller owns fan-in
 
 1. 记录任务开始基线和允许修改的文件。
 2. 写最小 task brief；精确值只保留一份，不粘贴完整会话历史。
-3. 分派全新 implementer，要求先读 brief、按 TDD 实现、自审并写 report。
-4. 收到 `NEEDS_CONTEXT` 时只补具体缺口；收到 `BLOCKED` 时改变范围、上下文、模型或验证方式。
+3. 独立任务启动新线程；要求 implementer 先读 brief、按 TDD 实现、自审并写 report。
+4. 同一任务收到 `NEEDS_CONTEXT`、finding 或补验证请求时，优先通过 `followup_task` 恢复 owning thread；只注入上下文且不立即执行时才使用 `send_message`。收到 `BLOCKED` 时改变范围、上下文、模型或验证方式。
 5. 生成 scoped review package，交给独立 reviewer 同时给出规格和质量 verdict。
 6. finding 优先退回原 producer；reviewer 给出复验标准并做 scoped re-review。
 7. 修复仍失败且预算耗尽时，由 controller adjudicate：缩小任务、改派、接手或进入 stop gate。
@@ -46,7 +46,7 @@ controller owns fan-in
 ## Bounded Fix Loop
 
 - 默认最多两轮实现返工和两轮同 finding 回归。
-- 第一轮失败后优先恢复原 producer，但下一轮输入必须发生可解释变化。
+- 第一轮失败后优先恢复原 producer 的同一 agent thread，但下一轮输入必须发生可解释变化。
 - 第二轮仍失败时不做原样重试；controller 逐项裁定 finding。
 - `NEEDS_CONTEXT` 最多补两次，且必须具体到文件、规格、错误输出或命令。
 - load-bearing finding 仍未关闭时停止并报告，不用“继续尝试”掩盖阻塞。
@@ -67,7 +67,7 @@ controller owns fan-in
 - 多文件集成与一般 review：标准模型
 - 架构判断、复杂故障和最终整体 review：更强模型
 
-重试是否升级模型取决于失败原因，不因“贵”或“强”本身判断。记录实际 role 和 model；未指定时写 `platform-default`。
+重试是否升级模型取决于失败原因，不因“贵”或“强”本身判断。Codex role TOML 已配置 model / reasoning 时视为 hard pin，不要假定显式 spawn 会覆盖；sandbox 则以 parent turn 的 live sandbox / approval override 和 host 实际生效权限为准。未指定时写 `platform-default`。
 
 ## 完成门禁
 

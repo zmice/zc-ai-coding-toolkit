@@ -18,6 +18,12 @@ export interface ToolkitAssetAttachmentLike {
   readonly contents: string;
 }
 
+export interface ToolkitCodexAgentConfigLike {
+  readonly model?: string;
+  readonly modelReasoningEffort?: "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | "ultra";
+  readonly sandboxMode?: "read-only" | "workspace-write" | "danger-full-access";
+}
+
 export interface ToolkitAssetLike {
   readonly id: string;
   readonly kind: ToolkitAssetKind;
@@ -37,6 +43,7 @@ export interface ToolkitAssetLike {
   readonly routingWorkflows?: readonly string[];
   readonly taskTypes?: readonly string[];
   readonly platformExposure?: Readonly<Partial<Record<string, string>>>;
+  readonly codexAgent?: ToolkitCodexAgentConfigLike;
 }
 
 export interface ToolkitManifestLike {

@@ -3,6 +3,8 @@ import {
   toolkitAssetAudiences,
   toolkitAssetStabilities,
   toolkitAssetTiers,
+  toolkitCodexAgentReasoningEfforts,
+  toolkitCodexAgentSandboxModes,
   toolkitPlatformExposureModes,
   toolkitPlatforms,
   toolkitTaskTypes,
@@ -10,6 +12,7 @@ import {
   toolkitWorkflowRoutes,
   toolkitWorkflowRoles,
   type ToolkitAssetAudience,
+  type ToolkitCodexAgentConfig,
   type ToolkitAssetMeta,
   type ToolkitPlatformExposure,
   type ToolkitAssetSource,
@@ -211,6 +214,48 @@ function assertPlatformExposureRecord(value: unknown): ToolkitPlatformExposure |
   return Object.keys(normalized).length > 0 ? normalized : undefined;
 }
 
+function assertCodexAgentRecord(value: unknown): ToolkitCodexAgentConfig | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("Invalid asset meta: codex_agent must be an object");
+  }
+
+  const record = value as LooseRecord;
+  const supportedFields = new Set(["model", "model_reasoning_effort", "sandbox_mode"]);
+  const unsupportedField = Object.keys(record).find((field) => !supportedFields.has(field));
+
+  if (unsupportedField) {
+    throw new Error(`Invalid asset meta: codex_agent contains unsupported field: ${unsupportedField}`);
+  }
+
+  const model = record.model === undefined
+    ? undefined
+    : assertNonEmptyString(record.model, "codex_agent.model");
+  const modelReasoningEffort = assertEnumValue(
+    record.model_reasoning_effort,
+    "codex_agent.model_reasoning_effort",
+    toolkitCodexAgentReasoningEfforts
+  );
+  const sandboxMode = assertEnumValue(
+    record.sandbox_mode,
+    "codex_agent.sandbox_mode",
+    toolkitCodexAgentSandboxModes
+  );
+
+  if (!model && !modelReasoningEffort && !sandboxMode) {
+    throw new Error("Invalid asset meta: codex_agent must configure at least one supported field");
+  }
+
+  return {
+    ...(model ? { model } : {}),
+    ...(modelReasoningEffort ? { modelReasoningEffort } : {}),
+    ...(sandboxMode ? { sandboxMode } : {})
+  };
+}
+
 function inferRoutingWorkflows(input: {
   kind: string;
   name: string;
@@ -312,7 +357,16 @@ export function validateToolkitAssetMeta(input: unknown): ToolkitAssetMeta {
   const routingWorkflows = assertWorkflowRouteArray(record.routing_workflows);
   const taskTypes = assertTaskTypeArray(record.task_types);
   const platformExposure = assertPlatformExposureRecord(record.platform_exposure);
+  const codexAgent = assertCodexAgentRecord(record.codex_agent);
   const source = assertSourceRecord(record.source);
+
+  if (codexAgent && kind !== "agent") {
+    throw new Error("Invalid asset meta: codex_agent is only valid for agent assets");
+  }
+
+  if (codexAgent && platforms && !platforms.includes("codex")) {
+    throw new Error("Invalid asset meta: codex_agent requires codex in platforms");
+  }
   const normalizedRoutingWorkflows =
     routingWorkflows ??
     inferRoutingWorkflows({
@@ -346,6 +400,7 @@ export function validateToolkitAssetMeta(input: unknown): ToolkitAssetMeta {
       : {}),
     ...(taskTypes ? { taskTypes } : {}),
     ...(platformExposure ? { platformExposure } : {}),
+    ...(codexAgent ? { codexAgent } : {}),
     ...(source ? { source } : {})
   };
 }

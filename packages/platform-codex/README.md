@@ -16,6 +16,8 @@
 
 传统 `.codex/config.toml` / `.codex/agents/` 与 plugin-native `commands/` / `agents/` 是两条不同安装面；不要把用户级 TOML role 误写成插件必需步骤。
 
+standalone / companion `agents/zc-<agent>.toml` 会从 canonical `codex_agent` 元数据生成 `model`、`model_reasoning_effort` 和 `sandbox_mode`。其中 model / reasoning 是有意的 role hard pin；sandbox 只是请求的默认隔离档位，parent turn 的 live sandbox / approval override 仍是实际权限边界。`mcp_servers`、`skills.config` 与顶层 `[agents]` 默认值尚未由本包生成。
+
 ## 边界
 
 - 提示资产内容不在本包维护

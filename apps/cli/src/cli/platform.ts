@@ -9,7 +9,8 @@ import {
   type GenerationPlan,
   type InstallPlan,
   type InstallScope,
-  type OverwriteMode
+  type OverwriteMode,
+  type ToolkitCodexAgentConfigLike as CodexAgentConfigLike
 } from "@zmice/platform-core";
 import { resolvePlatformInstallDoctor } from "../platform-state/doctor.js";
 import { resolvePlatformInstallStatus } from "../platform-state/status.js";
@@ -135,6 +136,7 @@ interface ToolkitAssetMetaLike {
   routingWorkflows?: readonly string[];
   taskTypes?: readonly string[];
   platformExposure?: Partial<Record<PlatformName, string>>;
+  codexAgent?: CodexAgentConfigLike;
 }
 
 interface ToolkitAssetLike {
@@ -175,6 +177,7 @@ interface PlatformAssetLike {
   routingWorkflows?: readonly string[];
   taskTypes?: readonly string[];
   platformExposure?: Partial<Record<PlatformName, string>>;
+  codexAgent?: CodexAgentConfigLike;
 }
 
 interface PlatformManifestLike {
@@ -414,7 +417,8 @@ function normalizeManifest(manifest: ToolkitManifestLike): PlatformManifestLike 
       workflowRole: asset.meta.workflowRole,
       routingWorkflows: asset.meta.routingWorkflows,
       taskTypes: asset.meta.taskTypes,
-      platformExposure: asset.meta.platformExposure
+      platformExposure: asset.meta.platformExposure,
+      codexAgent: asset.meta.codexAgent
     }))
   };
 }

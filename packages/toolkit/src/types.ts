@@ -28,6 +28,20 @@ export const toolkitPlatformExposureModes = [
   "prompt-entry",
   "command-style"
 ] as const;
+export const toolkitCodexAgentReasoningEfforts = [
+  "minimal",
+  "low",
+  "medium",
+  "high",
+  "xhigh",
+  "max",
+  "ultra"
+] as const;
+export const toolkitCodexAgentSandboxModes = [
+  "read-only",
+  "workspace-write",
+  "danger-full-access"
+] as const;
 
 export type ToolkitKind = (typeof toolkitKinds)[number];
 export type ToolkitPlatform = (typeof toolkitPlatforms)[number];
@@ -39,6 +53,10 @@ export type ToolkitWorkflowRoute = (typeof toolkitWorkflowRoutes)[number];
 export type ToolkitWorkflowRole = (typeof toolkitWorkflowRoles)[number];
 export type ToolkitTaskType = (typeof toolkitTaskTypes)[number];
 export type ToolkitPlatformExposureMode = (typeof toolkitPlatformExposureModes)[number];
+export type ToolkitCodexAgentReasoningEffort =
+  (typeof toolkitCodexAgentReasoningEfforts)[number];
+export type ToolkitCodexAgentSandboxMode =
+  (typeof toolkitCodexAgentSandboxModes)[number];
 
 export interface ToolkitAssetSource {
   upstream: string;
@@ -63,6 +81,12 @@ export interface ToolkitPlatformExposure {
   opencode?: ToolkitPlatformExposureMode;
 }
 
+export interface ToolkitCodexAgentConfig {
+  model?: string;
+  modelReasoningEffort?: ToolkitCodexAgentReasoningEffort;
+  sandboxMode?: ToolkitCodexAgentSandboxMode;
+}
+
 export interface ToolkitAssetMeta {
   kind: ToolkitKind;
   name: string;
@@ -84,6 +108,7 @@ export interface ToolkitAssetMeta {
   routingWorkflows?: readonly ToolkitWorkflowRoute[];
   taskTypes?: readonly ToolkitTaskType[];
   platformExposure?: ToolkitPlatformExposure;
+  codexAgent?: ToolkitCodexAgentConfig;
   source?: ToolkitAssetSource;
 }
 

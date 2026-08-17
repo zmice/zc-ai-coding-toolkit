@@ -196,6 +196,25 @@ describe("loadToolkitManifest", () => {
       manifest.byId["agent:test-engineer"]?.meta.platforms,
       ["qwen", "codex", "claude", "opencode"]
     );
+    const codexRoleMatrix = {
+      "agent:architect": ["gpt-5.6-sol", "high", "read-only"],
+      "agent:security-auditor": ["gpt-5.6-sol", "high", "read-only"],
+      "agent:code-reviewer": ["gpt-5.6-terra", "high", "read-only"],
+      "agent:performance-engineer": ["gpt-5.6-terra", "high", "read-only"],
+      "agent:backend-specialist": ["gpt-5.6-terra", "medium", "workspace-write"],
+      "agent:frontend-specialist": ["gpt-5.6-terra", "medium", "workspace-write"],
+      "agent:test-engineer": ["gpt-5.6-terra", "medium", "workspace-write"],
+      "agent:product-owner": ["gpt-5.6-terra", "medium", "read-only"],
+      "agent:context-steward": ["gpt-5.6-luna", "medium", "workspace-write"]
+    } as const;
+
+    for (const [agentId, [model, modelReasoningEffort, sandboxMode]] of Object.entries(codexRoleMatrix)) {
+      assert.deepEqual(manifest.byId[agentId]?.meta.codexAgent, {
+        model,
+        modelReasoningEffort,
+        sandboxMode
+      });
+    }
   });
 
   it("keeps the multi-agent control protocol discoverable in canonical content", async () => {
@@ -233,7 +252,30 @@ describe("loadToolkitManifest", () => {
       manifest.byId["skill:parallel-agent-dispatch"]?.body ?? "",
       /dispatch_contract[\s\S]*Bounded Loop[\s\S]*Loop budget/
     );
+    assert.match(
+      manifest.byId["skill:parallel-agent-dispatch"]?.body ?? "",
+      /references\/codex-native-lifecycle\.md[\s\S]*runtime capacity[\s\S]*zc agent worktree prepare/
+    );
+    assert.doesNotMatch(
+      manifest.byId["skill:parallel-agent-dispatch"]?.body ?? "",
+      /普通 Codex 多 agent 先用 `zc agent plan`/
+    );
+    const codexLifecycle = manifest.byId["skill:parallel-agent-dispatch"]?.attachments.find(
+      (attachment) => attachment.relativePath === "assets/references/codex-native-lifecycle.md"
+    );
+    assert.match(
+      codexLifecycle?.contents ?? "",
+      /spawn_agent[\s\S]*followup_task[\s\S]*send_message[\s\S]*interrupt_agent[\s\S]*wait_agent/
+    );
+    assert.match(
+      codexLifecycle?.contents ?? "",
+      /fork_turns[\s\S]*available child slots[\s\S]*controller/
+    );
     const subagentSkill = manifest.byId["skill:subagent-driven-development"];
+    assert.match(
+      subagentSkill?.body ?? "",
+      /独立任务启动新线程[\s\S]*同一任务[\s\S]*followup_task/
+    );
     assert.match(
       subagentSkill?.body ?? "",
       /references\/execution-protocol\.md[\s\S]*Bounded Fix Loop/

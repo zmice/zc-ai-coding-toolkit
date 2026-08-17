@@ -654,6 +654,15 @@ function renderCodexAgentArtifacts(
       content: [
         `name = ${renderTomlScalar(toCodexAgentName(asset))}`,
         `description = ${renderTomlScalar(asset.summary ?? describeAsset(asset))}`,
+        ...(asset.codexAgent?.model
+          ? [`model = ${renderTomlScalar(asset.codexAgent.model)}`]
+          : []),
+        ...(asset.codexAgent?.modelReasoningEffort
+          ? [`model_reasoning_effort = ${renderTomlScalar(asset.codexAgent.modelReasoningEffort)}`]
+          : []),
+        ...(asset.codexAgent?.sandboxMode
+          ? [`sandbox_mode = ${renderTomlScalar(asset.codexAgent.sandboxMode)}`]
+          : []),
         `developer_instructions = ${renderTomlScalar(
           asset.body ?? `# ${describeAsset(asset)}\n`,
         )}`,
