@@ -1,6 +1,6 @@
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -17,10 +17,10 @@ import {
 describe("Codex agents lifecycle", () => {
   it("maps a personal marketplace root to Codex home", () => {
     expect(resolveCodexAgentsRootFromMarketplace("/home/test", "global")).toBe(
-      "/home/test/.codex",
+      resolve("/home/test", ".codex"),
     );
     expect(resolveCodexAgentsRootFromMarketplace("/repo/project", "project")).toBe(
-      "/repo/project",
+      resolve("/repo/project"),
     );
   });
 

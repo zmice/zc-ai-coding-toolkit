@@ -312,7 +312,7 @@ describe("context CLI", () => {
       const result = await runCli(["context", "init", "--json"]);
       const payload = JSON.parse(result.stdout) as { root: string };
 
-      expect(payload.root).toBe(await realpath(root));
+      expect(await realpath(payload.root)).toBe(await realpath(root));
     } finally {
       process.chdir(originalCwd);
     }

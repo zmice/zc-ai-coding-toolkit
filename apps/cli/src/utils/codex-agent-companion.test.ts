@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 
 import { describe, expect, it } from "vitest";
@@ -61,23 +61,25 @@ describe("Codex agent companion", () => {
     ]);
     expect(companion.configContent).toBe(configContent);
 
+    const globalRoot = resolve("/home/test/.codex");
     const globalPlan = createCodexCompanionAgentInstallPlan(companion, {
-      root: "/home/test/.codex",
+      root: globalRoot,
       scope: "global",
     });
     expect(globalPlan.artifacts.map((artifact) => artifact.path)).toEqual([
-      "/home/test/.codex/config.toml",
-      "/home/test/.codex/agents/zc-code-reviewer.toml",
+      join(globalRoot, "config.toml"),
+      join(globalRoot, "agents", "zc-code-reviewer.toml"),
     ]);
     expect(globalPlan.metadata.artifactCount).toBe(globalPlan.artifacts.length);
 
+    const projectRoot = resolve("/repo/project");
     const projectPlan = createCodexCompanionAgentInstallPlan(companion, {
-      root: "/repo/project",
+      root: projectRoot,
       scope: "project",
     });
     expect(projectPlan.artifacts.map((artifact) => artifact.path)).toEqual([
-      "/repo/project/.codex/config.toml",
-      "/repo/project/.codex/agents/zc-code-reviewer.toml",
+      join(projectRoot, ".codex", "config.toml"),
+      join(projectRoot, ".codex", "agents", "zc-code-reviewer.toml"),
     ]);
   });
 
