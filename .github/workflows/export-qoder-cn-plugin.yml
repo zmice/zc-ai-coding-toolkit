@@ -1,0 +1,137 @@
+name: Publish Quest CN Plugin
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - "@zmice/zc@*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "要发布的 tag，例如 @zmice/zc@0.2.2"
+        required: false
+        type: string
+      target_branch:
+        description: "目标分支"
+        required: false
+        default: "main"
+        type: string
+      commit_message:
+        description: "同步提交信息"
+        required: false
+        default: "chore: sync quest cn plugin bundle"
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish-quest-cn-plugin:
+    name: export and publish quest cn plugin bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PLUGIN_REPO_TOKEN: ${{ secrets.QODER_CN_PLUGIN_REPO_TOKEN }}
+      PLUGIN_REPO: "zmice/zc-qoder-cn-plugin"
+      PLUGIN_BRANCH: "${{ github.event.inputs.target_branch || 'main' }}"
+      PLUGIN_COMMIT_MESSAGE: "${{ github.event.inputs.commit_message || 'chore: sync quest cn plugin bundle' }}"
+      RELEASE_TAG: "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}"
+
+    steps:
+      # 校验目标仓库 Token
+      - name: Validate token
+        run: |
+          if [ -z "$PLUGIN_REPO_TOKEN" ]; then
+            echo "缺少 secret：QODER_CN_PLUGIN_REPO_TOKEN" >&2
+            exit 1
+          fi
+
+      # 检出源码
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 设置 pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+
+      # 设置 Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # 安装依赖
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 构建 CLI
+      - name: Build CLI
+        run: pnpm --dir apps/cli build
+
+      # 导出 Quest CN 插件包
+      - name: Export Quest CN plugin bundle
+        run: node scripts/export-qoder-cn-plugin-bundle.mjs --out "$RUNNER_TEMP/qoder-cn-plugin"
+
+      # 打包为 zip 用于 release artifact
+      - name: Pack plugin bundle as release artifact
+        run: |
+          VERSION="${RELEASE_TAG#@zmice/zc@}"
+          ASSET_NAME="zc-qoder-cn-plugin-${VERSION}.zip"
+          cd "$RUNNER_TEMP/qoder-cn-plugin"
+          zip -r "$RUNNER_TEMP/$ASSET_NAME" .
+          echo "ASSET_NAME=$ASSET_NAME" >> "$GITHUB_ENV"
+          echo "ASSET_PATH=$RUNNER_TEMP/$ASSET_NAME" >> "$GITHUB_ENV"
+
+      # 上传为 GitHub Release Artifact
+      - name: Upload bundle to GitHub release
+        if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$ASSET_PATH#$ASSET_NAME" --clobber
+          else
+            echo "Release $RELEASE_TAG 不存在，跳过 artifact 上传。"
+          fi
+
+      # 准备目标插件仓库
+      - name: Prepare target plugin repository
+        run: |
+          mkdir -p .qoder-cn-plugin-repo
+          cd .qoder-cn-plugin-repo
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${PLUGIN_REPO_TOKEN}@github.com/${PLUGIN_REPO}.git"
+
+          if git ls-remote --exit-code --heads origin "$PLUGIN_BRANCH" >/dev/null 2>&1; then
+            git fetch --depth=1 origin "$PLUGIN_BRANCH"
+            git checkout -B "$PLUGIN_BRANCH" "origin/$PLUGIN_BRANCH"
+          else
+            git checkout --orphan "$PLUGIN_BRANCH"
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+
+      # 同步插件包到目标仓库
+      - name: Sync bundle to target repository
+        run: |
+          rsync -a --checksum --delete --exclude '.git/' "$RUNNER_TEMP/qoder-cn-plugin/" ".qoder-cn-plugin-repo/"
+
+      # 提交并推送变更
+      - name: Commit and push if changed
+        working-directory: .qoder-cn-plugin-repo
+        run: |
+          if git diff --quiet -- . && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+            echo "No changes to publish."
+            exit 0
+          fi
+
+          git add .
+          git commit -m "$PLUGIN_COMMIT_MESSAGE"
+          git push origin "HEAD:$PLUGIN_BRANCH"
