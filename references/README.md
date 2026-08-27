@@ -44,6 +44,8 @@ pnpm upstream -- snapshot agent-skills --label remote-review --with-remote
 
 `--with-remote` 会先读取远端 HEAD；当远端 HEAD 与基线不一致时，会拉取远端对象并对 `source_paths` 执行真实 diff。如果远端有变化但登记路径没有命中，报告会标记 `source_paths_gap`，提醒先修正 upstream 登记范围。
 
+`snapshot --with-remote` 还会把登记路径的 Git tree manifest 内联到 snapshot JSON，记录每个文件的 mode、object hash、路径、条目数和 manifest SHA-256。后续读取 baseline 时会校验 HEAD、scope、条目数和摘要；它用于冻结文件身份，不等于归档上游原始字节。
+
 ## 规则
 
 - 先把变化记录到 `references`，再决定是否吸收到 `packages/toolkit`

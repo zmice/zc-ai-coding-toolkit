@@ -5,6 +5,13 @@ description: 审查现有界面的 UI、UX 与无障碍质量。适用于审计�
 tier: recommended
 audience: advanced
 stability: stable
+aliases:
+  - 界面走查
+tags:
+  - 界面走查
+  - 体验评估
+  - 无障碍审查
+  - 设计系统漂移
 suggests:
   - skill:browser-qa-testing
   - skill:verification-before-completion

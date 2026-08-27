@@ -1,0 +1,944 @@
+{
+  "upstream": "awesome-design-md",
+  "captured_at": "2026-08-27T14:32:46.481Z",
+  "label": "2026-08-27-baseline-source-tree",
+  "metadata": {
+    "title": "Awesome DESIGN.md",
+    "kind": "github-public-repo",
+    "status": "evaluating",
+    "owner": "codex",
+    "source_url": "https://github.com/VoltAgent/awesome-design-md.git",
+    "source_paths": [
+      "LICENSE",
+      "README.md",
+      "CONTRIBUTING.md",
+      "design-md"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/VoltAgent/awesome-design-md.git",
+    "checked_at": "2026-08-27T14:32:46.482Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "8147538b4226ae41e2487a9179e3bcc1f68e8554"
+  },
+  "source_tree": {
+    "source_url": "https://github.com/VoltAgent/awesome-design-md.git",
+    "checked_at": "2026-08-27T14:32:58.607Z",
+    "command": "git fetch/ls-tree source_paths",
+    "head_sha": "8147538b4226ae41e2487a9179e3bcc1f68e8554",
+    "source_paths": [
+      "LICENSE",
+      "README.md",
+      "CONTRIBUTING.md",
+      "design-md"
+    ],
+    "entry_count": 150,
+    "manifest_sha256": "5e25ade5696224694b03d143f3742f40e25f50ba63f2b787fc3b9603c23d3482",
+    "entries": [
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ea8cab17e05320154e6b355b833dfffb9f77851b",
+        "path": "CONTRIBUTING.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5cea5d78a41df83eafe1fb9fc0710675a5b7acf6",
+        "path": "LICENSE"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3e989b4971ae2692190ae25119e7f8e0d63a558e",
+        "path": "README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "088254920b745ed12c9ad14429f3cd96128ab9b2",
+        "path": "design-md/airbnb/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "250d19a2f6d3176981fa75ff155c1ea70f5e0576",
+        "path": "design-md/airbnb/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d885f4984c2ca5c2840a62e2d828167957c02385",
+        "path": "design-md/airtable/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cdc5be6b3602c5d3aa1b0e4b0dac3055da7e8acd",
+        "path": "design-md/airtable/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0d37e1e5f6b621ccbdc666f6d9c82f2ada26208b",
+        "path": "design-md/apple/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5ffb382286775850f1ecf2320059866397d465b6",
+        "path": "design-md/apple/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "27ec482198f450621b747a007e3135656b95f70e",
+        "path": "design-md/binance/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a61384fb70da97cc5f476585e00f0bd86625133f",
+        "path": "design-md/binance/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fb1cd84a66900406038017902fb42a0e3e67122d",
+        "path": "design-md/bmw-m/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f04c7a6e9f98a6478805908e6dedabdb72bef6e5",
+        "path": "design-md/bmw-m/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8cb0be59fa1d2e839d5eddec3a4876f326f176bc",
+        "path": "design-md/bmw/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5738589d96a0e017a3e4ff104b84944d8f47d378",
+        "path": "design-md/bmw/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c6067fed091f2edfc787fe52aa8f61bd7c2a672f",
+        "path": "design-md/bugatti/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d918422da26688a4f9f23464378c6593e441a502",
+        "path": "design-md/bugatti/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1f8525c5bb7510000a1a986ae7be4c413054adb3",
+        "path": "design-md/cal/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4b07c7f89d984fe5281e3b9fdeb609c2865de124",
+        "path": "design-md/cal/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f92dc464d9bfdb6c6306f45a9ce406c6fca17432",
+        "path": "design-md/claude/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "952c656156ee1e619226c5b4a003a6e1e390c437",
+        "path": "design-md/claude/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4934340cffe12633bc7dd7800fb19237c8768c3f",
+        "path": "design-md/clay/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2a37c1633c06c98bd5514e43217084e8b14cc9e4",
+        "path": "design-md/clay/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f9b61f0a2be93c3e0b396a9a1b4ae1df02791cf9",
+        "path": "design-md/clickhouse/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a34ae6f74ffdc307f103e0a2dae9e60be69894cd",
+        "path": "design-md/clickhouse/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cc8bdf0482e7609c93a35d9b4526293d575dde8d",
+        "path": "design-md/cohere/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ca4cb923025f6124611225ee8bd545e5f0dc1ff6",
+        "path": "design-md/cohere/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "02bd7262fcca3db250d109a69a641ce677a7d784",
+        "path": "design-md/coinbase/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "71efde88751c6a01372e062e69546056c1c43806",
+        "path": "design-md/coinbase/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fe8d23a93af8c927b49c2bf7e4c05e9378c33a4c",
+        "path": "design-md/composio/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bdd28cc68726234e03505b583cf96a09e4020333",
+        "path": "design-md/composio/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f457973ed6dfb504a2b42a02845734f52bc399a8",
+        "path": "design-md/cursor/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2e0a4069a737860e7012b35b48131ae70a6fa3d1",
+        "path": "design-md/cursor/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "09285a8a2fcb13c2e452a01164682e84f6fafcba",
+        "path": "design-md/dell-1996/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4b0c5943c358c6a280854bed78b40412f310eb87",
+        "path": "design-md/dell-1996/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4d13eb977b5fb8f596b69a1ecc8f6de42c1a54a9",
+        "path": "design-md/elevenlabs/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a5d28aec2308e3a79c34879444a8c67788f2241c",
+        "path": "design-md/elevenlabs/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7d25b5dc1d502f008e7f61f55dbd644082c07b6d",
+        "path": "design-md/expo/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b4223e46f9201c5ada0320b1d693324ff0278da9",
+        "path": "design-md/expo/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3c6b43ab529cbddae51f09a2a659d123baf4a1f0",
+        "path": "design-md/ferrari/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a0870d8eb564a1a7271fbcc08872e6a877f8ae00",
+        "path": "design-md/ferrari/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "75e79fea9aadc35d4c9a0c75db631be927525f08",
+        "path": "design-md/figma/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ac3a1ba197b13e2d3c3ae1f26041162a75fc8034",
+        "path": "design-md/figma/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8351555233ee9379c47bfb57c557e64f0b6c7488",
+        "path": "design-md/framer/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3c9b18ab843bf9813146824cede5d89eb934cfa8",
+        "path": "design-md/framer/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4c27877aad49803d04596d90fd7e42a9e05030cd",
+        "path": "design-md/hashicorp/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cc1fd23c964da51761e52ea79f5cd45032f62350",
+        "path": "design-md/hashicorp/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fa0167583bb3df459128257a26c1794827196de6",
+        "path": "design-md/hp/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b4269e2a40029e535320b1e07bbcb717fab7668b",
+        "path": "design-md/hp/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "dbef1c5b20357a8953e6832e5d383a866a66f11a",
+        "path": "design-md/ibm/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fb1477b74693f628d1e0e928c0633dfea0c0fd9b",
+        "path": "design-md/ibm/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "dd01090d095d79cfec81100e3040678e2047531b",
+        "path": "design-md/intercom/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4dc34d051d49b78f5acc19392ef6aa4adc4a5cde",
+        "path": "design-md/intercom/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "972e541fcc56784ce6a69558652a47338adfafb7",
+        "path": "design-md/kraken/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9d5c23729ebec09d6a900564287370cb9742f50a",
+        "path": "design-md/kraken/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "aa9b12f1bac4c041525d704d00e5abb059cdd8dd",
+        "path": "design-md/lamborghini/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "81b7b3073e0e2434893d9db5ca7828f8d3421893",
+        "path": "design-md/lamborghini/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "88bcd11faa4f050982c7e84ca70bdf43d660ed6a",
+        "path": "design-md/linear.app/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "946f9992763f758eb544a928a7aa0c6a758bc278",
+        "path": "design-md/linear.app/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5a2821c9c503e8e78c99609a44da7cb41b5bba53",
+        "path": "design-md/lovable/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "73d61e1674846a38d387deb2bd053f2ef3f64c29",
+        "path": "design-md/lovable/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8087e66a902ea478f73cf9902a258a639b3311a2",
+        "path": "design-md/mastercard/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f369aa75ff0ffb59400b7cbb6d650b24390f7d93",
+        "path": "design-md/mastercard/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "61be6ca195040b5dab098c4aefaae6adedbee7e4",
+        "path": "design-md/meta/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ece69395afedd166746b5e254cf4db55ec16b986",
+        "path": "design-md/meta/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6f5a190cdcad424975a60944743e9a0f5f3adf2f",
+        "path": "design-md/minimax/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "acae8fdca236063db9b7693f7f305bd7cfc6dc61",
+        "path": "design-md/minimax/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "dbe946bcb53adba92dbc75b995497c18189b6f41",
+        "path": "design-md/mintlify/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4f9ad17465261180f0102f2aa549b42c8c402cf3",
+        "path": "design-md/mintlify/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "98fd9a4423e4d58de0d4395f897c059d10e52740",
+        "path": "design-md/miro/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4f126c0782a480fb6e690ffb92fd8aa04d8cd88a",
+        "path": "design-md/miro/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "76a451b97a263d1061f97f84d52a2c99ff6dc9b4",
+        "path": "design-md/mistral.ai/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c805f2d7c304d3c4bdce6ddf539e85defe5aad94",
+        "path": "design-md/mistral.ai/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "609b0478a8f5dc05ee012bf8118179c63661816a",
+        "path": "design-md/mongodb/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "df4209790ac4489740c0edbc7d08f3f252a3f12f",
+        "path": "design-md/mongodb/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c82517b67c20b9f1b8b189615c934899f28cd1f8",
+        "path": "design-md/nike/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7e17c745975fc05fa9df3959e32eb0537124acb0",
+        "path": "design-md/nike/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3dbe9e8707e3c36b6643e0e23e16fa2c5b309cc3",
+        "path": "design-md/nintendo-2001/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c556257e17e59d9ad50e2240da32c65ca3c2584f",
+        "path": "design-md/nintendo-2001/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7d306bd2713d24a35967310102d43e3585f0536a",
+        "path": "design-md/notion/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "30a99d26c7afac51dfa4a7ea3ccde76fe9814b00",
+        "path": "design-md/notion/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "318bbc3a204e2ea88b4c46d0791319f37f55d74a",
+        "path": "design-md/nvidia/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9bcc471bba90ba0b1fa0dd6d2fc3f5bd93dbb9c8",
+        "path": "design-md/nvidia/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c913335d19f76d53e26a46fccb8eb998517b60ed",
+        "path": "design-md/ollama/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4ac1681527395fe5b21ab697104bc38b85702299",
+        "path": "design-md/ollama/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "47c1c5443f3c61c682c1908334047a4c8c2a3de2",
+        "path": "design-md/opencode.ai/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "995368afad36bc244b20ff215f1c7528ba438402",
+        "path": "design-md/opencode.ai/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0c8e3f1f300381182340d757dc74f6466ce9f581",
+        "path": "design-md/pinterest/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4ce6541e57568b9bc3f4fd6f9f4c27ecfa7454eb",
+        "path": "design-md/pinterest/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "247ec9c13a37f137cfe606496211094a6b37f1ae",
+        "path": "design-md/playstation/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "46f828653d343e77ddf327d82537e7eac20d06af",
+        "path": "design-md/playstation/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4aac00897402ce1a79bfd209b79c9a0de078e485",
+        "path": "design-md/posthog/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "dd2245703356845aef30540e877ab827de968bf8",
+        "path": "design-md/posthog/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fa7a74cf19918d7acfada8282a02619c8ff80829",
+        "path": "design-md/raycast/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "483aaefcebd36bc0f53a8371cb668269e3064b97",
+        "path": "design-md/raycast/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "19f105b1197f739da3c247235572aff7c3cab073",
+        "path": "design-md/renault/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7b897a53212e043c648f05d24e8b9aa248363f57",
+        "path": "design-md/renault/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "affcf387b4763916e70b07bcaead8e4ad01719ef",
+        "path": "design-md/replicate/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "49b70cc99017b9b51da0c1ba20a3c655985c0b67",
+        "path": "design-md/replicate/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "de2feada60fb5a6c9c70cd218e9c74e1d5affea5",
+        "path": "design-md/resend/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cb6fbe84fbfbd94a47678d04433b54c99f075520",
+        "path": "design-md/resend/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "23b014f45600f1d852dc1c8bbca5c144255ddde4",
+        "path": "design-md/revolut/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f55f197ae404a201d1898b87cfd7038bc21dbfd8",
+        "path": "design-md/revolut/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7802bcb217b369fc5bd12fb1f6be35f24eadc871",
+        "path": "design-md/runwayml/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8c3c65e70349766a70f69f52d8b75fbd329a1d5f",
+        "path": "design-md/runwayml/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b38ba199d162acfecd2d16178828a21fea3c6583",
+        "path": "design-md/sanity/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "84765a69352e057378a6af9ae0cf1607b15115e3",
+        "path": "design-md/sanity/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8fb6eb8a48882679216860bb8a01879d7036bffe",
+        "path": "design-md/sentry/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d62a0a4d328ec43f203e0d63cf9460a80652c0d5",
+        "path": "design-md/sentry/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "17f043981f6577a174237b219b9f6f2688139180",
+        "path": "design-md/shopify/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7e1254b5f04f42fce0ed1642ef2461edf04f9a40",
+        "path": "design-md/shopify/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "51f1850cbdd79baf8103cf9714be318becbaf11a",
+        "path": "design-md/slack/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "afdcba91076dde643b20c596a6fd790a180a3f1d",
+        "path": "design-md/spacex/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "51788e5c944924814463a7f0d8c510fcba85bc6d",
+        "path": "design-md/spacex/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "66bb4af6cbde6b631792de8712f2dd92a06e076e",
+        "path": "design-md/spotify/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "439896f1c9d434f88a287a7ec19fc1b7b8b9bb55",
+        "path": "design-md/spotify/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "dcc5b5b9d57c84369a44dc2b19d3bc98ae329ad5",
+        "path": "design-md/starbucks/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "70e9bbbf783d13faf2da39bd246383aeaced065f",
+        "path": "design-md/starbucks/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "589bd23baeb1344444f087043c060afd6239371f",
+        "path": "design-md/stripe/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a0fb663643cc07a8c4324184a082aac2c82ad2d3",
+        "path": "design-md/stripe/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ef9f0a27f61aeff93f3a2fbe5430f3d33e37b4c1",
+        "path": "design-md/supabase/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2f307990f588bdc7dc79e7c555cccd7e64d41b39",
+        "path": "design-md/supabase/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0d4433aaa8d59fbd97d01721d95392fb02d1ca82",
+        "path": "design-md/superhuman/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "36fe25aff71467f8ff6cab10377104b6653fc333",
+        "path": "design-md/superhuman/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6e8e8b63e49d4a2b2759f504b3f49e2905d3255e",
+        "path": "design-md/tesla/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a32907194873da1fc47e68f12f2cef6280574e1a",
+        "path": "design-md/tesla/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "545551c00fe92f89507287e3ec89c2b5c49c4015",
+        "path": "design-md/theverge/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "005902999127e962b98e02f8eb69a6f67daa484b",
+        "path": "design-md/theverge/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "33d8b717bcdad344f7f7a804128c748a1d1374e0",
+        "path": "design-md/together.ai/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fcccef3d4611162a07bab791f6ba097ea49b5848",
+        "path": "design-md/together.ai/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "212aa14e4b0fe9612557098d7cee81d2b48bfd67",
+        "path": "design-md/uber/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "19509be1d6588f8646b946974feae12ba64b3548",
+        "path": "design-md/uber/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "987140b5394c2a4ada4ef324f2d19ef66caf4338",
+        "path": "design-md/vercel/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "dea32568d93a5634f4591285ee66e7bdd9f885ea",
+        "path": "design-md/vercel/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f64dbd3297a9b6a97e8f8aa5fb69874ff23e9bd0",
+        "path": "design-md/vodafone/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6d2d2fe2e0d59fe230bb295f9f4802ef73af3207",
+        "path": "design-md/vodafone/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7d08c78cd976f99697ba30d33eb8fd5aa089fed0",
+        "path": "design-md/voltagent/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c7f35de3b17b5a564ef89dd7e9717b5b419797f0",
+        "path": "design-md/voltagent/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e32923ec08b746463d033342a33252b866f35319",
+        "path": "design-md/warp/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a1c742e0f40357523e382992c90801502100271b",
+        "path": "design-md/warp/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d42e91702260443e7771dd3ad86badecc68ba487",
+        "path": "design-md/webflow/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bffcce32de00316fa234102ff12dd0a512cb6329",
+        "path": "design-md/webflow/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "913d4399fafc6c3b9d681fbeeb44dfeee444d405",
+        "path": "design-md/wired/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a4c650a711880478362a744c8e4865696d76eda7",
+        "path": "design-md/wired/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "79b01b7a6311bb9fdfc0b013b8b3020e72e3eb6f",
+        "path": "design-md/wise/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e4176ecaa736709f1dd7473904cd912358141e3d",
+        "path": "design-md/wise/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5e0eb5ef304728e3f402e2519c18d5d8fd4c1d8c",
+        "path": "design-md/x.ai/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c44d0b33c50053bf33c77e0f3ab001e34fb72160",
+        "path": "design-md/x.ai/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7a2b82bfec8bad3efa49200762879f497d224054",
+        "path": "design-md/zapier/DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9f07d77cef9e3cf7e0624f14545211658a0a380e",
+        "path": "design-md/zapier/README.md"
+      }
+    ]
+  },
+  "notes": {
+    "path": "references/notes/awesome-design-md.md",
+    "content": "# Awesome DESIGN.md\n\nSource: `https://github.com/VoltAgent/awesome-design-md`\n\n## Status\n\n面向 AI 编码代理的 `DESIGN.md` 视觉参考集合。当前登记为 `evaluating`，用于研究“视觉方向、语义 token、组件状态、布局与响应式”如何组成可消费的项目设计契约；它不是官方品牌设计系统，也不是 toolkit 的运行时依赖。\n\n## Latest Remote Evidence\n\n- remote head: `8147538b4226ae41e2487a9179e3bcc1f68e8554`\n- observed date: 2026-08-27\n- evidence: shallow clone review of `README.md`, `CONTRIBUTING.md`, `LICENSE`, the `design-md/` index, and representative `DESIGN.md` files\n- repository claim: 73 design references; the root collection is grouped by product category\n\n## Failure Baseline\n\n在“用户提供外部品牌或 `DESIGN.md` 参考”的场景中，当前前端资产只说明外部偏好不能覆盖项目设计系统，但没有要求固定来源版本、区分可迁移原则与受限品牌资产，也没有把文档 token 与代码 owner、组件状态和真实渲染做一致性核对。可观察失败是 Agent 可能直接复刻品牌值，或在审查时把“与外部参考不相似”误报为项目缺陷。\n\n## Extractable Upgrades\n\n- 把外部视觉资料先转换为项目 brief，再映射到本地语义 token 和组件 owner\n- 在设计契约中同时记录视觉气质、颜色角色、排版层级、组件状态、布局、响应式、深度、Do/Don't 和验证证据\n- 固定来源 URL 与 commit/ref，明确适用 surface、采用项、拒绝项和许可边界\n- 用“文档值 -> 代码 token -> 组件 owner -> 真实渲染”矩阵检查设计契约漂移\n\n## License Boundary\n\n- repository license: MIT, Copyright (c) 2026 VoltAgent\n- 当前只吸收信息结构和治理机制，没有复制或实质改写任何品牌 `DESIGN.md`、preview HTML、logo、截图、字体或具体 token\n- 若未来复制或实质改写上游内容，必须随对应附件保留 MIT notice，并单独核对商标、专有字体和品牌视觉识别权\n\n## Snapshot Evidence\n\n- `snapshot --with-remote` 在 JSON 中冻结治理元数据、notes、remote HEAD，以及 `LICENSE`、`README.md`、`CONTRIBUTING.md` 与 `design-md/**` 的 Git mode、object hash、路径、条目数和 manifest SHA-256\n- baseline 加载会校验 HEAD、登记 scope、entry count 和 SHA-256；早期同名前缀 `.tree.md` companion 仅保留为 append-only 迁移审计证据\n- 仓库内容不进入 runtime 或 toolkit；若远端历史对象不可获取，tree manifest 仍可证明文件身份，但不能替代原始字节归档\n\n## Non-Adoption Boundary\n\n- 不镜像 `design-md/` 品牌语料库，不把平台生成变成在线下载流程\n- 不把 `version: alpha` front matter 当作稳定 schema\n- 不把公开可观察的 CSS 值解释为官方品牌授权或可自由复刻的产品身份\n- 不用营销站点参考替代业务后台的加载、空、错、权限、认证和无障碍契约\n- 不因外部参考与当前界面不同就生成 UI/UX finding；仍需项目 contract、runtime 和 correction 证据\n\n## Representative Evaluation Cases\n\n1. 已有项目设计系统并提供 Linear 风格参考：只迁移信息密度和 surface hierarchy，保留本地字体、品牌色与组件 owner；输出固定来源、采用项和拒绝项。\n2. 没有设计稿的新页面：先形成可验证的项目 brief，仍覆盖正常、加载、空、错、禁用、成功与权限态；不得复制品牌资产或虚构业务内容。\n3. 只读审查引用外部 `DESIGN.md`：外部资料只能产生候选方向，不能单独满足 Contract 证据，也不能把风格差异报告成缺陷。\n\n## Current Decision\n\n- 保持 `evaluating`\n- 将外部视觉参考接入协议收敛到现有 `frontend-ui-engineering` 的 design-system contract\n- `ui-ux-review` 只消费项目契约，并明确外部参考不能单独构成 finding\n- 完成结构 lint、代表性行为对照和跨平台生成验证前，不新增独立 design skill\n"
+  }
+}

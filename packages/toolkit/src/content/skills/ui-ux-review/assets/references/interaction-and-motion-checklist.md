@@ -17,8 +17,9 @@
 
 - 尊重 `prefers-reduced-motion`，为非必要位移提供静态或淡化替代
 - 不用 hover 作为唯一入口；触屏与键盘拥有等价路径
-- 拖拽提供按钮、菜单或点击式替代，并保留操作顺序与结果
-- 自动播放、循环或闪烁内容可暂停，且不触发危险频率
+- 拖拽、滑动、捏合或路径手势提供点击与键盘替代，并保留操作顺序与结果；手势本身是任务本质时记录例外
+- 超过 5 秒的自动播放或循环内容可暂停、停止或隐藏，且不触发危险频率
+- 有意义媒体提供字幕、转录或描述，控件支持键盘；装饰媒体不进入辅助技术树
 - 动效结束后的焦点、名称、状态和阅读顺序仍正确
 
 ## Runtime Quality
@@ -28,6 +29,7 @@
 - 骨架与最终内容尺寸一致，避免状态切换造成布局位移
 - 快速请求避免一闪而过的 spinner；延迟和最短展示时间应以产品测试为准
 - 加载、成功、失败和回滚不能只靠动效表达
+- 循环动画优先比较压缩视频与 GIF 的体积、语义和浏览器支持；提供静态 fallback，并在 reduced motion 下停止非必要循环
 
 ## Browser and API Decisions
 
@@ -44,4 +46,6 @@
 
 - https://github.com/ibelick/ui-skills
 - https://github.com/GoogleChrome/modern-web-guidance
+- https://github.com/vercel-labs/web-interface-guidelines
 - `references/LICENSE-ui-skills.txt`
+- `references/LICENSE-vercel-web-interface-guidelines.txt`

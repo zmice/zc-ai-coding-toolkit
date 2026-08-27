@@ -1,0 +1,1052 @@
+{
+  "upstream": "modern-web-guidance",
+  "captured_at": "2026-08-27T14:56:59.184Z",
+  "label": "2026-08-27-browser-capability-gate",
+  "metadata": {
+    "title": "Modern Web Guidance",
+    "kind": "github-public-repo",
+    "status": "evaluating",
+    "owner": "codex",
+    "source_url": "https://github.com/GoogleChrome/modern-web-guidance.git",
+    "source_paths": [
+      "LICENSE",
+      "README.md",
+      "policies",
+      "skills"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/GoogleChrome/modern-web-guidance.git",
+    "checked_at": "2026-08-27T14:56:59.185Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "457c381def89ce6213a171238f92eea63e9eaeb2"
+  },
+  "source_tree": {
+    "source_url": "https://github.com/GoogleChrome/modern-web-guidance.git",
+    "checked_at": "2026-08-27T14:57:11.513Z",
+    "command": "git fetch/ls-tree source_paths",
+    "head_sha": "457c381def89ce6213a171238f92eea63e9eaeb2",
+    "source_paths": [
+      "LICENSE",
+      "README.md",
+      "policies",
+      "skills"
+    ],
+    "entry_count": 168,
+    "manifest_sha256": "9923940a577320e88549192566a883a719e7e6d391ee7074fa8dedc84580a333",
+    "entries": [
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+        "path": "LICENSE"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b11f389b7732c3611491797b6bbc79a0d8d4ac23",
+        "path": "README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "391ed32b0588491bc3e5eaac602b9dc485ea7d79",
+        "path": "policies/modern-web-guidance.toml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "91a915cd5ed48f1411737e32863778abf326d963",
+        "path": "skills/chrome-extensions/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d1cfba5b9ba6a8f0cf7c8a55b8774b9fc5bcb58e",
+        "path": "skills/chrome-extensions/references/extensions/api-calling.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bc819714f0583357e090c4377ea012e870a4fbec",
+        "path": "skills/chrome-extensions/references/extensions/auth-identity.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d87c58d4d617562f78d94d8172806c0433b0f82b",
+        "path": "skills/chrome-extensions/references/extensions/content-scripts.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d04b3e7d03d4e7495e3175af657fc4122f24354a",
+        "path": "skills/chrome-extensions/references/extensions/context-menus.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3a19438c1fce6b2a1a5bf2cd10863719dca2c3b7",
+        "path": "skills/chrome-extensions/references/extensions/csp-sandbox.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6a24a67ba981c04605fc70d1131e135fb88d174c",
+        "path": "skills/chrome-extensions/references/extensions/declarative-net-request.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6c99e83ce0a75a15219c48091e7cd8bfd0aa0b02",
+        "path": "skills/chrome-extensions/references/extensions/devtools.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a2340867a90faec63b59ccf5fd84be80ce64468d",
+        "path": "skills/chrome-extensions/references/extensions/icons.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "21333ebf62d5f315c09ce5ca7a7013c768b87529",
+        "path": "skills/chrome-extensions/references/extensions/media-capture.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7846ac49b3fad54c95e823fddb345386b7e4cd83",
+        "path": "skills/chrome-extensions/references/extensions/message-passing.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0d9816e3465958698bca8bca6fc88398cdee51fc",
+        "path": "skills/chrome-extensions/references/extensions/omnibox.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c104bef73a1c3280abcd1cedafa08487aeebaaae",
+        "path": "skills/chrome-extensions/references/extensions/permissions.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8e152843d6344baad506d72f772a9521d7116914",
+        "path": "skills/chrome-extensions/references/extensions/popup-ui.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bda04cd028f87171ab07801c37b2d08a501675d5",
+        "path": "skills/chrome-extensions/references/extensions/prompt-api.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "20b88c6925573ebaebf0f96c6c0debf004b27283",
+        "path": "skills/chrome-extensions/references/extensions/service-worker.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5a1e5b7613ed9c0cd8efc7a2ae3a449d39ca82be",
+        "path": "skills/chrome-extensions/references/extensions/side-panel.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0909440b3a3a6aa61e037a6c44a5202aa07e66d1",
+        "path": "skills/chrome-extensions/references/extensions/storage.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c86855a324892a1d1b1e26ffea15aae3dad117f9",
+        "path": "skills/chrome-extensions/references/extensions/tab-management.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ec9dff89bf193320b4ad13443ec1fc038639856f",
+        "path": "skills/chrome-extensions/references/extensions/user-scripts.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "976e9a5790cd738e5698f034c17592ab6ac49a50",
+        "path": "skills/chrome-extensions/references/webstore/chromewebstore-template.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7715376047e3d9c0312366f8ee1ccd4ba0d920bd",
+        "path": "skills/chrome-extensions/references/webstore/privacy-policy.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0ad374a37418b9052745f7da9e886012f9a3db6b",
+        "path": "skills/chrome-extensions/references/webstore/review-checklist.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "46c75037faade86fe3da51ead8e79407fb05e64d",
+        "path": "skills/chrome-extensions/references/webstore/store-listing.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4e5c5fb49a94a69bedc05638819fe713e3efacb4",
+        "path": "skills/modern-web-guidance/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ed2e168b0d287c295ac539f1679a89e2a90502f8",
+        "path": "skills/modern-web-guidance/guides/accessibility/accessibility.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6d011dca3dac602d1be9d23f20d5c9838df3d949",
+        "path": "skills/modern-web-guidance/guides/accessibility/accessible-error-announcement.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3670a3f30da7f99ff4b643fd0e9d2f8bc0d09c81",
+        "path": "skills/modern-web-guidance/guides/built-in-ai/language-detection.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2c10c87d6ba4075acb9bc1303a4e49241b6c5df1",
+        "path": "skills/modern-web-guidance/guides/built-in-ai/language-model.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2c10c87d6ba4075acb9bc1303a4e49241b6c5df1",
+        "path": "skills/modern-web-guidance/guides/built-in-ai/prompt-api.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ce5a019c4211afe341f6be72c1846c2e80a72010",
+        "path": "skills/modern-web-guidance/guides/built-in-ai/summarizer.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9bec3c6a9ff06b6d67275542946c5c1cb62e3063",
+        "path": "skills/modern-web-guidance/guides/built-in-ai/translator.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fdcf9b88a8a2f7a802fbf58da3152529e00f5375",
+        "path": "skills/modern-web-guidance/guides/css/animate-to-intrinsic-sizes.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "af64469a33e7bd49e54303e2aa7513072ee79d89",
+        "path": "skills/modern-web-guidance/guides/css/calculate-with-intrinsic-sizes.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "645ac0c2be6356c8af64e03ca74474375a2831c3",
+        "path": "skills/modern-web-guidance/guides/css/child-state-based-styling.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4454cca0b83797c8182d5d6e678f3796fc91247c",
+        "path": "skills/modern-web-guidance/guides/css/content-based-styling.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3c46dad3a89075d8df20272c8183922027b30265",
+        "path": "skills/modern-web-guidance/guides/css/css-layout.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "55e71924805def6e9f64a7db98311e1327f25fb4",
+        "path": "skills/modern-web-guidance/guides/css/css.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2c80be84d7f0d3cc1cf7df9e073fa09e735c0d75",
+        "path": "skills/modern-web-guidance/guides/css/design-token-reactivity.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b3a2dff8375a1d5f8c1c6a3fc2808d1ab1764ff9",
+        "path": "skills/modern-web-guidance/guides/css/dynamic-sibling-styling.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "69f1ae2a0092138bc9dbc60464855cc6bbe1df61",
+        "path": "skills/modern-web-guidance/guides/css/fluid-scaling.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e6544329cc0556a88ccb64d08bbc1edf0a91f4ac",
+        "path": "skills/modern-web-guidance/guides/css/individual-transform-properties.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5774cdac5a9931952d3ca9276a71c545df809219",
+        "path": "skills/modern-web-guidance/guides/css/overflow-clipping-control.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "05943bb039ccb8ea3512e4e383857882164e835b",
+        "path": "skills/modern-web-guidance/guides/css/reduce-style-repetition.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "46a9a802d1dff9bde44e8514b8c9bc4aedf0f95f",
+        "path": "skills/modern-web-guidance/guides/css/size-aware-styling.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ec5fedd8a2b110a420fe590ab278d00ed4275ddb",
+        "path": "skills/modern-web-guidance/guides/css/style-parent-with-has.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3d66a3feba3f706accb3a9b1c86d5b4f8549b18f",
+        "path": "skills/modern-web-guidance/guides/css/usage-aware-component-variations.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7ed987ed29ba72f400c7f24170c2a00d6a3c8b06",
+        "path": "skills/modern-web-guidance/guides/forms/animated-select-picker.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "70163f920fe9452ac61bc584d8b3a71a9b1c63e7",
+        "path": "skills/modern-web-guidance/guides/forms/autofill-address-form.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "538909d75fc61fae5bb7cc816d9f6227e81e1600",
+        "path": "skills/modern-web-guidance/guides/forms/autofill-highlight-inputs.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1c720c5bae637fee16d11c507abe57f165fc4505",
+        "path": "skills/modern-web-guidance/guides/forms/autofill-payment-form.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a80f995b07f3c12b0368a388aeaa445ef19e3634",
+        "path": "skills/modern-web-guidance/guides/forms/autofill-sign-in-form.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d055152dd71126cd0bf9fd3374edc20d0e85f0fa",
+        "path": "skills/modern-web-guidance/guides/forms/autofill-sign-up-form.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "912c2ef56336d75b78602f5cfc2225363ce4b9cd",
+        "path": "skills/modern-web-guidance/guides/forms/brand-consistent-forms.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "29ade1a276c2d133132270032ba84d96b43904cd",
+        "path": "skills/modern-web-guidance/guides/forms/branded-select-styling.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f0d2e34d92f4486bf0126e30176900e244020761",
+        "path": "skills/modern-web-guidance/guides/forms/custom-select-picker-layouts.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "588d7e89513c472b02de96987bf47d4d7886ad47",
+        "path": "skills/modern-web-guidance/guides/forms/form-fields-automatically-fit-contents.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "354ead98ba6fdeb89c4e14bf54311aeff77815d4",
+        "path": "skills/modern-web-guidance/guides/forms/forms.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6235172d44cf267bc19941e21c82a8dccedd9918",
+        "path": "skills/modern-web-guidance/guides/forms/required-field-feedback.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a0e448a3ddd94d2776ca67c53292f1258c6016e9",
+        "path": "skills/modern-web-guidance/guides/forms/rich-media-picker.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8e82e5dcaf8115434b8c8d787b5e68c6616efeaa",
+        "path": "skills/modern-web-guidance/guides/forms/select-menu-interaction.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e880ed21ce6bfea1dfd50ed31d65b46d6e5b3526",
+        "path": "skills/modern-web-guidance/guides/forms/validate-input-after-interaction.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ac205166e6ed12d4d937561c114851fb2c88c62d",
+        "path": "skills/modern-web-guidance/guides/html/html.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1077078d9fd26d2072e7d841db8c5f97e3ca5c5a",
+        "path": "skills/modern-web-guidance/guides/js/calculate-event-differentials.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6400ca88818050efc072730453d0c3052fb3bc95",
+        "path": "skills/modern-web-guidance/guides/js/capture-location-agnostic-data.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2e77238cf4492de76a36e8faf967d9ed65318770",
+        "path": "skills/modern-web-guidance/guides/js/coordinate-global-events.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "68bb4197da5a2f1cf125f8f75c9140f7a014e595",
+        "path": "skills/modern-web-guidance/guides/js/format-human-readable-durations.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "908c301ea15fc2db12040339427a7e559a0a33f3",
+        "path": "skills/modern-web-guidance/guides/js/manage-recurring-intervals.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a118740553724a40be510cfaab0a4fa05bc4e4e5",
+        "path": "skills/modern-web-guidance/guides/js/model-partial-time-concepts.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "20ee2936d33f405b5e66323b75a70fee75d1cda9",
+        "path": "skills/modern-web-guidance/guides/js/stabilize-reactive-state.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3163d74bd419b794d9c12741c31db29e1f89aaef",
+        "path": "skills/modern-web-guidance/guides/js/support-global-calendar-systems.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "118c1c6fa74ad443225c390198442d2366f6e5e1",
+        "path": "skills/modern-web-guidance/guides/performance/batch-analytics-events.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5fa659ade16e4f7b76af224f94de64bd3a2dc8b2",
+        "path": "skills/modern-web-guidance/guides/performance/break-up-long-tasks.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9794788094d1b2d0c18545aade1c25f52675f34e",
+        "path": "skills/modern-web-guidance/guides/performance/calculate-total-foreground-time.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "859b1334d00b100f3cdfeed990b4f97990ba6b4f",
+        "path": "skills/modern-web-guidance/guides/performance/conditional-async-dependencies.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4a8c54894ddd13d62182f777048c91f43b9e3023",
+        "path": "skills/modern-web-guidance/guides/performance/defer-rendering-heavy-content.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "dcec82cff24dd0b3e0aeb750bc24181e361bb853",
+        "path": "skills/modern-web-guidance/guides/performance/defer-work-until-scroll-ends.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "204c03feec66ea31048df716d676569944d24c0d",
+        "path": "skills/modern-web-guidance/guides/performance/deliver-optimized-decorative-images.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f0dc0a7a58fcb1061d543735a4a5a41050bdbdb0",
+        "path": "skills/modern-web-guidance/guides/performance/deprioritize-background-fetches.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7563b38cab25914195b70dbd42db1b77a4a80e3e",
+        "path": "skills/modern-web-guidance/guides/performance/detect-initial-visibility-state.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f78873d5fb453b2db018052dc5b04f2da1a17b4f",
+        "path": "skills/modern-web-guidance/guides/performance/efficient-background-processing.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e04cd285fc4a1fb2e8ff56ffd5e4ffb7634f49a8",
+        "path": "skills/modern-web-guidance/guides/performance/faster-spa-view-transitions.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cb0e0ca19b0a2429663d6e73a37e986f70b0489b",
+        "path": "skills/modern-web-guidance/guides/performance/flicker-free-client-side-ab-testing.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "288b59b2173f883760634a87e51b2c3f26ce4ed6",
+        "path": "skills/modern-web-guidance/guides/performance/full-session-analytics.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "30a11d06e6106d642601a7efb7e03b1e6384ecef",
+        "path": "skills/modern-web-guidance/guides/performance/identify-heavy-scripts.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c055b4f64f372112ce46a87d25183a4dcddaf986",
+        "path": "skills/modern-web-guidance/guides/performance/identify-inp-causes.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "08ec9b30071c28598c20443b9ad27d2efa81af61",
+        "path": "skills/modern-web-guidance/guides/performance/improve-next-page-load-performance.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "77173f4628937dfc6bd4d933f42500d8ef381440",
+        "path": "skills/modern-web-guidance/guides/performance/interactions-in-complex-layouts.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c07bf3f6f949b4621431a264a5442a16c93e6149",
+        "path": "skills/modern-web-guidance/guides/performance/optimize-image-priority.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cf317756974879972d98fd5a2c3f5415ecdd4b1c",
+        "path": "skills/modern-web-guidance/guides/performance/optimize-preload-priority.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ed5cad7e205d5d9ee2cf6b1090a3fc8be7efa95e",
+        "path": "skills/modern-web-guidance/guides/performance/optimize-script-priority.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a1469d40da8df57bce6819215043954a99aca90d",
+        "path": "skills/modern-web-guidance/guides/performance/performance.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "87bff706ecf3a273ccce7a77045a823de236f401",
+        "path": "skills/modern-web-guidance/guides/performance/resolution-optimized-pseudo-elements.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2f93a7191c13efa8e5430ad684718827d62dae3b",
+        "path": "skills/modern-web-guidance/guides/performance/schedule-tasks-by-priority.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "26a5c74b75919794c01cf44532ec33911f070b4e",
+        "path": "skills/modern-web-guidance/guides/performance/sequence-distributed-events.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c6fe3610e59417e2925ed0a2aedc668eaf4e0678",
+        "path": "skills/modern-web-guidance/guides/privacy/privacy.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "85466fcaa4260c420fb38fbc18f2dc0b2368f881",
+        "path": "skills/modern-web-guidance/guides/security/passkey-authentication.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a0202925ed40ad91371f973d01aaf9b2d470d836",
+        "path": "skills/modern-web-guidance/guides/security/passkey-conditional-create.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6cf733e05ac211880048ae88948638a6b34e02c5",
+        "path": "skills/modern-web-guidance/guides/security/passkey-management.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3020f9397ac4ca170e35e1097bc916d0f71db118",
+        "path": "skills/modern-web-guidance/guides/security/passkey-reauthentication.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "92966890543d9bc9d480c657f4a7c3bf80e0be35",
+        "path": "skills/modern-web-guidance/guides/security/passkey-registration.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b997f19d821d438871b5901c0efa14e5b0cb2673",
+        "path": "skills/modern-web-guidance/guides/security/passkeys.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d30b6f2ed4cefdf8a0509bf1ddba404ea745ff23",
+        "path": "skills/modern-web-guidance/guides/security/security.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c9eb278ec8ff69f74426f5faa46511b4a5e47bd8",
+        "path": "skills/modern-web-guidance/guides/ui-atoms/carousel-slide-effects.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c5478494d04e92aeade148a4cc13d5671711bc39",
+        "path": "skills/modern-web-guidance/guides/ui-atoms/component-specific-light-dark-theme.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ded9b7015efca4476c0d84b2c176323d7d808eba",
+        "path": "skills/modern-web-guidance/guides/ui-atoms/position-aware-tooltips.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a53c574d8ee50692b6fbdd81252b17fefa44c7c5",
+        "path": "skills/modern-web-guidance/guides/ui-atoms/pull-to-reveal.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6dc1fa1536793272b0dbcfc049bf3e1215541353",
+        "path": "skills/modern-web-guidance/guides/ui-atoms/resilient-context-menus-and-nested-dropdowns.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "11b02bda5805bff369cc4ea75bc1206642dc209f",
+        "path": "skills/modern-web-guidance/guides/ui-atoms/scroll-position-aware-elements.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "83c6dcf46a182b3de3f0edc3f9a2e6b06eed3b7e",
+        "path": "skills/modern-web-guidance/guides/ui-atoms/scroll-progress-indicator.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6ba0150ad104c0393b281239d574b0ef07ee2078",
+        "path": "skills/modern-web-guidance/guides/ui-atoms/scrollability-affordance-hints.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6a4b5c7a3e2e8bdd8fa6ce23e8a4b36610ca490b",
+        "path": "skills/modern-web-guidance/guides/ui-atoms/shrinking-header-on-scroll.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f4164f7c8ab83d77f11faab8db752c3670b4201b",
+        "path": "skills/modern-web-guidance/guides/ui-atoms/state-aware-sticky-headers.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c6e770d3d78befb5bdd726761ed529b75d8da7c1",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/anchor-positioning-tab-underline.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d2c4351f82af81455ff55dedc3c9a23717eceac0",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/animate-element-entry-exit.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "274ff28b91d563f77df8a95879a40fdcdf6b92ab",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/animate-to-from-top-layer.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "59aa4d72348beb24b643eaecb41f12d6d4cf4636",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/carousel-snap-highlights.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6d86d28b898952848462340479491b06abf82e54",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/consistent-cross-document-transitions.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f0edd54275634f710593e78f70ff80dec8bb9622",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/cross-document-transitions.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f9996f15b5b75171914b0185f733bd4ffe5b5bda",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/custom-button-actions.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e6d6e7da4c85cd6877c95ce3bd0b57abd1cbf7ed",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/declarative-dialog-popover-control.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "eca8bdad11d82611fc6d74a6bc24c5f83ead4643",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/directional-navigation-transitions.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f15f0c5cbdb9ab4e05b030b7f85ca87e3aec28a5",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/dynamic-sibling-animations.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cf6f73d6cabeee2344d35d8d5efc72755b671e77",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/group-element-transitions.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d52535701a1fc133f836a6b0a3ebee57b626379a",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/highlight-text-ranges.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a36054a55698600f76bca9c4e5895832ae4792a7",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/interactive-content-reveal.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b14076d89cc46f93b044179cb679874eb5eba709",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/interest-triggered-action-previews.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fd2b0ca70b712fc39240ce472f1d47172881e93f",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/interest-triggered-tooltips.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "da2768e9a6662717b22bac00d30da864097be6c4",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/light-dismiss-a-dialog.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "30914fa13d6fe0e8fbd3f741c7c0955f000ecb14",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/move-dom-element-without-losing-state.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5bf1df91d9741f8a0d3ec023ce4a970fc6750437",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/parallax-scroll-effects.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e03e0286931408ad8ba44c89cd4352061f469448",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/persistent-top-layer-ui.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "504a19300b05f0e902210eed2fbab0f79b6a1d36",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/physics-based-easing.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b7672dbcb43b9f5b0e1089e23aaec1fa0afb2d72",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/platform-controls-dismiss-dialog.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0730891822377908bd0c554365183a2fd217f908",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/same-document-transitions.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4887a1d0859badc0b5f5039b4fa250bc758d480f",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/scroll-entry-exit-effects.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c09328024ee8ac4d67d5fae8b881bef653919cda",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/scroll-snap-realtime-feedback.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "87046488a599196f7252a4765debae9827b814ff",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/scroll-snap-state-sync.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4364624f30ee9b7faabae1d96d583ced5d29fe98",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/scroll-target-on-load.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "dfc6ae2de524c0b7b0f0d7fff5bcdaabedb35f7e",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/scrollytelling.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "36e1361a3565bdd66bbdfa58a438ce03e1fb75ed",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/search-hidden-content.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c844458197256d6ac0925a1c8554df849fc40cde",
+        "path": "skills/modern-web-guidance/guides/ui-behaviors/swipe-to-remove.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a6486024061e9840769ce744144df5b66353bc20",
+        "path": "skills/modern-web-guidance/guides/ui-components/navigation-drawer.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3d6d8fada97be6cd0a4938fc99be7ce3a73ec9b2",
+        "path": "skills/modern-web-guidance/guides/ui-components/persistent-app-tours.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b18851765f5367db5b450f2ab2360f52e13b6996",
+        "path": "skills/modern-web-guidance/guides/ui-components/persistent-toast-notifications.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "364ec300b76bfb19220b7331b60a1cc6811de763",
+        "path": "skills/modern-web-guidance/guides/ui-components/stack-drill-down.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "aec029571f641fcfa17c53c9f6c8403ad3a35bda",
+        "path": "skills/modern-web-guidance/guides/visual-design/adapt-scrollbar-to-contrast-preferences.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ba42b5ee817208e15715d65648c80f18bb46f590",
+        "path": "skills/modern-web-guidance/guides/visual-design/apply-webgl-shaders.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d874bea806f8874e2772cffd03404d21dcaa4c54",
+        "path": "skills/modern-web-guidance/guides/visual-design/complex-shapes.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0d9ae8b3b49b220a694b5c924044da0f32403368",
+        "path": "skills/modern-web-guidance/guides/visual-design/customize-scrollbar-color-and-thickness.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4924b1d1a6b59a4ae5288e97d13af28b2e634d58",
+        "path": "skills/modern-web-guidance/guides/visual-design/dark-mode.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b985a9711a52b71b517737b7f7f088c1db3696bb",
+        "path": "skills/modern-web-guidance/guides/visual-design/export-html-media-from-canvas.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4f1eb2c14166d36f85ed906d85b7121ebb85b626",
+        "path": "skills/modern-web-guidance/guides/visual-design/expose-canvas-content-to-browser-features.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c1ae4a2dfef68e2670f1e20175fdac8f464ec9a9",
+        "path": "skills/modern-web-guidance/guides/visual-design/improve-text-layout-and-legibility.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "89ca5c5341edec991f192cb1da0d4ef88844d597",
+        "path": "skills/modern-web-guidance/guides/visual-design/interactive-content-in-3d-scenes.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3ce52d8015c4a8a85312c60396c6610d2eeb0943",
+        "path": "skills/modern-web-guidance/guides/visual-design/precise-text-alignment.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2abfb4de0a6b7754c2128cec14484aff1e9275bd",
+        "path": "skills/modern-web-guidance/guides/visual-design/prevent-text-wrapping.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4d9e7c7d07b4f92cd373376fdf5be32c0ba04216",
+        "path": "skills/modern-web-guidance/guides/visual-design/shaped-cutouts.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "97ef40474bcda74bbea84c3728d3fccc2e896d2f",
+        "path": "skills/modern-web-guidance/guides/visual-design/soft-edge-content-fade.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7016d123c5099135f34e108fdf24a002dd6c908f",
+        "path": "skills/modern-web-guidance/guides/visual-design/visually-stable-font-fallbacks.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c60dd69d5bf79433246bf92971a6347f5256596f",
+        "path": "skills/modern-web-guidance/guides/visual-design/visually-stable-mixed-fonts.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cbb1dca108b0aee8d87635fc51ddce0a16623764",
+        "path": "skills/modern-web-guidance/guides/visual-design/visually-texture-content.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "649eeb92e91aa0969ee1d984619d86fa0397ffd5",
+        "path": "skills/modern-web-guidance/guides/webmcp/agentic-forms.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "94e0273b81b1e0f19a46632f00c61b98c8dc3c8f",
+        "path": "skills/modern-web-guidance/guides/webmcp/agentic-javascript-tools.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b2cd2d8a3d84396678890f6ebf006d220c529dbd",
+        "path": "skills/modern-web-guidance/guides/webmcp/webmcp.md"
+      }
+    ]
+  },
+  "notes": {
+    "path": "references/notes/modern-web-guidance.md",
+    "content": "# Modern Web Guidance\r\n\r\nSource: `https://github.com/GoogleChrome/modern-web-guidance`\r\n\r\n## Status\r\n\r\nGoogle Chrome 团队支持的现代 Web 平台知识库，当前处于 preview。登记为 `evaluating`，仅作为按需检索和浏览器能力事实来源，不作为默认常驻上下文。\r\n\r\n## Latest Remote Evidence\r\n\r\n- remote head: `684ab9d7c6b78fc2cd5677912d874397cb2e5dfa`\r\n- observed date: 2026-08-05\r\n- release: `v0.0.179`\r\n- evidence: shallow clone review of `README.md`, `policies`, and `skills/modern-web-guidance`\r\n\r\n## Extractable Upgrades\r\n\r\n- 先按用户意图搜索 use case，再只加载命中的现代 Web 指南，避免把完整浏览器知识库注入上下文\r\n- 对 Baseline Widely Available、Newly Available 和自定义浏览器支持策略做显式区分\r\n- 优先使用原生浏览器能力、渐进增强和轻量 fallback，避免不必要的 polyfill 或大型依赖\r\n- 在 JSON/机器输出场景保持 stdout 纯净，把进度与诊断写入 stderr\r\n\r\n## License Boundary\r\n\r\n- repository license: Apache-2.0\r\n- 允许在保留许可证与变更声明的前提下改写或分发\r\n- 本仓库优先吸收检索协议和兼容性决策框架，不复制完整 guide 数据集\r\n\r\n## Non-Adoption Boundary\r\n\r\n- 不把 `npx ...@latest` 变成所有前端任务的强制网络依赖\r\n- 不在没有项目浏览器支持策略时默认采用尚未广泛可用的 API\r\n- 不把 preview 状态的全部指南并入 `frontend-ui-engineering` 正文\r\n\r\n## Current Decision\n\r\n- 保持 `evaluating`\r\n- 先作为 `ui-ux-review` 和前端实现的可选参考来源\r\n- 等离线缓存、版本固定和跨平台调用边界明确后，再评估独立 optional skill\n\n## Review Update 2026-08-27\n\n- remote head: `457c381def89ce6213a171238f92eea63e9eaeb2`\n- `source_paths` 扩展为完整 `skills` 树，使新增 `chrome-extensions` 与后续 guide 变化进入人工审阅范围\n- 已吸收的机制：在使用新 Web API、复杂 CSS 或非项目基线能力时，记录项目浏览器策略、权威兼容性证据与核对日期、能力检测、渐进增强、核心流程 fallback、无障碍影响和代表性浏览器验证\n- 未吸收：`npx ...@latest` 强制网络调用、完整 guide 数据集、telemetry、Chrome 专属默认策略与大型 polyfill\n"
+  }
+}

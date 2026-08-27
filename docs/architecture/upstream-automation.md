@@ -57,6 +57,7 @@ Stage 1 的目标不是“自动同步上游”，而是把仓库级 upstream �
 - snapshot 必须有可识别的 upstream id、时间戳和标签
 - snapshot 只能追加，不能原地编辑
 - snapshot 内容必须稳定到可用于后续 diff
+- `--with-remote` 必须内联 `source_paths` 的 Git tree manifest，包括 HEAD、mode、object hash、路径、条目数和 manifest SHA-256；加载 baseline 时必须校验其完整性与登记 scope
 - snapshot 只记录观察结果，不自动发布到 toolkit 或 platform
 
 ### `report`
@@ -232,6 +233,12 @@ Stage 1 的命令面应保持与当前仓库级 upstream 治理入口一致，�
 - `remote-head`: 只读取远端 HEAD，用于快速判断是否可能有更新
 - `remote-content`: 获取远端内容并对登记路径执行真实 diff，用于判断上游到底变了什么
 
+远端 snapshot 还包含 `remote-source-tree` 证据：获取当前 HEAD 的登记路径 tree，并把文件身份内联进不可变 JSON。它解决 baseline 只保存 HEAD、无法离线核对审阅范围的问题；但不保存文件原始字节，因此不能在远端对象完全不可获取时重建文本内容。
+
+远端内容采集使用 OS 临时 Git 目录。清理采用约 1 秒总预算的 Windows 短暂占用重试；预算耗尽后，`EBUSY`、`EPERM`、`ENOTEMPTY` 只输出包含精确路径的残留警告，不覆盖已经生成的审阅证据，其他文件系统错误仍使命令失败。维护者应在句柄释放后按警告路径清理残留。
+
+`report all --with-remote` 最多并发采集 4 个上游，并对只需要 tree / diff 元数据的 fetch 使用 `--filter=blob:none --no-tags`；路径 diff 使用 `--no-renames`，避免 rename detection 从 promisor remote 懒加载 blob。这样不会让 13 个仓库同时下载无用内容、放大超时和 Windows 子进程残留风险。重命名在治理报告中表现为删除加新增，结果仍按 registry 登记顺序输出，进度按实际完成顺序写入 stderr。
+
 `report --with-remote` 默认应至少展示 `remote-head`，并在远端 HEAD 与 baseline 不同时提示是否已完成 `remote-content`。任何声称“上游无内容变化”的结论都必须基于 `remote-content`，不能只基于 `remote-head`。
 
 如果某个 upstream 的登记路径没有覆盖实际有价值的上游变更，报告必须把它列为 `source_paths_gap`，而不是输出“无更新”。
@@ -298,6 +305,7 @@ Stage 1 先验证规格和 contract，再验证实现。
 - `source_paths` 覆盖不足时报告 `source_paths_gap`
 - 未登记的 AI 资产候选路径报告为 `unregistered_ai_asset_paths`
 - `pnpm upstream -- snapshot` 只追加不改写
+- `snapshot --with-remote` 生成可校验的 source tree manifest，篡改 entry count、scope、HEAD 或 SHA-256 时 baseline 读取失败
 - `pnpm upstream -- report` 在 text / json / md 间保持字段一致
 - `pnpm upstream -- import --dry-run` 不产生写入副作用
 - 所有写入型动作都需要人工审阅后的显式入口

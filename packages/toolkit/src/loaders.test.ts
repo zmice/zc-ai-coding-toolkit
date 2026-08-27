@@ -230,6 +230,27 @@ describe("loadToolkitAssetUnit", () => {
         attachment.relativePath.endsWith("LICENSE-agent-skills.txt"))?.contents ?? "",
       /Copyright \(c\) 2025 Addy Osmani/,
     );
+    assert.match(unit.body, /外部品牌、截图、站点或 `DESIGN\.md` 参考/);
+    assert.match(unit.body, /URL owner/);
+    assert.match(unit.body, /reload、deep-link 和 Back\/Forward/);
+    assert.match(unit.body, /overlay \/ layer owner/);
+    assert.match(unit.body, /SSR \/ hydration/);
+    assert.match(unit.body, /动态 viewport 和 safe area/);
+    assert.match(
+      unit.attachments.find((attachment) =>
+        attachment.relativePath.endsWith("design-system-contract.md"))?.contents ?? "",
+      /External Reference Gate/,
+    );
+    assert.match(
+      unit.attachments.find((attachment) =>
+        attachment.relativePath.endsWith("design-system-contract.md"))?.contents ?? "",
+      /Drift Matrix/,
+    );
+    assert.match(
+      unit.attachments.find((attachment) =>
+        attachment.relativePath.endsWith("design-system-contract.md"))?.contents ?? "",
+      /Browser Capability Decision/,
+    );
   });
 
   it("loads focused UI/UX review references without expanding the entry body", async () => {
@@ -252,6 +273,13 @@ describe("loadToolkitAssetUnit", () => {
     assert.match(unit.body, /只读审查|read-only/i);
     assert.match(unit.body, /最多选择 3 份参考文件/);
     assert.match(unit.body, /渲染证据/);
+    assert.match(unit.body, /不能单独满足 Contract 证据/);
+    const interfaceChecklist =
+      unit.attachments.find((attachment) =>
+        attachment.relativePath.endsWith("interface-review-checklist.md"))?.contents ?? "";
+    assert.match(interfaceChecklist, /背景滚动链/);
+    assert.match(interfaceChecklist, /hydration/);
+    assert.match(interfaceChecklist, /动态 viewport/);
   });
 
   it("ships the upstream license beside every copied agent-skills checklist", async () => {

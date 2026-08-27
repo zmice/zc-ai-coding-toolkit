@@ -37,3 +37,10 @@ Google Chrome 团队支持的现代 Web 平台知识库，当前处于 preview�
 - 保持 `evaluating`
 - 先作为 `ui-ux-review` 和前端实现的可选参考来源
 - 等离线缓存、版本固定和跨平台调用边界明确后，再评估独立 optional skill
+
+## Review Update 2026-08-27
+
+- remote head: `457c381def89ce6213a171238f92eea63e9eaeb2`
+- `source_paths` 扩展为完整 `skills` 树，使新增 `chrome-extensions` 与后续 guide 变化进入人工审阅范围
+- 已吸收的机制：在使用新 Web API、复杂 CSS 或非项目基线能力时，记录项目浏览器策略、权威兼容性证据与核对日期、能力检测、渐进增强、核心流程 fallback、无障碍影响和代表性浏览器验证
+- 未吸收：`npx ...@latest` 强制网络调用、完整 guide 数据集、telemetry、Chrome 专属默认策略与大型 polyfill

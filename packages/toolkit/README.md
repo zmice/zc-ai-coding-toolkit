@@ -26,6 +26,13 @@
 - `source`
 - `requires / suggests / conflicts_with / supersedes`
 
+发现元数据分成两类：
+
+- `aliases`：稳定、全局唯一、可被 `show` / `recommend` 精确解析的替代名称；每个资产最多 5 个，单项最多 64 字符
+- `tags`：供 `toolkit search` 使用的短搜索词，不代表平台原生 skill 一定会自动触发；每个资产最多 8 个，单项最多 32 字符
+
+两者都按 trim + lowercase 后去重。不要把完整句子、命令清单或所有生命周期词堆进 `tags`；当前 search 不做自然语言排名，结果仍按 manifest 稳定顺序返回。
+
 ## 渐进式披露规则
 
 内容默认按三层组织：

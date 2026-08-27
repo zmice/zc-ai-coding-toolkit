@@ -1,5 +1,6 @@
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import type { Command } from "commander";
@@ -24,6 +25,72 @@ function execFileAsync(
       });
     });
   });
+}
+
+type TemporaryDirectoryRemover = (
+  pathValue: string,
+  options: { recursive: true; force: true; maxRetries: number; retryDelay: number },
+) => Promise<void>;
+
+export async function removeTemporaryDirectory(
+  pathValue: string,
+  removeDirectory: TemporaryDirectoryRemover = (target, options) => rm(target, options),
+  warn: (message: string) => void = console.error,
+): Promise<boolean> {
+  try {
+    await removeDirectory(pathValue, {
+      recursive: true,
+      force: true,
+      maxRetries: 4,
+      retryDelay: 100,
+    });
+    return true;
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "code" in error && typeof error.code === "string" ? error.code : undefined;
+    if (!code || !["EBUSY", "EPERM", "ENOTEMPTY"].includes(code)) {
+      throw error;
+    }
+
+    warn(`[upstream governance] 警告：临时目录仍被占用，已保留供后续清理：${pathValue} (${code})`);
+    return false;
+  }
+}
+
+export async function mapWithConcurrency<T, R>(
+  items: readonly T[],
+  concurrency: number,
+  task: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (!Number.isInteger(concurrency) || concurrency < 1) {
+    throw new Error(`并发数必须是正整数：${concurrency}`);
+  }
+
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await task(items[currentIndex], currentIndex);
+    }
+  });
+
+  await Promise.all(workers);
+  return results;
+}
+
+function buildMetadataFetchArgs(checkoutRoot: string, headSha: string): string[] {
+  return [
+    "-C",
+    checkoutRoot,
+    "fetch",
+    "--depth=1",
+    "--filter=blob:none",
+    "--no-tags",
+    "origin",
+    headSha,
+  ];
 }
 
 interface UpstreamRecord {
@@ -53,6 +120,7 @@ interface SnapshotRecord {
     source_paths?: string[];
   };
   remote?: RemoteHeadEvidence;
+  source_tree?: RemoteSourceTreeEvidence;
   notes?: {
     path?: string;
     content?: string;
@@ -65,6 +133,24 @@ interface RemoteHeadEvidence {
   command: "git ls-remote HEAD";
   head_sha: string | null;
   error?: string;
+}
+
+interface RemoteSourceTreeEntry {
+  mode: string;
+  type: "blob" | "tree" | "commit";
+  object: string;
+  path: string;
+}
+
+interface RemoteSourceTreeEvidence {
+  source_url: string;
+  checked_at: string;
+  command: "git fetch/ls-tree source_paths";
+  head_sha: string;
+  source_paths: string[];
+  entry_count: number;
+  manifest_sha256: string;
+  entries: RemoteSourceTreeEntry[];
 }
 
 interface RemoteContentPathChange {
@@ -101,6 +187,8 @@ interface SnapshotResult {
     source_paths: number;
     notes_lines: number;
     remote_head: string | null;
+    source_tree_entries: number;
+    source_tree_sha256: string | null;
   };
 }
 
@@ -350,6 +438,8 @@ async function loadSnapshot(pathValue: string): Promise<SnapshotRecord> {
   if (!payload.upstream) {
     throw new Error(`snapshot 文件缺少 upstream 字段：${toWorkspaceRelative(pathValue)}`);
   }
+
+  validateSnapshotSourceTree(payload, pathValue);
   return payload;
 }
 
@@ -545,6 +635,69 @@ function parseNameOnlyOutput(source: string): string[] {
     .filter(Boolean);
 }
 
+function parseSourceTreeOutput(source: string): RemoteSourceTreeEntry[] {
+  return source
+    .split("\0")
+    .filter(Boolean)
+    .map((record) => {
+      const match = /^(\d{6}) (blob|tree|commit) ([0-9a-f]{40}|[0-9a-f]{64})\t([\s\S]+)$/u.exec(record);
+      if (!match) {
+        throw new Error(`无法解析 source tree 条目：${record}`);
+      }
+
+      return {
+        mode: match[1],
+        type: match[2] as RemoteSourceTreeEntry["type"],
+        object: match[3],
+        path: match[4],
+      };
+    });
+}
+
+function serializeSourceTreeEntries(entries: readonly RemoteSourceTreeEntry[]): string {
+  if (entries.length === 0) {
+    return "";
+  }
+
+  return `${entries.map((entry) => `${entry.mode} ${entry.type} ${entry.object}\t${entry.path}`).join("\0")}\0`;
+}
+
+function createSourceTreeHash(entries: readonly RemoteSourceTreeEntry[]): string {
+  return createHash("sha256").update(serializeSourceTreeEntries(entries)).digest("hex");
+}
+
+function validateSnapshotSourceTree(snapshot: SnapshotRecord, pathValue: string): void {
+  const sourceTree = snapshot.source_tree;
+  if (!sourceTree) {
+    return;
+  }
+
+  const displayPath = toWorkspaceRelative(pathValue);
+  if (sourceTree.entry_count !== sourceTree.entries.length) {
+    throw new Error(`snapshot source_tree.entry_count 不匹配：${displayPath}`);
+  }
+
+  if (sourceTree.head_sha !== snapshot.remote?.head_sha) {
+    throw new Error(`snapshot source_tree.head_sha 与 remote.head_sha 不匹配：${displayPath}`);
+  }
+
+  const metadataPaths = snapshot.metadata?.source_paths ?? [];
+  if (
+    sourceTree.source_paths.length !== metadataPaths.length ||
+    sourceTree.source_paths.some((pathValueEntry, index) => pathValueEntry !== metadataPaths[index])
+  ) {
+    throw new Error(`snapshot source_tree.source_paths 与 metadata.source_paths 不匹配：${displayPath}`);
+  }
+
+  if (sourceTree.entries.some((entry) => !isCoveredBySourcePaths(entry.path, sourceTree.source_paths))) {
+    throw new Error(`snapshot source_tree 包含登记范围外路径：${displayPath}`);
+  }
+
+  if (sourceTree.manifest_sha256 !== createSourceTreeHash(sourceTree.entries)) {
+    throw new Error(`snapshot source_tree.manifest_sha256 校验失败：${displayPath}`);
+  }
+}
+
 const aiAssetPathPatterns = [
   /^AGENTS\.md$/u,
   /^CLAUDE\.md$/u,
@@ -605,6 +758,60 @@ async function createRemoteHeadEvidence(item: UpstreamRecord): Promise<RemoteHea
       head_sha: null,
       error: message,
     };
+  }
+}
+
+async function createRemoteSourceTreeEvidence(
+  item: UpstreamRecord,
+  remote: RemoteHeadEvidence,
+): Promise<RemoteSourceTreeEvidence> {
+  if (!item.sourceUrl) {
+    throw new Error(`上游 ${item.id} 未配置 source_url，无法生成 source tree manifest。`);
+  }
+
+  if (!remote.head_sha || remote.error) {
+    throw new Error(remote.error ?? `上游 ${item.id} 未采集到远端 HEAD。`);
+  }
+
+  if (item.sourcePaths.length === 0) {
+    throw new Error(`上游 ${item.id} 未配置 source_paths，无法生成 source tree manifest。`);
+  }
+
+  const checkedAt = new Date().toISOString();
+  const checkoutRoot = await mkdtemp(resolve(tmpdir(), "zc-upstream-tree-"));
+
+  try {
+    await execFileAsync("git", ["init", checkoutRoot], { timeout: 15000, maxBuffer: 1024 * 1024 });
+    await execFileAsync("git", ["-C", checkoutRoot, "remote", "add", "origin", item.sourceUrl], {
+      timeout: 15000,
+      maxBuffer: 1024 * 1024,
+    });
+    await execFileAsync("git", buildMetadataFetchArgs(checkoutRoot, remote.head_sha), {
+      timeout: 60000,
+      maxBuffer: 4 * 1024 * 1024,
+    });
+    const { stdout } = await execFileAsync(
+      "git",
+      ["-C", checkoutRoot, "ls-tree", "-r", "-z", remote.head_sha, "--", ...item.sourcePaths],
+      { timeout: 30000, maxBuffer: 16 * 1024 * 1024 },
+    );
+    const entries = parseSourceTreeOutput(stdout);
+    if (entries.length === 0) {
+      throw new Error(`上游 ${item.id} 的 source_paths 未匹配任何远端文件。`);
+    }
+
+    return {
+      source_url: item.sourceUrl,
+      checked_at: checkedAt,
+      command: "git fetch/ls-tree source_paths",
+      head_sha: remote.head_sha,
+      source_paths: item.sourcePaths,
+      entry_count: entries.length,
+      manifest_sha256: createSourceTreeHash(entries),
+      entries,
+    };
+  } finally {
+    await removeTemporaryDirectory(checkoutRoot);
   }
 }
 
@@ -670,11 +877,11 @@ async function createRemoteContentEvidence(
       timeout: 15000,
       maxBuffer: 1024 * 1024,
     });
-    await execFileAsync("git", ["-C", checkoutRoot, "fetch", "--depth=1", "origin", currentHead], {
+    await execFileAsync("git", buildMetadataFetchArgs(checkoutRoot, currentHead), {
       timeout: 60000,
       maxBuffer: 4 * 1024 * 1024,
     });
-    await execFileAsync("git", ["-C", checkoutRoot, "fetch", "--depth=1", "origin", baselineHead], {
+    await execFileAsync("git", buildMetadataFetchArgs(checkoutRoot, baselineHead), {
       timeout: 60000,
       maxBuffer: 4 * 1024 * 1024,
     });
@@ -687,6 +894,7 @@ async function createRemoteContentEvidence(
               "-C",
               checkoutRoot,
               "diff",
+              "--no-renames",
               "--name-status",
               baselineHead,
               currentHead,
@@ -698,7 +906,7 @@ async function createRemoteContentEvidence(
         : { stdout: "", stderr: "" };
     const allDiff = await execFileAsync(
       "git",
-      ["-C", checkoutRoot, "diff", "--name-only", baselineHead, currentHead],
+      ["-C", checkoutRoot, "diff", "--no-renames", "--name-only", baselineHead, currentHead],
       { timeout: 30000, maxBuffer: 4 * 1024 * 1024 },
     );
     const changedPaths = parseNameStatusOutput(registeredDiff.stdout);
@@ -727,7 +935,7 @@ async function createRemoteContentEvidence(
       error: message,
     };
   } finally {
-    await rm(checkoutRoot, { recursive: true, force: true });
+    await removeTemporaryDirectory(checkoutRoot);
   }
 }
 
@@ -982,6 +1190,8 @@ function formatSnapshotText(result: SnapshotResult): string {
     `- source paths：${result.summary.source_paths}`,
     `- notes 有效行数：${result.summary.notes_lines}`,
     `- remote head：${result.summary.remote_head ?? "未采集"}`,
+    `- source tree 条目：${result.summary.source_tree_entries}`,
+    `- source tree SHA-256：${result.summary.source_tree_sha256 ?? "未采集"}`,
     "",
     "说明：",
     "- snapshot 为追加式治理记录，不会直接写入 `packages/toolkit`。",
@@ -1005,6 +1215,8 @@ function formatSnapshotMarkdown(result: SnapshotResult): string {
     `- source_paths: ${result.summary.source_paths}`,
     `- notes_lines: ${result.summary.notes_lines}`,
     `- remote_head: \`${result.summary.remote_head ?? "未采集"}\``,
+    `- source_tree_entries: ${result.summary.source_tree_entries}`,
+    `- source_tree_sha256: \`${result.summary.source_tree_sha256 ?? "未采集"}\``,
     "",
     "## Boundary",
     "- append-only snapshot",
@@ -1057,6 +1269,7 @@ async function createSnapshot(
   const capturedAt = new Date().toISOString();
   const currentNotesContent = await readOptionalFile(item.notesPath);
   const remote = options.withRemote ? await createRemoteHeadEvidence(item) : undefined;
+  const sourceTree = remote ? await createRemoteSourceTreeEvidence(item, remote) : undefined;
   const snapshotPayload: SnapshotRecord = {
     upstream: item.id,
     captured_at: capturedAt,
@@ -1070,6 +1283,7 @@ async function createSnapshot(
       source_paths: item.sourcePaths,
     },
     remote,
+    source_tree: sourceTree,
     notes: item.notesPath
       ? {
           path: item.notesPath,
@@ -1106,6 +1320,8 @@ async function createSnapshot(
       source_paths: item.sourcePaths.length,
       notes_lines: countMeaningfulLines(currentNotesContent),
       remote_head: remote?.head_sha ?? null,
+      source_tree_entries: sourceTree?.entry_count ?? 0,
+      source_tree_sha256: sourceTree?.manifest_sha256 ?? null,
     },
   };
 }
@@ -1243,7 +1459,7 @@ function buildUpstreamCommand(): CommanderCommand {
     .argument("<id>", "上游 ID")
     .option("--label <label>", "附加到 snapshot 文件名的标签")
     .option("--format <format>", "输出格式：text | json | md", "text")
-    .option("--with-remote", "通过 git ls-remote 采集当前远端 HEAD 并写入 snapshot")
+    .option("--with-remote", "采集远端 HEAD 与 source_paths tree manifest 并写入 snapshot")
     .action(async (id: string, options: { label?: string; format?: ReportFormat; withRemote?: boolean }) => {
       try {
         const upstreams = await loadUpstreams();
@@ -1295,8 +1511,10 @@ function buildUpstreamCommand(): CommanderCommand {
           console.error(`[upstream governance] 正在采集远端证据：0/${items.length}`);
         }
 
-        const results = await Promise.all(
-          items.map(async (item) => {
+        const results = await mapWithConcurrency(
+          items,
+          options.withRemote ? 4 : items.length,
+          async (item) => {
             const result = await createDiffResult(item, undefined, { withRemote: options.withRemote });
 
             if (shouldReportRemoteProgress) {
@@ -1307,7 +1525,7 @@ function buildUpstreamCommand(): CommanderCommand {
             }
 
             return result;
-          }),
+          },
         );
         const format = options.format ?? "text";
 

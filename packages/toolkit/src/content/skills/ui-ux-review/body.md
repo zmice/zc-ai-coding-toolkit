@@ -37,6 +37,7 @@
 - Audited surface:
 - Primary user task:
 - Governing sources:
+- External references (optional, not governing by default):
 - Runtime owners and consumers:
 - Documented decisions:
 - Explicit exceptions:
@@ -53,6 +54,8 @@
 3. **Correction**：证据能确定一个修正方向，并能指出应复用的 token、组件或范例
 
 信息层级、视觉突出度、密度、可发现性、连贯性和“看起来不对”等主观判断必须有截图、真实浏览器或用户研究等渲染证据。源码差异不足以证明这些问题。
+
+外部品牌站点、截图或 `DESIGN.md` 只能提供候选修正方向；除非用户明确把它纳入本项目验收目标，否则不能单独满足 Contract 证据，也不能因为界面“与参考不够像”生成 finding。
 
 直接影响键盘、辅助技术、缩放、目标尺寸或认证的规范性问题，可以由有效标准与运行路径共同证明，不要求先看到视觉缺陷。
 

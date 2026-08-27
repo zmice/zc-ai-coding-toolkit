@@ -1,0 +1,860 @@
+{
+  "upstream": "agent-skills",
+  "captured_at": "2026-08-27T14:55:13.923Z",
+  "label": "2026-08-27-monitoring-coverage",
+  "metadata": {
+    "title": "Agent Skills",
+    "kind": "github-public-repo",
+    "status": "active",
+    "owner": "codex",
+    "source_url": "https://github.com/addyosmani/agent-skills.git",
+    "source_paths": [
+      "LICENSE",
+      "README.md",
+      "skills",
+      "commands",
+      ".claude-plugin/plugin.json",
+      ".github/workflows/test-plugin-install.yml",
+      "docs/getting-started.md",
+      "evals",
+      "references",
+      "scripts"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/addyosmani/agent-skills.git",
+    "checked_at": "2026-08-27T14:55:13.925Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "7cb7a20bb38b199728d456999c725a0488490ab6"
+  },
+  "source_tree": {
+    "source_url": "https://github.com/addyosmani/agent-skills.git",
+    "checked_at": "2026-08-27T14:55:15.176Z",
+    "command": "git fetch/ls-tree source_paths",
+    "head_sha": "7cb7a20bb38b199728d456999c725a0488490ab6",
+    "source_paths": [
+      "LICENSE",
+      "README.md",
+      "skills",
+      "commands",
+      ".claude-plugin/plugin.json",
+      ".github/workflows/test-plugin-install.yml",
+      "docs/getting-started.md",
+      "evals",
+      "references",
+      "scripts"
+    ],
+    "entry_count": 134,
+    "manifest_sha256": "39caece910dcdcfd66c2caa5b51b0d9679e34eb624f4a71b8ada7bc9ebbb8465",
+    "entries": [
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "929efe3fd6f8379a0e826dc3f8f6b46eaecdcac6",
+        "path": ".claude-plugin/plugin.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "782b330ed48d7693548d3509682420037281b47c",
+        "path": ".github/workflows/test-plugin-install.yml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d67778ada6b9cda6227e9130da182c13e73c8b2e",
+        "path": "LICENSE"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f31b37f7fc881e76cf9ba9cedd74efad27d4d255",
+        "path": "README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b7a4f7f1f6ab193c3abb75690bb9df7a88024371",
+        "path": "commands/build.toml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "926442b958f1f89b2b5ecdc04b4b79896b4dbf2b",
+        "path": "commands/code-simplify.toml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3b8daa23aacfb92aadb1fefe2cabfb65361f947f",
+        "path": "commands/planning.toml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "23f5b78c63192a8a25ec069cb7f710639b669b45",
+        "path": "commands/review.toml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bf0a77647e3c67eea7a5a65f496e857f403b336f",
+        "path": "commands/ship.toml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "799f682b0fe450bade82da5b63a51d7817f22acd",
+        "path": "commands/spec.toml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "73e36f53ed289bc01d24a69c89907e32605fb519",
+        "path": "commands/test.toml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3532ec69d198a5d0b7e24920f50cb3e21dd41cc0",
+        "path": "commands/webperf.toml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8fe56d39832f541cfd695efdb44e670b6161f921",
+        "path": "docs/getting-started.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d67a025d0b2a1867e37d7f31b39dd5db344df294",
+        "path": "evals/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c730e83efcfe726b553b61410b87a9b27d3cf068",
+        "path": "evals/cases/api-and-interface-design.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3e35e55944b45bb6816cbb011f14bc0bfaf1b5fb",
+        "path": "evals/cases/browser-testing-with-devtools.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1d4a300a39fc5e38ed43af056de46150bd9c3214",
+        "path": "evals/cases/ci-cd-and-automation.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "427b95da0c10efc89d3adbe99904e11064a37da8",
+        "path": "evals/cases/code-review-and-quality.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4a43fa65792b4c95c2def83aa9263c962457b989",
+        "path": "evals/cases/code-simplification.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "efb5e28c1a4dce2fde5dfc63c9dfdfe7b814d5c7",
+        "path": "evals/cases/context-engineering.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f6a12cddf6c41378d9f11ba4d55e47e2cddde3a7",
+        "path": "evals/cases/debugging-and-error-recovery.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "17585478a29dd7ded70c6937e3c4d7e11c5b9017",
+        "path": "evals/cases/deprecation-and-migration.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d705168e09553aa4f8fb842f580239211ddc11e3",
+        "path": "evals/cases/documentation-and-adrs.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c50e0ae207911881c42252de5dc17c7d7b8c6335",
+        "path": "evals/cases/doubt-driven-development.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4b67d9a99f240fb4a24357b9943b80ff4b349a5c",
+        "path": "evals/cases/frontend-ui-engineering.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9236defed685647d83d1ca8287e32191637fd3a7",
+        "path": "evals/cases/git-workflow-and-versioning.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fb384b09832e930f6de27dafcb91f5963d24b53b",
+        "path": "evals/cases/idea-refine.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5829a0d8e0317234e9520f391c959ffdaeb95301",
+        "path": "evals/cases/incremental-implementation.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "568fa8954b5a127f95a01a4f27a359113e3d6487",
+        "path": "evals/cases/interview-me.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "296cf60405425230e5928a73a36cbf47a4639937",
+        "path": "evals/cases/observability-and-instrumentation.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2fe195e39c05e89670a14701c2fcedd04c119746",
+        "path": "evals/cases/performance-optimization.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "36950f567f57bec93872da20623ad6084b8cda06",
+        "path": "evals/cases/planning-and-task-breakdown.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "10a1f33698b067e3f54fe50ddff4ccc30cc09725",
+        "path": "evals/cases/security-and-hardening.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8f205fa844a18e144b0fd6dc2950710dd713e9f3",
+        "path": "evals/cases/shipping-and-launch.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b58864578587a7a229f31842f778b7f47c05523a",
+        "path": "evals/cases/source-driven-development.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2e9a04d478b41d1c00fc1afeee32f80a8a033fca",
+        "path": "evals/cases/spec-driven-development.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ab6ddd00871ce7535e99f538439f2afe51c92721",
+        "path": "evals/cases/test-driven-development.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "06a5c168db40993dc520cc89476843e89624c727",
+        "path": "evals/cases/using-agent-skills.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4d1c8f290798087525d125ba4e4441502ff56e53",
+        "path": "evals/fixtures/api-and-interface-design/service-brief.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4cf61e4d4f801feefdede6657c22683decd23579",
+        "path": "evals/fixtures/browser-testing-with-devtools/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "29c88cfb280529c771c4c150b0b6edcb2488b891",
+        "path": "evals/fixtures/browser-testing-with-devtools/index.html"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "53c271786155b7f29ad4e51e3b063c1471e8ad52",
+        "path": "evals/fixtures/browser-testing-with-devtools/server.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "27051892330aa764718667704b029cbdd95d8bf7",
+        "path": "evals/fixtures/ci-cd-and-automation/package.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9c87193f2d06086517239c41249133af497465a2",
+        "path": "evals/fixtures/ci-cd-and-automation/src/slug.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "66898b14575c6e123d3da6a00a57418238b55593",
+        "path": "evals/fixtures/ci-cd-and-automation/test/slug.test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d83e015fed84dfd39d2dfe3ffad4abae9a9707e4",
+        "path": "evals/fixtures/code-review-and-quality/user-search.diff"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4e7c7389fc4f97998c9e98a03d96917910ee73e6",
+        "path": "evals/fixtures/code-simplification/config-parser.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "784a043f53fb97920239a1d02b1e6e2f984648c3",
+        "path": "evals/fixtures/code-simplification/config-parser.test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0e704f5759e6e9a46567bb33bf7140eaa7939329",
+        "path": "evals/fixtures/context-engineering/context-audit.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a8a2ed81c354cc812062eb412df4923d4714ef0f",
+        "path": "evals/fixtures/debugging-and-error-recovery/pagination.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5e6e5d269a4ea35bcb9d4ec1be73493242fb0f7c",
+        "path": "evals/fixtures/debugging-and-error-recovery/pagination.test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "04afc7ccc9efcd0702b4b77c7d1694a07c2fa91d",
+        "path": "evals/fixtures/debugging-and-error-recovery/time-pressure.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "41c92d7f5ea05c84a5a608ea544f8a57e8340818",
+        "path": "evals/fixtures/deprecation-and-migration/api-inventory.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a3c072e66ea56ccf8a3e952847a34a272f94810a",
+        "path": "evals/fixtures/documentation-and-adrs/decision-context.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "966b8a45cafb74746fd103d79af5af8b3574945c",
+        "path": "evals/fixtures/doubt-driven-development/migration-plan.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9f3b65357cddb2b8c9d3b36117f58fbe30ff35d9",
+        "path": "evals/fixtures/frontend-ui-engineering/Button.tsx"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "858eaeb730e655855b8ecf43587363f2475c6b94",
+        "path": "evals/fixtures/frontend-ui-engineering/design-system.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8a824478b3612ceddd61f1b5d007ca7c688cb052",
+        "path": "evals/fixtures/git-workflow-and-versioning/.eval/working-tree.patch"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "54ac07ede08a87f064b2e9d415a76ca7d76bf449",
+        "path": "evals/fixtures/git-workflow-and-versioning/app.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "df7152575b903f55cfeb208684b783c50bb268e1",
+        "path": "evals/fixtures/git-workflow-and-versioning/app.test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b91bd66c625d111d8dc13623c620449d7f401bdd",
+        "path": "evals/fixtures/incremental-implementation-pressure/draft-export.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1df89a9d4020db44f0d9b495acac17872849e97f",
+        "path": "evals/fixtures/incremental-implementation-pressure/scenario.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e7cabbe7e47b41429fd050f840a89c485768adfc",
+        "path": "evals/fixtures/incremental-implementation/reports.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4d18d4a767466b0fc61ba65b4430ccf539d33be2",
+        "path": "evals/fixtures/incremental-implementation/reports.test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "17895afa4996e817784eca63dd87b355049e72f6",
+        "path": "evals/fixtures/incremental-implementation/tasks/plan.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "50b804049bdf610fdfeb34ded6754c5d4eb95016",
+        "path": "evals/fixtures/observability-and-instrumentation/operations.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5ff2b6e504e669b12aad154ed3f4a7fd96664f70",
+        "path": "evals/fixtures/observability-and-instrumentation/payment-retry.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7c4422a21524ed3f7cbdc42609d722d3b08941c9",
+        "path": "evals/fixtures/performance-optimization/benchmark.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "13cc4f23f5912f9e90cbfb50d85d867b798393d9",
+        "path": "evals/fixtures/performance-optimization/products.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a3b58d91433db689f16da445b31e97dca8276ad3",
+        "path": "evals/fixtures/planning-and-task-breakdown/notifications-spec.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0bfd524b7319b51e9573e0fe20682270af55ae14",
+        "path": "evals/fixtures/security-and-hardening/webhook.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6ca6d7005a8805f5e6f09fcc0ce0dad28bd44161",
+        "path": "evals/fixtures/security-and-hardening/webhook.test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b0592de83f8d8cd1eee0347b1bd973a0ac04eba0",
+        "path": "evals/fixtures/shipping-and-launch/authority-pressure.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "01c619c3f9e2f85bbe7333529ea560bb2fd71818",
+        "path": "evals/fixtures/shipping-and-launch/launch-status.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0dce86431bcb5d2d4006241c5fec3b7a7d4208ea",
+        "path": "evals/fixtures/source-driven-development/framework-task.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c8ecafe9918f2b7249337acc646e3ae3a5d97a21",
+        "path": "evals/fixtures/spec-driven-development-decomposition/portal-brief.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cb5f40be20377cc6b32415e692c1a377a970a433",
+        "path": "evals/fixtures/spec-driven-development/billing-brief.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ce71454c38ef5ef471586ff4fc41948b080330dc",
+        "path": "evals/fixtures/test-driven-development-ecosystem/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0b8c09b0cbf3edd14a0accd66305e52539670d7d",
+        "path": "evals/fixtures/test-driven-development-ecosystem/ledger.py"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "617b0a0182049fa297821a84ba329772550f66ff",
+        "path": "evals/fixtures/test-driven-development-ecosystem/test_ledger.py"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "782f7d32ffe4309cf754c22bd133c7a13556aebb",
+        "path": "evals/fixtures/test-driven-development/BUG.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a8458a7a35eb32b9f1f47a3f7ae5d7ec310145e2",
+        "path": "evals/fixtures/test-driven-development/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7433a0b51669ca20e32183115e4e708854d30754",
+        "path": "evals/fixtures/test-driven-development/package.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9841a2f1dcf9cb0d31e9de6e830d9966f40aa8e9",
+        "path": "evals/fixtures/test-driven-development/src/split.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8e03e27045ec8e06996f77e3e299b1e6ceef6082",
+        "path": "evals/fixtures/test-driven-development/test/split.test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3e1b1b63a9db94fd10b9f64dc749ac65520e9c1c",
+        "path": "evals/fixtures/using-agent-skills/incident.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c8c61e5f3d5a010a0d0ecb918bfaffe6c76fca78",
+        "path": "references/accessibility-checklist.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "35e39f9e15f6dd0ff4725a6e5cbce7f2aa69064a",
+        "path": "references/definition-of-done.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fff9f5843c38ef8024c94e8afb540209e5530b34",
+        "path": "references/observability-checklist.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "09cddd31d52a95be1d9bca814547d184b9945e44",
+        "path": "references/orchestration-patterns.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "86a41496bf9c4c58b60be30fdf137b8bc813fad8",
+        "path": "references/performance-checklist.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0f656479b05812383abfd8d11ab72a6d7dd47e14",
+        "path": "references/security-checklist.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bc96e271ad241ca567f06d21c6ecc001455b80f1",
+        "path": "references/testing-patterns.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bfb61e518b198ab6bbabc25b16065e503d543d96",
+        "path": "scripts/lib/skill-lint-test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "baa21afce56de809efa6210d8e2bbe4fa593bcce",
+        "path": "scripts/lib/skill-lint.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "381a8cf00220683db2050a79dcb6934b2a004568",
+        "path": "scripts/run-evals-test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "80138873f953f780fb0821e8e601ae1d7550c446",
+        "path": "scripts/run-evals.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "448e69f363891ca43f5bbc790bb7717fdef21e09",
+        "path": "scripts/validate-artifact-paths-test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "dbc270a4e05d4e904bfbb8040404782cdf8c5f7b",
+        "path": "scripts/validate-artifact-paths.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1bcf77c4b1ff6d4d4f2a245922d4fdcb9a110bc5",
+        "path": "scripts/validate-commands-test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a9ff439924f579f3edb20e72d7ee2bf6eacafed5",
+        "path": "scripts/validate-commands.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8c8b147ac232068c70ef3b0a6e3f01cc3c215b8c",
+        "path": "scripts/validate-reference-links-test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f460bf98a3afd803438155317da2c2a9f594db1f",
+        "path": "scripts/validate-reference-links.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b73a431d001a4dd9adf7fab672e3bd99fb9de890",
+        "path": "scripts/validate-skills.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e39f1049fd230e8e06d2f53abde43f35e59b57fc",
+        "path": "scripts/validate-versions-test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6f47248d72e00b6515900a8b5a89567b741ede6f",
+        "path": "scripts/validate-versions.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "820d6d981f90b7802e0ea8b75bb966a3d78b8d0f",
+        "path": "skills/api-and-interface-design/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9864d2724e273e1164d62ab10b73590ae00fd6a8",
+        "path": "skills/browser-testing-with-devtools/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "118456fcb10225c030769a4fee7815b9c536b0ce",
+        "path": "skills/ci-cd-and-automation/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7dfa56362fa65fff450ee5aa02393b85b9c26d85",
+        "path": "skills/code-review-and-quality/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "239b2848489511de30d9e63b0bd183adc4b01347",
+        "path": "skills/code-simplification/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "be991103fe2b13f7e5f6f5da9d3c6029ad30ac64",
+        "path": "skills/context-engineering/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "03775802b244cddf2f58f6c54039f6e6ee8702f2",
+        "path": "skills/debugging-and-error-recovery/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "765bdde6329dbd5fd22d5d3fc2c185737fc9f908",
+        "path": "skills/deprecation-and-migration/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7faf52c9558fa60faf7362cf473cf24784f9209b",
+        "path": "skills/documentation-and-adrs/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ea46342c5dcfe445004a6fa5bc43e71f3f25e78d",
+        "path": "skills/doubt-driven-development/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "837df875900d4d431c6d51a3251bac0d4bd5dfed",
+        "path": "skills/frontend-ui-engineering/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6b33aefe602eee4d43ae77e12329827eba5b70cc",
+        "path": "skills/git-workflow-and-versioning/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "38955e8943f2ea68c041f10ef1902d94bdfb1cb9",
+        "path": "skills/idea-refine/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a797d22c69cb248d718713633f42d4ee7a4d01d7",
+        "path": "skills/idea-refine/examples.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0e7fc8fe203bd6aabfba0f79cb6fa98c76d92e28",
+        "path": "skills/idea-refine/frameworks.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "53e79c725b7aa0a4a39389056bd71b1689aa8740",
+        "path": "skills/idea-refine/refinement-criteria.md"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "a53cb5a9dc00252003a04d485132d58a5260e9b6",
+        "path": "skills/idea-refine/scripts/idea-refine.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6df12f9a878c80305c42bcdbe8a43a10d2e0c933",
+        "path": "skills/incremental-implementation/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "de5e3aff0c497e2d474e329cde447678632e082b",
+        "path": "skills/interview-me/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7d56593ec599cce0bae12aa46862884d0208cc59",
+        "path": "skills/observability-and-instrumentation/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a4e968e57ec1f57acdaef83d1d00f7201cadff19",
+        "path": "skills/performance-optimization/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b10995ce30a0e61bc507a538c768e8513c1804db",
+        "path": "skills/planning-and-task-breakdown/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c00236e94bf52be841d575a99e09602110dc1216",
+        "path": "skills/security-and-hardening/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "acef513b77a33b366220d58224e472cb83ffd21d",
+        "path": "skills/shipping-and-launch/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d1f599a9fe8eb77d4af7dc2f45404c2f6363e441",
+        "path": "skills/source-driven-development/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f3f5877c5d6be8f74408c308393bfb45cbcf53c4",
+        "path": "skills/spec-driven-development/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0cfd2f33d78961a23365b34bd92e08026dd140bc",
+        "path": "skills/test-driven-development/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b250b297c41369ac380eb322f6561c78dd177586",
+        "path": "skills/using-agent-skills/SKILL.md"
+      }
+    ]
+  },
+  "notes": {
+    "path": "references/notes/agent-skills.md",
+    "content": "# Agent Skills\r\n\r\nSource: `https://github.com/addyosmani/agent-skills`\r\n\r\n## Status\r\n\r\nRegistered from historical upstream tracking. Initial baseline snapshot captured in the new governance layer.\r\n\r\n## Historical Role\r\n\r\n- This was the primary external base for the early skill and command system.\r\n- Commit history previously marked it as the core upstream for the toolkit skill architecture.\r\n\r\n## Expected Downstream Value\r\n\r\n- Skill workflow structure\r\n- Command naming and routing patterns\r\n- Reusable agent-skill composition ideas\r\n\r\n## Boundaries\r\n\r\n- Do not mirror the upstream layout directly into `packages/toolkit`.\r\n- Prefer absorbing durable workflow patterns over copying prompt wording verbatim.\r\n- Exact or substantial copied material must retain the upstream MIT notice in generated skill attachments; repository-level attribution is recorded in `THIRD_PARTY_NOTICES.md`.\r\n\r\n## Snapshot Baseline\r\n\r\n- baseline: `references/snapshots/agent-skills/2026-04-14-baseline.json`\r\n- current governance status: `active`\r\n\r\n## Latest Reviewed Upstream\r\n\r\n- remote head: `f17c6e88c904dc747381c374312c2d58e10647ae`\r\n- observed date: 2026-05-18\r\n- notable upstream change: upstream added `scripts/validate-skills.js` and a plugin-install CI workflow that validates skill `SKILL.md` presence, frontmatter shape, description budget, required sections, and dead cross-skill references.\r\n\r\n## Latest Remote Evidence\r\n\r\n- remote head: `7829ffd90d973b6325f5f12f1b1226dcace74443`\r\n- observed date: 2026-07-28\r\n- evidence: `references/snapshots/agent-skills/2026-07-28T08-27-50-843Z-2026-07-28-review.json`\r\n- comparison baseline: `d187883b7d761265309cdcc0f202cc76b4b3fb06`\r\n- finding: registered content and adjacent governance assets changed across 101 files, including 24 deterministic/behavioral eval cases, 45 fixtures, a three-tier eval runner, Definition of Done guidance, validator hardening, dependency upgrade discipline, observability guidance, and ecosystem-neutral command examples.\r\n\r\n## 2026-07-28 Review Outcome\r\n\r\nAlready absorbed in this review:\r\n\r\n- Restored the upstream accessibility, security, and performance checklists as per-skill supporting assets instead of always-loaded body content.\r\n- Added the upstream MIT notice beside every copied checklist so Codex, Qwen, OpenCode, and vendored CLI outputs carry attribution with the material.\r\n- Preserved progressive disclosure by emitting those assets beside each generated `SKILL.md`.\r\n- Added a manifest lint error for missing local supporting-file references so broken `references/*.md` links block release.\r\n- Propagated toolkit attachments through Codex, Qwen, and OpenCode skill-directory generation.\r\n- Absorbed the latest ecosystem-aware dependency installation boundary and install-script gate through the restored security checklist.\r\n- Added a localized `observability-and-instrumentation` skill and progressive-disclosure checklist covering on-call questions, structured logs, RED/USE metrics, trace continuity, bounded cardinality, symptom alerts, and induced-failure verification.\r\n- Hardened `toolkit lint` so headings and asset/support-file references inside fenced examples no longer satisfy governance checks or create false dead-reference findings.\r\n\r\nHigh-value follow-up candidates:\r\n\r\n- Adopt the three-tier eval model: structural lint in CI, deterministic trigger/routing checks in CI, and fixture-backed behavioral evals on demand.\r\n- Add deterministic trigger/routing checks as the next layer above structural lint, including positive prompts, negative ownership, collision thresholds, and a ratcheted rank-1 floor.\r\n- Continue `toolkit lint` hardening for negated activation phrases; keep policy logic testable and separate from filesystem traversal.\r\n- Extend code review dependency discipline so upgrades require changelog review, one-package-at-a-time isolation, lockfile diff review, and before/after behavior tests.\r\n\r\nAlready covered locally:\r\n\r\n- Definition of Done is already separated from per-task acceptance criteria in `planning-and-task-breakdown`.\r\n- Structural remedies are already present in `code-review-and-quality`, including explicit fixes for repeated branching, feature leakage into shared modules, and complexity relocation.\r\n- Doubt handling is already covered by engineering principles plus bounded reviewer/agent loops; a separate recursive orchestration skill is unnecessary.\r\n- Interview-style clarification remains covered by `idea-refine` and `product-analysis`.\r\n\r\n## Extractable Upgrades\r\n\r\n- Adopt the skill anatomy checklist as a governance heuristic: trigger clarity, workflow steps, anti-rationalization, red flags, verification evidence.\r\n- Reuse the OpenCode idea of agent-driven skill routing through `AGENTS.md` rather than forcing slash-command parity on platforms that do not natively support it.\r\n- Keep reference checklists as optional supporting material, not always-loaded context.\r\n- Strengthen `command:start` routing language: descriptions and trigger conditions must say both what a workflow does and when to activate it, because platforms increasingly auto-discover skills from short metadata.\r\n- Prefer on-demand skill loading over persistent always-on context; reserve persistent files such as `AGENTS.md` / `GEMINI.md` for project conventions and canonical routing.\r\n- Extend the same discovery/context rule into `using-agent-skills` and `context-engineering`, not only the `start` command.\r\n- Fold doubt-driven behavior into existing engineering principles: route-changing doubts should become explicit questions or assumptions before implementation.\r\n- Keep local skill discovery names accurate; upstream references to a browser testing skill should map to this repo's `browser-qa-testing`.\r\n- Treat interview-style clarification as already covered by `idea-refine` / `product-analysis`; no separate interview skill is needed yet.\r\n- Absorb validator intent into `toolkit lint`: check description length, empty body, skill activation sections, and explicit skill / command / agent references without copying upstream's file layout.\r\n- Code review content now has stronger structural-remedy language: repeated conditionals, feature logic leaking into shared modules, refactors that relocate rather than remove complexity, and large-file growth should become review signals.\r\n- Definition-of-Done separation is useful: per-task acceptance criteria should sit under a project-wide done bar instead of replacing it.\r\n\r\n## Non-Adoption Boundary\r\n\r\n- Do not mirror upstream skill names or prose directly into `packages/toolkit`.\r\n- Do not add platform setup instructions that imply unsupported native plugin behavior.\r\n- Do not add Gemini as a supported `zc platform` target until the CLI install model, generated layout, and tests are designed in `packages/platform-*`.\r\n- Do not import the upstream GitHub workflow directly; this repo should keep validation centered on manifest-aware `toolkit lint` and package tests.\r\n\r\n## Recommended Phase\r\n\r\n- Phase 1: complete the supporting-asset distribution and dead local-reference gate.\r\n- Phase 2: design a platform-neutral trigger/routing eval schema and CI-safe deterministic runner before importing behavioral execution machinery.\r\n- Phase 3: add fixture-backed behavioral evals for the highest-risk workflow skills after the deterministic routing layer is stable.\r\n- Phase 4: evaluate a dedicated Gemini platform adapter only if there is user demand.\r\n\r\n## Latest Remote Evidence 2026-08-05\r\n\r\n- remote head: `bdf76c7c6b7b3b3e01bb15c9fdc42ac5351855c1`\r\n- previous reviewed head: `7829ffd90d973b6325f5f12f1b1226dcace74443`\r\n- finding: registered `skills` and `commands` did not change; adjacent plugin manifest, installation documentation, workflow, and command-validator regression coverage changed\r\n- registry update: track `README.md`, `.claude-plugin/plugin.json`, `docs/getting-started.md`, the plugin-install workflow, and command-validator implementation/tests\r\n\r\n## Current Decision 2026-08-05\n\r\n- No frontend skill content sync is required for this head.\r\n- Absorb the platform-manifest compatibility lesson and validator regression discipline through repository governance and tests.\r\n- Keep the per-skill reference limitation visible because generated attachments must travel with every platform skill directory.\n\n## Monitoring Coverage 2026-08-27\n\n- remote head: `7cb7a20bb38b199728d456999c725a0488490ab6`\n- expanded `source_paths` to include `evals`, `references`, and the complete `scripts` governance surface\n- reason: deterministic routing fixtures, reference-link checks, artifact-path checks, and version validation must be visible to upstream review even when they are not copied into this toolkit\n- non-adoption: upstream runner code and its fixed artifact paths remain reference-only; local routing evaluation requires a separate ranking contract because `recommendToolkitAssets` currently resolves exact identities rather than natural-language prompts\n"
+  }
+}

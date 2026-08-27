@@ -93,6 +93,31 @@ describe("toolkit query helpers", () => {
     assert.ok(matches.some((asset) => asset.id === "skill:ui-ux-review"));
   });
 
+  it("resolves curated Chinese aliases to a single frontend owner", async () => {
+    const manifest = await loadToolkitManifest();
+
+    assert.equal(resolveToolkitAssetQuery(manifest, "前端实现")?.id, "skill:frontend-ui-engineering");
+    assert.equal(resolveToolkitAssetQuery(manifest, "界面走查")?.id, "skill:ui-ux-review");
+    assert.equal(resolveToolkitAssetQuery(manifest, "浏览器验收")?.id, "skill:browser-qa-testing");
+  });
+
+  it("discovers frontend assets through bounded Chinese search tags", async () => {
+    const manifest = await loadToolkitManifest();
+
+    assert.deepEqual(
+      searchToolkitAssets(manifest, "页面开发").map((asset) => asset.id),
+      ["skill:frontend-ui-engineering"]
+    );
+    assert.deepEqual(
+      searchToolkitAssets(manifest, "界面走查").map((asset) => asset.id),
+      ["skill:ui-ux-review"]
+    );
+    assert.deepEqual(
+      searchToolkitAssets(manifest, "浏览器测试").map((asset) => asset.id),
+      ["skill:browser-qa-testing"]
+    );
+  });
+
   it("keeps UI implementation and general code review on their neighboring routes", async () => {
     const manifest = await loadToolkitManifest();
     const implementationMatches = searchToolkitAssets(manifest, "前端界面");

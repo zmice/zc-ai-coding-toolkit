@@ -44,3 +44,10 @@ Active official Agent Skills reference with a public specification pointer, exam
 - Do not copy its full prose or make one aesthetic direction globally mandatory.
 - Reuse project design systems and user-provided visual targets before general anti-template advice.
 - Keep visual exploration separate from evidence-based review and implementation verification.
+
+## Monitoring Coverage 2026-08-27
+
+- remote head: `3b3fad96af16a10759d930941b4520ba0c40edae`
+- added `.claude-plugin` and `THIRD_PARTY_NOTICES.md` to the governance surface
+- retained explicit monitoring for `skills/skill-creator` and `skills/frontend-design` instead of registering the whole `skills` tree
+- reason: skill-level licenses differ, and monitoring every document skill would blur discovery with permission to absorb; additional skills remain subject to individual license and relevance review

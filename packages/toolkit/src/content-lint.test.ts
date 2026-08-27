@@ -518,6 +518,72 @@ describe("lintToolkitManifest", () => {
     assert.equal(result.issues[0]?.rule, "mixed-language-summary");
   });
 
+  it("errors when an alias collides with another asset identity", () => {
+    const result = lintToolkitManifest(
+      makeManifestWithAssets([
+        {
+          id: "skill:first",
+          meta: {
+            tier: "recommended",
+            audience: "default",
+            stability: "stable",
+            description: "中文摘要 A",
+            aliases: ["second"],
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        },
+        {
+          id: "skill:second",
+          meta: {
+            tier: "recommended",
+            audience: "default",
+            stability: "stable",
+            description: "中文摘要 B",
+            source: adaptedAgentSkillsSourceWithOrigin
+          }
+        }
+      ])
+    );
+
+    assert.equal(result.summary.errors, 1);
+    assert.equal(result.issues[0]?.rule, "duplicate-discovery-identity");
+  });
+
+  it("errors when normalized tags repeat within an asset", () => {
+    const result = lintToolkitManifest(
+      makeManifest({
+        tier: "recommended",
+        audience: "default",
+        stability: "stable",
+        description: "中文摘要",
+        tags: ["界面走查", " 界面走查 "],
+        source: adaptedAgentSkillsSourceWithOrigin
+      })
+    );
+
+    assert.equal(result.summary.errors, 1);
+    assert.equal(result.issues[0]?.rule, "duplicate-discovery-tag");
+  });
+
+  it("errors when tags exceed their count or item-length budgets", () => {
+    const result = lintToolkitManifest(
+      makeManifest({
+        tier: "recommended",
+        audience: "default",
+        stability: "stable",
+        description: "中文摘要",
+        tags: ["一", "二", "三", "四", "五", "六", "七", "八", "中".repeat(33)],
+        source: adaptedAgentSkillsSourceWithOrigin
+      })
+    );
+
+    assert.equal(result.summary.errors, 2);
+    assert.deepEqual(
+      result.issues.map((issue) => issue.rule),
+      ["too-many-discovery-tags", "discovery-tag-too-long"]
+    );
+  });
+
   it("warns when multiple assets share the same normalized summary", () => {
     const result = lintToolkitManifest(
       makeManifestWithAssets([

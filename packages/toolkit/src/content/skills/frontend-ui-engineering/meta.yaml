@@ -5,6 +5,13 @@ description: 构建生产级前端界面。适用于开发或修改用户可见�
 tier: recommended
 audience: advanced
 stability: stable
+aliases:
+  - 前端实现
+tags:
+  - 页面开发
+  - 组件实现
+  - 响应式界面
+  - 前端状态
 suggests:
   - skill:ui-ux-review
   - skill:browser-qa-testing

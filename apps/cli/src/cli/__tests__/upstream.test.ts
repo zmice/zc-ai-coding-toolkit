@@ -1,10 +1,16 @@
-import { mkdirSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createUpstreamProgram, createUpstreamSnapshot } from "../upstream.js";
+import {
+  createUpstreamProgram,
+  createUpstreamSnapshot,
+  mapWithConcurrency,
+  removeTemporaryDirectory,
+} from "../upstream.js";
 
 vi.mock("node:child_process", () => ({
   execFile: vi.fn(),
@@ -69,6 +75,72 @@ describe("upstream governance commands", () => {
     vi.useRealTimers();
     vi.restoreAllMocks();
     execFileMock.mockReset();
+  });
+
+  it("清理临时 Git 目录时会启用 Windows 短暂占用重试", async () => {
+    const removeDirectory = vi.fn().mockResolvedValue(undefined);
+
+    await removeTemporaryDirectory("C:\\temp\\zc-upstream-example", removeDirectory);
+
+    expect(removeDirectory).toHaveBeenCalledWith("C:\\temp\\zc-upstream-example", {
+      recursive: true,
+      force: true,
+      maxRetries: 4,
+      retryDelay: 100,
+    });
+  });
+
+  it.each(["EBUSY", "EPERM", "ENOTEMPTY"])(
+    "Windows 临时目录清理遇到 %s 时只告警残留，不覆盖已生成的上游证据",
+    async (code) => {
+      const cleanupError = Object.assign(new Error("temporary directory is still locked"), { code });
+      const removeDirectory = vi.fn().mockRejectedValue(cleanupError);
+      const warn = vi.fn();
+
+      const removed = await removeTemporaryDirectory(
+        "C:\\temp\\zc-upstream-example",
+        removeDirectory,
+        warn,
+      );
+
+      expect(removed).toBe(false);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining("临时目录仍被占用，已保留供后续清理"),
+      );
+    },
+  );
+
+  it.each(["EACCES", "EIO", undefined])(
+    "临时目录清理遇到非瞬态错误 %s 时保持失败",
+    async (code) => {
+      const cleanupError = Object.assign(
+        new Error("unexpected cleanup failure"),
+        code ? { code } : {},
+      );
+      const removeDirectory = vi.fn().mockRejectedValue(cleanupError);
+      const warn = vi.fn();
+
+      await expect(
+        removeTemporaryDirectory("C:\\temp\\zc-upstream-example", removeDirectory, warn),
+      ).rejects.toBe(cleanupError);
+      expect(warn).not.toHaveBeenCalled();
+    },
+  );
+
+  it("批量远端任务限制并发并保持登记顺序", async () => {
+    let active = 0;
+    let peak = 0;
+
+    const results = await mapWithConcurrency([1, 2, 3, 4, 5, 6], 3, async (value) => {
+      active += 1;
+      peak = Math.max(peak, active);
+      await new Promise((resolvePromise) => setTimeout(resolvePromise, 5));
+      active -= 1;
+      return value * 10;
+    });
+
+    expect(results).toEqual([10, 20, 30, 40, 50, 60]);
+    expect(peak).toBeLessThanOrEqual(3);
   });
 
   it("以文本格式输出 diff，并区分结构、文本、元数据和影响面", async () => {
@@ -184,6 +256,11 @@ describe("upstream governance commands", () => {
       expect.any(Object),
       expect.any(Function),
     );
+    expect(
+      execFileMock.mock.calls
+        .filter(([, args]) => Array.isArray(args) && args.includes("diff"))
+        .every(([, args]) => Array.isArray(args) && args.includes("--no-renames")),
+    ).toBe(true);
   });
 
   it("with-remote 会单独标记未登记的疑似 AI asset 路径", async () => {
@@ -296,7 +373,7 @@ describe("upstream governance commands", () => {
     };
 
     expect(payload.mode).toBe("report");
-    expect(payload.results).toHaveLength(12);
+    expect(payload.results).toHaveLength(13);
     expect(payload.results.map((entry) => entry.upstream)).toEqual([
       "agent-skills",
       "superpowers",
@@ -310,9 +387,10 @@ describe("upstream governance commands", () => {
       "vercel-web-interface-guidelines",
       "modern-web-guidance",
       "ui-skills",
+      "awesome-design-md",
     ]);
-    expect(result.stderr).toContain("正在采集远端证据：0/12");
-    expect(result.stderr).toContain("远端证据采集完成：12/12");
+    expect(result.stderr).toContain("正在采集远端证据：0/13");
+    expect(result.stderr).toContain("远端证据采集完成：13/13");
   });
 
   it("snapshot 会追加不可变快照，并输出生成路径", async () => {
@@ -336,6 +414,160 @@ describe("upstream governance commands", () => {
     expect(payload.label).toBe(label);
     expect(payload.metadata.status).toBe("active");
     expect(payload.metadata.source_url).toBe("https://github.com/addyosmani/agent-skills.git");
+  }, 15000);
+
+  it("snapshot --with-remote 会把登记路径的 source tree manifest 绑定进 JSON", async () => {
+    const head = "4444444444444444444444444444444444444444";
+    const treeOutput = [
+      `100644 blob ${"a".repeat(40)}\tLICENSE`,
+      `100644 blob ${"b".repeat(40)}\tREADME.md`,
+      `100644 blob ${"c".repeat(40)}\tskills/frontend-ui-engineering/SKILL.md`,
+    ].join("\0") + "\0";
+
+    mockGitExecFile((args) => {
+      if (args[0] === "ls-remote") {
+        return `${head}\tHEAD\n`;
+      }
+
+      if (args.includes("ls-tree")) {
+        return treeOutput;
+      }
+
+      return "";
+    });
+
+    const label = `tree-manifest-${Date.now()}`;
+    const result = await runCli([
+      "snapshot",
+      "agent-skills",
+      "--label",
+      label,
+      "--format",
+      "json",
+      "--with-remote",
+    ]);
+    const summary = JSON.parse(result.stdout) as {
+      snapshot_path: string;
+      summary: { source_tree_entries: number; source_tree_sha256: string | null };
+    };
+    cleanupPaths.add(join(workspaceRoot, summary.snapshot_path));
+
+    const payload = JSON.parse(readFileSync(join(workspaceRoot, summary.snapshot_path), "utf8")) as {
+      remote: { head_sha: string };
+      source_tree: {
+        command: string;
+        head_sha: string;
+        source_paths: string[];
+        entry_count: number;
+        manifest_sha256: string;
+        entries: Array<{ mode: string; type: string; object: string; path: string }>;
+      };
+    };
+    const expectedHash = createHash("sha256").update(treeOutput).digest("hex");
+
+    expect(result.stderr).toBe("");
+    expect(payload.remote.head_sha).toBe(head);
+    expect(payload.source_tree.command).toBe("git fetch/ls-tree source_paths");
+    expect(payload.source_tree.head_sha).toBe(head);
+    expect(payload.source_tree.source_paths).toEqual(
+      expect.arrayContaining(["skills", "evals", "references", "scripts"]),
+    );
+    expect(payload.source_tree.entry_count).toBe(3);
+    expect(payload.source_tree.entries.map((entry) => entry.path)).toEqual([
+      "LICENSE",
+      "README.md",
+      "skills/frontend-ui-engineering/SKILL.md",
+    ]);
+    expect(payload.source_tree.manifest_sha256).toBe(expectedHash);
+    expect(summary.summary.source_tree_entries).toBe(3);
+    expect(summary.summary.source_tree_sha256).toBe(expectedHash);
+    expect(
+      execFileMock.mock.calls.some(([, args]) =>
+        Array.isArray(args) && args.includes("fetch") && args.includes("--filter=blob:none") && args.includes("--no-tags")
+      ),
+    ).toBe(true);
+  }, 15000);
+
+  it.each([
+    {
+      field: "entry count",
+      mutate: (payload: {
+        source_tree: { entry_count: number; head_sha: string; source_paths: string[]; manifest_sha256: string };
+      }) => {
+        payload.source_tree.entry_count = 2;
+      },
+      expected: "source_tree.entry_count 不匹配",
+    },
+    {
+      field: "HEAD",
+      mutate: (payload: {
+        source_tree: { entry_count: number; head_sha: string; source_paths: string[]; manifest_sha256: string };
+      }) => {
+        payload.source_tree.head_sha = "6".repeat(40);
+      },
+      expected: "source_tree.head_sha 与 remote.head_sha 不匹配",
+    },
+    {
+      field: "scope",
+      mutate: (payload: {
+        source_tree: { entry_count: number; head_sha: string; source_paths: string[]; manifest_sha256: string };
+      }) => {
+        payload.source_tree.source_paths = ["README.md"];
+      },
+      expected: "source_tree.source_paths 与 metadata.source_paths 不匹配",
+    },
+    {
+      field: "SHA-256",
+      mutate: (payload: {
+        source_tree: { entry_count: number; head_sha: string; source_paths: string[]; manifest_sha256: string };
+      }) => {
+        payload.source_tree.manifest_sha256 = "0".repeat(64);
+      },
+      expected: "source_tree.manifest_sha256 校验失败",
+    },
+  ])("diff 会拒绝 $field 被篡改的 source tree baseline", async ({ mutate, expected }) => {
+    const head = "5555555555555555555555555555555555555555";
+    mockGitExecFile((args) => {
+      if (args[0] === "ls-remote") {
+        return `${head}\tHEAD\n`;
+      }
+
+      if (args.includes("ls-tree")) {
+        return `100644 blob ${"d".repeat(40)}\tLICENSE\0`;
+      }
+
+      return "";
+    });
+
+    const created = await runCli([
+      "snapshot",
+      "agent-skills",
+      "--label",
+      `tampered-tree-${Date.now()}-${expected.length}`,
+      "--format",
+      "json",
+      "--with-remote",
+    ]);
+    const result = JSON.parse(created.stdout) as { snapshot_path: string };
+    const absolutePath = join(workspaceRoot, result.snapshot_path);
+    cleanupPaths.add(absolutePath);
+    const payload = JSON.parse(readFileSync(absolutePath, "utf8")) as {
+      source_tree: { entry_count: number; head_sha: string; source_paths: string[]; manifest_sha256: string };
+    };
+    mutate(payload);
+    writeFileSync(absolutePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+
+    const diff = await runCli([
+      "diff",
+      "agent-skills",
+      "--against",
+      basename(result.snapshot_path),
+      "--format",
+      "json",
+    ]);
+
+    expect(diff.stdout).toBe("");
+    expect(diff.stderr).toContain(expected);
   }, 15000);
 
   it("report --output 会把 Markdown 审阅材料写入文件", async () => {

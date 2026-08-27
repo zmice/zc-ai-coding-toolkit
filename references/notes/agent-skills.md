@@ -110,3 +110,10 @@ Already covered locally:
 - No frontend skill content sync is required for this head.
 - Absorb the platform-manifest compatibility lesson and validator regression discipline through repository governance and tests.
 - Keep the per-skill reference limitation visible because generated attachments must travel with every platform skill directory.
+
+## Monitoring Coverage 2026-08-27
+
+- remote head: `7cb7a20bb38b199728d456999c725a0488490ab6`
+- expanded `source_paths` to include `evals`, `references`, and the complete `scripts` governance surface
+- reason: deterministic routing fixtures, reference-link checks, artifact-path checks, and version validation must be visible to upstream review even when they are not copied into this toolkit
+- non-adoption: upstream runner code and its fixed artifact paths remain reference-only; local routing evaluation requires a separate ranking contract because `recommendToolkitAssets` currently resolves exact identities rather than natural-language prompts

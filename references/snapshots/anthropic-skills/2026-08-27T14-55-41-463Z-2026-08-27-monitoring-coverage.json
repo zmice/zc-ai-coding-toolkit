@@ -1,0 +1,200 @@
+{
+  "upstream": "anthropic-skills",
+  "captured_at": "2026-08-27T14:55:41.463Z",
+  "label": "2026-08-27-monitoring-coverage",
+  "metadata": {
+    "title": "Anthropic Skills",
+    "kind": "github-public-repo",
+    "status": "active",
+    "owner": "codex",
+    "source_url": "https://github.com/anthropics/skills.git",
+    "source_paths": [
+      "README.md",
+      "THIRD_PARTY_NOTICES.md",
+      ".claude-plugin",
+      "spec",
+      "template",
+      "skills/skill-creator",
+      "skills/frontend-design"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/anthropics/skills.git",
+    "checked_at": "2026-08-27T14:55:41.465Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "3b3fad96af16a10759d930941b4520ba0c40edae"
+  },
+  "source_tree": {
+    "source_url": "https://github.com/anthropics/skills.git",
+    "checked_at": "2026-08-27T14:55:53.805Z",
+    "command": "git fetch/ls-tree source_paths",
+    "head_sha": "3b3fad96af16a10759d930941b4520ba0c40edae",
+    "source_paths": [
+      "README.md",
+      "THIRD_PARTY_NOTICES.md",
+      ".claude-plugin",
+      "spec",
+      "template",
+      "skills/skill-creator",
+      "skills/frontend-design"
+    ],
+    "entry_count": 25,
+    "manifest_sha256": "804891a4bb385eaa7dea52c7c346580e7bcb698aa4e9471dd5ae1271d34ef798",
+    "entries": [
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1969092344b3405a5459f82c1dd252d30b335a6e",
+        "path": ".claude-plugin/marketplace.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "eb54ee8b92f2d40b4b26569be0772be3c1e23156",
+        "path": "README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ffef92c48b351a3ed036556ed32dda934e8cf41a",
+        "path": "THIRD_PARTY_NOTICES.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f433b1a53f5b830a205fd2df78e2b34974656c7b",
+        "path": "skills/frontend-design/LICENSE.txt"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "decdff43d05908b4c1fc2cfd2d80fc5743440934",
+        "path": "skills/frontend-design/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4f881c52d1f72f4cfb720e339e2d35c3058d01a9",
+        "path": "skills/skill-creator/LICENSE.txt"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "65b3a402dbd09b8e83f9d637c6b553875189085c",
+        "path": "skills/skill-creator/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "14e41d6068635f4dd3fb878fd1626312395dda63",
+        "path": "skills/skill-creator/agents/analyzer.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "80e00eb45db3ee53a132fc2ba97fd59a7339e563",
+        "path": "skills/skill-creator/agents/comparator.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "558ab05c0a9a8bb062ef4c51823d4d76c3acf7c4",
+        "path": "skills/skill-creator/agents/grader.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "938ff32aed9bffabf723bd5492d720f4736c8e4d",
+        "path": "skills/skill-creator/assets/eval_review.html"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7fa5978631fed1ed545591dbb2b0eb21ce3f3d08",
+        "path": "skills/skill-creator/eval-viewer/generate_review.py"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6d8e96348a02e66c3363d2ff3b3ae58ac11e6382",
+        "path": "skills/skill-creator/eval-viewer/viewer.html"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b6eeaa2d4a34c1653069585c6c5603da39a5bdbe",
+        "path": "skills/skill-creator/references/schemas.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+        "path": "skills/skill-creator/scripts/__init__.py"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "3e66e8c105be9bab9f0e9c61f0d1482619401580",
+        "path": "skills/skill-creator/scripts/aggregate_benchmark.py"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "959e30a0014ec165c41a2bb7420b7dfe1416bbac",
+        "path": "skills/skill-creator/scripts/generate_report.py"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "06bcec76122446986e3610c20a39c466de36f495",
+        "path": "skills/skill-creator/scripts/improve_description.py"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "f48eac444656ddc41204aac1760a217951ce609e",
+        "path": "skills/skill-creator/scripts/package_skill.py"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "ed8e1dddce77b16af13c6f36b3fe86c4ac7c590c",
+        "path": "skills/skill-creator/scripts/quick_validate.py"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "e58c70bea39d5b252a1e819f242bbdcdf20e8b87",
+        "path": "skills/skill-creator/scripts/run_eval.py"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "30a263d674ef19de11c756d6f7537f91a421909e",
+        "path": "skills/skill-creator/scripts/run_loop.py"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "51b6a07dd57174197a937034b7eecebd5768ff8a",
+        "path": "skills/skill-creator/scripts/utils.py"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "772512097afe01955bd635c46b71cd351ce42e9a",
+        "path": "spec/agent-skills-spec.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "50a4f9b104357d96361e257adb70454604cd15c0",
+        "path": "template/SKILL.md"
+      }
+    ]
+  },
+  "notes": {
+    "path": "references/notes/anthropic-skills.md",
+    "content": "# Anthropic Skills\r\n\r\nSource: `https://github.com/anthropics/skills`\r\n\r\n## Status\r\n\r\nActive official Agent Skills reference with a public specification pointer, examples, and a skill-creation evaluation workflow.\r\n\r\n## Latest Remote Evidence\r\n\r\n- remote head: `b29e7cf65e5cb78a5ac33d582270551bc74a14eb`\r\n- observed date: 2026-07-29\r\n- evidence: shallow clone review of `README.md`, `spec`, `template`, and `skills/skill-creator`\r\n\r\n## Extractable Upgrades\r\n\r\n- Evaluate skills with representative prompts rather than only linting Markdown structure.\r\n- Compare a new skill with no guidance, and an updated skill with the previous version.\r\n- Separate objective assertions from human judgment; do not force subjective quality into weak numeric checks.\r\n- Preserve timing and token evidence where the execution harness exposes it.\r\n- Iterate from observed failures, and generalize corrections instead of overfitting a few prompts.\r\n\r\n## License Boundary\r\n\r\n- Many example skills are Apache-2.0, but document skills can be source-available rather than open source.\r\n- Review the license inside each skill directory before copying or adapting any content.\r\n- This workspace absorbs rewritten governance mechanics, not document-skill source.\r\n\r\n## Recommended Phase\r\n\r\n- Fold the baseline / candidate / review loop into the toolkit skill-authoring workflow.\r\n- Keep full benchmark viewers and provider-specific runners out of the core toolkit until a portable harness exists.\r\n\r\n## Frontend Design Review 2026-08-05\r\n\r\n- remote head remains `b29e7cf65e5cb78a5ac33d582270551bc74a14eb`\r\n- reviewed asset: `skills/frontend-design`\r\n- license: Apache-2.0 at the skill directory level\r\n- extractable value: ground visual direction in the real subject, treat interface copy as design material, separate design planning from implementation, and critique generic defaults before build and after rendering\r\n- registry update: track `skills/frontend-design` explicitly so future UI guidance changes are visible\r\n\r\n## Frontend Design Boundary\n\r\n- Do not copy its full prose or make one aesthetic direction globally mandatory.\r\n- Reuse project design systems and user-provided visual targets before general anti-template advice.\r\n- Keep visual exploration separate from evidence-based review and implementation verification.\n\n## Monitoring Coverage 2026-08-27\n\n- remote head: `3b3fad96af16a10759d930941b4520ba0c40edae`\n- added `.claude-plugin` and `THIRD_PARTY_NOTICES.md` to the governance surface\n- retained explicit monitoring for `skills/skill-creator` and `skills/frontend-design` instead of registering the whole `skills` tree\n- reason: skill-level licenses differ, and monitoring every document skill would blur discovery with permission to absorb; additional skills remain subject to individual license and relevance review\n"
+  }
+}

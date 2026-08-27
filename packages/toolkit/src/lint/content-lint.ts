@@ -30,6 +30,10 @@ export interface ToolkitLintOptions {
 const chineseCharacterPattern = /[\u3400-\u9fff]/u;
 const longEnglishFragmentPattern = /\b[A-Za-z]+(?:\s+[A-Za-z]+){3,}\b/u;
 const maxDescriptionLength = 1024;
+const maxDiscoveryAliases = 5;
+const maxDiscoveryAliasLength = 64;
+const maxDiscoveryTags = 8;
+const maxDiscoveryTagLength = 32;
 const slashCommandTokenPattern = /(?:^|[\s，、,;；])\/[a-z][a-z0-9-]+/gu;
 const lifecyclePhaseTokenPattern = /\b(?:Brainstorm|Specify|Plan|Build|Review|Commit)\b/gu;
 const markdownSectionHeadingPattern = /^##\s+\S/mu;
@@ -215,6 +219,98 @@ function checkDescriptionDiscoveryScope(assetId: string, meta: ToolkitAssetMeta)
   ];
 }
 
+function normalizeDiscoveryToken(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function checkDiscoveryMetadata(assetId: string, meta: ToolkitAssetMeta): ToolkitLintIssue[] {
+  const issues: ToolkitLintIssue[] = [];
+  const aliases = meta.aliases ?? [];
+  const tags = meta.tags ?? [];
+
+  if (aliases.length > maxDiscoveryAliases) {
+    issues.push({
+      level: "error",
+      assetId,
+      rule: "too-many-discovery-aliases",
+      message: `aliases 数量为 ${aliases.length}，超过 ${maxDiscoveryAliases}；只保留稳定且可唯一解析的替代名称。`
+    });
+  }
+
+  const seenAliases = new Set<string>();
+  for (const alias of aliases) {
+    const normalized = normalizeDiscoveryToken(alias);
+    if (!normalized) {
+      issues.push({
+        level: "error",
+        assetId,
+        rule: "empty-discovery-alias",
+        message: "aliases 不能包含空白项。"
+      });
+      continue;
+    }
+    if (alias.length > maxDiscoveryAliasLength) {
+      issues.push({
+        level: "error",
+        assetId,
+        rule: "discovery-alias-too-long",
+        message: `alias 长度为 ${alias.length}，超过 ${maxDiscoveryAliasLength} 字符。`
+      });
+    }
+    if (seenAliases.has(normalized)) {
+      issues.push({
+        level: "error",
+        assetId,
+        rule: "duplicate-discovery-alias",
+        message: `aliases 包含规范化后重复的值：${alias}`
+      });
+    }
+    seenAliases.add(normalized);
+  }
+
+  if (tags.length > maxDiscoveryTags) {
+    issues.push({
+      level: "error",
+      assetId,
+      rule: "too-many-discovery-tags",
+      message: `tags 数量为 ${tags.length}，超过 ${maxDiscoveryTags}；避免用关键词堆叠模拟自然语言排名。`
+    });
+  }
+
+  const seenTags = new Set<string>();
+  for (const tag of tags) {
+    const normalized = normalizeDiscoveryToken(tag);
+    if (!normalized) {
+      issues.push({
+        level: "error",
+        assetId,
+        rule: "empty-discovery-tag",
+        message: "tags 不能包含空白项。"
+      });
+      continue;
+    }
+    if (tag.length > maxDiscoveryTagLength) {
+      issues.push({
+        level: "error",
+        assetId,
+        rule: "discovery-tag-too-long",
+        message: `tag 长度为 ${tag.length}，超过 ${maxDiscoveryTagLength} 字符；请使用短搜索词。`
+      });
+    }
+    if (seenTags.has(normalized)) {
+      issues.push({
+        level: "error",
+        assetId,
+        rule: "duplicate-discovery-tag",
+        message: `tags 包含规范化后重复的值：${tag}`
+      });
+    }
+    seenTags.add(normalized);
+  }
+
+  return issues;
+}
+
 function checkBodyStructure(asset: ToolkitAssetUnit): ToolkitLintIssue[] {
   const issues: ToolkitLintIssue[] = [];
   const rawBody = asset.body.trim();
@@ -379,6 +475,42 @@ function checkDuplicateSummaries(manifest: ToolkitManifest): ToolkitLintIssue[] 
         assetId,
         rule: "duplicate-summary",
         message: `与其他资产共享相同摘要，建议归并或明确区分定位：${related}`
+      });
+    }
+  }
+
+  return issues;
+}
+
+function checkDuplicateDiscoveryIdentities(manifest: ToolkitManifest): ToolkitLintIssue[] {
+  const ownersByToken = new Map<string, Set<string>>();
+
+  for (const asset of manifest.assets) {
+    const identities = [asset.id, asset.meta.name, asset.meta.title, ...(asset.meta.aliases ?? [])];
+    for (const identity of identities) {
+      const normalized = normalizeDiscoveryToken(identity);
+      if (!normalized) {
+        continue;
+      }
+      const owners = ownersByToken.get(normalized) ?? new Set<string>();
+      owners.add(asset.id);
+      ownersByToken.set(normalized, owners);
+    }
+  }
+
+  const issues: ToolkitLintIssue[] = [];
+  for (const asset of manifest.assets) {
+    for (const alias of asset.meta.aliases ?? []) {
+      const owners = ownersByToken.get(normalizeDiscoveryToken(alias));
+      const conflictingOwners = [...(owners ?? [])].filter((owner) => owner !== asset.id);
+      if (conflictingOwners.length === 0) {
+        continue;
+      }
+      issues.push({
+        level: "error",
+        assetId: asset.id,
+        rule: "duplicate-discovery-identity",
+        message: `alias 无法唯一解析：${alias}；同时属于 ${conflictingOwners.join(", ")}`
       });
     }
   }
@@ -663,6 +795,7 @@ export function lintToolkitManifest(
     ...checkGovernanceConsistency(asset.id, asset.meta),
     ...checkDescriptionLength(asset.id, asset.meta),
     ...checkDescriptionDiscoveryScope(asset.id, asset.meta),
+    ...checkDiscoveryMetadata(asset.id, asset.meta),
     ...checkLocalizedSummary(asset.id, asset.meta),
     ...checkUpstreamRegistryConsistency(asset.id, asset.meta, options.knownUpstreams),
     ...checkSourceTraceability(asset.id, asset.meta),
@@ -671,6 +804,7 @@ export function lintToolkitManifest(
     ...checkLocalSupportFileReferences(asset)
   ]).concat(
     checkDuplicateSummaries(manifest),
+    checkDuplicateDiscoveryIdentities(manifest),
     checkExplicitAssetReferences(manifest),
     checkRelationshipTargets(manifest),
     checkRelationshipCycles(manifest, "requires"),

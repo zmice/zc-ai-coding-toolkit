@@ -1,0 +1,76 @@
+{
+  "upstream": "vercel-web-interface-guidelines",
+  "captured_at": "2026-08-27T14:32:52.204Z",
+  "label": "2026-08-27-ui-review-source-tree",
+  "metadata": {
+    "title": "Vercel Web Interface Guidelines",
+    "kind": "github-public-repo",
+    "status": "evaluating",
+    "owner": "codex",
+    "source_url": "https://github.com/vercel-labs/web-interface-guidelines.git",
+    "source_paths": [
+      "LICENSE",
+      "README.md",
+      "AGENTS.md",
+      "command.md",
+      "install.sh"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/vercel-labs/web-interface-guidelines.git",
+    "checked_at": "2026-08-27T14:32:52.206Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "e3d624baaf29dc1fc645aff3e38f03e564d2d6b1"
+  },
+  "source_tree": {
+    "source_url": "https://github.com/vercel-labs/web-interface-guidelines.git",
+    "checked_at": "2026-08-27T14:33:00.188Z",
+    "command": "git fetch/ls-tree source_paths",
+    "head_sha": "e3d624baaf29dc1fc645aff3e38f03e564d2d6b1",
+    "source_paths": [
+      "LICENSE",
+      "README.md",
+      "AGENTS.md",
+      "command.md",
+      "install.sh"
+    ],
+    "entry_count": 5,
+    "manifest_sha256": "63ff80f019257c9b5f3c38d2129af99378920289ef25316e5e1bf917751e0ddf",
+    "entries": [
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0fe53e87b32d38e6dd99f86875cdc03a180382a1",
+        "path": "AGENTS.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b3575a3c1358eac4b9ee36a4c851872d81417760",
+        "path": "LICENSE"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b1955a1d22175925a729f6aeb79db5d83b153725",
+        "path": "README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e1e8e3460db7c1440e34642c4f7b885185ca5366",
+        "path": "command.md"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "e7361b5dcc4800eeeb6d5466dc7808d422443f25",
+        "path": "install.sh"
+      }
+    ]
+  },
+  "notes": {
+    "path": "references/notes/vercel-web-interface-guidelines.md",
+    "content": "# Vercel Web Interface Guidelines\r\n\r\nSource: `https://github.com/vercel-labs/web-interface-guidelines`\r\n\r\n## Status\r\n\r\nVercel Labs 维护的 Web 界面检查清单。当前登记为 `evaluating`，用于按需审查交互、表单、响应式、内容和性能候选问题，不作为项目视觉风格的强制来源。\r\n\r\n## Latest Remote Evidence\n\n- remote head: `e3d624baaf29dc1fc645aff3e38f03e564d2d6b1`\n- observed date: 2026-08-27\n- evidence: exact diff from the previous baseline across `README.md`, `AGENTS.md`, and `command.md`; `install.sh` and `LICENSE` were unchanged\n\r\n## Extractable Upgrades\r\n\r\n- 键盘、焦点、点击目标、表单、认证、长文本和状态覆盖可作为框架无关的候选检查项\r\n- Windows 常显滚动条、移动端输入与跨平台原生控件需要进入真实浏览器验证矩阵\r\n- 主观视觉建议必须服从项目设计系统；阴影、圆角、大小写和品牌文案不能作为通用 MUST\n- 清单用于发现候选，最终问题仍需运行路径、规范或渲染证据证明\n- sticky/fixed surface 不得遮挡焦点；拖拽、滑动、捏合和路径手势需要非手势与键盘替代，除非手势本身是任务本质\n- 有意义媒体需要字幕、转录或描述及键盘可操作控件；长时间自动播放动效必须可暂停、停止或隐藏，并尊重 reduced motion\n- 动画 GIF 优先评估更小的视频与静态 fallback，但媒体选择仍取决于语义、浏览器支持和项目性能证据\n\r\n## License Boundary\r\n\r\n- repository license: MIT\r\n- 改写内容旁保留 `LICENSE-vercel-web-interface-guidelines.txt`\r\n- 本仓库不复制安装脚本，不引入运行时网络依赖\r\n\r\n## Current Decision\r\n\r\n- 保持 `evaluating`\n- 将本轮框架无关的焦点、手势、媒体和动效检查吸收到前端实现与 `ui-ux-review` 的渐进式 reference\n- Vercel 品牌专属 copy 和设计偏好仅作上下文示例，不提升为工具包全局规则\n"
+  }
+}
