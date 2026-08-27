@@ -151,6 +151,7 @@ function main() {
   run("node", ["scripts/upstream-governance.mjs", "list"], "smoke upstream list");
 
   const smokeRoot = mkdtempSync(join(tmpdir(), "ai-coding-verify-"));
+  const qoderCnPluginRoot = mkdtempSync(join(tmpdir(), "ai-coding-qoder-cn-plugin-"));
   const installRoot = mkdtempSync(join(tmpdir(), "ai-coding-install-"));
   const codexMarketplaceRoot = mkdtempSync(join(tmpdir(), "ai-coding-codex-marketplace-"));
   try {
@@ -163,6 +164,21 @@ function main() {
     assertFile(join(qwenExtensionRoot, "QWEN.md"), /skill:api-and-interface-design|skill:sdd-tdd-workflow/);
     assertFile(join(qwenExtensionRoot, "qwen-extension.json"), /"platform": "qwen"/);
     assertFile(join(qwenExtensionRoot, "commands", "zc", "start.md"), /zc:start/);
+    run(
+      "node",
+      ["apps/cli/dist/cli/index.js", "platform", "generate", "qoder-cn", "--dir", qoderCnPluginRoot],
+      "smoke platform generate qoder-cn plugin bundle"
+    );
+    const qoderCnManifestPath = join(qoderCnPluginRoot, ".qoder-plugin", "plugin.json");
+    assertFile(qoderCnManifestPath, /"displayName": "zc AI 编码工具包"/);
+    assertFile(qoderCnManifestPath, /"commands": "\.\/commands"/);
+    assertFile(join(qoderCnPluginRoot, "commands", "start.md"), /name: "start"/);
+    assertFile(join(qoderCnPluginRoot, "skills", "sdd-tdd-workflow", "SKILL.md"));
+    const qoderCnManifest = JSON.parse(readFileSync(qoderCnManifestPath, "utf8"));
+    const cliPackage = JSON.parse(readFileSync(resolve(root, "apps/cli/package.json"), "utf8"));
+    if (qoderCnManifest.version !== cliPackage.version) {
+      throw new Error(`Qoder CN plugin version ${qoderCnManifest.version} does not match CLI version ${cliPackage.version}`);
+    }
     run(
       "node",
       ["scripts/export-codex-marketplace-bundle.mjs", "--out", codexMarketplaceRoot],
@@ -203,11 +219,17 @@ function main() {
         [join(publishedRoot, "dist/cli/index.js"), "platform", "where", "opencode", "--global", "--json"],
         "smoke published zc platform where opencode --global"
       );
+      run(
+        "node",
+        [join(publishedRoot, "dist/cli/index.js"), "platform", "install", "qoder-cn", "--global", "--plan", "--json"],
+        "smoke published zc platform install qoder-cn --global --plan"
+      );
     } finally {
       rmSync(publishedRoot, { recursive: true, force: true });
     }
   } finally {
     rmSync(smokeRoot, { recursive: true, force: true });
+    rmSync(qoderCnPluginRoot, { recursive: true, force: true });
     rmSync(installRoot, { recursive: true, force: true });
     rmSync(codexMarketplaceRoot, { recursive: true, force: true });
   }

@@ -499,17 +499,18 @@ export function createInstallPlan(
   });
 }
 
-// ─── Quest CN (qoder-cn) plugin generation ────────────────────────────
+// ─── Qoder CN (qoder-cn) plugin generation ────────────────────────────
 
 export const qoderCnPlatformName = "qoder-cn" as const;
 export const qoderCnPackageName = "@zmice/platform-core" as const;
+export const qoderCnPluginName = "zc-toolkit" as const;
 
 export const qoderCnCapability: PlatformCapability = {
   platform: qoderCnPlatformName,
-  namespace: "zc",
+  namespace: "zc-toolkit",
   surfaces: ["plugin-dir", "commands-dir", "skills-dir", "agents-dir"],
   commands: {
-    relativeDir: "commands/zc",
+    relativeDir: "commands",
     fileExtension: ".md",
   },
   skills: {
@@ -542,10 +543,16 @@ function renderQoderCnPluginManifest(options: {
     {
       name: options.name,
       version: options.version ?? "0.1.0",
-      description: "zc AI 编码工具包 — Quest CN 插件",
-      author: { name: "zc" },
+      description: "zc AI 编码工具包 — Qoder CN 插件",
+      displayName: "zc AI 编码工具包",
+      author: { name: "ZMICE" },
+      homepage: "https://github.com/zmice/zc-ai-coding-toolkit",
+      repository: "https://github.com/zmice/zc-ai-coding-toolkit.git",
       license: "MIT",
       keywords: ["workflow", "skills", "coding-toolkit"],
+      commands: "./commands",
+      skills: "./skills",
+      agents: "./agents",
     },
     null,
     2,
@@ -558,13 +565,13 @@ function renderQoderCnCommandArtifact(
   const slug = stripAssetKindPrefix(asset.id);
 
   return createMarkdownCommandArtifact({
-    path: `commands/zc/${slug}.md`,
+    path: `commands/${slug}.md`,
     asset,
-    name: `zc:${slug}`,
+    name: slug,
     description: describeAsset(asset),
     body:
       asset.body
-      ?? `这是由工具包资产 \`${asset.id}\` 生成的 Quest CN 命令入口，用于触发 \`zc:${slug}\`。`,
+      ?? `这是由工具包资产 \`${asset.id}\` 生成的 Qoder CN 命令入口，用于触发 \`/${qoderCnPluginName}:${slug}\`。`,
   });
 }
 
@@ -572,17 +579,17 @@ function renderQoderCnSkillArtifacts(
   asset: ToolkitAssetLike,
 ): readonly PlatformArtifact[] {
   const slug = stripAssetKindPrefix(asset.id);
-  const directory = `skills/zc-${slug}`;
+  const directory = `skills/${slug}`;
 
   return [
     createSkillArtifact({
       path: `${directory}/SKILL.md`,
       asset,
-      name: `zc-${slug}`,
+      name: slug,
       description: describeAsset(asset),
       body:
         asset.body
-        ?? `这是由工具包资产 \`${asset.id}\` 生成的 Quest CN skill。`,
+        ?? `这是由工具包资产 \`${asset.id}\` 生成的 Qoder CN skill。`,
     }),
     ...createAttachmentArtifacts({ directory, asset }),
   ];
@@ -594,16 +601,16 @@ function renderQoderCnAgentArtifact(
   const slug = stripAssetKindPrefix(asset.id);
   const skillRefs = asset.requires
     ?.filter((entry) => entry.startsWith("skill:"))
-    .map((entry) => `zc-${entry.slice("skill:".length)}`);
+    .map((entry) => entry.slice("skill:".length));
 
   return createMarkdownAgentArtifact({
-    path: `agents/zc-${slug}.md`,
+    path: `agents/${slug}.md`,
     asset,
-    name: `zc-${slug}`,
+    name: slug,
     description: describeAsset(asset),
     body:
       asset.body
-      ?? `这是由工具包资产 \`${asset.id}\` 生成的 Quest CN agent，用于承接 \`zc-${slug}\` 角色能力。`,
+      ?? `这是由工具包资产 \`${asset.id}\` 生成的 Qoder CN agent，用于承接 \`${qoderCnPluginName}:${slug}\` 角色能力。`,
     tools: asset.tools,
     skills: skillRefs,
   });
@@ -630,7 +637,7 @@ export function createQoderCnGenerationPlan(
       {
         path: ".qoder-plugin/plugin.json",
         content: renderQoderCnPluginManifest({
-          name: "zc-toolkit",
+          name: qoderCnPluginName,
           version: options.pluginVersion,
         }),
       },

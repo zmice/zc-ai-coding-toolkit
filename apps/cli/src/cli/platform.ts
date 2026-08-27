@@ -76,10 +76,27 @@ import {
   uninstallQwenExtensionWithOfficialCli,
   updateQwenExtensionWithOfficialCli,
 } from "../utils/qwen-extension-cli.js";
+import {
+  installQoderCnPluginWithOfficialCli,
+  qoderCnPluginName,
+  reinstallQoderCnPluginWithOfficialCli,
+  resolveQoderCnOfficialCliBundleDir,
+  syncQoderCnOfficialCliBundle,
+  toQoderCnOfficialCliInstallPlan,
+  uninstallQoderCnPluginWithOfficialCli,
+} from "../utils/qoder-cn-plugin-cli.js";
+import {
+  inspectQoderCnLegacyInstall,
+  migrateQoderCnLegacyInstall,
+  resolveQoderCnLegacyInstallRoot,
+  type QoderCnLegacyInstallInspection,
+  type QoderCnLegacyInstallMigrationResult,
+} from "../utils/qoder-cn-legacy-install.js";
 
 type PlatformName = "qwen" | "codex" | "claude" | "opencode" | "qoder-cn";
 type PlatformOutputFormat = "text" | "json";
 type PlatformInstallScope = "project" | "global" | "dir";
+type PlatformInstallMethod = "filesystem" | "qwen-cli" | "qoder-cn-cli";
 type PlatformGenerateBundleType = "release-bundle" | "codex-plugin" | "codex-marketplace" | "qoder-cn-plugin";
 type PlatformAction = "generate" | "install" | "update" | "repair" | "uninstall";
 type PlatformTargetSelectorOpts = {
@@ -193,6 +210,7 @@ interface PlatformResolutionMetadata {
   rootSource?: string;
   hint?: string;
   scope?: PlatformInstallScope;
+  legacyMigration?: QoderCnLegacyInstallInspection | QoderCnLegacyInstallMigrationResult | null;
 }
 
 interface PlatformResultExtra {
@@ -201,7 +219,7 @@ interface PlatformResultExtra {
   contentFingerprint?: string | null;
   status?: string | null;
   noop?: boolean;
-  installMethod?: "filesystem" | "qwen-cli";
+  installMethod?: PlatformInstallMethod;
   installSource?: "github-repo" | "local-bundle" | null;
   sourceRef?: string | null;
   bundleType?: "source-bundle" | "release-bundle" | "codex-plugin" | "codex-marketplace" | "qoder-cn-plugin" | null;
@@ -248,7 +266,7 @@ interface PlatformModule {
   createQoderCnGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string; pluginVersion?: string }) => GenerationPlan;
   createQoderCnInstallPlan?: (
     manifest: PlatformManifestLike,
-    opts: { destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode; pluginVersion?: string }
+    opts: { manifestSource?: string; destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode; pluginVersion?: string }
   ) => InstallPlan;
 }
 
@@ -335,12 +353,12 @@ function getPlanCapabilitySummary(
         };
       case "qoder-cn":
         return {
-          style: "plugin",
-          entryPattern: "$zc-toolkit:<skill>",
+          style: "plugin-slash-command",
+          entryPattern: "/zc-toolkit:<command>",
           examples: [
-            "zc:start -> $zc-toolkit:start",
-            "zc:product-analysis -> $zc-toolkit:product-analysis",
-            "zc:sdd-tdd -> $zc-toolkit:sdd-tdd",
+            "zc:start -> /zc-toolkit:start",
+            "zc:product-analysis -> /zc-toolkit:product-analysis",
+            "zc:sdd-tdd -> /zc-toolkit:sdd-tdd",
           ],
         };
     }
@@ -490,9 +508,12 @@ function createGenerationPlan(
       return finalizePlan(platformModule.createOpenCodeGenerationPlan(manifest, { manifestSource: manifest.source, extensionVersion }));
     case "qoder-cn":
       if (!platformModule.createQoderCnGenerationPlan) {
-        throw new Error("Quest CN 平台包未导出 createQoderCnGenerationPlan()");
+        throw new Error("Qoder CN 平台包未导出 createQoderCnGenerationPlan()");
       }
-      return finalizePlan(platformModule.createQoderCnGenerationPlan(manifest, { manifestSource: manifest.source }));
+      return finalizePlan(platformModule.createQoderCnGenerationPlan(manifest, {
+        manifestSource: manifest.source,
+        pluginVersion: extensionVersion,
+      }));
   }
 }
 
@@ -552,13 +573,15 @@ function createInstallPlan(
       }));
     case "qoder-cn":
       if (!platformModule.createQoderCnInstallPlan) {
-        throw new Error("Quest CN 平台包未导出 createQoderCnInstallPlan()");
+        throw new Error("Qoder CN 平台包未导出 createQoderCnInstallPlan()");
       }
-      return finalizePlan(platformModule.createQoderCnInstallPlan(manifest, {
+      return toQoderCnOfficialCliInstallPlan(finalizePlan(platformModule.createQoderCnInstallPlan(manifest, {
+        manifestSource: manifest.source,
         destinationRoot,
         scope,
         overwrite,
-      }));
+        pluginVersion: extensionVersion,
+      })));
   }
 }
 
@@ -596,6 +619,17 @@ function mergeHints(...hints: Array<string | undefined>): string | undefined {
 
 function resolveScopeFromSelector(opts: PlatformTargetSelectorOpts): PlatformInstallScope {
   return normalizeInstallSelector(opts).mode;
+}
+
+function resolveLifecycleSelector(
+  target: PlatformName,
+  opts: PlatformTargetSelectorOpts,
+): PlatformTargetSelectorOpts {
+  if (target === "qoder-cn" && !opts.dir && !opts.project && !opts.global) {
+    return { ...opts, global: true };
+  }
+
+  return opts;
 }
 
 function emitOutput(format: PlatformOutputFormat, payload: object, text: string): void {
@@ -665,8 +699,16 @@ function formatStatusLabel(kind: PlatformInstallStatusResult["kind"]): string {
   }
 }
 
-function formatInstallMethodLabel(method: "filesystem" | "qwen-cli"): string {
-  return method === "qwen-cli" ? "官方 qwen extensions CLI" : "直接写入";
+function formatInstallMethodLabel(method: PlatformInstallMethod): string {
+  if (method === "qwen-cli") {
+    return "官方 qwen extensions CLI";
+  }
+
+  if (method === "qoder-cn-cli") {
+    return "官方 qodercn plugins CLI";
+  }
+
+  return "直接写入";
 }
 
 function formatInstallSourceLabel(source: "github-repo" | "local-bundle"): string {
@@ -683,10 +725,29 @@ function formatBundleTypeLabel(type: "source-bundle" | "release-bundle" | "codex
   }
 
   if (type === "qoder-cn-plugin") {
-    return "Quest CN plugin";
+    return "Qoder CN plugin";
   }
 
   return type === "release-bundle" ? "发布态扩展包" : "开发态源包";
+}
+
+function formatQoderCnLegacyMigration(
+  migration: QoderCnLegacyInstallInspection | QoderCnLegacyInstallMigrationResult,
+): string {
+  switch (migration.status) {
+    case "not-found":
+      return "旧版迁移：未发现受管的 ~/.qoder 旧安装。";
+    case "ready":
+      return `旧版迁移：将清理 ${migration.trackedArtifacts} 个回执受管产物，并保留其他 ~/.qoder 数据。`;
+    case "drifted":
+      return `旧版迁移：发现 ${migration.driftedArtifacts} 个已修改产物，默认保留；确认后可追加 --force。`;
+    case "unsupported":
+    case "invalid":
+    case "retained":
+      return `旧版迁移：未自动清理（${migration.reason ?? "不满足安全迁移条件"}）`;
+    case "migrated":
+      return `旧版迁移：已移除 ${migration.removedArtifacts} 个回执受管产物，并删除旧回执。`;
+  }
 }
 
 function formatScopeFlag(scope: PlatformInstallScope, root: string): string {
@@ -777,6 +838,7 @@ function summarizeResult(action: PlatformAction, target: PlatformName, root: str
     ...(metadata?.bundleType ? [`Bundle 类型：${formatBundleTypeLabel(metadata.bundleType)}`] : []),
     ...(metadata?.bundlePath ? [`Bundle 目录：${metadata.bundlePath}`] : []),
     ...(metadata?.receiptPath ? [`回执：${metadata.receiptPath}`] : []),
+    ...(metadata?.legacyMigration ? [formatQoderCnLegacyMigration(metadata.legacyMigration)] : []),
     ...(metadata?.hint ? [`提示：${metadata.hint}`] : []),
     metadata?.noop
       ? "无需写入，当前安装已满足目标状态。"
@@ -795,15 +857,17 @@ function summarizeResult(action: PlatformAction, target: PlatformName, root: str
 
 function summarizePlan(action: PlatformAction, target: PlatformName, root: string, plan: PlatformPlanLike, metadata?: PlatformResolutionMetadata & {
   status?: string;
-} & Pick<PlatformResultExtra, "installSource" | "sourceRef" | "bundleType" | "bundlePath">): string {
+} & Pick<PlatformResultExtra, "installMethod" | "installSource" | "sourceRef" | "bundleType" | "bundlePath">): string {
   const lines = [
     `${target} ${formatActionLabel(action)}计划`,
     formatRootLabel(action, root, metadata),
     ...(metadata?.status ? [`状态：${metadata.status}`] : []),
+    ...(metadata?.installMethod ? [`安装方式：${formatInstallMethodLabel(metadata.installMethod)}`] : []),
     ...(metadata?.installSource ? [`安装来源：${formatInstallSourceLabel(metadata.installSource)}`] : []),
     ...(metadata?.sourceRef ? [`来源：${metadata.sourceRef}`] : []),
     ...(metadata?.bundleType ? [`Bundle 类型：${formatBundleTypeLabel(metadata.bundleType)}`] : []),
     ...(metadata?.bundlePath ? [`Bundle 目录：${metadata.bundlePath}`] : []),
+    ...(metadata?.legacyMigration ? [formatQoderCnLegacyMigration(metadata.legacyMigration)] : []),
     ...(metadata?.hint ? [`提示：${metadata.hint}`] : []),
     ...summarizeCapability(plan, metadata),
     `产物数量：${plan.artifacts.length}`,
@@ -821,7 +885,7 @@ function summarizePlan(action: PlatformAction, target: PlatformName, root: strin
 
 function buildPlanPayload(action: PlatformAction, target: PlatformName, root: string, plan: PlatformPlanLike, metadata?: PlatformResolutionMetadata & {
   status?: string | null;
-} & Pick<PlatformResultExtra, "installSource" | "sourceRef" | "bundleType" | "bundlePath">) {
+} & Pick<PlatformResultExtra, "installMethod" | "installSource" | "sourceRef" | "bundleType" | "bundlePath">) {
   return {
     mode: "plan",
     action,
@@ -832,10 +896,12 @@ function buildPlanPayload(action: PlatformAction, target: PlatformName, root: st
     autoResolvedRoot: metadata?.autoResolvedRoot ?? false,
     hint: metadata?.hint ?? null,
     status: metadata?.status ?? null,
+    installMethod: metadata?.installMethod ?? null,
     installSource: metadata?.installSource ?? null,
     sourceRef: metadata?.sourceRef ?? null,
     bundleType: metadata?.bundleType ?? null,
     bundlePath: metadata?.bundlePath ?? null,
+    legacyMigration: metadata?.legacyMigration ?? null,
     capability: getPlanCapabilitySummary(plan, metadata),
     artifactCount: plan.artifacts.length,
     contentFingerprint: plan.metadata?.fingerprint.value ?? null,
@@ -2899,6 +2965,7 @@ function buildResultPayload(action: PlatformAction, target: PlatformName, root: 
     sourceRef: metadata?.sourceRef ?? null,
     bundleType: metadata?.bundleType ?? null,
     bundlePath: metadata?.bundlePath ?? null,
+    legacyMigration: metadata?.legacyMigration ?? null,
     receiptPath: metadata?.receiptPath ?? null,
     zcVersion: metadata?.zcVersion ?? null,
     status: metadata?.status ?? null,
@@ -3034,15 +3101,15 @@ function summarizeStatus(target: PlatformName, root: string, status: PlatformIns
   hint?: string;
   zcVersion?: string;
   plan: PlatformPlanLike;
-  installMethod?: "filesystem" | "qwen-cli";
+  installMethod?: PlatformInstallMethod;
   installSource?: "github-repo" | "local-bundle";
   sourceRef?: string;
-  bundleType?: "source-bundle" | "release-bundle";
+  bundleType?: "source-bundle" | "release-bundle" | "qoder-cn-plugin";
   bundlePath?: string;
-  recommendedInstallMethod?: "filesystem" | "qwen-cli";
+  recommendedInstallMethod?: PlatformInstallMethod;
   recommendedInstallSource?: "github-repo" | "local-bundle";
   recommendedSourceRef?: string;
-  recommendedBundleType?: "source-bundle" | "release-bundle";
+  recommendedBundleType?: "source-bundle" | "release-bundle" | "qoder-cn-plugin";
   recommendedBundlePath?: string;
 }): string {
   const lines = [
@@ -3080,15 +3147,15 @@ function buildStatusPayload(target: PlatformName, root: string, status: Platform
   hint?: string;
   zcVersion?: string;
   plan: PlatformPlanLike;
-  installMethod?: "filesystem" | "qwen-cli";
+  installMethod?: PlatformInstallMethod;
   installSource?: "github-repo" | "local-bundle";
   sourceRef?: string;
-  bundleType?: "source-bundle" | "release-bundle";
+  bundleType?: "source-bundle" | "release-bundle" | "qoder-cn-plugin";
   bundlePath?: string;
-  recommendedInstallMethod?: "filesystem" | "qwen-cli";
+  recommendedInstallMethod?: PlatformInstallMethod;
   recommendedInstallSource?: "github-repo" | "local-bundle";
   recommendedSourceRef?: string;
-  recommendedBundleType?: "source-bundle" | "release-bundle";
+  recommendedBundleType?: "source-bundle" | "release-bundle" | "qoder-cn-plugin";
   recommendedBundlePath?: string;
 }) {
   return {
@@ -3198,7 +3265,7 @@ function summarizeUninstall(
   },
   metadata: PlatformResolutionMetadata & {
     receiptPath: string;
-    installMethod?: "filesystem" | "qwen-cli";
+    installMethod?: PlatformInstallMethod;
     installSource?: "github-repo" | "local-bundle" | null;
     sourceRef?: string | null;
     bundlePath?: string | null;
@@ -3239,7 +3306,7 @@ function buildUninstallPayload(
   },
   metadata: PlatformResolutionMetadata & {
     receiptPath: string;
-    installMethod?: "filesystem" | "qwen-cli";
+    installMethod?: PlatformInstallMethod;
     installSource?: "github-repo" | "local-bundle" | null;
     sourceRef?: string | null;
     bundlePath?: string | null;
@@ -3694,12 +3761,13 @@ export async function runPlatformInstall(
   let destinationRoot = "";
   let fallbackHint: string | undefined;
   try {
-    const scope = resolveScopeFromSelector(opts);
+    const selector = resolveLifecycleSelector(target, opts);
+    const scope = resolveScopeFromSelector(selector);
     const targetResolution = await resolveInstallTarget(target, {
-      dir: opts.dir,
+      dir: selector.dir,
       cwd: process.cwd(),
-      project: opts.project,
-      global: opts.global,
+      project: selector.project,
+      global: selector.global,
     });
     const autoResolvedRoot = targetResolution.source !== "explicit";
     destinationRoot = resolve(targetResolution.root);
@@ -3711,6 +3779,18 @@ export async function runPlatformInstall(
       ? resolveQwenOfficialCliReleaseBundleDir(plan)
       : null;
     const qwenInstallSource = shouldPreferQwenOfficialRepoInstall(target, scope) ? "github-repo" : "local-bundle";
+    const qoderCnBundlePath = target === "qoder-cn"
+      ? resolveQoderCnOfficialCliBundleDir(plan)
+      : null;
+    const qoderCnLegacyRoot = target === "qoder-cn" && scope === "global"
+      ? resolveQoderCnLegacyInstallRoot(destinationRoot)
+      : null;
+    const qoderCnLegacyInspection = qoderCnLegacyRoot
+      ? await inspectQoderCnLegacyInstall({ legacyRoot: qoderCnLegacyRoot })
+      : null;
+    const plannedLegacyMigration = qoderCnLegacyInspection?.status === "not-found"
+      ? null
+      : qoderCnLegacyInspection;
 
     if (opts.plan) {
       emitOutput(
@@ -3720,21 +3800,105 @@ export async function runPlatformInstall(
           rootSource: targetResolution.source,
           hint: targetResolution.hint,
           scope,
-          installSource: target === "qwen" && scope === "global" ? qwenInstallSource : null,
+          installMethod: target === "qoder-cn" ? "qoder-cn-cli" : target === "qwen" && scope === "global" ? "qwen-cli" : undefined,
+          installSource: target === "qoder-cn" ? "local-bundle" : target === "qwen" && scope === "global" ? qwenInstallSource : null,
           sourceRef: target === "qwen" && scope === "global" && qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
-          bundleType: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : null,
-          bundlePath: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath : null,
+          bundleType: target === "qoder-cn" ? "qoder-cn-plugin" : target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : null,
+          bundlePath: target === "qoder-cn" ? qoderCnBundlePath : target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath : null,
+          legacyMigration: plannedLegacyMigration,
         }),
         summarizePlan("install", target, destinationRoot, plan, {
           autoResolvedRoot,
           rootSource: targetResolution.source,
           hint: targetResolution.hint,
           scope,
-          installSource: target === "qwen" && scope === "global" ? qwenInstallSource : null,
+          installMethod: target === "qoder-cn" ? "qoder-cn-cli" : target === "qwen" && scope === "global" ? "qwen-cli" : undefined,
+          installSource: target === "qoder-cn" ? "local-bundle" : target === "qwen" && scope === "global" ? qwenInstallSource : null,
           sourceRef: target === "qwen" && scope === "global" && qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
-          bundleType: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : null,
-          bundlePath: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath : null,
+          bundleType: target === "qoder-cn" ? "qoder-cn-plugin" : target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : null,
+          bundlePath: target === "qoder-cn" ? qoderCnBundlePath : target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath : null,
+          legacyMigration: plannedLegacyMigration,
         })
+      );
+      return;
+    }
+
+    if (target === "qoder-cn") {
+      const status = await resolvePlatformInstallStatus(plan);
+      const requiresOfficialLifecycleRegistration = status.receipt?.installMethod !== "qoder-cn-cli";
+
+      if (status.kind === "drifted" && !opts.force) {
+        emitPlatformError(
+          format,
+          target,
+          "install",
+          `${target} 受管插件 bundle 已漂移。请先运行 \`zc platform status ${target}\` 检查差异，确认后追加 \`--force\` 再安装。`,
+          {
+            root: destinationRoot,
+            receiptPath: status.receiptPath,
+            status: status.kind,
+          },
+        );
+        process.exitCode = 1;
+        return;
+      }
+
+      if (format === "text") {
+        console.log(`正在调用官方命令：qodercn plugins ${status.kind === "not-installed" ? "validate / install" : "uninstall / validate / install"} …`);
+      }
+
+      const bundle = await syncQoderCnOfficialCliBundle(plan);
+      if (status.kind === "not-installed") {
+        await installQoderCnPluginWithOfficialCli(bundle.bundleDir);
+      } else if (status.kind !== "up-to-date" || requiresOfficialLifecycleRegistration) {
+        await reinstallQoderCnPluginWithOfficialCli(bundle.bundleDir);
+      }
+
+      const legacyMigration = qoderCnLegacyInspection && qoderCnLegacyInspection.status !== "not-found"
+        ? await migrateQoderCnLegacyInstall(qoderCnLegacyInspection, { force: Boolean(opts.force) })
+        : null;
+
+      await writePlatformInstallReceiptForPlan(plan, {
+        installedAt: new Date().toISOString(),
+        zcVersion: getCliVersion(),
+        installMethod: "qoder-cn-cli",
+        installSource: "local-bundle",
+        bundleType: "qoder-cn-plugin",
+        bundlePath: bundle.bundleDir,
+      });
+
+      const result = status.kind === "up-to-date" && !requiresOfficialLifecycleRegistration
+        ? {
+            created: 0,
+            overwritten: 0,
+            unchanged: plan.artifacts.length,
+            skipped: 0,
+            dryRun: false,
+          }
+        : estimateManagedInstallResult(plan, status);
+
+      const resultMetadata = {
+        autoResolvedRoot,
+        rootSource: targetResolution.source,
+        hint: targetResolution.hint,
+        scope,
+        receiptPath: resolvePlatformInstallReceiptPath(plan),
+        zcVersion: getCliVersion(),
+        contentFingerprint: plan.metadata?.fingerprint.value ?? null,
+        status: status.kind === "up-to-date" && !requiresOfficialLifecycleRegistration ? status.kind : "installed",
+        noop: status.kind === "up-to-date" && !requiresOfficialLifecycleRegistration,
+        installMethod: "qoder-cn-cli" as const,
+        installSource: "local-bundle" as const,
+        sourceRef: null,
+        bundleType: "qoder-cn-plugin" as const,
+        bundlePath: bundle.bundleDir,
+        legacyMigration,
+      };
+
+      emitOutput(
+        format,
+        buildResultPayload("install", target, destinationRoot, result, resultMetadata),
+        summarizeResult("install", target, destinationRoot, result, resultMetadata),
       );
       return;
     }
@@ -3922,12 +4086,13 @@ export async function runPlatformStatus(
   const format = resolveOutputFormat(opts.json);
 
   try {
-    const scope = resolveScopeFromSelector(opts);
+    const selector = resolveLifecycleSelector(target, opts);
+    const scope = resolveScopeFromSelector(selector);
     const targetResolution = await resolveInstallTarget(target, {
-      dir: opts.dir,
+      dir: selector.dir,
       cwd: process.cwd(),
-      project: opts.project,
-      global: opts.global,
+      project: selector.project,
+      global: selector.global,
     });
     const destinationRoot = resolve(targetResolution.root);
     const manifest = await loadToolkitManifest();
@@ -3948,13 +4113,19 @@ export async function runPlatformStatus(
     const sourceRef = status.receipt?.sourceRef ?? undefined;
     const bundleType = status.receipt?.bundleType ?? undefined;
     const bundlePath = status.receipt?.bundlePath ?? undefined;
-    const recommendedInstallMethod = shouldPreferQwenOfficialCli(target, scope) ? "qwen-cli" : undefined;
-    const recommendedInstallSource = shouldPreferQwenOfficialRepoInstall(target, scope) ? "github-repo" : undefined;
+    const recommendedInstallMethod = target === "qoder-cn"
+      ? "qoder-cn-cli"
+      : shouldPreferQwenOfficialCli(target, scope) ? "qwen-cli" : undefined;
+    const recommendedInstallSource = target === "qoder-cn"
+      ? "local-bundle"
+      : shouldPreferQwenOfficialRepoInstall(target, scope) ? "github-repo" : undefined;
     const recommendedSourceRef = recommendedInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : undefined;
-    const recommendedBundleType = shouldPreferQwenOfficialCli(target, scope) ? "release-bundle" : undefined;
-    const recommendedBundlePath = shouldPreferQwenOfficialCli(target, scope)
-      ? resolveQwenOfficialCliReleaseBundleDir(plan)
-      : undefined;
+    const recommendedBundleType = target === "qoder-cn"
+      ? "qoder-cn-plugin"
+      : shouldPreferQwenOfficialCli(target, scope) ? "release-bundle" : undefined;
+    const recommendedBundlePath = target === "qoder-cn"
+      ? resolveQoderCnOfficialCliBundleDir(plan)
+      : shouldPreferQwenOfficialCli(target, scope) ? resolveQwenOfficialCliReleaseBundleDir(plan) : undefined;
 
     emitOutput(
       format,
@@ -4017,12 +4188,13 @@ export async function runPlatformUpdate(
   let fallbackHint: string | undefined;
 
   try {
-    const scope = resolveScopeFromSelector(opts);
+    const selector = resolveLifecycleSelector(target, opts);
+    const scope = resolveScopeFromSelector(selector);
     const targetResolution = await resolveInstallTarget(target, {
-      dir: opts.dir,
+      dir: selector.dir,
       cwd: process.cwd(),
-      project: opts.project,
-      global: opts.global,
+      project: selector.project,
+      global: selector.global,
     });
     const autoResolvedRoot = targetResolution.source !== "explicit";
     destinationRoot = resolve(targetResolution.root);
@@ -4035,6 +4207,11 @@ export async function runPlatformUpdate(
       ? resolveQwenOfficialCliReleaseBundleDir(statusPlan)
       : undefined;
     const qwenInstallSource = shouldPreferQwenOfficialRepoInstall(target, scope) ? "github-repo" : "local-bundle";
+    const qoderCnBundlePath = target === "qoder-cn"
+      ? resolveQoderCnOfficialCliBundleDir(statusPlan)
+      : undefined;
+    const requiresQoderCnLifecycleMigration = target === "qoder-cn"
+      && status.receipt?.installMethod !== "qoder-cn-cli";
 
     if (status.kind === "not-installed") {
       emitPlatformError(
@@ -4051,7 +4228,7 @@ export async function runPlatformUpdate(
       return;
     }
 
-    if (status.kind === "up-to-date") {
+    if (status.kind === "up-to-date" && !requiresQoderCnLifecycleMigration) {
       const result = {
         created: 0,
         overwritten: 0,
@@ -4072,11 +4249,11 @@ export async function runPlatformUpdate(
           contentFingerprint: status.contentFingerprint ?? null,
           status: status.kind,
           noop: true,
-          installMethod: target === "qwen" && scope === "global" ? "qwen-cli" : undefined,
-          installSource: target === "qwen" && scope === "global" ? qwenInstallSource : null,
+          installMethod: target === "qoder-cn" ? "qoder-cn-cli" : target === "qwen" && scope === "global" ? "qwen-cli" : status.receipt?.installMethod,
+          installSource: target === "qoder-cn" ? "local-bundle" : target === "qwen" && scope === "global" ? qwenInstallSource : status.receipt?.installSource ?? null,
           sourceRef: target === "qwen" && scope === "global" && qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
-          bundleType: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : null,
-          bundlePath: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath ?? null : null,
+          bundleType: target === "qoder-cn" ? "qoder-cn-plugin" : target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : status.receipt?.bundleType ?? null,
+          bundlePath: target === "qoder-cn" ? qoderCnBundlePath ?? null : target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath ?? null : status.receipt?.bundlePath ?? null,
         }),
         summarizeResult("update", target, destinationRoot, result, {
           autoResolvedRoot,
@@ -4088,11 +4265,11 @@ export async function runPlatformUpdate(
           contentFingerprint: status.contentFingerprint ?? null,
           status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
           noop: true,
-          installMethod: target === "qwen" && scope === "global" ? "qwen-cli" : undefined,
-          installSource: target === "qwen" && scope === "global" ? qwenInstallSource : null,
+          installMethod: target === "qoder-cn" ? "qoder-cn-cli" : target === "qwen" && scope === "global" ? "qwen-cli" : status.receipt?.installMethod,
+          installSource: target === "qoder-cn" ? "local-bundle" : target === "qwen" && scope === "global" ? qwenInstallSource : status.receipt?.installSource ?? null,
           sourceRef: target === "qwen" && scope === "global" && qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
-          bundleType: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : undefined,
-          bundlePath: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath : undefined,
+          bundleType: target === "qoder-cn" ? "qoder-cn-plugin" : target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : status.receipt?.bundleType,
+          bundlePath: target === "qoder-cn" ? qoderCnBundlePath : target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath : status.receipt?.bundlePath,
         }),
       );
       return;
@@ -4126,10 +4303,11 @@ export async function runPlatformUpdate(
           hint: targetResolution.hint,
           scope,
           status: status.kind,
-          installSource: target === "qwen" && scope === "global" ? qwenInstallSource : null,
+          installMethod: target === "qoder-cn" ? "qoder-cn-cli" : target === "qwen" && scope === "global" ? "qwen-cli" : undefined,
+          installSource: target === "qoder-cn" ? "local-bundle" : target === "qwen" && scope === "global" ? qwenInstallSource : null,
           sourceRef: target === "qwen" && scope === "global" && qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
-          bundleType: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : null,
-          bundlePath: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath ?? null : null,
+          bundleType: target === "qoder-cn" ? "qoder-cn-plugin" : target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : null,
+          bundlePath: target === "qoder-cn" ? qoderCnBundlePath ?? null : target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath ?? null : null,
         }),
         summarizePlan("update", target, destinationRoot, plan, {
           autoResolvedRoot,
@@ -4137,11 +4315,53 @@ export async function runPlatformUpdate(
           hint: targetResolution.hint,
           scope,
           status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
-          installSource: target === "qwen" && scope === "global" ? qwenInstallSource : null,
+          installMethod: target === "qoder-cn" ? "qoder-cn-cli" : target === "qwen" && scope === "global" ? "qwen-cli" : undefined,
+          installSource: target === "qoder-cn" ? "local-bundle" : target === "qwen" && scope === "global" ? qwenInstallSource : null,
           sourceRef: target === "qwen" && scope === "global" && qwenInstallSource === "github-repo" ? qwenOfficialExtensionRepoUrl : null,
-          bundleType: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : null,
-          bundlePath: target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath ?? null : null,
+          bundleType: target === "qoder-cn" ? "qoder-cn-plugin" : target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? "release-bundle" : null,
+          bundlePath: target === "qoder-cn" ? qoderCnBundlePath ?? null : target === "qwen" && scope === "global" && qwenInstallSource === "local-bundle" ? qwenReleaseBundlePath ?? null : null,
         }),
+      );
+      return;
+    }
+
+    if (target === "qoder-cn") {
+      if (format === "text") {
+        console.log("正在调用官方命令：qodercn plugins uninstall / validate / install …");
+      }
+
+      const bundle = await syncQoderCnOfficialCliBundle(plan);
+      await reinstallQoderCnPluginWithOfficialCli(bundle.bundleDir);
+      await writePlatformInstallReceiptForPlan(plan, {
+        installedAt: new Date().toISOString(),
+        zcVersion,
+        installMethod: "qoder-cn-cli",
+        installSource: "local-bundle",
+        bundleType: "qoder-cn-plugin",
+        bundlePath: bundle.bundleDir,
+      });
+
+      const result = estimateManagedInstallResult(plan, status);
+      const resultMetadata = {
+        autoResolvedRoot,
+        rootSource: targetResolution.source,
+        hint: targetResolution.hint,
+        scope,
+        receiptPath: resolvePlatformInstallReceiptPath(plan),
+        zcVersion,
+        contentFingerprint: plan.metadata?.fingerprint.value ?? null,
+        status: status.kind,
+        installMethod: "qoder-cn-cli" as const,
+        installSource: "local-bundle" as const,
+        sourceRef: null,
+        bundleType: "qoder-cn-plugin" as const,
+        bundlePath: bundle.bundleDir,
+      };
+
+      emitOutput(
+        format,
+        buildResultPayload("update", target, destinationRoot, result, resultMetadata),
+        summarizeResult("update", target, destinationRoot, result, resultMetadata),
       );
       return;
     }
@@ -4291,12 +4511,13 @@ export async function runPlatformUninstall(
   const format = resolveOutputFormat(opts.json);
 
   try {
-    const scope = resolveScopeFromSelector(opts);
+    const selector = resolveLifecycleSelector(target, opts);
+    const scope = resolveScopeFromSelector(selector);
     const targetResolution = await resolveInstallTarget(target, {
-      dir: opts.dir,
+      dir: selector.dir,
       cwd: process.cwd(),
-      project: opts.project,
-      global: opts.global,
+      project: selector.project,
+      global: selector.global,
     });
     const autoResolvedRoot = targetResolution.source !== "explicit";
     const destinationRoot = resolve(targetResolution.root);
@@ -4371,7 +4592,7 @@ export async function runPlatformUninstall(
             hint: targetResolution.hint,
           }),
           `状态：${status.kind}（${formatStatusLabel(status.kind)}）`,
-          `安装方式：${installMethod === "qwen-cli" ? "官方 qwen extensions CLI" : "直接写入"}`,
+          `安装方式：${formatInstallMethodLabel(installMethod)}`,
           ...(installSource ? [`安装来源：${installSource === "github-repo" ? "GitHub 扩展仓库" : "本地 bundle"}`] : []),
           ...(sourceRef ? [`来源：${sourceRef}`] : []),
           `回执：${status.receiptPath}`,
@@ -4393,6 +4614,12 @@ export async function runPlatformUninstall(
       }
 
       await uninstallQwenExtensionWithOfficialCli(extensionName);
+    } else if (target === "qoder-cn" && installMethod === "qoder-cn-cli") {
+      if (format === "text") {
+        console.log(`正在调用官方命令：qodercn plugins uninstall ${qoderCnPluginName} …`);
+      }
+
+      await uninstallQoderCnPluginWithOfficialCli(qoderCnPluginName);
     } else {
       artifactCleanup = await removeManagedPaths(status.receipt.artifacts.map((artifact) => artifact.path));
     }
@@ -4458,12 +4685,13 @@ export async function runPlatformRepair(
   const format = resolveOutputFormat(opts.json);
 
   try {
-    const scope = resolveScopeFromSelector(opts);
+    const selector = resolveLifecycleSelector(target, opts);
+    const scope = resolveScopeFromSelector(selector);
     const targetResolution = await resolveInstallTarget(target, {
-      dir: opts.dir,
+      dir: selector.dir,
       cwd: process.cwd(),
-      project: opts.project,
-      global: opts.global,
+      project: selector.project,
+      global: selector.global,
     });
     const autoResolvedRoot = targetResolution.source !== "explicit";
     const destinationRoot = resolve(targetResolution.root);
@@ -4489,14 +4717,19 @@ export async function runPlatformRepair(
 
     const installMethod = status.receipt.installMethod ?? "filesystem";
     const installSource = status.receipt.installSource
-      ?? (target === "qwen" && scope === "global" ? "github-repo" : undefined);
+      ?? (target === "qoder-cn" ? "local-bundle" : target === "qwen" && scope === "global" ? "github-repo" : undefined);
     const sourceRef = status.receipt.sourceRef
       ?? (installSource === "github-repo" ? qwenOfficialExtensionRepoUrl : undefined);
     const bundlePath = status.receipt.bundlePath
-      ?? (shouldPreferQwenOfficialCli(target, scope) ? resolveQwenOfficialCliReleaseBundleDir(statusPlan) : null);
+      ?? (target === "qoder-cn"
+        ? resolveQoderCnOfficialCliBundleDir(statusPlan)
+        : shouldPreferQwenOfficialCli(target, scope) ? resolveQwenOfficialCliReleaseBundleDir(statusPlan) : null);
     const bundleMissing = installSource === "local-bundle" && bundlePath ? !(await pathExists(bundlePath)) : false;
+    const requiresLifecycleRepair = target === "qoder-cn"
+      ? true
+      : target === "qwen" && installMethod === "qwen-cli" && bundleMissing;
 
-    if (status.kind === "up-to-date" && !(target === "qwen" && installMethod === "qwen-cli" && bundleMissing)) {
+    if (status.kind === "up-to-date" && !requiresLifecycleRepair) {
       const result = {
         created: 0,
         overwritten: 0,
@@ -4555,9 +4788,10 @@ export async function runPlatformRepair(
           hint: targetResolution.hint,
           scope,
           status: status.kind,
-          installSource: installSource ?? null,
+          installMethod: target === "qoder-cn" ? "qoder-cn-cli" : installMethod,
+          installSource: target === "qoder-cn" ? "local-bundle" : installSource ?? null,
           sourceRef: sourceRef ?? null,
-          bundleType: status.receipt.bundleType ?? null,
+          bundleType: target === "qoder-cn" ? "qoder-cn-plugin" : status.receipt.bundleType ?? null,
           bundlePath: bundlePath ?? null,
         }),
         summarizePlan("repair", target, destinationRoot, plan, {
@@ -4566,11 +4800,61 @@ export async function runPlatformRepair(
           hint: targetResolution.hint,
           scope,
           status: `${status.kind}（${formatStatusLabel(status.kind)}）`,
-          installSource: installSource ?? null,
+          installMethod: target === "qoder-cn" ? "qoder-cn-cli" : installMethod,
+          installSource: target === "qoder-cn" ? "local-bundle" : installSource ?? null,
           sourceRef: sourceRef ?? null,
-          bundleType: status.receipt.bundleType ?? null,
+          bundleType: target === "qoder-cn" ? "qoder-cn-plugin" : status.receipt.bundleType ?? null,
           bundlePath: bundlePath ?? null,
         }),
+      );
+      return;
+    }
+
+    if (target === "qoder-cn") {
+      if (format === "text") {
+        console.log("正在调用官方命令：qodercn plugins uninstall / validate / install …");
+      }
+
+      const bundle = await syncQoderCnOfficialCliBundle(plan);
+      await reinstallQoderCnPluginWithOfficialCli(bundle.bundleDir);
+      await writePlatformInstallReceiptForPlan(plan, {
+        installedAt: new Date().toISOString(),
+        zcVersion: getCliVersion(),
+        installMethod: "qoder-cn-cli",
+        installSource: "local-bundle",
+        bundleType: "qoder-cn-plugin",
+        bundlePath: bundle.bundleDir,
+      });
+
+      const result = status.kind === "up-to-date"
+        ? {
+            created: 0,
+            overwritten: 0,
+            unchanged: plan.artifacts.length,
+            skipped: 0,
+            dryRun: false,
+          }
+        : estimateManagedInstallResult(plan, status);
+      const resultMetadata = {
+        autoResolvedRoot,
+        rootSource: targetResolution.source,
+        hint: targetResolution.hint,
+        scope,
+        receiptPath: resolvePlatformInstallReceiptPath(plan),
+        zcVersion: getCliVersion(),
+        contentFingerprint: plan.metadata?.fingerprint.value ?? null,
+        status: status.kind,
+        installMethod: "qoder-cn-cli" as const,
+        installSource: "local-bundle" as const,
+        sourceRef: null,
+        bundleType: "qoder-cn-plugin" as const,
+        bundlePath: bundle.bundleDir,
+      };
+
+      emitOutput(
+        format,
+        buildResultPayload("repair", target, destinationRoot, result, resultMetadata),
+        summarizeResult("repair", target, destinationRoot, result, resultMetadata),
       );
       return;
     }
@@ -4722,12 +5006,13 @@ export async function runPlatformDoctor(
   const format = resolveOutputFormat(opts.json);
 
   try {
-    const scope = resolveScopeFromSelector(opts);
+    const selector = resolveLifecycleSelector(target, opts);
+    const scope = resolveScopeFromSelector(selector);
     const targetResolution = await resolveInstallTarget(target, {
-      dir: opts.dir,
+      dir: selector.dir,
       cwd: process.cwd(),
-      project: opts.project,
-      global: opts.global,
+      project: selector.project,
+      global: selector.global,
     });
     const destinationRoot = resolve(targetResolution.root);
     const manifest = await loadToolkitManifest();
@@ -4768,12 +5053,13 @@ export async function runPlatformWhere(
 ): Promise<void> {
   const format = resolveOutputFormat(opts.json);
   try {
-    const scope = resolveScopeFromSelector(opts);
+    const selector = resolveLifecycleSelector(target, opts);
+    const scope = resolveScopeFromSelector(selector);
     const targetResolution = await resolveInstallTarget(target, {
-      dir: opts.dir,
+      dir: selector.dir,
       cwd: process.cwd(),
-      project: opts.project,
-      global: opts.global,
+      project: selector.project,
+      global: selector.global,
     });
     const root = resolve(targetResolution.root);
     const manifest = await loadToolkitManifest();

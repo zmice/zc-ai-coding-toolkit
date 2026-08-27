@@ -72,7 +72,16 @@ describe("resolveInstallTarget", () => {
   it("falls back to cwd when no project root markers exist", async () => {
     const cwd = await createTempDir();
 
-    const result = await resolveInstallTarget("claude", { cwd });
+    const result = await resolveInstallTarget(
+      "claude",
+      { cwd },
+      {
+        findNearestProjectRoot: async (startDir) => {
+          assert.equal(startDir, cwd);
+          return null;
+        },
+      },
+    );
 
     assert.equal(result.root, cwd);
     assert.equal(result.source, "cwd");
@@ -108,6 +117,14 @@ describe("resolveInstallTarget", () => {
     assert.equal(result.source, "official-global");
     assert.ok(result.root.endsWith(`${join(".qwen")}`));
     assert.ok(result.hint?.includes("~/.qwen/QWEN.md"));
+  });
+
+  it("resolves Qoder CN global scope to ~/.qoder-cn and the official plugin CLI", async () => {
+    const result = await resolveInstallTarget("qoder-cn", { global: true });
+
+    assert.equal(result.source, "official-global");
+    assert.ok(result.root.endsWith(`${join(".qoder-cn")}`));
+    assert.ok(result.hint?.includes("qodercn plugins"));
   });
 
 });

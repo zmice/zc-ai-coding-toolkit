@@ -233,14 +233,14 @@ npm install -g @qwen-code/qwen-code@latest
 | `claude` | `/zc-*` command | `zc:start -> /zc-start` |
 | `opencode` | `/zc-*` command | `zc:start -> /zc-start` |
 | `qwen` | `zc:*` namespaced command | `zc:start -> zc:start` |
-| `qoder-cn` | 插件命名空间限定，通过 `.qoder-plugin/plugin.json` 承载 | `zc:start -> zc-toolkit:start` |
+| `qoder-cn` | 插件命名空间限定，通过 `.qoder-plugin/plugin.json` 承载 | `zc:start -> /zc-toolkit:start` |
 
 同时：
 
 - 传统文件系统安装的 workflow / 专项 skill 会带 `zc-` 前缀
 - Codex 插件安装不再给 skill 额外加 `zc-` 前缀，因为插件自身已经提供 `zc-toolkit` 命名空间
 - 插件 Markdown agents 使用插件自己的命名空间；带明确 session settings 的 standalone TOML agents 继续保留 `zc-` / `zc_` 前缀
-- Quest CN 插件安装不额外加前缀，插件自身已经提供 `zc-toolkit` 命名空间
+- Qoder CN 插件安装不额外加前缀，插件自身已经提供 `zc-toolkit` 命名空间
 
 ### 产物矩阵
 
@@ -250,7 +250,7 @@ npm install -g @qwen-code/qwen-code@latest
 | `claude` | `CLAUDE.md`、`.claude/commands`、`.claude/agents` |
 | `opencode` | `AGENTS.md`、`.opencode/commands`、`.opencode/skills`、`.opencode/agents` |
 | `qwen` | 用户级优先通过官方 `qwen extensions` CLI 从 `https://github.com/zmice/zc-qwen-extension.git` 安装和更新 `zc-toolkit`；扩展目录位于 `.qwen/extensions/zc-toolkit/`，其中包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/`、`skills/`、`agents/` |
-| `qoder-cn` | 通过 `createQoderCnGenerationPlan()` 生成标准插件 bundle（`.qoder-plugin/plugin.json` + `commands/` + `skills/` + `agents/`）；用户通过 `qodercli cn plugins install` 原生安装；支持 URL 直接安装和插件市场分发 |
+| `qoder-cn` | 通过 `createQoderCnGenerationPlan()` 生成标准插件 bundle（`.qoder-plugin/plugin.json` + `commands/` + `skills/` + `agents/`）；`zc platform install qoder-cn` 调用官方 `qodercn plugins validate/install` 注册插件；也可手工通过官方 CLI 安装导出的 bundle |
 
 ### 官方默认位置矩阵
 
@@ -260,6 +260,7 @@ npm install -g @qwen-code/qwen-code@latest
 | `claude` | `<project-root>/CLAUDE.md` | `~/.claude/CLAUDE.md` | Claude Code 官方文档明确给出 project/user memory 位置 |
 | `opencode` | `<project-root>/AGENTS.md` | `~/.config/opencode/AGENTS.md` | OpenCode 官方文档明确给出 project/global rules 位置 |
 | `qwen` | `<project-root>/QWEN.md` | `~/.qwen/QWEN.md` | 官方文档明确 `/init` 会在项目目录创建 `QWEN.md`，并明确用户级配置目录为 `~/.qwen`；阿里云官方帮助文档同时给出了 Qwen CLI 的用户级 `QWEN.md` 位置 |
+| `qoder-cn` | 通过 `--dir` 指定受管 bundle 目录 | `~/.qoder-cn`（可由 `QODERCN_CONFIG_DIR` 覆盖） | 默认安装使用用户配置根目录中的受管 bundle，并由官方 `qodercn plugins` 完成校验、注册和卸载 |
 
 ### 4.1 项目安装
 
@@ -271,7 +272,7 @@ zc platform install codex
 zc platform install claude
 zc platform install opencode
 zc platform install qwen
-zc platform install qoder-cn
+zc platform install qoder-cn --global
 # 或显式声明
 zc platform install codex --project
 ```
@@ -315,9 +316,9 @@ zc platform install codex --project
 - `qoder-cn`
   - 插件 bundle 输出到指定目录（通过 `--dir` 参数）
   - `.qoder-plugin/plugin.json`
-  - `commands/zc/<command>.md`
-  - `skills/zc-<skill>/SKILL.md`
-  - `agents/zc-<agent>.md`
+  - `commands/<command>.md`
+  - `skills/<skill>/SKILL.md`
+  - `agents/<agent>.md`
 
 ### 4.2 全局安装
 
@@ -346,7 +347,7 @@ zc platform install codex --global
 zc platform install claude --global
 zc platform install opencode --global
 zc platform install qwen --global
-zc platform install qoder-cn
+zc platform install qoder-cn --global
 zc platform status codex --global --json
 zc platform doctor codex --global --json
 zc platform repair codex --global --plan --json
@@ -358,43 +359,58 @@ zc platform where opencode --global --json
 zc platform where qwen --global --json
 ```
 
-### 4.3 Quest CN (Qoder CN) 插件安装
+### 4.3 Qoder CN 插件安装
 
-Quest CN 采用插件优先策略，所有内容通过标准插件 bundle 分发。
+Qoder CN 采用插件优先策略。`zc` 先在 `~/.qoder-cn/.zc/platform-bundles/qoder-cn/zc-toolkit` 同步受管 bundle，再调用官方 `qodercn plugins` 生命周期，因此插件会出现在 Qoder CN 的插件管理界面中。
 
 **安装**：
 
 ```bash
-# 方式一：通过 zc CLI 生成插件 bundle
-zc platform generate qoder-cn --dir <output-dir>
+# 推荐：先预览官方安装与旧版迁移计划
+zc platform install qoder-cn --global --plan --json
 
-# 方式二：使用 export 脚本（如果已创建）
+# 由 zc 生成 bundle、校验并调用官方插件安装
+zc platform install qoder-cn --global
+
+# 仅导出 bundle，用于检查或手工分发
+zc platform generate qoder-cn --dir <output-dir>
 node scripts/export-qoder-cn-plugin-bundle.mjs --out <output-dir>
 
-# 安装到 Quest CN
-qodercli cn plugins install <output-dir>
+# 手工安装导出的 bundle
+qodercn plugins validate <output-dir>
+qodercn plugins install <output-dir>
 ```
+
+全局安装会兼容旧版曾直接写入 `~/.qoder` 的异常状态：
+
+1. 仅在标准 `.qoder-cn` 全局配置根旁检查 `.qoder`，显式 `--dir` 不会触发旧目录扫描。
+2. 旧回执必须属于 `qoder-cn`、安装方式为 `filesystem`，且全部受管路径位于 `.qoder` 内。
+3. 先完成 `qodercn plugins validate/install`，成功后才清理旧回执拥有的产物；官方注册失败时旧安装保持不动。
+4. 无回执、无效回执、符号链接路径或非文件系统安装不会自动清理。
+5. 旧产物与回执哈希不一致时默认保留；检查 `--plan --json` 输出并确认后，可执行 `zc platform install qoder-cn --global --force`。
+
+迁移只删除回执跟踪的 `zc-toolkit` 产物和旧回执，不删除整个 `~/.qoder`，也不影响其中的用户设置或其他文件。
 
 **更新**：
 
 ```bash
-# 重新生成并安装
-zc platform generate qoder-cn --dir <output-dir>
-qodercli cn plugins install <output-dir>
+zc platform update qoder-cn --global
 ```
 
 **卸载**：
 
 ```bash
-qodercli cn plugins uninstall zc-toolkit
+zc platform uninstall qoder-cn --global
+# 等价的官方生命周期命令
+qodercn plugins uninstall zc-toolkit
 ```
 
 说明：
 
-- Quest CN 不需要入口文件，所有内容通过 `.qoder-plugin/plugin.json` + `commands/` + `skills/` + `agents/` 承载
-- 支持 URL 直接安装：`qodercli cn plugins install <url>`
-- 支持插件市场分发
-- 用户级和项目级支持通过 Quest CN 的 scope 机制
+- Qoder CN 不需要入口文件，所有内容通过 `.qoder-plugin/plugin.json` + `commands/` + `skills/` + `agents/` 承载
+- 找不到 `qodercn` 时安装会明确失败，不会退化成 Qoder CN 无法识别的目录写入
+- `QODERCN_CONFIG_DIR` 可覆盖默认 `~/.qoder-cn` 配置根目录
+- `legacyMigration` 字段会出现在安装计划和安装结果 JSON 中，用于区分 `ready`、`drifted`、`migrated`、`retained` 等迁移状态
 
 当前行为：
 
@@ -771,5 +787,5 @@ zc platform install codex --global --plan
 zc platform install claude --plan
 zc platform install opencode --plan
 zc platform install qwen --plan
-zc platform install qoder-cn --plan
+zc platform install qoder-cn --global --plan
 ```

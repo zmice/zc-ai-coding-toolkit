@@ -65,7 +65,10 @@ zc platform plugin codex --uninstall --with-agents
 
 ```bash
 zc platform install <claude|opencode|qwen> [--global]
+zc platform install qoder-cn --global
 ```
+
+Qoder CN 安装会在 `~/.qoder-cn/.zc/platform-bundles/qoder-cn/zc-toolkit` 生成受管插件 bundle，并调用官方 `qodercn plugins validate/install` 注册；更新、修复和卸载继续使用官方插件生命周期。全局安装还会检查同级 `~/.qoder` 的旧版文件系统回执：先完成官方插件注册，再删除回执拥有且未漂移的旧产物；无回执、路径不安全或存在本地修改时不会自动删除。可用 `--plan --json` 预览，确认漂移内容后用 `--force` 迁移。若未安装 `qodercn`，命令会明确失败，不会回退为插件页面无法识别的直接目录写入。`QODERCN_CONFIG_DIR` 可覆盖默认配置根。
 
 如果你只是想安装和更新平台内容，优先看：
 
@@ -106,6 +109,7 @@ pnpm upstream -- report all --format md --with-remote
 | Claude Code | `CLAUDE.md` + `commands/` + `agents/` | `zc:start -> /zc-start` |
 | OpenCode | `AGENTS.md` + `commands/` + `skills/` + `agents/` | `zc:start -> /zc-start` |
 | Qwen | `QWEN.md` + extension 目录 | `zc:start -> zc:start` |
+| Qoder CN | `.qoder-plugin/plugin.json` + `commands/` + `skills/` + `agents/`，由官方 `qodercn plugins` 注册 | `zc:start -> /zc-toolkit:start` |
 
 用户级 Qwen 安装默认会优先走官方扩展链：
 
@@ -124,6 +128,7 @@ CLI 侧当前重点参考：
 - Claude Code 官方 memory / slash commands / sub-agents 文档
 - OpenCode 官方 rules / commands / skills / agents 文档
 - Qwen 官方 extensions / skills / `qwen extensions` 文档
+- Qoder CN 官方 plugin manifest / `qodercn plugins` / `QODERCN_CONFIG_DIR` 文档
 
 也就是说：
 

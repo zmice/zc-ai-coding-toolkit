@@ -29,10 +29,10 @@ export interface PlatformInstallReceipt {
   readonly installedAt: string;
   readonly zcVersion?: string;
   readonly contentFingerprint?: string;
-  readonly installMethod?: "filesystem" | "qwen-cli";
+  readonly installMethod?: "filesystem" | "qwen-cli" | "qoder-cn-cli";
   readonly installSource?: "github-repo" | "local-bundle";
   readonly sourceRef?: string;
-  readonly bundleType?: "source-bundle" | "release-bundle";
+  readonly bundleType?: "source-bundle" | "release-bundle" | "qoder-cn-plugin";
   readonly bundlePath?: string;
   readonly artifacts: readonly PlatformInstallReceiptArtifact[];
 }

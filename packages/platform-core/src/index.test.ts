@@ -248,7 +248,7 @@ describe("@zmice/platform-core", () => {
   });
 });
 
-// ─── Quest CN (qoder-cn) plugin generation ─────────────────────────────
+// ─── Qoder CN (qoder-cn) plugin generation ─────────────────────────────
 
 const qoderCnManifest: ToolkitManifestLike = {
   source: "toolkit-manifest",
@@ -289,7 +289,7 @@ const qoderCnManifest: ToolkitManifestLike = {
   ],
 };
 
-describe("Quest CN (qoder-cn) generation plan", () => {
+describe("Qoder CN (qoder-cn) generation plan", () => {
   it("creates a generation plan with correct platform and matched assets", () => {
     const plan = createQoderCnGenerationPlan(qoderCnManifest);
 
@@ -311,14 +311,14 @@ describe("Quest CN (qoder-cn) generation plan", () => {
       plan.artifacts.map((artifact) => artifact.path),
       [
         ".qoder-plugin/plugin.json",
-        "commands/zc/start.md",
-        "skills/zc-alpha/SKILL.md",
-        "agents/zc-reviewer.md",
+        "commands/start.md",
+        "skills/alpha/SKILL.md",
+        "agents/reviewer.md",
       ],
     );
   });
 
-  it("generates valid JSON for plugin.json with required fields", () => {
+  it("generates Qoder CN plugin metadata and explicit component paths for the plugin UI", () => {
     const plan = createQoderCnGenerationPlan(qoderCnManifest);
     const pluginJsonArtifact = plan.artifacts[0];
 
@@ -329,6 +329,12 @@ describe("Quest CN (qoder-cn) generation plan", () => {
     assert.equal(typeof parsed.name, "string");
     assert.ok(parsed.name.length > 0);
     assert.equal(parsed.version, "0.1.0");
+    assert.equal(parsed.displayName, "zc AI 编码工具包");
+    assert.equal(parsed.homepage, "https://github.com/zmice/zc-ai-coding-toolkit");
+    assert.equal(parsed.repository, "https://github.com/zmice/zc-ai-coding-toolkit.git");
+    assert.equal(parsed.commands, "./commands");
+    assert.equal(parsed.skills, "./skills");
+    assert.equal(parsed.agents, "./agents");
     assert.equal(parsed.license, "MIT");
   });
 
@@ -346,7 +352,7 @@ describe("Quest CN (qoder-cn) generation plan", () => {
     const commandArtifact = plan.artifacts[1];
 
     assert.ok(commandArtifact);
-    assert.ok(commandArtifact.content.includes('name: "zc:start"'));
+    assert.ok(commandArtifact.content.includes('name: "start"'));
     assert.ok(commandArtifact.content.includes("Start command body"));
   });
 
@@ -355,7 +361,7 @@ describe("Quest CN (qoder-cn) generation plan", () => {
     const skillArtifact = plan.artifacts[2];
 
     assert.ok(skillArtifact);
-    assert.ok(skillArtifact.content.includes('name: "zc-alpha"'));
+    assert.ok(skillArtifact.content.includes('name: "alpha"'));
     assert.ok(skillArtifact.content.includes("Alpha skill body"));
   });
 
@@ -364,11 +370,11 @@ describe("Quest CN (qoder-cn) generation plan", () => {
     const agentArtifact = plan.artifacts[3];
 
     assert.ok(agentArtifact);
-    assert.ok(agentArtifact.content.includes('name: "zc-reviewer"'));
+    assert.ok(agentArtifact.content.includes('name: "reviewer"'));
     assert.ok(agentArtifact.content.includes("Reviewer agent body"));
     assert.ok(agentArtifact.content.includes('"read"'));
     assert.ok(agentArtifact.content.includes('"grep"'));
-    assert.ok(agentArtifact.content.includes("zc-alpha"));
+    assert.ok(agentArtifact.content.includes("alpha"));
   });
 
   it("filters out assets that do not target qoder-cn platform", () => {
@@ -407,7 +413,7 @@ describe("Quest CN (qoder-cn) generation plan", () => {
     assert.ok(
       plan.artifacts.some(
         (artifact) =>
-          artifact.path === "skills/zc-with-attachments/references/guide.md"
+          artifact.path === "skills/with-attachments/references/guide.md"
           && artifact.content === "# Guide\n",
       ),
     );
@@ -424,7 +430,7 @@ describe("Quest CN (qoder-cn) generation plan", () => {
   });
 });
 
-describe("Quest CN (qoder-cn) install plan", () => {
+describe("Qoder CN (qoder-cn) install plan", () => {
   it("creates an install plan with correct destination and defaults", () => {
     const destinationRoot = join("tmp", "qoder-cn");
     const plan = createQoderCnInstallPlan(qoderCnManifest, {
@@ -447,9 +453,9 @@ describe("Quest CN (qoder-cn) install plan", () => {
       plan.artifacts.map((artifact) => artifact.path),
       [
         join(destinationRoot, ".qoder-plugin/plugin.json"),
-        join(destinationRoot, "commands/zc/start.md"),
-        join(destinationRoot, "skills/zc-alpha/SKILL.md"),
-        join(destinationRoot, "agents/zc-reviewer.md"),
+        join(destinationRoot, "commands/start.md"),
+        join(destinationRoot, "skills/alpha/SKILL.md"),
+        join(destinationRoot, "agents/reviewer.md"),
       ],
     );
   });
@@ -482,6 +488,6 @@ describe("Quest CN (qoder-cn) install plan", () => {
 
     const pluginJson = JSON.parse(plan.artifacts[0]!.content);
     assert.equal(typeof pluginJson.name, "string");
-    assert.ok(plan.artifacts[1]!.content.includes('name: "zc:start"'));
+    assert.ok(plan.artifacts[1]!.content.includes('name: "start"'));
   });
 });

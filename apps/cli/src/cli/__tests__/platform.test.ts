@@ -25,6 +25,8 @@ const platformMocks = vi.hoisted(() => ({
   createCodexCompanionAgentInstallPlan: vi.fn(),
   createClaudeInstallPlan: vi.fn(),
   createOpenCodeInstallPlan: vi.fn(),
+  createQoderCnGenerationPlan: vi.fn(),
+  createQoderCnInstallPlan: vi.fn(),
   loadToolkitManifest: vi.fn(),
   importWorkspaceDistModule: vi.fn(),
   normalizeInstallSelector: vi.fn(),
@@ -54,6 +56,15 @@ const platformMocks = vi.hoisted(() => ({
   uninstallQwenExtensionWithOfficialCli: vi.fn(),
   updateQwenExtensionWithOfficialCli: vi.fn(),
   relinkQwenExtensionWithOfficialCli: vi.fn(),
+  toQoderCnOfficialCliInstallPlan: vi.fn(),
+  resolveQoderCnOfficialCliBundleDir: vi.fn(),
+  syncQoderCnOfficialCliBundle: vi.fn(),
+  installQoderCnPluginWithOfficialCli: vi.fn(),
+  reinstallQoderCnPluginWithOfficialCli: vi.fn(),
+  uninstallQoderCnPluginWithOfficialCli: vi.fn(),
+  inspectQoderCnLegacyInstall: vi.fn(),
+  migrateQoderCnLegacyInstall: vi.fn(),
+  resolveQoderCnLegacyInstallRoot: vi.fn(),
   spawn: vi.fn(),
 }));
 
@@ -131,6 +142,23 @@ vi.mock("../../utils/qwen-extension-cli.js", () => ({
   uninstallQwenExtensionWithOfficialCli: platformMocks.uninstallQwenExtensionWithOfficialCli,
   updateQwenExtensionWithOfficialCli: platformMocks.updateQwenExtensionWithOfficialCli,
   relinkQwenExtensionWithOfficialCli: platformMocks.relinkQwenExtensionWithOfficialCli,
+}));
+
+vi.mock("../../utils/qoder-cn-plugin-cli.js", () => ({
+  QoderCnOfficialCliUnavailableError: class QoderCnOfficialCliUnavailableError extends Error {},
+  qoderCnPluginName: "zc-toolkit",
+  toQoderCnOfficialCliInstallPlan: platformMocks.toQoderCnOfficialCliInstallPlan,
+  resolveQoderCnOfficialCliBundleDir: platformMocks.resolveQoderCnOfficialCliBundleDir,
+  syncQoderCnOfficialCliBundle: platformMocks.syncQoderCnOfficialCliBundle,
+  installQoderCnPluginWithOfficialCli: platformMocks.installQoderCnPluginWithOfficialCli,
+  reinstallQoderCnPluginWithOfficialCli: platformMocks.reinstallQoderCnPluginWithOfficialCli,
+  uninstallQoderCnPluginWithOfficialCli: platformMocks.uninstallQoderCnPluginWithOfficialCli,
+}));
+
+vi.mock("../../utils/qoder-cn-legacy-install.js", () => ({
+  inspectQoderCnLegacyInstall: platformMocks.inspectQoderCnLegacyInstall,
+  migrateQoderCnLegacyInstall: platformMocks.migrateQoderCnLegacyInstall,
+  resolveQoderCnLegacyInstallRoot: platformMocks.resolveQoderCnLegacyInstallRoot,
 }));
 
 import {
@@ -259,6 +287,29 @@ function createQwenInstallPlan(
   };
 }
 
+function createQoderCnInstallPlan(
+  destinationRoot: string,
+  artifacts: Array<{ path: string; content: string }>,
+  scope: "project" | "global" | "dir" = "global",
+  overwrite: "error" | "force" = "error",
+) {
+  return {
+    platform: "qoder-cn" as const,
+    packageName: "@zmice/platform-core",
+    manifestSource: "/repo/packages/toolkit/src/content#generatedAt=2026-04-19T12:00:00.000Z",
+    matchedAssets: [],
+    destinationRoot,
+    scope,
+    overwrite,
+    capability: {
+      platform: "qoder-cn" as const,
+      namespace: "zc-toolkit",
+      surfaces: ["plugin-dir", "commands-dir", "skills-dir", "agents-dir"],
+    },
+    artifacts,
+  };
+}
+
 function mockCodexSpawnResults(results: Array<{
   code: number;
   stdout?: string;
@@ -305,6 +356,8 @@ describe("platform CLI", () => {
     platformMocks.createCodexCompanionAgentInstallPlan.mockReset();
     platformMocks.createClaudeInstallPlan.mockReset();
     platformMocks.createOpenCodeInstallPlan.mockReset();
+    platformMocks.createQoderCnGenerationPlan.mockReset();
+    platformMocks.createQoderCnInstallPlan.mockReset();
     platformMocks.loadToolkitManifest.mockReset();
     platformMocks.importWorkspaceDistModule.mockReset();
     platformMocks.normalizeInstallSelector.mockReset();
@@ -334,6 +387,15 @@ describe("platform CLI", () => {
     platformMocks.uninstallQwenExtensionWithOfficialCli.mockReset();
     platformMocks.updateQwenExtensionWithOfficialCli.mockReset();
     platformMocks.relinkQwenExtensionWithOfficialCli.mockReset();
+    platformMocks.toQoderCnOfficialCliInstallPlan.mockReset();
+    platformMocks.resolveQoderCnOfficialCliBundleDir.mockReset();
+    platformMocks.syncQoderCnOfficialCliBundle.mockReset();
+    platformMocks.installQoderCnPluginWithOfficialCli.mockReset();
+    platformMocks.reinstallQoderCnPluginWithOfficialCli.mockReset();
+    platformMocks.uninstallQoderCnPluginWithOfficialCli.mockReset();
+    platformMocks.inspectQoderCnLegacyInstall.mockReset();
+    platformMocks.migrateQoderCnLegacyInstall.mockReset();
+    platformMocks.resolveQoderCnLegacyInstallRoot.mockReset();
     platformMocks.spawn.mockReset();
 
     platformMocks.loadToolkitManifest.mockResolvedValue({
@@ -381,6 +443,13 @@ describe("platform CLI", () => {
 
       if (relativePath === "packages/platform-opencode/dist/index.js") {
         return { createOpenCodeInstallPlan: platformMocks.createOpenCodeInstallPlan };
+      }
+
+      if (relativePath === "packages/platform-core/dist/index.js") {
+        return {
+          createQoderCnGenerationPlan: platformMocks.createQoderCnGenerationPlan,
+          createQoderCnInstallPlan: platformMocks.createQoderCnInstallPlan,
+        };
       }
 
       throw new Error(`unexpected import: ${relativePath}`);
@@ -497,6 +566,37 @@ describe("platform CLI", () => {
     ));
 
     platformMocks.writePlatformInstallReceiptForPlan.mockResolvedValue({});
+    platformMocks.toQoderCnOfficialCliInstallPlan.mockImplementation((plan) => plan);
+    platformMocks.resolveQoderCnOfficialCliBundleDir.mockImplementation((plan: { destinationRoot: string }) => (
+      join(plan.destinationRoot, ".zc", "platform-bundles", "qoder-cn", "zc-toolkit")
+    ));
+    platformMocks.syncQoderCnOfficialCliBundle.mockImplementation(async (plan: { destinationRoot: string; artifacts: unknown[] }) => ({
+      bundleDir: join(plan.destinationRoot, ".zc", "platform-bundles", "qoder-cn", "zc-toolkit"),
+      artifactCount: plan.artifacts.length,
+    }));
+    platformMocks.installQoderCnPluginWithOfficialCli.mockResolvedValue(undefined);
+    platformMocks.reinstallQoderCnPluginWithOfficialCli.mockResolvedValue(undefined);
+    platformMocks.uninstallQoderCnPluginWithOfficialCli.mockResolvedValue(undefined);
+    platformMocks.resolveQoderCnLegacyInstallRoot.mockReturnValue(null);
+    platformMocks.inspectQoderCnLegacyInstall.mockResolvedValue({
+      status: "not-found",
+      legacyRoot: abs("/home/test/.qoder"),
+      receiptPath: abs("/home/test/.qoder/.zc/platform-state/qoder-cn.install-receipt.json"),
+      trackedArtifacts: 0,
+      driftedArtifacts: 0,
+      missingArtifacts: 0,
+      artifactPaths: [],
+    });
+    platformMocks.migrateQoderCnLegacyInstall.mockResolvedValue({
+      status: "not-found",
+      legacyRoot: abs("/home/test/.qoder"),
+      receiptPath: abs("/home/test/.qoder/.zc/platform-state/qoder-cn.install-receipt.json"),
+      trackedArtifacts: 0,
+      driftedArtifacts: 0,
+      removedArtifacts: 0,
+      missingArtifacts: 0,
+      receiptRemoved: false,
+    });
     platformMocks.syncQwenOfficialCliSourceBundle.mockResolvedValue({
       sourceDir: abs("/tmp/qwen-source"),
       extensionName: "zc-toolkit",
@@ -2646,6 +2746,384 @@ describe("platform CLI", () => {
       [{ path: join(installRoot, "AGENTS.md"), content: "# agents" }],
       { dryRun: false, overwrite: "force" },
     );
+  });
+
+  it("installs Qoder CN through the official plugin lifecycle instead of direct filesystem writes", async () => {
+    const qoderRoot = abs("/home/test/.qoder-cn");
+    const bundleRoot = join(qoderRoot, ".zc", "platform-bundles", "qoder-cn", "zc-toolkit");
+    const plan = createQoderCnInstallPlan(
+      qoderRoot,
+      [{ path: join(qoderRoot, ".qoder-plugin/plugin.json"), content: "{}\n" }],
+      "global",
+    );
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: qoderRoot,
+      source: "official-global",
+      hint: "Qoder CN 官方插件目录",
+    });
+    platformMocks.createQoderCnInstallPlan.mockReturnValue(plan);
+    platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
+      kind: "not-installed",
+      platform: "qoder-cn",
+      receiptPath: join(qoderRoot, ".zc", "platform-state", "qoder-cn.install-receipt.json"),
+      receipt: null,
+      summary: {
+        trackedArtifacts: 0,
+        driftedArtifacts: 0,
+        missingArtifacts: 0,
+        plannedChanges: 1,
+      },
+      artifacts: [],
+    });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformInstall("qoder-cn", {});
+
+    expect(platformMocks.resolveInstallTarget).toHaveBeenCalledWith("qoder-cn", expect.objectContaining({
+      global: true,
+    }));
+    expect(platformMocks.createQoderCnInstallPlan).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        destinationRoot: qoderRoot,
+        scope: "global",
+        pluginVersion: expect.any(String),
+      }),
+    );
+    expect(platformMocks.toQoderCnOfficialCliInstallPlan).toHaveBeenCalledWith(expect.objectContaining({
+      platform: "qoder-cn",
+      destinationRoot: qoderRoot,
+      scope: "global",
+      artifacts: [expect.objectContaining({
+        path: join(qoderRoot, ".qoder-plugin/plugin.json"),
+        content: "{}\n",
+      })],
+    }));
+    const officialPlan = platformMocks.toQoderCnOfficialCliInstallPlan.mock.calls[0]![0];
+    expect(platformMocks.syncQoderCnOfficialCliBundle).toHaveBeenCalledWith(officialPlan);
+    expect(platformMocks.installQoderCnPluginWithOfficialCli).toHaveBeenCalledWith(bundleRoot);
+    expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
+    expect(platformMocks.writePlatformInstallReceiptForPlan).toHaveBeenCalledWith(
+      officialPlan,
+      expect.objectContaining({
+        installMethod: "qoder-cn-cli",
+        installSource: "local-bundle",
+        bundleType: "qoder-cn-plugin",
+        bundlePath: bundleRoot,
+      }),
+    );
+    expect(process.exitCode).toBeUndefined();
+
+    logSpy.mockRestore();
+  });
+
+  it("migrates a receipt-owned legacy Qoder install after official plugin registration succeeds", async () => {
+    const qoderRoot = abs("/home/test/.qoder-cn");
+    const legacyRoot = abs("/home/test/.qoder");
+    const bundleRoot = join(qoderRoot, ".zc", "platform-bundles", "qoder-cn", "zc-toolkit");
+    const legacyReceiptPath = join(legacyRoot, ".zc", "platform-state", "qoder-cn.install-receipt.json");
+    const plan = createQoderCnInstallPlan(
+      qoderRoot,
+      [{ path: join(qoderRoot, ".qoder-plugin/plugin.json"), content: "{}\n" }],
+      "global",
+    );
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: qoderRoot,
+      source: "official-global",
+      hint: "Qoder CN 官方插件目录",
+    });
+    platformMocks.createQoderCnInstallPlan.mockReturnValue(plan);
+    platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
+      kind: "not-installed",
+      platform: "qoder-cn",
+      receiptPath: join(qoderRoot, ".zc", "platform-state", "qoder-cn.install-receipt.json"),
+      receipt: null,
+      summary: {
+        trackedArtifacts: 0,
+        driftedArtifacts: 0,
+        missingArtifacts: 0,
+        plannedChanges: 1,
+      },
+      artifacts: [],
+    });
+    platformMocks.resolveQoderCnLegacyInstallRoot.mockReturnValue(legacyRoot);
+    platformMocks.inspectQoderCnLegacyInstall.mockResolvedValue({
+      status: "ready",
+      legacyRoot,
+      receiptPath: legacyReceiptPath,
+      trackedArtifacts: 2,
+      driftedArtifacts: 0,
+      missingArtifacts: 0,
+      artifactPaths: [
+        join(legacyRoot, ".qoder-plugin", "plugin.json"),
+        join(legacyRoot, "commands", "zc", "start.md"),
+      ],
+    });
+    platformMocks.migrateQoderCnLegacyInstall.mockResolvedValue({
+      status: "migrated",
+      legacyRoot,
+      receiptPath: legacyReceiptPath,
+      trackedArtifacts: 2,
+      driftedArtifacts: 0,
+      removedArtifacts: 2,
+      missingArtifacts: 0,
+      receiptRemoved: true,
+    });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformInstall("qoder-cn", { json: true });
+
+    expect(platformMocks.inspectQoderCnLegacyInstall).toHaveBeenCalledWith({ legacyRoot });
+    expect(platformMocks.installQoderCnPluginWithOfficialCli).toHaveBeenCalledWith(bundleRoot);
+    expect(platformMocks.migrateQoderCnLegacyInstall).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "ready", legacyRoot }),
+      { force: false },
+    );
+    expect(platformMocks.installQoderCnPluginWithOfficialCli.mock.invocationCallOrder[0]).toBeLessThan(
+      platformMocks.migrateQoderCnLegacyInstall.mock.invocationCallOrder[0]!,
+    );
+    const payload = JSON.parse(logSpy.mock.calls.at(-1)?.[0] ?? "{}");
+    expect(payload.legacyMigration).toEqual(expect.objectContaining({
+      status: "migrated",
+      legacyRoot,
+      removedArtifacts: 2,
+      receiptRemoved: true,
+    }));
+
+    logSpy.mockRestore();
+  });
+
+  it("reports legacy Qoder migration in plans without deleting anything", async () => {
+    const qoderRoot = abs("/home/test/.qoder-cn");
+    const legacyRoot = abs("/home/test/.qoder");
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: qoderRoot,
+      source: "official-global",
+      hint: "Qoder CN 官方插件目录",
+    });
+    platformMocks.createQoderCnInstallPlan.mockReturnValue(createQoderCnInstallPlan(
+      qoderRoot,
+      [{ path: join(qoderRoot, ".qoder-plugin/plugin.json"), content: "{}\n" }],
+      "global",
+    ));
+    platformMocks.resolveQoderCnLegacyInstallRoot.mockReturnValue(legacyRoot);
+    platformMocks.inspectQoderCnLegacyInstall.mockResolvedValue({
+      status: "drifted",
+      legacyRoot,
+      receiptPath: join(legacyRoot, ".zc", "platform-state", "qoder-cn.install-receipt.json"),
+      trackedArtifacts: 2,
+      driftedArtifacts: 1,
+      missingArtifacts: 0,
+      artifactPaths: [],
+      reason: "旧安装产物包含本地修改；默认保留，确认后可使用 --force 迁移。",
+    });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformInstall("qoder-cn", { plan: true, json: true });
+
+    expect(platformMocks.migrateQoderCnLegacyInstall).not.toHaveBeenCalled();
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload.legacyMigration).toEqual(expect.objectContaining({
+      status: "drifted",
+      legacyRoot,
+      driftedArtifacts: 1,
+    }));
+
+    logSpy.mockRestore();
+  });
+
+  it("does not fall back to direct writes when the Qoder CN official CLI is unavailable", async () => {
+    const qoderRoot = abs("/home/test/.qoder-cn");
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: qoderRoot,
+      source: "official-global",
+      hint: "Qoder CN 官方插件目录",
+    });
+    platformMocks.createQoderCnInstallPlan.mockReturnValue(createQoderCnInstallPlan(
+      qoderRoot,
+      [{ path: join(qoderRoot, ".qoder-plugin/plugin.json"), content: "{}\n" }],
+      "global",
+    ));
+    platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
+      kind: "not-installed",
+      platform: "qoder-cn",
+      receiptPath: join(qoderRoot, ".zc", "platform-state", "qoder-cn.install-receipt.json"),
+      receipt: null,
+      summary: {
+        trackedArtifacts: 0,
+        driftedArtifacts: 0,
+        missingArtifacts: 0,
+        plannedChanges: 1,
+      },
+      artifacts: [],
+    });
+    platformMocks.installQoderCnPluginWithOfficialCli.mockRejectedValue(new Error("未检测到 qodercn CLI"));
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await runPlatformInstall("qoder-cn", {});
+
+    expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
+    expect(platformMocks.writePlatformInstallReceiptForPlan).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("未检测到 qodercn CLI"));
+
+    logSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
+  it("updates Qoder CN by rebuilding and reinstalling the managed plugin bundle", async () => {
+    const qoderRoot = abs("/home/test/.qoder-cn");
+    const bundleRoot = join(qoderRoot, ".zc", "platform-bundles", "qoder-cn", "zc-toolkit");
+    const plan = createQoderCnInstallPlan(
+      qoderRoot,
+      [{ path: join(qoderRoot, ".qoder-plugin/plugin.json"), content: "{\"version\":\"0.2.0\"}\n" }],
+      "global",
+    );
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: qoderRoot,
+      source: "official-global",
+      hint: "Qoder CN 官方插件目录",
+    });
+    platformMocks.createQoderCnInstallPlan.mockReturnValue(plan);
+    platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
+      kind: "update-available",
+      platform: "qoder-cn",
+      receiptPath: join(qoderRoot, ".zc", "platform-state", "qoder-cn.install-receipt.json"),
+      receipt: {
+        schemaVersion: 1,
+        platform: "qoder-cn",
+        destinationRoot: qoderRoot,
+        manifestSource: plan.manifestSource,
+        overwrite: "error",
+        installedAt: "2026-08-27T00:00:00.000Z",
+        installMethod: "qoder-cn-cli",
+        installSource: "local-bundle",
+        bundleType: "qoder-cn-plugin",
+        bundlePath: bundleRoot,
+        artifacts: [],
+      },
+      summary: {
+        trackedArtifacts: 1,
+        driftedArtifacts: 0,
+        missingArtifacts: 0,
+        plannedChanges: 1,
+      },
+      artifacts: [],
+    });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformUpdate("qoder-cn", {});
+
+    expect(platformMocks.syncQoderCnOfficialCliBundle).toHaveBeenCalled();
+    expect(platformMocks.reinstallQoderCnPluginWithOfficialCli).toHaveBeenCalledWith(bundleRoot);
+    expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
+    expect(platformMocks.writePlatformInstallReceiptForPlan).toHaveBeenCalledWith(
+      expect.objectContaining({ platform: "qoder-cn" }),
+      expect.objectContaining({
+        installMethod: "qoder-cn-cli",
+        bundleType: "qoder-cn-plugin",
+        bundlePath: bundleRoot,
+      }),
+    );
+
+    logSpy.mockRestore();
+  });
+
+  it("uninstalls Qoder CN through the official plugin lifecycle and removes its managed bundle", async () => {
+    const qoderRoot = abs("/home/test/.qoder-cn");
+    const bundleRoot = join(qoderRoot, ".zc", "platform-bundles", "qoder-cn", "zc-toolkit");
+    const receiptPath = join(qoderRoot, ".zc", "platform-state", "qoder-cn.install-receipt.json");
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: qoderRoot,
+      source: "official-global",
+      hint: "Qoder CN 官方插件目录",
+    });
+    platformMocks.createQoderCnInstallPlan.mockReturnValue(createQoderCnInstallPlan(qoderRoot, [], "global"));
+    platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
+      kind: "up-to-date",
+      platform: "qoder-cn",
+      receiptPath,
+      receipt: {
+        schemaVersion: 1,
+        platform: "qoder-cn",
+        destinationRoot: qoderRoot,
+        manifestSource: "toolkit-manifest",
+        overwrite: "error",
+        installedAt: "2026-08-27T00:00:00.000Z",
+        installMethod: "qoder-cn-cli",
+        installSource: "local-bundle",
+        bundleType: "qoder-cn-plugin",
+        bundlePath: bundleRoot,
+        artifacts: [],
+      },
+      summary: {
+        trackedArtifacts: 0,
+        driftedArtifacts: 0,
+        missingArtifacts: 0,
+        plannedChanges: 0,
+      },
+      artifacts: [],
+    });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformUninstall("qoder-cn", {});
+
+    expect(platformMocks.uninstallQoderCnPluginWithOfficialCli).toHaveBeenCalledWith("zc-toolkit");
+    expect(platformMocks.removeManagedPaths).toHaveBeenCalledWith([bundleRoot]);
+    expect(platformMocks.deletePlatformInstallReceipt).toHaveBeenCalledWith(receiptPath);
+
+    logSpy.mockRestore();
+  });
+
+  it("repairs an up-to-date Qoder CN receipt by re-registering the plugin", async () => {
+    const qoderRoot = abs("/home/test/.qoder-cn");
+    const bundleRoot = join(qoderRoot, ".zc", "platform-bundles", "qoder-cn", "zc-toolkit");
+    const plan = createQoderCnInstallPlan(
+      qoderRoot,
+      [{ path: join(qoderRoot, ".qoder-plugin/plugin.json"), content: "{}\n" }],
+      "global",
+    );
+    platformMocks.resolveInstallTarget.mockResolvedValue({
+      root: qoderRoot,
+      source: "official-global",
+      hint: "Qoder CN 官方插件目录",
+    });
+    platformMocks.createQoderCnInstallPlan.mockReturnValue(plan);
+    platformMocks.resolvePlatformInstallStatus.mockResolvedValue({
+      kind: "up-to-date",
+      platform: "qoder-cn",
+      receiptPath: join(qoderRoot, ".zc", "platform-state", "qoder-cn.install-receipt.json"),
+      receipt: {
+        schemaVersion: 1,
+        platform: "qoder-cn",
+        destinationRoot: qoderRoot,
+        manifestSource: plan.manifestSource,
+        overwrite: "error",
+        installedAt: "2026-08-27T00:00:00.000Z",
+        installMethod: "qoder-cn-cli",
+        installSource: "local-bundle",
+        bundleType: "qoder-cn-plugin",
+        bundlePath: bundleRoot,
+        artifacts: [],
+      },
+      summary: {
+        trackedArtifacts: 1,
+        driftedArtifacts: 0,
+        missingArtifacts: 0,
+        plannedChanges: 0,
+      },
+      artifacts: [],
+    });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformRepair("qoder-cn", {});
+
+    expect(platformMocks.syncQoderCnOfficialCliBundle).toHaveBeenCalled();
+    expect(platformMocks.reinstallQoderCnPluginWithOfficialCli).toHaveBeenCalledWith(bundleRoot);
+    expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
+
+    logSpy.mockRestore();
   });
 
   it("uses the resolved project root when install target is omitted", async () => {

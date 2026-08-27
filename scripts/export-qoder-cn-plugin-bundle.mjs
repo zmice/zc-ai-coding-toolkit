@@ -51,31 +51,32 @@ async function run(command, args) {
 }
 
 function renderReadme() {
-  return `# zc Quest CN Plugin
+  return `# zc Qoder CN Plugin
 
 [![source repo](https://img.shields.io/badge/source-zc--ai--coding--toolkit-24292f)](https://github.com/zmice/zc-ai-coding-toolkit)
 [![npm version](https://img.shields.io/npm/v/@zmice/zc)](https://www.npmjs.com/package/@zmice/zc)
 [![license](https://img.shields.io/github/license/zmice/zc-ai-coding-toolkit)](LICENSE)
 
-这是由 [zc AI Coding Toolkit](https://github.com/zmice/zc-ai-coding-toolkit) 自动导出的 Quest CN 插件包。
+这是由 [zc AI Coding Toolkit](https://github.com/zmice/zc-ai-coding-toolkit) 自动导出的 Qoder CN 插件包。
 
-这个插件包面向 Quest CN 平台分发模型，提供：
+这个插件包面向 Qoder CN 平台分发模型，提供：
 
 - \`.qoder-plugin/plugin.json\` 插件元数据
-- \`commands/zc/\` 命令入口
-- \`skills/zc-*/\` 技能目录
-- \`agents/zc-*.md\` 角色入口
+- \`commands/\` 命令入口（安装后以 \`/zc-toolkit:<command>\` 调用）
+- \`skills/*/\` 技能目录
+- \`agents/*.md\` 角色入口
 
 ## 安装
 
 \`\`\`bash
-qodercli cn plugins install <path-or-url>
+qodercn plugins validate <path-or-url>
+qodercn plugins install <path-or-url>
 \`\`\`
 
 ## 更新
 
 \`\`\`bash
-qodercli cn plugins update zc-toolkit
+qodercn plugins update zc-toolkit
 \`\`\`
 
 ## 常用入口
@@ -94,12 +95,12 @@ qodercli cn plugins update zc-toolkit
 ## 目录说明
 
 - \`.qoder-plugin/plugin.json\`
-  - Quest CN 插件元数据
-- \`commands/zc/\`
+  - Qoder CN 插件元数据
+- \`commands/\`
   - 统一任务入口和阶段入口
-- \`skills/zc-*/SKILL.md\`
+- \`skills/*/SKILL.md\`
   - workflow 技能和专项方法
-- \`agents/zc-*.md\`
+- \`agents/*.md\`
   - 角色型入口
 
 ## 维护方式
@@ -141,8 +142,8 @@ async function main() {
 main().catch((error) => {
   console.error(
     error instanceof Error
-      ? `Quest CN 插件包导出失败：${error.message}`
-      : "Quest CN 插件包导出失败。",
+      ? `Qoder CN 插件包导出失败：${error.message}`
+      : "Qoder CN 插件包导出失败。",
   );
   process.exitCode = 1;
 });

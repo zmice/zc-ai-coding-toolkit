@@ -2,7 +2,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const platformNames = ["codex", "qwen", "claude", "opencode"];
+const platformNames = ["codex", "qwen", "claude", "opencode", "qoder-cn"];
 
 function parseArgs(argv) {
   return {
@@ -179,6 +179,10 @@ async function createPlan(platform, manifest) {
       path: "packages/platform-opencode/dist/index.js",
       create: "createOpenCodeGenerationPlan",
     },
+    "qoder-cn": {
+      path: "packages/platform-core/dist/index.js",
+      create: "createQoderCnGenerationPlan",
+    },
   }[platform];
   const platformModule = await importWorkspaceModule(moduleMap.path);
 
@@ -203,6 +207,7 @@ async function main() {
       title: asset.meta.title,
       summary: asset.meta.description,
       body: asset.body,
+      attachments: asset.attachments,
       tools: asset.meta.tools,
       requires: asset.meta.requires,
     })),

@@ -19,7 +19,7 @@
 | Claude Code | `CLAUDE.md` | `~/.claude/commands` / `.claude/commands` | 未见官方 skills 目录模型 | `~/.claude/agents` / `.claude/agents` | 未见官方 plugin 安装模型 | Yes | Yes |
 | Qwen | `QWEN.md` | extension 内支持 | `~/.qwen/skills` / `.qwen/skills` | extension 内支持 | `~/.qwen/extensions` / `.qwen/extensions` + 官方 `qwen extensions` CLI | Yes | Yes |
 | OpenCode | `AGENTS.md` | `~/.config/opencode/commands` / `.opencode/commands` | `~/.config/opencode/skills` / `.opencode/skills` | `~/.config/opencode/agents` / `.opencode/agents` | 未见独立 plugin 安装模型 | Yes | Yes |
-| Quest CN (Qoder CN) | 无（插件模式不需要入口文件） | `commands/zc/*.md` | `skills/zc-*/SKILL.md` | `agents/zc-*.md` | `.qoder-plugin/plugin.json` | Yes | Yes |
+| Qoder CN | 无（插件模式不需要入口文件） | `commands/*.md` | `skills/*/SKILL.md` | `agents/*.md` | `.qoder-plugin/plugin.json` | Yes | Yes |
 
 ## 平台分型
 
@@ -61,18 +61,18 @@
 
 ### 4. Plugin Lifecycle（插件优先）
 
-- 平台：`Quest CN (Qoder CN)`
+- 平台：`Qoder CN`
 - 推荐安装面：
   - `.qoder-plugin/plugin.json`
-  - `commands/zc/*.md`
-  - `skills/zc-*/SKILL.md`
-  - `agents/zc-*.md`
+  - `commands/*.md`
+  - `skills/*/SKILL.md`
+  - `agents/*.md`
 - 处理原则：
   - 插件优先策略：通过 `createQoderCnGenerationPlan()` 生成标准插件 bundle
-  - 用户通过 `qodercli cn plugins install` 原生安装插件
-  - 支持 URL 直接安装和插件市场分发
+  - `zc platform install qoder-cn --global` 通过 `qodercn plugins validate/install` 原生注册插件
+  - `update / repair / uninstall` 继续使用官方 `qodercn plugins` 生命周期
   - 不需要入口文件（无 Entry / Memory），所有内容通过插件目录承载
-  - 支持用户级和项目级 scope（通过 Quest CN 的 scope 机制）
+  - 默认配置根为 `~/.qoder-cn`，可由 `QODERCN_CONFIG_DIR` 覆盖
 
 ## 官方要求摘要
 
@@ -152,24 +152,24 @@
 - 阿里云帮助中心
 - Qwen Code Docs skills / extension / extensions 管理文档
 
-### Quest CN (Qoder CN)
+### Qoder CN
 
 - 无入口文件，采用插件优先策略
 - 插件身份声明：`.qoder-plugin/plugin.json`
 - 插件目录结构：
-  - `commands/zc/<command>.md`
-  - `skills/zc-<skill>/SKILL.md`
-  - `agents/zc-<agent>.md`
+  - `commands/<command>.md`
+  - `skills/<skill>/SKILL.md`
+  - `agents/<agent>.md`
 - 安装方式：
-  - `zc platform generate qoder-cn --dir <output-dir>` 生成插件 bundle
-  - `qodercli cn plugins install <output-dir>` 安装插件
-  - 支持 URL 直接安装：`qodercli cn plugins install <url>`
-- 用户级 / 项目级支持通过 Quest CN 的 scope 机制
+  - `zc platform install qoder-cn --global` 同步受管 bundle，并通过官方 CLI 校验、安装
+  - `zc platform generate qoder-cn --dir <output-dir>` 仅生成可审阅、可手工分发的插件 bundle
+  - 手工安装时使用 `qodercn plugins validate <output-dir>` 和 `qodercn plugins install <output-dir>`
+- 默认用户配置根为 `~/.qoder-cn`；通过 `QODERCN_CONFIG_DIR` 可显式覆盖
 
 来源：
 
-- Quest CN 官方插件管理规范
-- `packages/platform-qoder-cn` 实现
+- Qoder CN 官方插件管理规范
+- `packages/platform-core` 中的 Qoder CN generation/install plan 实现
 
 ### OpenCode
 
@@ -202,7 +202,7 @@
 | Claude Code | `CLAUDE.md` + `commands/zc-*.md` + `agents/zc-*.md`；不覆盖 `enterprise policy`、`CLAUDE.local.md`、`@imports` 目标文件 | 目录化原生安装 |
 | Qwen | 优先通过官方 `qwen extensions` CLI 管理 `zc-toolkit` 的发布态 extension bundle；扩展内容为 `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md` + `qwen-extension.json` + `commands` + `skills` + `agents` | extension 原生安装 |
 | OpenCode | `AGENTS.md` + `.opencode/commands/zc-*.md` + `.opencode/skills/zc-*/SKILL.md` + `.opencode/agents/zc-*.md` + 全局对应目录 | 目录化原生安装 |
-| Quest CN (Qoder CN) | 通过 `createQoderCnGenerationPlan()` 生成标准插件 bundle（`.qoder-plugin/plugin.json` + `commands/` + `skills/` + `agents/`）；用户通过 `qodercli cn plugins install` 原生安装；支持 URL 直接安装和插件市场分发 | 插件原生安装 |
+| Qoder CN | 通过 `createQoderCnGenerationPlan()` 生成标准插件 bundle（`.qoder-plugin/plugin.json` + `commands/` + `skills/` + `agents/`）；`zc platform install qoder-cn --global` 调用官方 `qodercn plugins validate/install` 注册插件 | 插件原生安装 |
 
 ## 结论
 
@@ -212,7 +212,7 @@
 - `Claude Code`：走官方目录结构，不做插件抽象
 - `Qwen`：走官方 extension 生命周期
 - `OpenCode`：走官方目录结构，覆盖 `AGENTS.md + commands + skills + agents`
-- `Quest CN (Qoder CN)`：走插件优先策略，通过标准插件 bundle 分发，用户通过 `qodercli cn plugins install` 原生安装
+- `Qoder CN`：走插件优先策略，通过标准插件 bundle 分发，并由官方 `qodercn plugins` 管理生命周期
 
 ## 对 `zc platform install` 的模型要求
 

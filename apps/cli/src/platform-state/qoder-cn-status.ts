@@ -16,18 +16,6 @@ interface QoderCnPluginManifest {
   version?: string;
 }
 
-async function pathExists(path: string): Promise<boolean> {
-  try {
-    await readFile(path, "utf8");
-    return true;
-  } catch (error) {
-    if (isEnoentError(error)) {
-      return false;
-    }
-    throw error;
-  }
-}
-
 function isEnoentError(error: unknown): boolean {
   return typeof error === "object" && error !== null && (error as NodeJS.ErrnoException).code === "ENOENT";
 }
@@ -54,7 +42,9 @@ async function readQoderCnPluginManifest(destinationRoot: string): Promise<Qoder
 }
 
 function resolveQoderCnGlobalRoot(): string {
-  return resolve(homedir(), ".qoder");
+  return process.env.QODERCN_CONFIG_DIR
+    ? resolve(process.env.QODERCN_CONFIG_DIR)
+    : resolve(homedir(), ".qoder-cn");
 }
 
 function buildQoderCnDirectoryStatus(

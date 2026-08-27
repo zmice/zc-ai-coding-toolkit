@@ -25,6 +25,10 @@ export interface InstallSelector {
   mode: InstallSelectorMode;
 }
 
+interface InstallTargetResolutionDependencies {
+  findNearestProjectRoot?: (startDir: string) => Promise<InstallTargetResolution | null>;
+}
+
 const projectRootMarkers: readonly ProjectRootMarker[] = [".git", "pnpm-workspace.yaml", "package.json"];
 
 async function pathExists(path: string): Promise<boolean> {
@@ -88,9 +92,11 @@ function resolveOfficialGlobalTarget(platform: PlatformName): InstallTargetResol
       };
     case "qoder-cn":
       return {
-        root: resolve(home, ".qoder"),
+        root: process.env.QODERCN_CONFIG_DIR
+          ? resolve(process.env.QODERCN_CONFIG_DIR)
+          : resolve(home, ".qoder-cn"),
         source: "official-global",
-        hint: "Quest CN (Qoder CN) 插件通过 qodercli 管理，全局位置为 `~/.qoder`。",
+        hint: "Qoder CN 插件通过官方 `qodercn plugins` 管理，用户级配置目录默认为 `~/.qoder-cn`，可由 `QODERCN_CONFIG_DIR` 覆盖。",
       };
   }
 }
@@ -120,6 +126,7 @@ export function normalizeInstallSelector(options: InstallSelectorInput): Install
 export async function resolveInstallTarget(
   _platform: PlatformName,
   options: InstallSelectorInput,
+  dependencies: InstallTargetResolutionDependencies = {},
 ): Promise<InstallTargetResolution> {
   const platform = _platform;
   const selector = normalizeInstallSelector(options);
@@ -136,7 +143,7 @@ export async function resolveInstallTarget(
   }
 
   const cwd = resolve(options.cwd ?? process.cwd());
-  const projectRoot = await findNearestProjectRoot(cwd);
+  const projectRoot = await (dependencies.findNearestProjectRoot ?? findNearestProjectRoot)(cwd);
   if (projectRoot) {
     return projectRoot;
   }

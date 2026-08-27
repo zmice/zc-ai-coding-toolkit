@@ -13,6 +13,8 @@ const copyEntries = [
   { from: "packages/toolkit/src/content", to: "packages/toolkit/src/content", root: "vendor" },
   { from: "packages/toolkit/templates", to: "packages/toolkit/templates", root: "vendor" },
   { from: "packages/toolkit/package.json", to: "packages/toolkit/package.json", root: "vendor" },
+  { from: "packages/platform-core/dist", to: "packages/platform-core/dist", root: "vendor" },
+  { from: "packages/platform-core/package.json", to: "packages/platform-core/package.json", root: "vendor" },
   { from: "packages/platform-qwen/dist", to: "packages/platform-qwen/dist", root: "vendor" },
   { from: "packages/platform-qwen/templates", to: "packages/platform-qwen/templates", root: "vendor" },
   { from: "packages/platform-qwen/package.json", to: "packages/platform-qwen/package.json", root: "vendor" },

@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@zmice/zc)](https://www.npmjs.com/package/@zmice/zc)
 [![license](https://img.shields.io/github/license/zmice/zc-ai-coding-toolkit)](LICENSE)
 [![qwen extension](https://img.shields.io/badge/Qwen-extension_repo-blue)](https://github.com/zmice/zc-qwen-extension)
-[![platforms](https://img.shields.io/badge/platforms-Codex%20%7C%20Claude%20%7C%20OpenCode%20%7C%20Qwen-2ea44f)](#支持的平台)
+[![platforms](https://img.shields.io/badge/platforms-Codex%20%7C%20Claude%20%7C%20OpenCode%20%7C%20Qwen%20%7C%20QoderCN-2ea44f)](#支持的平台)
 
 面向 AI 编码工作流的开源工具包。
 
@@ -17,7 +17,7 @@
 
 ## 适合谁
 
-- 想用统一 CLI 给 Codex、Claude Code、OpenCode、Qwen 安装 AI 编码内容的人
+- 想用统一 CLI 给 Codex、Claude Code、OpenCode、Qwen、Qoder CN 安装 AI 编码内容的人
 - 想维护一套可治理的 AI workflow 内容，而不是零散 prompt 文件的人
 - 想参考一个把内容层、CLI、平台适配和上游参考拆开的开源实现的人
 
@@ -55,6 +55,7 @@ zc platform plugin codex --global --uninstall --plan
 - `claude`
 - `opencode`
 - `qwen`
+- `qoder-cn`（默认通过官方 `qodercn plugins` 注册）
 
 更完整的安装和更新说明见：
 
@@ -82,6 +83,7 @@ zc platform plugin codex --global --uninstall --plan
 | Claude Code | `CLAUDE.md` | Yes | - | Yes | - | `zc:start -> /zc-start` |
 | OpenCode | `AGENTS.md` | Yes | Yes | Yes | - | `zc:start -> /zc-start` |
 | Qwen | `QWEN.md` | Yes | Yes | Yes | Yes | `zc:start -> zc:start` |
+| Qoder CN | - | Yes | Yes | Yes | `.qoder-plugin/plugin.json` | `zc:start -> /zc-toolkit:start` |
 
 补充说明：
 
@@ -92,6 +94,7 @@ zc platform plugin codex --global --uninstall --plan
 - `--with-agents` 与 `zc platform agents codex` 负责 Codex 官方 standalone custom-agent TOML；需要逐角色固定 `model`、`model_reasoning_effort` 或 `sandbox_mode` 时必须保留这条配置面，前者用独立回执约束 status、升级和卸载
 - Claude Code 和 OpenCode 通过 `/zc-*` 命令承接统一语义
 - Qwen 通过 `zc:*` namespaced command 承接统一语义
+- Qoder CN 通过标准 plugin bundle 承载统一语义，并由官方 `qodercn plugins` 注册到插件管理界面
 - 这样做是为了避免和平台内置命令、社区插件或未来扩展冲突
 - 更细的官方能力边界见 [docs/architecture/platform-capability-matrix.md](docs/architecture/platform-capability-matrix.md)
 
@@ -137,6 +140,7 @@ zc platform where codex --global --json
 zc platform where claude --global --json
 zc platform where opencode --global --json
 zc platform where qwen --global --json
+zc platform where qoder-cn --global --json
 ```
 
 ### 2. 安装平台内容
@@ -146,6 +150,7 @@ zc platform install codex --global
 zc platform install claude --global
 zc platform install opencode --global
 zc platform install qwen --global
+zc platform install qoder-cn --global
 ```
 
 ### 3. 查看状态 / 更新 / 修复
@@ -157,6 +162,10 @@ zc platform doctor codex --global --json
 zc platform repair codex --global --plan --json
 zc platform uninstall codex --global --plan --json
 zc platform plugin codex --global --uninstall --plan
+zc platform status qoder-cn --global --json
+zc platform update qoder-cn --global --plan --json
+zc platform repair qoder-cn --global --plan --json
+zc platform uninstall qoder-cn --global --plan --json
 ```
 
 Qwen 用户级安装默认会优先走官方扩展链：
@@ -164,6 +173,15 @@ Qwen 用户级安装默认会优先走官方扩展链：
 - 安装源：`https://github.com/zmice/zc-qwen-extension.git`
 - 安装方式：`qwen extensions install`
 - 更新方式：`qwen extensions update zc-toolkit`
+
+Qoder CN 用户级安装默认走官方插件链：
+
+- 配置根：`~/.qoder-cn`，可由 `QODERCN_CONFIG_DIR` 覆盖
+- 安装方式：`qodercn plugins validate` + `qodercn plugins install`
+- 更新/修复：重新同步受管 bundle，并通过官方插件命令重新注册
+- 卸载方式：`qodercn plugins uninstall zc-toolkit`
+- 旧版迁移：全局安装会检测同级 `~/.qoder` 中的旧文件系统安装回执；官方插件注册成功后，仅清理回执拥有且未漂移的旧产物，保留其他 Qoder 数据
+- 迁移预演：`zc platform install qoder-cn --global --plan --json`；旧产物有本地修改时默认保留，确认后可追加 `--force`
 
 ### 4. 查询内容
 
@@ -257,7 +275,7 @@ pnpm --dir packages/toolkit test
 CLI 和安装语义还参考：
 
 - [`Yeachan-Heo/oh-my-codex`](https://github.com/Yeachan-Heo/oh-my-codex)
-- Codex / Claude Code / OpenCode / Qwen 官方文档
+- Codex / Claude Code / OpenCode / Qwen / Qoder CN 官方文档
 
 治理记录与上游登记清单见：
 

@@ -8,10 +8,10 @@ export const platformInstallReceiptSchemaVersion = 1 as const;
 export interface CreatePlatformInstallReceiptOptions {
   readonly installedAt?: string | Date;
   readonly zcVersion?: string;
-  readonly installMethod?: "filesystem" | "qwen-cli";
+  readonly installMethod?: "filesystem" | "qwen-cli" | "qoder-cn-cli";
   readonly installSource?: "github-repo" | "local-bundle";
   readonly sourceRef?: string;
-  readonly bundleType?: "source-bundle" | "release-bundle";
+  readonly bundleType?: "source-bundle" | "release-bundle" | "qoder-cn-plugin";
   readonly bundlePath?: string;
 }
 

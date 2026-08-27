@@ -111,6 +111,37 @@ describe("platform install receipt store", () => {
     });
   });
 
+  it("persists the Qoder CN official plugin lifecycle metadata", async () => {
+    const root = await createTempDir();
+    const bundlePath = join(root, ".zc", "platform-bundles", "qoder-cn", "zc-toolkit");
+    const plan = {
+      platform: "qoder-cn" as const,
+      destinationRoot: root,
+      manifestSource: "packages/toolkit/src/content",
+      overwrite: "force" as const,
+      artifacts: [
+        {
+          path: join(bundlePath, ".qoder-plugin", "plugin.json"),
+          content: "{}\n",
+        },
+      ],
+    };
+
+    const receiptPath = resolvePlatformInstallReceiptPath(plan);
+    await writePlatformInstallReceiptForPlan(plan, {
+      installMethod: "qoder-cn-cli",
+      installSource: "local-bundle",
+      bundleType: "qoder-cn-plugin",
+      bundlePath,
+    });
+
+    const receipt = await readPlatformInstallReceipt(receiptPath);
+    assert.equal(receipt?.installMethod, "qoder-cn-cli");
+    assert.equal(receipt?.installSource, "local-bundle");
+    assert.equal(receipt?.bundleType, "qoder-cn-plugin");
+    assert.equal(receipt?.bundlePath, bundlePath);
+  });
+
   it("cleans the legacy duplicated codex receipt after writing the canonical global receipt", async () => {
     const root = join(await createTempDir(), ".codex");
     const plan = {
