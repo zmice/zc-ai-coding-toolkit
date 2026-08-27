@@ -9,6 +9,10 @@ import { CodexAgentWorktreeManager } from "../codex-worktree-manager.js";
 const execFileAsync = promisify(execFile);
 const cleanupPaths = new Set<string>();
 
+async function createDirectoryLink(target: string, path: string): Promise<void> {
+  await symlink(target, path, process.platform === "win32" ? "junction" : "dir");
+}
+
 async function git(cwd: string, ...args: string[]): Promise<string> {
   const result = await execFileAsync("git", ["-C", cwd, ...args], { encoding: "utf8" });
   return result.stdout.trim();
@@ -204,7 +208,7 @@ describe("CodexAgentWorktreeManager", () => {
     cleanupPaths.add(actualCodexHome);
     cleanupPaths.add(linkParent);
     await mkdir(nativeWorktreeRoot, { recursive: true });
-    await symlink(actualCodexHome, codexHomeLink, "dir");
+    await createDirectoryLink(actualCodexHome, codexHomeLink);
     const manager = new CodexAgentWorktreeManager({
       repoRoot,
       tempRoot: nativeWorktreeRoot,
@@ -222,7 +226,7 @@ describe("CodexAgentWorktreeManager", () => {
     cleanupPaths.add(outsideRoot);
     const plan = await manager.planPrepare({ runId: "run-link", taskId: "task-link" });
     await mkdir(dirname(dirname(plan.path)), { recursive: true });
-    await symlink(outsideRoot, dirname(plan.path), "dir");
+    await createDirectoryLink(outsideRoot, dirname(plan.path));
 
     await expect(
       manager.prepare({ runId: plan.runId, taskId: plan.taskId }),
@@ -239,7 +243,7 @@ describe("CodexAgentWorktreeManager", () => {
     const outsideRoot = await mkdtemp(join(tmpdir(), "zc-codex-receipt-outside-"));
     cleanupPaths.add(tempRoot);
     cleanupPaths.add(outsideRoot);
-    await symlink(outsideRoot, join(repoRoot, ".codex"), "dir");
+    await createDirectoryLink(outsideRoot, join(repoRoot, ".codex"));
     const manager = new CodexAgentWorktreeManager({ repoRoot, tempRoot });
 
     await expect(
