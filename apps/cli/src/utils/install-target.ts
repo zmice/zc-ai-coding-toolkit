@@ -2,7 +2,7 @@ import { access } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { homedir } from "node:os";
 
-type PlatformName = "qwen" | "codex" | "claude" | "opencode";
+type PlatformName = "qwen" | "codex" | "claude" | "opencode" | "qoder-cn";
 type ProjectRootMarker = ".git" | "pnpm-workspace.yaml" | "package.json";
 type InstallSelectorMode = "project" | "global" | "dir";
 
@@ -85,6 +85,12 @@ function resolveOfficialGlobalTarget(platform: PlatformName): InstallTargetResol
         root: resolve(home, ".qwen"),
         source: "official-global",
         hint: "Qwen 官方文档定义用户级配置目录为 `~/.qwen`，并在官方帮助文档中给出 Qwen CLI 的用户级 `QWEN.md` 位置为 `~/.qwen/QWEN.md`。",
+      };
+    case "qoder-cn":
+      return {
+        root: resolve(home, ".qoder"),
+        source: "official-global",
+        hint: "Quest CN (Qoder CN) 插件通过 qodercli 管理，全局位置为 `~/.qoder`。",
       };
   }
 }

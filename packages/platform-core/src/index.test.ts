@@ -9,10 +9,15 @@ import {
   createMarkdownCommandArtifact,
   createArtifactMetadata,
   createNamespacedAssetSlug,
+  createQoderCnGenerationPlan,
+  createQoderCnInstallPlan,
   createStableFingerprint,
   createInstallPlan,
   createSkillArtifact,
   prependGeneratedHeader,
+  qoderCnCapability,
+  qoderCnPackageName,
+  qoderCnPlatformName,
   renderPlatformAssetList,
   selectMatchedAssets,
   stripAssetKindPrefix,
@@ -240,5 +245,243 @@ describe("@zmice/platform-core", () => {
       () => createAttachmentArtifacts({ directory: "skills/alpha", asset }),
       /不安全的附件路径/,
     );
+  });
+});
+
+// ─── Quest CN (qoder-cn) plugin generation ─────────────────────────────
+
+const qoderCnManifest: ToolkitManifestLike = {
+  source: "toolkit-manifest",
+  assets: [
+    {
+      id: "skill:alpha",
+      kind: "skill",
+      platforms: ["qoder-cn", "qwen"],
+      title: "Alpha skill",
+      summary: "Alpha summary",
+      body: "Alpha skill body",
+    },
+    {
+      id: "command:start",
+      kind: "command",
+      platforms: ["qoder-cn"],
+      title: "Start command",
+      summary: "Route the task into the right workflow",
+      body: "Start command body",
+    },
+    {
+      id: "agent:reviewer",
+      kind: "agent",
+      platforms: ["qoder-cn"],
+      title: "Reviewer agent",
+      summary: "Review implementation quality",
+      body: "Reviewer agent body",
+      tools: ["read", "grep"],
+      requires: ["skill:alpha"],
+    },
+    {
+      id: "skill:codex-only",
+      kind: "skill",
+      platforms: ["codex"],
+      title: "Codex exclusive skill",
+      body: "Not for qoder-cn",
+    },
+  ],
+};
+
+describe("Quest CN (qoder-cn) generation plan", () => {
+  it("creates a generation plan with correct platform and matched assets", () => {
+    const plan = createQoderCnGenerationPlan(qoderCnManifest);
+
+    assert.equal(plan.platform, qoderCnPlatformName);
+    assert.equal(plan.platform, "qoder-cn");
+    assert.equal(plan.packageName, qoderCnPackageName);
+    assert.equal(plan.manifestSource, "toolkit-manifest");
+    assert.deepEqual(plan.capability, qoderCnCapability);
+    assert.deepEqual(
+      plan.matchedAssets.map((asset) => asset.id),
+      ["skill:alpha", "command:start", "agent:reviewer"],
+    );
+  });
+
+  it("produces artifacts with correct paths for plugin.json, commands, skills, and agents", () => {
+    const plan = createQoderCnGenerationPlan(qoderCnManifest);
+
+    assert.deepEqual(
+      plan.artifacts.map((artifact) => artifact.path),
+      [
+        ".qoder-plugin/plugin.json",
+        "commands/zc/start.md",
+        "skills/zc-alpha/SKILL.md",
+        "agents/zc-reviewer.md",
+      ],
+    );
+  });
+
+  it("generates valid JSON for plugin.json with required fields", () => {
+    const plan = createQoderCnGenerationPlan(qoderCnManifest);
+    const pluginJsonArtifact = plan.artifacts[0];
+
+    assert.ok(pluginJsonArtifact);
+    assert.equal(pluginJsonArtifact.path, ".qoder-plugin/plugin.json");
+
+    const parsed = JSON.parse(pluginJsonArtifact.content);
+    assert.equal(typeof parsed.name, "string");
+    assert.ok(parsed.name.length > 0);
+    assert.equal(parsed.version, "0.1.0");
+    assert.equal(parsed.license, "MIT");
+  });
+
+  it("respects custom pluginVersion option", () => {
+    const plan = createQoderCnGenerationPlan(qoderCnManifest, {
+      pluginVersion: "2.0.0",
+    });
+    const parsed = JSON.parse(plan.artifacts[0]!.content);
+
+    assert.equal(parsed.version, "2.0.0");
+  });
+
+  it("generates command artifacts with correct frontmatter", () => {
+    const plan = createQoderCnGenerationPlan(qoderCnManifest);
+    const commandArtifact = plan.artifacts[1];
+
+    assert.ok(commandArtifact);
+    assert.ok(commandArtifact.content.includes('name: "zc:start"'));
+    assert.ok(commandArtifact.content.includes("Start command body"));
+  });
+
+  it("generates skill artifacts with correct frontmatter", () => {
+    const plan = createQoderCnGenerationPlan(qoderCnManifest);
+    const skillArtifact = plan.artifacts[2];
+
+    assert.ok(skillArtifact);
+    assert.ok(skillArtifact.content.includes('name: "zc-alpha"'));
+    assert.ok(skillArtifact.content.includes("Alpha skill body"));
+  });
+
+  it("generates agent artifacts with tools and skill references", () => {
+    const plan = createQoderCnGenerationPlan(qoderCnManifest);
+    const agentArtifact = plan.artifacts[3];
+
+    assert.ok(agentArtifact);
+    assert.ok(agentArtifact.content.includes('name: "zc-reviewer"'));
+    assert.ok(agentArtifact.content.includes("Reviewer agent body"));
+    assert.ok(agentArtifact.content.includes('"read"'));
+    assert.ok(agentArtifact.content.includes('"grep"'));
+    assert.ok(agentArtifact.content.includes("zc-alpha"));
+  });
+
+  it("filters out assets that do not target qoder-cn platform", () => {
+    const plan = createQoderCnGenerationPlan(qoderCnManifest);
+
+    const matchedIds = plan.matchedAssets.map((asset) => asset.id);
+    assert.ok(!matchedIds.includes("skill:codex-only"));
+    assert.ok(matchedIds.includes("skill:alpha"));
+
+    const artifactPaths = plan.artifacts.map((artifact) => artifact.path);
+    assert.ok(!artifactPaths.some((path) => path.includes("codex-only")));
+  });
+
+  it("includes supporting-file attachments beside generated skills", () => {
+    const attachmentManifest: ToolkitManifestLike = {
+      source: "toolkit-manifest",
+      assets: [
+        {
+          id: "skill:with-attachments",
+          kind: "skill",
+          platforms: ["qoder-cn"],
+          title: "Skill with attachments",
+          body: "See attachments.",
+          attachments: [
+            {
+              relativePath: "assets/references/guide.md",
+              contents: "# Guide\n",
+            },
+          ],
+        },
+      ],
+    };
+
+    const plan = createQoderCnGenerationPlan(attachmentManifest);
+
+    assert.ok(
+      plan.artifacts.some(
+        (artifact) =>
+          artifact.path === "skills/zc-with-attachments/references/guide.md"
+          && artifact.content === "# Guide\n",
+      ),
+    );
+  });
+
+  it("uses custom packageName and manifestSource when provided", () => {
+    const plan = createQoderCnGenerationPlan(qoderCnManifest, {
+      packageName: "@custom/package",
+      manifestSource: "custom-source",
+    });
+
+    assert.equal(plan.packageName, "@custom/package");
+    assert.equal(plan.manifestSource, "custom-source");
+  });
+});
+
+describe("Quest CN (qoder-cn) install plan", () => {
+  it("creates an install plan with correct destination and defaults", () => {
+    const destinationRoot = join("tmp", "qoder-cn");
+    const plan = createQoderCnInstallPlan(qoderCnManifest, {
+      destinationRoot,
+    });
+
+    assert.equal(plan.destinationRoot, destinationRoot);
+    assert.equal(plan.scope, "project");
+    assert.equal(plan.overwrite, "error");
+    assert.equal(plan.platform, "qoder-cn");
+  });
+
+  it("prefixes all artifact paths with destinationRoot", () => {
+    const destinationRoot = join("tmp", "qoder-cn");
+    const plan = createQoderCnInstallPlan(qoderCnManifest, {
+      destinationRoot,
+    });
+
+    assert.deepEqual(
+      plan.artifacts.map((artifact) => artifact.path),
+      [
+        join(destinationRoot, ".qoder-plugin/plugin.json"),
+        join(destinationRoot, "commands/zc/start.md"),
+        join(destinationRoot, "skills/zc-alpha/SKILL.md"),
+        join(destinationRoot, "agents/zc-reviewer.md"),
+      ],
+    );
+  });
+
+  it("supports global scope", () => {
+    const destinationRoot = join("tmp", "qoder-cn-global");
+    const plan = createQoderCnInstallPlan(qoderCnManifest, {
+      destinationRoot,
+      scope: "global",
+    });
+
+    assert.equal(plan.scope, "global");
+  });
+
+  it("supports force overwrite mode", () => {
+    const destinationRoot = join("tmp", "qoder-cn-force");
+    const plan = createQoderCnInstallPlan(qoderCnManifest, {
+      destinationRoot,
+      overwrite: "force",
+    });
+
+    assert.equal(plan.overwrite, "force");
+  });
+
+  it("preserves artifact content after path prefixing", () => {
+    const destinationRoot = join("tmp", "qoder-cn");
+    const plan = createQoderCnInstallPlan(qoderCnManifest, {
+      destinationRoot,
+    });
+
+    const pluginJson = JSON.parse(plan.artifacts[0]!.content);
+    assert.equal(typeof pluginJson.name, "string");
+    assert.ok(plan.artifacts[1]!.content.includes('name: "zc:start"'));
   });
 });

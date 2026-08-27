@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 
-export type PlatformName = "qwen" | "codex" | "claude" | "opencode";
+export type PlatformName = "qwen" | "codex" | "claude" | "opencode" | "qoder-cn";
 export type ToolkitAssetKind = "skill" | "command" | "agent";
 export type OverwriteMode = "error" | "force";
 export type InstallScope = "project" | "global" | "dir";
@@ -496,5 +496,160 @@ export function createInstallPlan(
     scope: options.scope ?? "project",
     overwrite: options.overwrite ?? "error",
     artifacts: prefixArtifacts(options.destinationRoot, generationPlan.artifacts),
+  });
+}
+
+// ─── Quest CN (qoder-cn) plugin generation ────────────────────────────
+
+export const qoderCnPlatformName = "qoder-cn" as const;
+export const qoderCnPackageName = "@zmice/platform-core" as const;
+
+export const qoderCnCapability: PlatformCapability = {
+  platform: qoderCnPlatformName,
+  namespace: "zc",
+  surfaces: ["plugin-dir", "commands-dir", "skills-dir", "agents-dir"],
+  commands: {
+    relativeDir: "commands/zc",
+    fileExtension: ".md",
+  },
+  skills: {
+    relativeDir: "skills",
+    fileName: "SKILL.md",
+  },
+  agents: {
+    relativeDir: "agents",
+    fileExtension: ".md",
+  },
+};
+
+export interface QoderCnGenerationOptions {
+  readonly packageName?: string;
+  readonly manifestSource?: string;
+  readonly pluginVersion?: string;
+}
+
+export interface QoderCnInstallOptions extends QoderCnGenerationOptions {
+  readonly destinationRoot: string;
+  readonly scope?: InstallScope;
+  readonly overwrite?: OverwriteMode;
+}
+
+function renderQoderCnPluginManifest(options: {
+  readonly name: string;
+  readonly version?: string;
+}): string {
+  return `${JSON.stringify(
+    {
+      name: options.name,
+      version: options.version ?? "0.1.0",
+      description: "zc AI 编码工具包 — Quest CN 插件",
+      author: { name: "zc" },
+      license: "MIT",
+      keywords: ["workflow", "skills", "coding-toolkit"],
+    },
+    null,
+    2,
+  )}\n`;
+}
+
+function renderQoderCnCommandArtifact(
+  asset: ToolkitAssetLike,
+): PlatformArtifact {
+  const slug = stripAssetKindPrefix(asset.id);
+
+  return createMarkdownCommandArtifact({
+    path: `commands/zc/${slug}.md`,
+    asset,
+    name: `zc:${slug}`,
+    description: describeAsset(asset),
+    body:
+      asset.body
+      ?? `这是由工具包资产 \`${asset.id}\` 生成的 Quest CN 命令入口，用于触发 \`zc:${slug}\`。`,
+  });
+}
+
+function renderQoderCnSkillArtifacts(
+  asset: ToolkitAssetLike,
+): readonly PlatformArtifact[] {
+  const slug = stripAssetKindPrefix(asset.id);
+  const directory = `skills/zc-${slug}`;
+
+  return [
+    createSkillArtifact({
+      path: `${directory}/SKILL.md`,
+      asset,
+      name: `zc-${slug}`,
+      description: describeAsset(asset),
+      body:
+        asset.body
+        ?? `这是由工具包资产 \`${asset.id}\` 生成的 Quest CN skill。`,
+    }),
+    ...createAttachmentArtifacts({ directory, asset }),
+  ];
+}
+
+function renderQoderCnAgentArtifact(
+  asset: ToolkitAssetLike,
+): PlatformArtifact {
+  const slug = stripAssetKindPrefix(asset.id);
+  const skillRefs = asset.requires
+    ?.filter((entry) => entry.startsWith("skill:"))
+    .map((entry) => `zc-${entry.slice("skill:".length)}`);
+
+  return createMarkdownAgentArtifact({
+    path: `agents/zc-${slug}.md`,
+    asset,
+    name: `zc-${slug}`,
+    description: describeAsset(asset),
+    body:
+      asset.body
+      ?? `这是由工具包资产 \`${asset.id}\` 生成的 Quest CN agent，用于承接 \`zc-${slug}\` 角色能力。`,
+    tools: asset.tools,
+    skills: skillRefs,
+  });
+}
+
+export function createQoderCnGenerationPlan(
+  manifest: ToolkitManifestLike,
+  options: QoderCnGenerationOptions = {},
+): GenerationPlan {
+  const matchedAssets = selectMatchedAssets(manifest, qoderCnPlatformName);
+  const commands = selectMatchedAssetsByKind(manifest, qoderCnPlatformName, "command");
+  const skills = selectMatchedAssetsByKind(manifest, qoderCnPlatformName, "skill");
+  const agents = selectMatchedAssetsByKind(manifest, qoderCnPlatformName, "agent");
+  const manifestSource = options.manifestSource ?? manifest.source ?? "toolkit-manifest";
+  const resolvedPackageName = options.packageName ?? qoderCnPackageName;
+
+  return {
+    platform: qoderCnPlatformName,
+    packageName: resolvedPackageName,
+    manifestSource,
+    matchedAssets,
+    capability: qoderCnCapability,
+    artifacts: [
+      {
+        path: ".qoder-plugin/plugin.json",
+        content: renderQoderCnPluginManifest({
+          name: "zc-toolkit",
+          version: options.pluginVersion,
+        }),
+      },
+      ...commands.map((asset) => renderQoderCnCommandArtifact(asset)),
+      ...skills.flatMap((asset) => renderQoderCnSkillArtifacts(asset)),
+      ...agents.map((asset) => renderQoderCnAgentArtifact(asset)),
+    ],
+  };
+}
+
+export function createQoderCnInstallPlan(
+  manifest: ToolkitManifestLike,
+  options: QoderCnInstallOptions,
+): InstallPlan {
+  const generationPlan = createQoderCnGenerationPlan(manifest, options);
+
+  return createInstallPlan(generationPlan, {
+    destinationRoot: options.destinationRoot,
+    scope: options.scope,
+    overwrite: options.overwrite,
   });
 }

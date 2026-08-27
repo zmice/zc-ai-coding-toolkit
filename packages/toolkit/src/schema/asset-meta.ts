@@ -180,6 +180,15 @@ function assertSourceRecord(value: unknown): ToolkitAssetSource | undefined {
   };
 }
 
+/**
+ * Map platform_exposure YAML keys to toolkitPlatforms entries.
+ * Most platforms use the same key, but "qoderCn" maps to "qoder-cn".
+ */
+const platformExposureKeyToPlatform: Record<string, string> = Object.fromEntries(
+  toolkitPlatforms.map((p) => [p, p])
+);
+platformExposureKeyToPlatform["qoderCn"] = "qoder-cn";
+
 function assertPlatformExposureRecord(value: unknown): ToolkitPlatformExposure | undefined {
   if (value === undefined) {
     return undefined;
@@ -193,14 +202,16 @@ function assertPlatformExposureRecord(value: unknown): ToolkitPlatformExposure |
   const entries = Object.entries(record);
   const normalized: Partial<Record<ToolkitPlatform, typeof toolkitPlatformExposureModes[number]>> = {};
 
-  for (const [platform, mode] of entries) {
-    if (!(toolkitPlatforms as readonly string[]).includes(platform)) {
+  for (const [rawKey, mode] of entries) {
+    const platform = platformExposureKeyToPlatform[rawKey];
+
+    if (!platform) {
       throw new Error(
-        `Invalid asset meta: platform_exposure keys must only contain ${toolkitPlatforms.join(", ")}`
+        `Invalid asset meta: platform_exposure keys must only contain ${toolkitPlatforms.join(", ")} (or qoderCn)`
       );
     }
 
-    const normalizedMode = assertNonEmptyString(mode, `platform_exposure.${platform}`);
+    const normalizedMode = assertNonEmptyString(mode, `platform_exposure.${rawKey}`);
 
     if (!(toolkitPlatformExposureModes as readonly string[]).includes(normalizedMode)) {
       throw new Error(

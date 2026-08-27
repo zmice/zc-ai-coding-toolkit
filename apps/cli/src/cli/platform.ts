@@ -14,6 +14,7 @@ import {
 } from "@zmice/platform-core";
 import { resolvePlatformInstallDoctor } from "../platform-state/doctor.js";
 import { resolvePlatformInstallStatus } from "../platform-state/status.js";
+import { resolveQoderCnDirectoryStatus } from "../platform-state/qoder-cn-status.js";
 import {
   createCodexAgentsReceipt,
   deleteCodexAgentsReceipt,
@@ -76,10 +77,10 @@ import {
   updateQwenExtensionWithOfficialCli,
 } from "../utils/qwen-extension-cli.js";
 
-type PlatformName = "qwen" | "codex" | "claude" | "opencode";
+type PlatformName = "qwen" | "codex" | "claude" | "opencode" | "qoder-cn";
 type PlatformOutputFormat = "text" | "json";
 type PlatformInstallScope = "project" | "global" | "dir";
-type PlatformGenerateBundleType = "release-bundle" | "codex-plugin" | "codex-marketplace";
+type PlatformGenerateBundleType = "release-bundle" | "codex-plugin" | "codex-marketplace" | "qoder-cn-plugin";
 type PlatformAction = "generate" | "install" | "update" | "repair" | "uninstall";
 type PlatformTargetSelectorOpts = {
   dir?: string;
@@ -115,7 +116,7 @@ type PlatformGenerateOpts = PlatformTargetSelectorOpts & {
   json?: boolean;
   bundle?: PlatformGenerateBundleType;
 };
-const platformNames: readonly PlatformName[] = ["qwen", "codex", "claude", "opencode"];
+const platformNames: readonly PlatformName[] = ["qwen", "codex", "claude", "opencode", "qoder-cn"];
 const codexPluginManifestPath = ".codex-plugin/plugin.json";
 const codexMarketplacePluginName = "zc-toolkit";
 const codexMarketplaceDefaultGitSource = "zmice/zc-codex-marketplace";
@@ -203,7 +204,7 @@ interface PlatformResultExtra {
   installMethod?: "filesystem" | "qwen-cli";
   installSource?: "github-repo" | "local-bundle" | null;
   sourceRef?: string | null;
-  bundleType?: "source-bundle" | "release-bundle" | "codex-plugin" | "codex-marketplace" | null;
+  bundleType?: "source-bundle" | "release-bundle" | "codex-plugin" | "codex-marketplace" | "qoder-cn-plugin" | null;
   bundlePath?: string | null;
 }
 
@@ -243,6 +244,11 @@ interface PlatformModule {
   createQwenInstallPlan?: (
     manifest: PlatformManifestLike,
     opts: { manifestSource?: string; destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode; extensionVersion?: string }
+  ) => InstallPlan;
+  createQoderCnGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string; pluginVersion?: string }) => GenerationPlan;
+  createQoderCnInstallPlan?: (
+    manifest: PlatformManifestLike,
+    opts: { destinationRoot: string; scope?: InstallScope; overwrite?: OverwriteMode; pluginVersion?: string }
   ) => InstallPlan;
 }
 
@@ -327,6 +333,16 @@ function getPlanCapabilitySummary(
             "zc:sdd-tdd -> zc:sdd-tdd",
           ],
         };
+      case "qoder-cn":
+        return {
+          style: "plugin",
+          entryPattern: "$zc-toolkit:<skill>",
+          examples: [
+            "zc:start -> $zc-toolkit:start",
+            "zc:product-analysis -> $zc-toolkit:product-analysis",
+            "zc:sdd-tdd -> $zc-toolkit:sdd-tdd",
+          ],
+        };
     }
   })();
 
@@ -386,7 +402,7 @@ function summarizeCapability(
   ];
 }
 
-const defaultPlatforms: readonly PlatformName[] = ["qwen", "codex", "claude", "opencode"];
+const defaultPlatforms: readonly PlatformName[] = ["qwen", "codex", "claude", "opencode", "qoder-cn"];
 
 function getCliVersion(): string {
   const packageJsonPath = new URL("../../package.json", import.meta.url);
@@ -437,7 +453,8 @@ async function loadPlatformModule(platform: PlatformName): Promise<PlatformModul
     qwen: "packages/platform-qwen/dist/index.js",
     codex: "packages/platform-codex/dist/index.js",
     claude: "packages/platform-claude/dist/index.js",
-    opencode: "packages/platform-opencode/dist/index.js"
+    opencode: "packages/platform-opencode/dist/index.js",
+    "qoder-cn": "packages/platform-core/dist/index.js",
   };
 
   return importWorkspaceDistModule<PlatformModule>(packageMap[platform]);
@@ -471,6 +488,11 @@ function createGenerationPlan(
         throw new Error("OpenCode 平台包未导出 createOpenCodeGenerationPlan()");
       }
       return finalizePlan(platformModule.createOpenCodeGenerationPlan(manifest, { manifestSource: manifest.source, extensionVersion }));
+    case "qoder-cn":
+      if (!platformModule.createQoderCnGenerationPlan) {
+        throw new Error("Quest CN 平台包未导出 createQoderCnGenerationPlan()");
+      }
+      return finalizePlan(platformModule.createQoderCnGenerationPlan(manifest, { manifestSource: manifest.source }));
   }
 }
 
@@ -527,6 +549,15 @@ function createInstallPlan(
         scope,
         overwrite,
         extensionVersion,
+      }));
+    case "qoder-cn":
+      if (!platformModule.createQoderCnInstallPlan) {
+        throw new Error("Quest CN 平台包未导出 createQoderCnInstallPlan()");
+      }
+      return finalizePlan(platformModule.createQoderCnInstallPlan(manifest, {
+        destinationRoot,
+        scope,
+        overwrite,
       }));
   }
 }
@@ -642,13 +673,17 @@ function formatInstallSourceLabel(source: "github-repo" | "local-bundle"): strin
   return source === "github-repo" ? "GitHub 扩展仓库" : "本地 bundle";
 }
 
-function formatBundleTypeLabel(type: "source-bundle" | "release-bundle" | "codex-plugin" | "codex-marketplace"): string {
+function formatBundleTypeLabel(type: "source-bundle" | "release-bundle" | "codex-plugin" | "codex-marketplace" | "qoder-cn-plugin"): string {
   if (type === "codex-marketplace") {
     return "Codex marketplace";
   }
 
   if (type === "codex-plugin") {
     return "Codex plugin";
+  }
+
+  if (type === "qoder-cn-plugin") {
+    return "Quest CN plugin";
   }
 
   return type === "release-bundle" ? "发布态扩展包" : "开发态源包";
@@ -1321,7 +1356,11 @@ function parseGenerateBundleType(value: string): PlatformGenerateBundleType {
     return "codex-marketplace";
   }
 
-  throw new InvalidArgumentError(`不支持的 bundle 类型：${value}。当前支持：release-bundle | codex-plugin | codex-marketplace`);
+  if (value === "qoder-cn-plugin" || value === "qoder-cn") {
+    return "qoder-cn-plugin";
+  }
+
+  throw new InvalidArgumentError(`不支持的 bundle 类型：${value}。当前支持：release-bundle | codex-plugin | codex-marketplace | qoder-cn-plugin`);
 }
 
 function resolveCodexMarketplaceGitSource(value: boolean | string | undefined): string {
@@ -3894,7 +3933,15 @@ export async function runPlatformStatus(
     const manifest = await loadToolkitManifest();
     const platformModule = await loadPlatformModule(target);
     const plan = createInstallPlan(target, platformModule, manifest, destinationRoot, scope, "error");
-    const status = await resolvePlatformInstallStatus(plan);
+    let status = await resolvePlatformInstallStatus(plan);
+
+    if (target === "qoder-cn" && status.kind === "not-installed") {
+      const directoryStatus = await resolveQoderCnDirectoryStatus(plan);
+      if (directoryStatus) {
+        status = directoryStatus;
+      }
+    }
+
     const zcVersion = getCliVersion();
     const installMethod = status.receipt ? (status.receipt.installMethod ?? "filesystem") : undefined;
     const installSource = status.receipt?.installSource ?? undefined;
@@ -4776,7 +4823,7 @@ export function registerPlatformCommand(program: Command): void {
     .command("generate")
     .alias("g")
     .description("导出平台内容或 Qwen 发布 bundle")
-    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode|qoder-cn)", parsePlatformName)
     .option("-d, --dir <dir>", "输出目录")
     .option("-p, --project", "输出到当前目录向上解析出的最近项目根（当前仅 codex marketplace）")
     .option("-g, --global", "输出到用户级默认位置（当前仅 codex marketplace）")
@@ -4829,7 +4876,7 @@ export function registerPlatformCommand(program: Command): void {
     .command("install")
     .alias("i")
     .description("把平台内容安装到项目、用户级或指定目录")
-    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode|qoder-cn)", parsePlatformName)
     .option("-d, --dir <dir>", "使用指定目录")
     .option("-p, --project", "使用当前目录向上解析出的最近项目根")
     .option("-g, --global", "使用平台定义的用户级默认位置")
@@ -4842,7 +4889,7 @@ export function registerPlatformCommand(program: Command): void {
     .command("where")
     .alias("w")
     .description("查看平台内容会安装到哪里")
-    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode|qoder-cn)", parsePlatformName)
     .option("-d, --dir <dir>", "使用指定目录")
     .option("-p, --project", "使用当前目录向上解析出的最近项目根")
     .option("-g, --global", "使用平台定义的用户级默认位置")
@@ -4853,7 +4900,7 @@ export function registerPlatformCommand(program: Command): void {
     .command("status")
     .alias("s")
     .description("查看是否已安装、是否可更新、是否漂移")
-    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode|qoder-cn)", parsePlatformName)
     .option("-d, --dir <dir>", "使用指定目录")
     .option("-p, --project", "使用当前目录向上解析出的最近项目根")
     .option("-g, --global", "使用平台定义的用户级默认位置")
@@ -4864,7 +4911,7 @@ export function registerPlatformCommand(program: Command): void {
     .command("update")
     .alias("u")
     .description("更新已安装的平台内容")
-    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode|qoder-cn)", parsePlatformName)
     .option("-d, --dir <dir>", "使用指定目录")
     .option("-p, --project", "使用当前目录向上解析出的最近项目根")
     .option("-g, --global", "使用平台定义的用户级默认位置")
@@ -4877,7 +4924,7 @@ export function registerPlatformCommand(program: Command): void {
     .command("uninstall")
     .alias("remove")
     .description("卸载受管平台内容并删除安装记录")
-    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode|qoder-cn)", parsePlatformName)
     .option("-d, --dir <dir>", "使用指定目录")
     .option("-p, --project", "使用当前目录向上解析出的最近项目根")
     .option("-g, --global", "使用平台定义的用户级默认位置")
@@ -4890,7 +4937,7 @@ export function registerPlatformCommand(program: Command): void {
     .command("repair")
     .alias("fix")
     .description("修复漂移、缺失或官方 CLI 失配的安装")
-    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode|qoder-cn)", parsePlatformName)
     .option("-d, --dir <dir>", "使用指定目录")
     .option("-p, --project", "使用当前目录向上解析出的最近项目根")
     .option("-g, --global", "使用平台定义的用户级默认位置")
@@ -4902,7 +4949,7 @@ export function registerPlatformCommand(program: Command): void {
     .command("doctor")
     .alias("check")
     .description("诊断当前平台安装的健康度和下一步建议")
-    .argument("<target>", "目标平台 (qwen|codex|claude|opencode)", parsePlatformName)
+    .argument("<target>", "目标平台 (qwen|codex|claude|opencode|qoder-cn)", parsePlatformName)
     .option("-d, --dir <dir>", "使用指定目录")
     .option("-p, --project", "使用当前目录向上解析出的最近项目根")
     .option("-g, --global", "使用平台定义的用户级默认位置")

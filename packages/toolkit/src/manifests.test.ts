@@ -139,7 +139,8 @@ describe("createToolkitManifest", () => {
         codex: "prompt-entry",
         qwen: "command-style",
         claude: "command-style",
-        opencode: "command-style"
+        opencode: "command-style",
+        "qoder-cn": "command-style"
       }
     );
     assert.deepEqual(
@@ -148,7 +149,8 @@ describe("createToolkitManifest", () => {
         codex: "primary",
         qwen: "listed",
         claude: "listed",
-        opencode: "listed"
+        opencode: "listed",
+        "qoder-cn": "listed"
       }
     );
     assert.deepEqual(manifest.byRelationship.suggests["agent:frontend-specialist"], [
@@ -157,7 +159,7 @@ describe("createToolkitManifest", () => {
     ]);
     assert.deepEqual(
       getToolkitAssetById(manifest, "command:verify")?.meta.platforms,
-      ["qwen", "codex", "claude", "opencode"]
+      ["qwen", "codex", "claude", "opencode", "qoder-cn"]
     );
     assert.ok(listToolkitAssetsByKind(manifest, "agent").length >= 1);
   });
@@ -194,7 +196,7 @@ describe("loadToolkitManifest", () => {
     ]);
     assert.deepEqual(
       manifest.byId["agent:test-engineer"]?.meta.platforms,
-      ["qwen", "codex", "claude", "opencode"]
+      ["qwen", "codex", "claude", "opencode", "qoder-cn"]
     );
     const codexRoleMatrix = {
       "agent:architect": ["gpt-5.6-sol", "high", "read-only"],
