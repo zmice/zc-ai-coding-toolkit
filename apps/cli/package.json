@@ -28,7 +28,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "zc": "./dist/cli/index.js"
+    "zc": "dist/cli/index.js"
   },
   "files": [
     "dist",
