@@ -15,6 +15,10 @@ coverage/
 # Local runtime state
 .zc/
 .codex
+.qoder/
+
+# Generated platform bundles
+dist-qoder-cn/
 
 # Logs and ad-hoc review artifacts
 *.log
