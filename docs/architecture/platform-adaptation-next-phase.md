@@ -2,7 +2,7 @@
 
 ## 目标
 
-记录 `codex / claude / opencode / qwen` 平台适配深化后的当前事实，并明确后续维护边界。
+记录 `codex / claude / opencode / qwen / qoder-cn` 平台适配深化后的当前事实，并明确后续维护边界。
 
 继续坚持：
 
@@ -13,9 +13,10 @@
 上一阶段优先级是：
 
 1. `Qwen` 发布态扩展模型
-2. `OpenCode` agents
-3. `Claude` 能力再核查
-4. `platform uninstall / repair / doctor`
+2. `Quest CN` 插件优先模型
+3. `OpenCode` agents
+4. `Claude` 能力再核查
+5. `platform uninstall / repair / doctor`
 
 这些能力已经进入当前可用状态。后续重点是事实对齐、上下文预算控制和 platform-core 去重，而不是继续新增平台 surface。
 
@@ -87,6 +88,26 @@
 - 开发态 source bundle 与发布态 release bundle 已分开
 - 仍未直接承诺 `qwen extensions install <git-url>`、扩展仓库 tag/release/version 自动管理或 marketplace 发布
 
+### Quest CN (Qoder CN)
+
+已支持：
+
+- 插件优先策略，不需要入口文件
+- `createQoderCnGenerationPlan()` 生成标准插件 bundle
+- `createQoderCnInstallPlan()` 提供安装计划
+- 插件目录结构：`.qoder-plugin/plugin.json` + `commands/zc/` + `skills/zc-*/` + `agents/zc-*.md`
+- `zc platform generate qoder-cn --dir <output-dir>` 导出插件 bundle
+- `zc platform install qoder-cn` 安装插件
+- 支持 URL 直接安装和插件市场分发
+- 用户通过 `qodercli cn plugins install <path-or-url>` 原生安装
+
+当前定位：
+
+- 内容模型是标准插件 bundle
+- 插件优先策略，类似 Codex 的 marketplace 模式，但使用 Quest CN 自己的插件生命周期
+- 支持用户级和项目级 scope（通过 Quest CN 的 scope 机制）
+- 仍未直接承诺插件市场仓库托管和自动版本管理
+
 ## 运维能力
 
 `platform status / update / uninstall / repair / doctor` 已经落地。
@@ -108,6 +129,7 @@
 ## 成功标准
 
 - Qwen 发布态 extension bundle 模型保持清晰
+- Quest CN 插件 bundle 模型保持清晰，插件优先策略不偏离
 - OpenCode 持续支持官方 `agents` 目录
 - Claude 保持保守，不发明插件或 skills 目录
 - Codex 文档明确区分官方能力边界与 `zc` 打包路径
