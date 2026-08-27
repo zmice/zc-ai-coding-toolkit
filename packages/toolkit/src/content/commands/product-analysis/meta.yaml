@@ -17,6 +17,7 @@ platforms:
   - codex
   - claude
   - opencode
+  - qoder-cn
 workflow_family: lifecycle
 workflow_role: workflow-entry
 routing_workflows:
@@ -29,6 +30,7 @@ platform_exposure:
   qwen: command-style
   claude: command-style
   opencode: command-style
+  qoderCn: command-style
 source:
   upstream: toolkit-original
   strategy: curated

@@ -25,6 +25,7 @@ platforms:
   - codex
   - claude
   - opencode
+  - qoder-cn
 source:
   upstream: superpowers
   strategy: inspired

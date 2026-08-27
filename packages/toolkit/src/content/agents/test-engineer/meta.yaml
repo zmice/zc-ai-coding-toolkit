@@ -24,6 +24,7 @@ platforms:
   - codex
   - claude
   - opencode
+  - qoder-cn
 source:
   upstream: agent-skills
   strategy: adapted

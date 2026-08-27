@@ -16,11 +16,13 @@ platforms:
   - codex
   - claude
   - opencode
+  - qoder-cn
 platform_exposure:
   codex: prompt-entry
   qwen: command-style
   claude: command-style
   opencode: command-style
+  qoderCn: command-style
 source:
   upstream: toolkit-original
   strategy: curated

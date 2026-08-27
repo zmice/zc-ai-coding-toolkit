@@ -35,6 +35,7 @@ platforms:
   - codex
   - claude
   - opencode
+  - qoder-cn
 workflow_family: intake
 workflow_role: intake-router
 routing_workflows:
@@ -56,6 +57,7 @@ platform_exposure:
   qwen: command-style
   claude: command-style
   opencode: command-style
+  qoderCn: command-style
 source:
   upstream: toolkit-original
   strategy: curated

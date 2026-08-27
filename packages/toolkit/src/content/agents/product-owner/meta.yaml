@@ -23,6 +23,7 @@ platforms:
   - codex
   - claude
   - opencode
+  - qoder-cn
 source:
   upstream: toolkit-original
   strategy: curated

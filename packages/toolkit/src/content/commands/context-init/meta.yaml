@@ -12,6 +12,7 @@ suggests:
   - agent:context-steward
 platforms:
   - codex
+  - qoder-cn
 workflow_family: support
 workflow_role: specialized-entry
 routing_workflows:
@@ -24,6 +25,7 @@ task_types:
   - feature
 platform_exposure:
   codex: command-style
+  qoderCn: command-style
 source:
   upstream: toolkit-original
   strategy: curated

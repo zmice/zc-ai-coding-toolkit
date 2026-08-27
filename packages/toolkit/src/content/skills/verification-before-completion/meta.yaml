@@ -12,6 +12,7 @@ platforms:
   - codex
   - claude
   - opencode
+  - qoder-cn
 source:
   upstream: andrej-karpathy-skills
   strategy: inspired

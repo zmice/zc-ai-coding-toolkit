@@ -14,11 +14,13 @@ platforms:
   - codex
   - claude
   - opencode
+  - qoder-cn
 platform_exposure:
   codex: primary
   qwen: listed
   claude: listed
   opencode: listed
+  qoderCn: listed
 source:
   upstream: agent-skills
   strategy: adapted

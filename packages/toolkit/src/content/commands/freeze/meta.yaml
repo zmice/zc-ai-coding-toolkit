@@ -12,6 +12,7 @@ platforms:
   - codex
   - claude
   - opencode
+  - qoder-cn
 workflow_family: support
 workflow_role: guardrail
 task_types:
@@ -26,6 +27,7 @@ platform_exposure:
   qwen: command-style
   claude: command-style
   opencode: command-style
+  qoderCn: command-style
 source:
   upstream: toolkit-original
   strategy: curated
