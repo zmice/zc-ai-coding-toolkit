@@ -55,11 +55,11 @@ Recommendation: <Approve / Request changes / Defer> because <evidence, risk, and
 
 以下问题即使 diff 不大，也要作为架构或可维护性风险审查：
 
-- 重复的条件判断、模式匹配或 switch 分支不断出现，通常说明缺少领域模型、策略表、dispatcher 或数据驱动映射。
+- 多个独立调用点重复同一项稳定决策时，先判断删除、复用或局部数据映射能否解决；只有这些方式不能降低复杂度，才把它视为缺少领域模型、策略表或 dispatcher 的证据。
 - shared / common 模块里出现 feature-specific 分支，通常说明边界泄漏；优先建议把专属逻辑下沉到调用方、adapter 或策略实现。
 - 重构只是把复杂度从一个文件搬到另一个文件，没有减少状态、分支、耦合或重复时，不应算质量改善。
 - 文件已经过大、职责混杂或新增逻辑需要读很远的上下文才能判断正确时，即使本次新增行数少，也要指出后续维护风险。
-- finding 不能只说“建议抽象一下”；必须给出结构性 remedy，例如引入明确模型、拆 dispatcher、移动边界、删除重复路径或缩小公共 API。
+- finding 不能只说“建议抽象一下”；remedy 按删除、复用仓库能力、使用标准库或平台原生能力、内联无效抽象、移动边界、缩小公共 API 的顺序评估，只有当前消费者和稳定边界提供证据时才新增模型或 dispatcher。
 
 ## 与其他技能的衔接
 
@@ -89,6 +89,8 @@ Recommendation: <Approve / Request changes / Defer> because <evidence, risk, and
 - [ ] Follows existing patterns
 - [ ] No unnecessary coupling or dependencies
 - [ ] Appropriate abstraction level
+- [ ] New dependencies, configuration, and abstractions are supported by a current requirement or real boundary
+- [ ] Does not reimplement an existing repository, standard-library, or platform capability
 
 ### Security
 - [ ] No secrets in code

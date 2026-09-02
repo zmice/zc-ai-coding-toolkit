@@ -224,7 +224,7 @@ describe("loadToolkitManifest", () => {
 
     assert.match(
       manifest.byId["command:start"]?.body ?? "",
-      /agent_opportunity:[\s\S]*dispatch_now[\s\S]*loop_budget[\s\S]*zc-team/
+      /agent_opportunity:[\s\S]*dispatch_now[\s\S]*loop_budget[\s\S]*worktree-team/
     );
     assert.match(
       manifest.byId["command:context-init"]?.body ?? "",
@@ -291,7 +291,7 @@ describe("loadToolkitManifest", () => {
     );
     assert.match(
       manifest.byId["skill:team-orchestration"]?.body ?? "",
-      /agent_opportunity\.mode=zc-team[\s\S]*用户明确确认[\s\S]*Bounded Team Loop/
+      /agent_opportunity\.mode=worktree-team[\s\S]*用户明确确认[\s\S]*Bounded Team Loop/
     );
   });
 });

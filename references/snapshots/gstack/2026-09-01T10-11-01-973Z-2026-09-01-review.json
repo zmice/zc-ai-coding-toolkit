@@ -1,0 +1,746 @@
+{
+  "upstream": "gstack",
+  "captured_at": "2026-09-01T10:11:01.973Z",
+  "label": "2026-09-01-review",
+  "metadata": {
+    "title": "GStack",
+    "kind": "github-public-repo",
+    "status": "active",
+    "owner": "codex",
+    "source_url": "https://github.com/garrytan/gstack.git",
+    "source_paths": [
+      "README.md",
+      "CLAUDE.md",
+      "package.json",
+      "agents",
+      "browser-skills",
+      "careful",
+      "context-restore",
+      "context-save",
+      "devex-review",
+      "docs",
+      "investigate",
+      "plan-devex-review",
+      "qa",
+      "review",
+      "skillify",
+      "spec"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/garrytan/gstack.git",
+    "checked_at": "2026-09-01T10:11:01.974Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "e76f65a8da31ec14776a965c608222c1aecad656"
+  },
+  "source_tree": {
+    "source_url": "https://github.com/garrytan/gstack.git",
+    "checked_at": "2026-09-01T10:11:14.639Z",
+    "command": "git fetch/ls-tree source_paths",
+    "head_sha": "e76f65a8da31ec14776a965c608222c1aecad656",
+    "source_paths": [
+      "README.md",
+      "CLAUDE.md",
+      "package.json",
+      "agents",
+      "browser-skills",
+      "careful",
+      "context-restore",
+      "context-save",
+      "devex-review",
+      "docs",
+      "investigate",
+      "plan-devex-review",
+      "qa",
+      "review",
+      "skillify",
+      "spec"
+    ],
+    "entry_count": 113,
+    "manifest_sha256": "cbf5d928aa4ec750d98e1a6e61229937308fbb1c64b7e5afe55f7d546b311872",
+    "entries": [
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "46f167c28b2c3b965919368592a61da2ae05cb02",
+        "path": "CLAUDE.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cb76f65a84767ff1e98f41b1dd10b6e486be0aa7",
+        "path": "README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "def8292bfdf2b5eb121b3b479b441465588ec325",
+        "path": "agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "aa90258f6b9332fff82ed1903f9268181d9d7873",
+        "path": "browser-skills/hackernews-frontpage/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "499b366f76a35fefd312ee1335a3b229f70c4c5d",
+        "path": "browser-skills/hackernews-frontpage/_lib/browse-client.ts"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "072ef3499979848227cd53ccfe493f7bb045b9e5",
+        "path": "browser-skills/hackernews-frontpage/fixtures/hn-2026-04-26.html"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e921b276e9f5742cfceac7c4d736d6b1b19751d2",
+        "path": "browser-skills/hackernews-frontpage/script.test.ts"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "106142d75a197e28a2fb742094e121851e015e62",
+        "path": "browser-skills/hackernews-frontpage/script.ts"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5dae5e97285b357c392f8b6c00e680b9a523d4c2",
+        "path": "careful/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8fba18fb0bc699d68058bb569a55a2aa535ebb93",
+        "path": "careful/SKILL.md.tmpl"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "b6bebb9d3cc74758a292dd779361a7b5f49fff0b",
+        "path": "careful/bin/check-careful.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6ab8d611ed114e41b301e16b18b99d4598ccb974",
+        "path": "careful/bin/hook-extract.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9a59b4c32b99d35f65cc5aaeb8b7956f6f6ffc95",
+        "path": "context-restore/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d2e78ca8976b96df3077bce57ab5396ad7e4afd2",
+        "path": "context-restore/SKILL.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "eec2bc754ac96636df9bbfb34a49ebaee30ffc7c",
+        "path": "context-save/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a3702bc95439cddd87841aba836708bf511ef55d",
+        "path": "context-save/SKILL.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "07280368f090a91f09093b72ce35c779e6179c73",
+        "path": "devex-review/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "081d4f35bbdec0c6b3da8ae71615ec4d41a84551",
+        "path": "devex-review/SKILL.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d699816df9d63ee964a4d8184fb2b9528012526d",
+        "path": "docs/ADDING_A_HOST.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bdb1ed3816cdc21d0099e683f3f7090894930566",
+        "path": "docs/BROWSER_INTERNALS.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f544428189efeae9c70b0c1ef5be4031b6b687dd",
+        "path": "docs/CHANGELOG_STYLE.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1cbd70e1a89a36edc62e5ef4bbb6f2a090c8b405",
+        "path": "docs/ON_THE_LOC_CONTROVERSY.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bd67b551d631b1336847260cea01fa36c99fb846",
+        "path": "docs/OPENCLAW.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "04e31195704f77811ccc596dc4434073b99a1c74",
+        "path": "docs/OPENCLAW_PUBLISHING.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6d043e7dce325dcb5874072485a00b68cf79bcdb",
+        "path": "docs/PROJECT_STRUCTURE.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "950d23b86a5411b3a5b2dcfc18a35db1d27782a4",
+        "path": "docs/REMOTE_BROWSER_ACCESS.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8f857ebfe72ae91728488a405452b5a5041e7c18",
+        "path": "docs/SLOP_SCAN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "dbab9d8b46cfc1ad1b805fd1e26a16cd53b21a07",
+        "path": "docs/TESTING_INTERNALS.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "54f4ac34509ecb094b266108958eb73aac19ca86",
+        "path": "docs/askuserquestion-cjk.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ec2f880cef9d64d37b1da5b101531172509fdcf2",
+        "path": "docs/askuserquestion-split.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "aca82c00b93dd676c5bb9160033c67a2cad53bc4",
+        "path": "docs/designs/BROWSER_SKILLS_V1.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "aa863f2a1f36ff06f07be63072129c4c11a7372a",
+        "path": "docs/designs/BUN_NATIVE_INFERENCE.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "55c078d10fe13956f031ffb0e907f9513dcac21c",
+        "path": "docs/designs/CHROME_VS_CHROMIUM_EXPLORATION.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "575a875918db7b8fbec0f28585ccdc030e75e83b",
+        "path": "docs/designs/CODE_INTELLIGENCE_PROVIDER_CONTRACT.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "61f68ef0480ea9a806b8acc1430765a266d0ad80",
+        "path": "docs/designs/CONDUCTOR_CHROME_SIDEBAR_INTEGRATION.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6c721cc0527e2cf0a54e5db9075c1d0353e8eca9",
+        "path": "docs/designs/CONDUCTOR_SESSION_API.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cd355e55928fc8702cc1a4b5810a69b3a14ad233",
+        "path": "docs/designs/DESIGN_SHOTGUN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "37bea21c0b7ecb13ed3ec7c4de55d718595d0332",
+        "path": "docs/designs/DESIGN_TOOLS_V1.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "96842535d731afaa2c1ee6eb45c31f64087df889",
+        "path": "docs/designs/FIX_1671_PROFILE_MIGRATION.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3937eccfd3e9538d020290173c322892438d877b",
+        "path": "docs/designs/GCOMPACTION.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7539336ad3d38c2ae31b6242db70198b50963ded",
+        "path": "docs/designs/GSTACK_BROWSER_V0.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "14d848fd18b12197683b0f13c5f731f1396728a2",
+        "path": "docs/designs/ML_PROMPT_INJECTION_KILLER.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7cffa3bafbfa0def47d696874ebc10ffd95b1f19",
+        "path": "docs/designs/PACING_UPDATES_V0.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b1a0e785312b57734be092cd8938df50ee7638b7",
+        "path": "docs/designs/PLAN_TUNING_V0.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8fd0604a8a538f275709564cffbd00219a8faa3a",
+        "path": "docs/designs/PLAN_TUNING_V1.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8aac1592619dbba3244b2063fe1412e01754fd77",
+        "path": "docs/designs/SELF_LEARNING_V0.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "859036ebe600e506512f9a158d57426165771eb8",
+        "path": "docs/designs/SESSION_INTELLIGENCE.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ae46df16f69bd207a3ba05ef03441f11e0aee1e0",
+        "path": "docs/designs/SIDEBAR_MESSAGE_FLOW.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f704e43d2b058e23083dea01c7edf70765b2cab7",
+        "path": "docs/designs/SLATE_HOST.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cf838a29af31f5f5a949fcf5bdd3274fb1083881",
+        "path": "docs/designs/SLOP_SCAN_FOR_REVIEW_SHIP.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9da91727b015676f6534f484c05573c4a3adcf94",
+        "path": "docs/designs/SYNC_GBRAIN_BATCH_INGEST.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bd684df0dd6afd80d631240852fd8029ee22c6e3",
+        "path": "docs/designs/v2_PLAN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "21917234c0bf9dd29f72e3f2c294bb59c2222984",
+        "path": "docs/domain-skills.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1261483fe6e0b0e9d020d41ac2ac06ebaa8d5efc",
+        "path": "docs/evals/security-bench-ensemble-v2.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0e201d5ea2d9c020e3b1eac0091177f941d0cd89",
+        "path": "docs/explanation-diataxis-in-gstack.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1f5f7bed674239686737786153dda9d31fd07f8f",
+        "path": "docs/gbrain-sync-errors.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "330ed29e2a29cadf9d2072546e43df8fc189a1a8",
+        "path": "docs/gbrain-sync.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7d84734b14030605c5d3ba8fd5020efaa7973400",
+        "path": "docs/gbrain-write-surfaces.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f591db726cee6f501158fd3edfd51712ad8821de",
+        "path": "docs/howto-diagrams-and-formats.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f2959eb5de4d3b54fd138105722fd5477903c08b",
+        "path": "docs/howto-document-a-shipped-feature.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "181937491d8926b73dfbf0ef2e8af4de4233a48b",
+        "path": "docs/howto-ios-testing-with-gstack.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "186324ba71bbb234778c2e9c185bef82f66d663b",
+        "path": "docs/images/github-2013.png"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b908c8a4ed17044b8408579ca317c4d571a85f01",
+        "path": "docs/images/github-2026.png"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "aa8434c38f33c5767d3d636824e060a47ff57e05",
+        "path": "docs/skills.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6dde72d87d0845bdf32ba8918d963f321abfdacb",
+        "path": "docs/spikes/claude-code-hook-mutation.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "323bdff2971dbc6eb041e068815d512bbbb92806",
+        "path": "docs/spikes/codex-session-format.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7e8e78f4528d21fd714eed0ff24cc4688b2ba14b",
+        "path": "docs/tutorial-document-generate.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9f6dd2e517d56535bf359ba29b396e4c07741167",
+        "path": "investigate/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c7cd9a99ad695f966ef2befaf18b1120eff89535",
+        "path": "investigate/SKILL.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "863c5d65979af9942dbde18283ff9197da233375",
+        "path": "package.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4aadcce44dce16973d61bdfc7e11605104fea159",
+        "path": "plan-devex-review/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "76871cafab3aebac91c1a049fc6365b3211ab52e",
+        "path": "plan-devex-review/SKILL.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "99f8bdd216f7c55455c23c33aecfd4c06cc5afc9",
+        "path": "plan-devex-review/dx-hall-of-fame.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cb6a2d8aed249a9274f3cfd7de68c80f83941edc",
+        "path": "plan-devex-review/sections/manifest.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2a5cfa517e426e5fca8db0a227c5762b1510b955",
+        "path": "plan-devex-review/sections/review-sections.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "eca5dbccaab17ef1f1ecd6b624df6762b8e596fe",
+        "path": "plan-devex-review/sections/review-sections.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5ce210af34859b23b6192668af938623de0d9c3a",
+        "path": "qa/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d15a0c5d151ec6a8b15cd3a31dc96430ddb91909",
+        "path": "qa/SKILL.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "05c574166b469352301664cd02320a1ce1d65b41",
+        "path": "qa/references/issue-taxonomy.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "be254b68f14b793ae6abaa860263fee546dd9d91",
+        "path": "qa/sections/manifest.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1a170322d83e4ab1032aadc6ba7eddfa5e917fd4",
+        "path": "qa/sections/qa-patterns.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0cfefe1fe50e0410e6b7a6424b44d2006a9db964",
+        "path": "qa/sections/qa-patterns.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3455ffbd2dbc062fed8071a77b754648d876965c",
+        "path": "qa/sections/test-bootstrap.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "05328f2bbd190bc29ee97f88c2203cb15fa61821",
+        "path": "qa/sections/test-bootstrap.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6aa30943392b75ca8fb8694be31edf89881afd92",
+        "path": "qa/templates/qa-report-template.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "14e8e07f4433388a35bcc5d94e8e8adc711204ea",
+        "path": "review/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a1d6a172746bdc4905731fe4e96ffb6976a579e9",
+        "path": "review/SKILL.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "eb2f4d9418f9930f0ca6af7f8eed6ca5f1685628",
+        "path": "review/TODOS-format.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d550e6967c17275e549b1a3b5a07086be4ae92d2",
+        "path": "review/checklist.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e9d2b7117c039f82b78daec8f7db63998ee1480c",
+        "path": "review/design-checklist.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c3121c546a6859af7be073d874a6a751495a338a",
+        "path": "review/greptile-triage.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ce7b1b04fa899f2ffedc6e988c5cf4f9a3c66d25",
+        "path": "review/sections/adversarial.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "dd691cd575866f466e48ce0ce8f858c9619e03c0",
+        "path": "review/sections/adversarial.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "26a94ca3a7ed431514d857d9b6bd758afa859e88",
+        "path": "review/sections/manifest.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "38da1ae08b0d966004d522b74af3f48ffceadcf3",
+        "path": "review/sections/plan-completion.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7a7ae47e4ae31f1e28991bf7b233fc665f2ad4a8",
+        "path": "review/sections/plan-completion.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e9f2d62d8d81f0fecdd677651b9aaf38df7ca082",
+        "path": "review/sections/review-army.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ea190d1376835a085d056a088e5cc6c255f964eb",
+        "path": "review/sections/review-army.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "01a649b1b0f47bb1af78e1614924b80cddbd48fa",
+        "path": "review/specialists/api-contract.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "effc11469c12ec14975cc12036f0e28570d39019",
+        "path": "review/specialists/data-migration.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a2a036f9ca4c77ea4d9b9b38233444772a9eccfc",
+        "path": "review/specialists/maintainability.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "612aa285d69a3c73da37e766a8da6de489c41a6d",
+        "path": "review/specialists/performance.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "12654da877f4f036e7f994fbd587b8cafe1e1d62",
+        "path": "review/specialists/red-team.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b1d2e30c1ff0cc83d5d4e4e4f4fe5b1f4bd581e2",
+        "path": "review/specialists/security.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "913c038bf980bb6edd9710b9a4c32f3278ee65e6",
+        "path": "review/specialists/simplification.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b2ea12e57c882ef307daee1abaa7066429b4425f",
+        "path": "review/specialists/testing.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0244ddcb977d2ac142508fe39f7dd8d707e6336b",
+        "path": "skillify/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b1384bf5ed2a7c4d4561a8a8bc0ca845cb8a1192",
+        "path": "skillify/SKILL.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "11d685fabf290d70ac5348de23aeaa3cbafa2a8d",
+        "path": "spec/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fdfff41dfc6616cda20c84027f3b309e65cb7f0d",
+        "path": "spec/SKILL.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "acbede0d5380d556bb70179242bcb9f81214a254",
+        "path": "spec/sections/gate-and-file.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f8923a834e9228d42b4e535ed8b97cb52e0e5a6d",
+        "path": "spec/sections/gate-and-file.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9fcb831351ff9b69fa0dca6b51f21c4dfbf49df8",
+        "path": "spec/sections/manifest.json"
+      }
+    ]
+  },
+  "notes": {
+    "path": "references/notes/gstack.md",
+    "content": "# GStack\r\n\r\nSource: `https://github.com/garrytan/gstack`\r\n\r\n## Status\r\n\r\nRegistered from historical upstream tracking. Initial baseline snapshot captured in the new governance layer.\r\n\r\n## Historical Role\r\n\r\n- Commit history previously tracked it as an architecture reference.\r\n- It influenced strategic filtering, UX review, and \"role embedded in command\" style decisions.\r\n\r\n## Expected Downstream Value\r\n\r\n- UX and workflow review heuristics\r\n- Command-layer product framing\r\n- Prompt architecture references for design-heavy tasks\r\n\r\n## Boundaries\r\n\r\n- Treat it as a reference for behavior and architecture, not as a direct source tree to replicate.\r\n\r\n## Snapshot Baseline\r\n\r\n- baseline: `references/snapshots/gstack/2026-04-18T18-02-14-539Z-2026-04-19-baseline.json`\r\n- current governance status: `active`\r\n\r\n## Latest Reviewed Upstream\r\n\r\n- remote head: `026751ea2012ec7cbedc149ba615929a20026501`\r\n- observed date: 2026-05-18\r\n- notable upstream change: upstream advanced through v1.40.x with plan-mode `EXIT PLAN MODE` gating, Implementation Tasks aggregation, stronger stop-gate tests, browser sanitization, and additional gbrain hardening.\r\n\r\n## Latest Remote Evidence\r\n\r\n- remote head: `11de390be1be6849eb9a15f91ff4922dd16c589a`\r\n- observed date: 2026-07-02\r\n- evidence: `pnpm upstream -- report all --format md --with-remote`\r\n- finding: registered `docs` paths changed in 2 files, mainly documenting offline diagram rendering, Mermaid / Excalidraw output, HTML / DOCX export, and strict placeholder failure behavior.\r\n\r\n## Extractable Upgrades\r\n\r\n- Keep plan-mode questions few, outcome-framed, and preference-aware.\r\n- Treat review/eval evidence as a plan artifact before claiming readiness.\r\n- Diff-based test selection and real PTY E2E are useful as future verification architecture references.\r\n- Add `command:start` tie-breakers for when to ask versus when to proceed: ask only for high-stakes ambiguity, otherwise choose the conservative workflow and state the assumption.\r\n- Add a privacy / persistence stop-gate rule: anything that would write cross-session memory, sync across machines, or mutate project routing files must be explicit and opt-in.\r\n- Extend plan-review and task-planning content so review findings become plan artifacts with evidence, risks, and verification gates.\r\n- Adopt the useful part of document-generation work: choose the document type first, then write; do not mix tutorial, how-to, reference, explanation, and ADR purposes in one artifact.\r\n- Keep gbrain as a reference for memory architecture tradeoffs only; cross-machine memory sync remains opt-in and out of the default toolkit runtime.\r\n- Upgrade `planning-and-task-breakdown`, `multi-perspective-review`, and `plan-review` wording so route-changing findings trigger explicit stop gates and review findings become P1/P2/P3 Implementation Tasks.\r\n- Diagram/document export ideas are useful for a future doc-generation surface: keep source diagrams editable, render offline, fail loudly in CI for broken assets, and preserve accessibility labels.\r\n\r\n## Non-Adoption Boundary\r\n\r\n- Do not import gstack telemetry, auto-upgrade, browser runtime, heavy preambles, or paid eval harness into `zc`.\r\n- Do not make plan-mode writes part of default `zc` behavior.\r\n- Do not adopt gbrain-style cross-machine memory sync or question-preference storage as a default runtime capability.\r\n- Do not import the document-generation skill wholesale; this repo already has `documentation-and-adrs` and `release-documentation-sync`.\r\n- Do not copy gstack's exact plan-mode phrasing; this repo keeps the behavior in toolkit content as `stop gate` and `Implementation Tasks` artifacts.\r\n\r\n## Recommended Phase\r\n\r\n- Phase 1: extract wording and workflow discipline into documentation only, including plan-mode / stop-gate report shape.\r\n- Phase 3: revisit PTY/E2E harness ideas if `zc team` needs end-to-end runtime tests.\r\n\r\n## Latest Remote Evidence 2026-07-29\r\n\r\n- remote head: `a3259400a366593e0c909dd9ac3e59752efd2488`\r\n- evidence: remote HEAD lookup followed by an independent shallow clone after the governance report's temporary content-fetch failure\r\n- registry correction: the old `prompts` and `commands` paths no longer exist; tracking now follows current skill, agent, review, QA, context, and documentation surfaces\r\n- finding: upstream has become a large product runtime with browser, telemetry, memory, document, iOS, deploy, and model-overlay systems\r\n\r\n## Current Decision\r\n\r\n- Continue absorbing only stop-gate, evidence-artifact, and developer-experience review mechanics.\r\n- Do not import the browser runtime, telemetry, gbrain sync, model overlays, auto-update, or platform-specific skill catalog.\n\n## Review Update 2026-09-01\n\n- remote head: `e76f65a8da31ec14776a965c608222c1aecad656`\n- upstream added a Ponytail-derived simplification specialist and agentic benchmark work; useful content is limited to the reuse ladder, advisory simplification signals and correctness-first evaluation\n- absorbed locally through existing assets: repository reuse -> standard library/platform -> installed dependency -> minimal custom implementation, with security/error/accessibility boundaries preserved\n- future eval candidate: run a functional oracle before LOC/structure scoring; zero-diff is valid and judge failure must be reported as inconclusive\n- do not adopt branded shortcut comments, a second debt ledger, an eight-specialist review army, telemetry, browser runtime, auto-update or benchmark sandbox machinery\n"
+  }
+}

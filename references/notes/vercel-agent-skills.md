@@ -44,3 +44,10 @@ Active official Vercel skill collection. Use it as a domain-specific quality ref
 - expanded `source_paths` from four selected directories to the complete `skills` tree so new framework packs are visible without being auto-adopted
 - `react-view-transitions` remains reference-only: the generic toolkit now records a browser capability/fallback decision, but does not add a React or Next.js framework pack
 - the repository still lacks a reviewed top-level license, so monitoring does not grant permission to copy skill prose
+
+## Review Update 2026-09-01
+
+- remote head: `063bee94c3f4df8453406c830b0a7df0f2860278`
+- all registered changes are under `react-view-transitions` and concern React/Next.js implementation, CSS recipes and troubleshooting
+- no generic engineering content is synchronized in this cycle; version-specific framework decisions remain governed by `source-driven-development`
+- retain the existing boundary: React-specific material is optional reference content until a separately approved framework pack exists

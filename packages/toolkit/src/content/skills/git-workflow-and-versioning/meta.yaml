@@ -1,7 +1,7 @@
 kind: skill
 name: git-workflow-and-versioning
 title: Git 工作流
-description: Git 工作流规范。在进行任何代码变更时使用。包括提交、分支、冲突解决，以及多并行流的组织方式。
+description: 在 Git 仓库内进行提交、分支、合并、worktree、冲突或历史操作时使用。先遵循团队既有策略并保护用户改动；非 Git 工作区不自动初始化仓库。
 tier: recommended
 audience: default
 stability: stable

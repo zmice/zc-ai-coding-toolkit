@@ -48,9 +48,11 @@
 
 普通 Codex 只读 fan-out 直接使用 host 原生 lifecycle，不强制先生成 controller artifacts。线程、容量、context fork、复用、中断和临时 worktree 的精确映射见 `references/codex-native-lifecycle.md`。`zc agent plan` 只用于写入较重、需要恢复或审计 transcript 的运行；需要 tmux / 多 CLI 才切到 `team-orchestration`。
 
-## 通知与授权
+## 共享决策契约
 
-只读 fan-out 在已授权时使用通知式提示：
+mode、授权、runtime capacity、ownership、context steward、fan-in 和默认 loop budget 统一见 `references/agent-opportunity-contract.md`。本 skill 不再维护第二套字段定义，只消费上游已记录的决策并执行。
+
+只读 fan-out 使用通知式提示：
 
 ```text
 Agent assist:
@@ -58,9 +60,7 @@ Agent assist:
 fan-in：主线程汇总结论后再决定是否改代码
 ```
 
-只读检查属于当前任务范围、且 host 暴露真实 subagent 能力时，提示后立即派发；只有任务会扩大外部影响、读取未授权范围或平台没有 dispatch 能力时才停下。
-
-写入型 fan-out 启动前必须让用户看到这段信息的等价内容。若这些信息已经在本轮已接受计划中出现，可通知式启动，不必重复等待确认：
+写入型 fan-out 在共享契约允许通知式启动时复述本次解析结果：
 
 ```text
 Agent assist:
@@ -70,7 +70,7 @@ Agent assist:
 - 启动条件：已接受计划中的低风险写入 fan-out
 ```
 
-没有预授权边界时，必须改用显式确认：
+共享契约要求显式确认时使用：
 
 ```text
 Recommendation: 开启 <模式> because <并行收益> outweighs <集成代价>。
@@ -82,43 +82,7 @@ Recommendation: 开启 <模式> because <并行收益> outweighs <集成代价>�
 确认后我再启动；不确认则按串行推进。
 ```
 
-不能用只读授权替代写入授权。只读 consult 发现“可以并行”也只是证据，真正让 worker 改文件前仍要有显式确认，或有已接受计划中的预授权边界。
-
-## Context Steward Sidecar
-
-上下文维护适合交给独立 sidecar，而不是让主实现 worker 顺手处理：
-
-- 触发：模块结构、验证命令、安装方式、根入口规则或 `.codex/context/**` 可能过期。
-- 默认模式：`agent:context-steward` scoped_write，先运行 `zc context doctor --json` 和 `zc context update --plan --json` 或等价 dry-run；候选变更只涉及自有边界时，直接刷新 `.codex/context/**` 和 `AGENTS.md` 的 `zc-context:init` managed block。
-- 降级边界：只有出现同文件冲突、来源不明、需要修改用户手写规则或越过项目上下文边界时，才停在 fan-in 等主线程确认。
-- 隔离规则：context steward 不修改业务源码，不占用业务 worker 的文件所有权；如果主任务也要改 `AGENTS.md`，必须先停在 fan-in，由主线程统一处理。
-- loop budget：context steward 默认 1 轮；如果需要补上下文，最多补交 1 次，仍无法判断时回到 `context-engineering`。
-
-推荐派发片段：
-
-```text
-Agent assist:
-- zc_context_steward：审计并维护项目上下文，不改业务文件
-ownership：.codex/context/** + AGENTS.md managed block
-fan-in：主线程读取写入证据；冲突、越界或来源不明时再决策
-```
-
-低风险写入 fan-out 条件：
-
-- 任务非生产、非敏感、非破坏性。
-- 每个 worker 的修改文件或目录不重叠。
-- 当前请求或已接受计划已授权实现，且计划列出文件所有权、验证命令和 fan-in gate。
-- 派发数量不超过当前 runtime capacity，主线程保留 controller 职责。
-- 启动时用通知式提示复述 worker、文件边界和验证。
-
-runtime capacity 策略：
-
-- 先读取 host session limit、正在运行的 child threads 和 ready task 数，不写死 1-3 / 5 的跨版本上限。
-- 有两个独立问题即可派发；首批可使用全部有收益的 available child slots，完成一个再补一个。
-- 写入 worker 仍要求互斥文件所有权；容量允许不等于允许同文件并写。
-- 达到 capacity 时分批执行或串行降级，保留主线程做 controller / integrator。
-- `zc agent plan` 是可选审计 artifact 入口，不是 native dispatch 前置条件。
-- `zc team` 仍需用户明确要求或确认。
+具体 context steward lifecycle 仍按 `context-engineering` 和当前 host 能力执行；`zc agent plan` 是可选审计 artifact，不是 native dispatch 前置条件。
 
 ## 执行契约
 

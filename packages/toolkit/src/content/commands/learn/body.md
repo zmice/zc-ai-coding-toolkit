@@ -1,27 +1,20 @@
-调用 continuous-learning 技能。分析会话中的模式，提取可复用的 instincts（本能）。
+调用 `continuous-learning` 技能，以自然语言 workflow 分析当前会话并提取可审查的学习项。这不是 `zc` CLI 子命令，也不表示平台已经安装 hook、instinct store 或 Agent Memory 同步能力。
 
-1. 读取 hook 采集的观察数据（纠正、错误修复路径、重复工具调用）
+1. 读取当前会话和用户明确放入范围的证据；只有已确认存在且获准读取时才使用 hook 数据
 2. 识别模式 — 用户纠正、错误->修复路径、重复工作流、项目约定
-3. 生成 instinct 草稿，分配置信度和作用域
+3. 生成学习项草稿，说明证据、置信度、作用域和不应保存的内容
 4. 展示结果，等待用户确认
-5. 确认后持久化到本地文件；置信度 >= 0.7 同步到 Agent Memory
+5. 只有平台已确认具备对应存储能力，且用户明确指定目标和范围后，才执行持久化；否则只返回草稿
 
-子命令：
+## 能力边界
 
-| 子命令 | 说明 |
-|--------|------|
-| `/learn` | 分析当前会话，提取 instincts |
-| `/learn status` | 显示所有 instincts 状态 |
-| `/learn evolve` | 聚类分析，建议演化为 skill/command |
-| `/learn save [描述]` | 手动创建高置信度 instinct |
-| `/learn promote [id]` | 提升为全局 instinct |
-| `/learn export` | 导出 instincts |
-| `/learn import [file]` | 导入 instincts |
-| `/learn setup` | 安装持续学习 hooks |
+- `/learn` 是跨平台语义入口，不保证存在同名 CLI 命令。
+- 不虚构 `status`、`evolve`、`save`、`promote`、`export`、`import` 或 `setup` 子命令；只有当前平台实际暴露并验证后才能使用。
+- 不自动安装 hook、不自动写长期配置，也不把一次确认扩展成跨项目或跨会话授权。
 
 ## 使用方式
 
-在 Sprint 结束或会话中积累足够操作后，执行 `/learn` 提取可复用模式。
+在 Sprint 结束或会话中积累足够证据后，使用 `/learn` 的语义请求提取可复用模式。
 
 ### 示例
 
@@ -29,9 +22,6 @@
 # 会话结束时提取学习
 /learn
 
-# 查看已有 instincts
-/learn status
-
-# 手动教学
-/learn save 这个项目中所有 API 返回都使用 Result<T, E> 模式
+# 提议一条项目约定；先输出草稿，不自动保存
+/learn 提炼“这个项目中所有 API 返回都使用 Result<T, E> 模式”，并列出证据与适用范围
 ```

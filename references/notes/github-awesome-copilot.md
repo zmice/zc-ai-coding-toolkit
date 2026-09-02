@@ -44,3 +44,11 @@ Active GitHub-maintained community collection. Use it primarily as a governance 
 - Track `.github/plugin/marketplace.json`, `plugins/external.json`, and `eng/lib` as governance inputs.
 - Register `modern-web-guidance` independently instead of importing it through the GitHub marketplace catalog.
 - Continue rejecting wholesale marketplace content absorption.
+
+## Review Update 2026-09-01
+
+- remote head: `5eaae7e2cde26b5cf86682fb31e758da0288aef7`
+- registered changes mainly describe Agent Plugins v1 packaging, marketplace generation and pinned external plugin refs
+- the plugin v1 layout is a separate platform-compatibility topic; this review does not change `packages/platform-*`
+- unregistered `anti-ui-slop` repeats local project-design-system, minimal-reference and real-render finish gates; the paid MCP dependency and community catalog are not adopted
+- keep immutable external refs as a governance principle, but do not widen `source_paths` to mirror the community skill catalog

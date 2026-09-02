@@ -284,3 +284,28 @@ upstreams:
       review_required: true
       compare_against: snapshots
       publish_target: toolkit-and-platform-generation
+  - id: ponytail
+    title: Ponytail
+    kind: github-public-repo
+    status: evaluating
+    owner: codex
+    source_url: https://github.com/dietrichgebert/ponytail.git
+    source_paths:
+      - LICENSE
+      - README.md
+      - AGENTS.md
+      - skills/ponytail
+      - skills/ponytail-review
+      - skills/ponytail-audit
+      - skills/ponytail-debt
+      - benchmarks/agentic
+      - benchmarks/results/2026-06-18-agentic.md
+      - docs/agent-portability.md
+      - hooks/claude-codex-hooks.json
+    notes_path: references/notes/ponytail.md
+    snapshots_path: references/snapshots/ponytail/
+    sync:
+      mode: manual-review
+      review_required: true
+      compare_against: snapshots
+      publish_target: toolkit-and-platform-generation

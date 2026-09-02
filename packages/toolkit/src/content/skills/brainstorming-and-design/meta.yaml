@@ -1,7 +1,7 @@
 kind: skill
 name: brainstorming-and-design
 title: 方案探索
-description: 在任何创造性工作前使用。通过协作式对话先探索用户意图、需求和设计方向，再进入实现，把 idea-refine 的发散收敛与 spec-driven-development 的规格化阶段衔接起来。
+description: 在需求模糊、跨模块、存在不可逆决策或真实方案分歧时使用。通过协作式对话探索用户意图、需求和设计方向，把 idea-refine 的发散收敛与 spec-driven-development 的规格化阶段衔接起来。
 tier: recommended
 audience: default
 stability: stable

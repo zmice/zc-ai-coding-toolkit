@@ -75,7 +75,7 @@ const nonAssetReferenceAllowlist = new Set<string>([
   "test",
   "text-primary",
   "update-available",
-  "zc-team"
+  "worktree-team"
 ]);
 const agentLoopBoundaryAssetIds = new Set<string>([
   "command:start",

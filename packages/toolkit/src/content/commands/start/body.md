@@ -175,7 +175,7 @@
 
 ```text
 agent_opportunity:
-- mode: none | readonly-consult | serial-subagent | context-fanout | zc-team
+- mode: none | readonly-consult | serial-subagent | context-fanout | worktree-team
 - dispatch_now: yes | no
 - dispatch_evidence:
 - reason:
@@ -187,40 +187,12 @@ agent_opportunity:
 - needs_confirmation:
 ```
 
-模式规则：
+字段语义、mode、授权、capacity、ownership、fan-in 和 loop 默认值统一由 `parallel-agent-dispatch` 的 agent opportunity contract 定义；本次输出仍必须包含 `loop_budget`、stop condition 和 fan-in gate。`start` 只做首轮分诊：
 
-- `none`：简单任务或无法证明 agent 有收益。
-- `readonly-consult`：架构、审查、测试、安全、性能、产品、上游吸收、Codex 适配、安装/更新或跨 surface 验证等只读协助；它是复杂任务进入写入前优先考虑的低风险帮助。当前请求、`AGENTS.md` 或已激活 skill 已把该只读问题放进任务范围时，通知后直接启动。
-- `agent:context-steward` 不是新的 mode，而是优先挂在 `context-fanout` 下的 sidecar 角色：主线程继续推进需求，它审计上下文是否 stale / missing / conflict；若只涉及 `.codex/context/**` 或 `AGENTS.md` managed block，可直接 scoped_write 并在 fan-in 汇报证据。
-- `serial-subagent`：已有任务计划、任务彼此独立，但不需要并行执行。
-- `context-fanout`：多个独立问题或互不重叠文件可以并行处理；写入型 fan-out 必须先明确文件所有权和 fan-in 验证。任务已授权实现且低风险、文件不重叠时可通知式启动；需要独立构建环境时追加 `isolation: codex-temp-worktree`。
-- `zc-team`：需要 tmux + git worktree 或 Codex / Qwen 多 CLI worker 时才建议；必须用户明确要求或确认。
-
-runtime capacity：
-
-- 不写死普通 1-3 / 最多 5；按 host session limit、已运行 child threads 与 independent ready tasks 计算 available child slots。
-- 两个独立证据问题即可派发；首批使用有收益的 available slots，完成后从 ready queue 补位。
-- 主线程保留 controller / integrator；达到 capacity 时分批或串行降级。
-- 写入 worker 数量还受文件所有权和验证门禁约束，容量不是共享文件并写许可。
-- `zc team` 不能因“可能更快”自动启动，必须用户明确。
-
-执行映射：
-
-- `dispatch_now: yes` 表示下一步必须实际派发可用的 Codex custom agent / subagent，或显式说明当前平台缺少可用 dispatch tool 并降级。
-- `dispatch_now: no` 表示只记录机会，不启动 agent；必须说明阻塞原因，如缺少授权、文件所有权不清、需要先写计划或风险过高。
-- `agents` 必须优先使用真实可用角色，如 `zc_context_steward`、`zc_code_reviewer`、`zc_test_engineer`、`zc_security_auditor`、`zc_performance_engineer`、`zc_architect`、`zc_product_owner`。没有对应角色时写主线程复核，不凭空造 agent。
-- Codex native dispatch 记录 thread id、context fork、runtime capacity、实际状态与 fallback；独立任务启动新 thread，同一任务 clarification / rework 复用 owner。
-- 需要临时写入隔离时使用 `zc agent worktree prepare` / `cleanup`；OS temp worktree 不进入 repo `.worktrees/` 或 Codex Desktop worktree namespace。
-- `context_maintenance` 必须说明是否需要 sidecar；如果需要，默认 `scoped_write`，写入范围只能是 `.codex/context/**` 和 `AGENTS.md` 的 `zc-context:init` managed block。只有出现同文件冲突、来源不明或越过项目上下文边界时，才降级到主线程 fan-in 后确认。
-- `loop_budget` 必须写清最多几轮、同一 finding 何时停止、失败后回到哪个入口。默认：只读 consult 1 轮；串行子代理同一 task 最多 2 轮 rework；context fan-out 单 worker 最多 2 次补交；同类失败重复出现就停线回到 `task-plan` 或 `debug`。
-
-确认边界：
-
-- 只读 agent：任务范围明确且 host 可用时通知式启用，必须说明 agent、目标和“不改文件”；越过当前读取范围或需要外部状态变更时才等待确认。
-- 写入型 agent：当前请求或已接受计划已授权实现，且文件所有权、验证命令和 fan-in gate 明确时可通知式启用；高风险、破坏性、生产/敏感、边界不清或外部副作用仍需明确确认。
-- 上下文维护 sidecar：默认可在项目上下文边界内 scoped_write 且不阻塞主流程；它不直接改业务文件，遇到 `AGENTS.md` 非 managed 段落或跨项目持久化时必须停在 fan-in。
-- 无法证明独立、存在同文件冲突、存在依赖链：默认先 `task-plan`，不直接并行。
-- 如果进入 `zc team`，先 dry-run：`zc team plan ... --json`。
+- `dispatch_now: yes` 必须真实派发可用 agent；平台不支持时明确 `fallback=main-thread`。
+- 只使用当前 host 真实存在的 agent，不凭空造角色。
+- 高风险、生产、敏感、破坏性、外部副作用或 `worktree-team` 必须显式确认。
+- 无法证明任务独立、所有权互斥或验证充分时，路由到 `task-plan`，不在入口层展开执行手册。
 
 Codex 优先规则：
 

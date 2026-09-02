@@ -4,7 +4,7 @@
 
 使用 `zc team` 把多个 AI CLI worker 运行在 tmux pane 和 git worktree 中，适合需要文件系统级隔离、长时间并行或多 CLI 协作的任务。
 
-这是重型能力。默认先考虑串行执行或 `parallel-agent-dispatch`；只有用户明确要求多 worker / team 模式，或用户确认 `agent_opportunity.mode=zc-team`，且文件边界清楚时才启动。
+这是重型能力。默认先考虑串行执行或 `parallel-agent-dispatch`；只有用户明确要求多 worker / team 模式，或用户确认 `agent_opportunity.mode=worktree-team`，且文件边界清楚时才启动。
 
 ## 何时使用
 
@@ -82,7 +82,7 @@ Recommendation: 使用 zc team because <文件系统隔离收益> outweighs <tmu
 确认后我再启动；不确认则按串行或 Context Fan-Out 推进。
 ```
 
-即使 `start` 或 `task-plan` 输出 `agent_opportunity.mode=zc-team`，也只能作为建议。没有用户明确确认时，不运行 `zc team start`。
+即使 `start` 或 `task-plan` 输出 `agent_opportunity.mode=worktree-team`，也只能作为建议。没有用户明确确认时，不运行 `zc team start`。
 
 确认 `zc team` 前，应先说明为什么 `readonly-consult`、`serial-subagent` 或 `context-fanout` 不足以覆盖目标，避免把 team 当成默认实现模式。
 

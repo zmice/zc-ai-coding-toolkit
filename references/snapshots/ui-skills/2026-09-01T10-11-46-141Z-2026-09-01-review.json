@@ -1,0 +1,116 @@
+{
+  "upstream": "ui-skills",
+  "captured_at": "2026-09-01T10:11:46.141Z",
+  "label": "2026-09-01-review",
+  "metadata": {
+    "title": "UI Skills",
+    "kind": "github-public-repo",
+    "status": "evaluating",
+    "owner": "codex",
+    "source_url": "https://github.com/ibelick/ui-skills.git",
+    "source_paths": [
+      "LICENSE",
+      "README.md",
+      "DESIGN.md",
+      "skills"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/ibelick/ui-skills.git",
+    "checked_at": "2026-09-01T10:11:46.142Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "f2dadf221a166a79606b337d08ce0b04d0d2bfd9"
+  },
+  "source_tree": {
+    "source_url": "https://github.com/ibelick/ui-skills.git",
+    "checked_at": "2026-09-01T10:11:51.705Z",
+    "command": "git fetch/ls-tree source_paths",
+    "head_sha": "f2dadf221a166a79606b337d08ce0b04d0d2bfd9",
+    "source_paths": [
+      "LICENSE",
+      "README.md",
+      "DESIGN.md",
+      "skills"
+    ],
+    "entry_count": 12,
+    "manifest_sha256": "40daf95515af3f9537a8c1a2c1b28b8f50cc4426c3bf3e763fe30c3bebf9149c",
+    "entries": [
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e3655609423bef86094088731b660b947bf5be7b",
+        "path": "DESIGN.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cac7c466df604fc44527fd89d9662626bab57354",
+        "path": "LICENSE"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bc8d438ec66b06f25bcf2fb16045263b13a85857",
+        "path": "README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "98477ee0f2e9cc7506453ee5aa9f88d1d033ab2f",
+        "path": "skills/baseline-ui/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1aa15726985929fe8d95624767cdc9a524418925",
+        "path": "skills/create-design-md/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e2dcd7004645277488a142be152878b7310437e1",
+        "path": "skills/fixing-accessibility/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3c3009290827a5204e92f95d240d490d2d53c55c",
+        "path": "skills/fixing-metadata/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7d22f2ecdd3305f73cf202cb9b5a0e4c1d3700e5",
+        "path": "skills/fixing-motion-performance/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c3ed42a578d3c0ca798ddd122fe0886e9c9acbc0",
+        "path": "skills/improve-ui/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "54b7aa85c942d5daf7d07fdd445ecb4d5ad5b963",
+        "path": "skills/improve-ui/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e08b3dd0b3a3a4c40a3861e0326e1159558ff7b7",
+        "path": "skills/improve-ui/references/plan-template.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c40d8458a67aa859d4ce50589d22f36f14123fb9",
+        "path": "skills/ui-skills-root/SKILL.md"
+      }
+    ]
+  },
+  "notes": {
+    "path": "references/notes/ui-skills.md",
+    "content": "# UI Skills\r\n\r\nSource: `https://github.com/ibelick/ui-skills`\r\n\r\n## Status\r\n\r\n面向 Design Engineer 的社区 UI skill 集合。登记为 `evaluating`，用于研究窄技能路由、证据驱动审查和渐进式 UI 上下文加载。\r\n\r\n## Latest Remote Evidence\r\n\r\n- remote head: `2b3a114a3fcff079d73639a21710c595d4700a74`\r\n- observed date: 2026-08-05\r\n- evidence: shallow clone review of the root router, baseline UI, improve UI, accessibility, metadata, and motion-performance skills\r\n\r\n## Extractable Upgrades\r\n\r\n- UI 路由默认选择 1 个专项 skill，宽泛审查最多选择 3 个，避免上下文膨胀\r\n- 设计审查先证明设计契约、运行时关联和确定性修正，再保留 finding\r\n- 将 accessibility、motion performance、metadata 和快速 UI cleanup 分成窄能力，而不是堆在一个万能 prompt 中\r\n- 审查和实现分离；只读审查不顺手修改产品源码\r\n\r\n## License Boundary\r\n\r\n- repository license: MIT\r\n- 复制或实质改写时保留 MIT notice\r\n- 本仓库以 adapted / inspired 方式吸收方法，不镜像其 CLI 和完整 skill catalog\r\n\r\n## Non-Adoption Boundary\r\n\r\n- 不强制 Tailwind、Motion、Base UI、React Aria 或 Radix 等具体技术选型\r\n- 不把单一审美偏好升级为跨项目 MUST\r\n- 不复制 `npx ui-skills` 运行时；当前 toolkit 继续使用 manifest 和 requires/suggests 路由\r\n\r\n## Current Decision\r\n\r\n- 保持 `evaluating`\r\n- 吸收最小上下文路由和证据门禁到新的 `ui-ux-review`\r\n- 通过 micro-eval 证明路由改善后，再决定是否升级为 active upstream\n\n## Review Update 2026-09-01\n\n- remote head: `f2dadf221a166a79606b337d08ce0b04d0d2bfd9`\n- registered change: only `README.md`; `DESIGN.md` and `skills/**` are unchanged\n- new CLI, remote MCP, Playbook and Astro/Cloudflare site runtime are distribution surfaces, not canonical UI guidance for this toolkit\n- Playbook guidance is either already covered by local accessibility/design references or expresses product-specific visual preferences; no content sync or `source_paths` expansion is required\n"
+  }
+}

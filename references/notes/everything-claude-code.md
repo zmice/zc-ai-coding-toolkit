@@ -87,3 +87,10 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 - Keep the repository as a runtime and governance reference.
 - Do not import its learning runtime, large skill catalog, hooks, or framework packs.
 - Revisit only the root-resolution and capability-detection patterns when the corresponding local platform code changes.
+
+## Review Update 2026-09-01
+
+- remote head: `ca185ef5f7667078a1e70a763bd3a9c71c48acf0`
+- the upstream surface has expanded to hundreds of skills, commands and agents; it remains a breadth and over-expansion pressure test, not a catalog to import
+- retain two implementation lessons for future local eval tooling: redact operator home paths before persisting reports, and use NUL-delimited exact `SKILL.md` discovery without swallowing filesystem errors
+- no guided installer, hooks observer, continuous-learning runtime, multi-model council, RAG reviewer, language packs or copied Codex/Claude plugin trees are adopted

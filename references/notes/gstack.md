@@ -76,3 +76,11 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 
 - Continue absorbing only stop-gate, evidence-artifact, and developer-experience review mechanics.
 - Do not import the browser runtime, telemetry, gbrain sync, model overlays, auto-update, or platform-specific skill catalog.
+
+## Review Update 2026-09-01
+
+- remote head: `e76f65a8da31ec14776a965c608222c1aecad656`
+- upstream added a Ponytail-derived simplification specialist and agentic benchmark work; useful content is limited to the reuse ladder, advisory simplification signals and correctness-first evaluation
+- absorbed locally through existing assets: repository reuse -> standard library/platform -> installed dependency -> minimal custom implementation, with security/error/accessibility boundaries preserved
+- future eval candidate: run a functional oracle before LOC/structure scoring; zero-diff is valid and judge failure must be reported as inconclusive
+- do not adopt branded shortcut comments, a second debt ledger, an eight-specialist review army, telemetry, browser runtime, auto-update or benchmark sandbox machinery

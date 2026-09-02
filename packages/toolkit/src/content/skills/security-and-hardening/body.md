@@ -13,18 +13,26 @@ Security-first development practices for web applications. Treat every external 
 - Adding file uploads, webhooks, or callbacks
 - Handling payment or PII data
 
-## The Three-Tier Boundary System
+## Security Boundary System
 
-### Always Do (No Exceptions)
+### 绝对安全属性
 
 - **Validate all external input** at the system boundary (API routes, form handlers)
 - **Parameterize all database queries** — never concatenate user input into SQL
 - **Encode output** to prevent XSS (use framework auto-escaping, don't bypass it)
-- **Use HTTPS** for all external communication
 - **Hash passwords** with bcrypt/scrypt/argon2 (never store plaintext)
-- **Set security headers** (CSP, HSTS, X-Frame-Options, X-Content-Type-Options)
-- **Use httpOnly, secure, sameSite cookies** for sessions
-- **Run `npm audit`** (or equivalent) before every release
+- **Authorize every protected operation** on the server, including object-level access
+- **Keep secrets and sensitive error details out of source, logs, and user responses**
+
+### 依部署拓扑与项目生态验证的控制项
+
+- 面向公网、跨不可信网络或传输凭据/敏感数据的 HTTP 流量必须使用 TLS。本地明文 HTTP 仅限 loopback / 隔离开发；非 HTTP 协议使用等价的认证加密与身份校验。
+- 浏览器响应按内容、embedding 和 TLS termination 拓扑设计 CSP、frame protection、HSTS 等 headers；HSTS 只在目标域名确认全量 HTTPS 后启用。
+- 浏览器 cookie session 必须 `HttpOnly`；生产 HTTPS cookie 必须 `Secure`。`SameSite` 按同站、跨站 OAuth 或嵌入式场景选择，并补相应 CSRF 控制；非 cookie session 不套用 cookie 检查。
+- 发布前运行当前生态对应的依赖风险检查，记录可达性、runtime / dev-only 范围、修复或缓解和复核日期。已知可达的 critical / high 运行时漏洞在没有批准的缓解、隔离或延期决定时阻断发布。
+- CORS、rate limit 和风控按实际浏览器跨源、认证、恢复、支付、高成本端点及部署容量配置；分布式部署不能只依赖进程内 limiter。
+
+所有开发例外都必须有明确范围、不可进入生产的门禁和等价控制，不能把“本地可用”扩展为部署例外。
 
 ### Ask First (Requires Human Approval)
 
@@ -41,7 +49,7 @@ Security-first development practices for web applications. Treat every external 
 - **Never commit secrets** to version control (API keys, passwords, tokens)
 - **Never log sensitive data** (passwords, tokens, full credit card numbers)
 - **Never trust client-side validation** as a security boundary
-- **Never disable security headers** for convenience
+- **Never remove a required security control** for convenience without topology evidence, an equivalent control, and a bounded exception
 - **Never use `eval()` or `innerHTML`** with user-provided data
 - **Never store sessions in client-accessible storage** (localStorage for auth tokens)
 - **Never expose stack traces** or internal error details to users
@@ -208,9 +216,9 @@ function validateUpload(file: UploadedFile) {
 }
 ```
 
-## Triaging npm audit Results
+## Triaging Dependency Risk Results
 
-Not all audit findings require immediate action. Use this decision tree:
+Use the current ecosystem's scanner; the following `npm audit` tree is a Node example. Not all findings have the same reachability or release impact:
 
 ```
 npm audit reports a vulnerability
@@ -282,7 +290,7 @@ git diff --cached | grep -i "password\|secret\|api_key\|token"
 ```markdown
 ### Authentication
 - [ ] Passwords hashed with bcrypt/scrypt/argon2 (salt rounds ≥ 12)
-- [ ] Session tokens are httpOnly, secure, sameSite
+- [ ] Cookie sessions use HttpOnly; Secure and SameSite match the production HTTPS and cross-site topology
 - [ ] Login has rate limiting
 - [ ] Password reset tokens expire
 
@@ -336,10 +344,10 @@ The copied checklist's license notice is distributed beside it as `references/LI
 
 After implementing security-relevant code:
 
-- [ ] `npm audit` shows no critical or high vulnerabilities
+- [ ] The ecosystem-appropriate dependency scan is recorded; reachable critical/high runtime findings have a fix, approved mitigation, isolation, or explicit defer decision
 - [ ] No secrets in source code or git history
 - [ ] All user input validated at system boundaries
 - [ ] Authentication and authorization checked on every protected endpoint
-- [ ] Security headers present in response (check with browser DevTools)
+- [ ] Browser security headers, cookie flags, CORS and CSRF controls match the actual deployment topology
 - [ ] Error responses don't expose internal details
 - [ ] Rate limiting active on auth endpoints

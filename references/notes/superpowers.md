@@ -86,3 +86,11 @@ Registered from historical upstream tracking. Initial baseline snapshot captured
 - Keep the local default at two fix rounds instead of copying the upstream five-round loop.
 - Do not copy `.superpowers/` paths, scripts, model names, or prompt templates.
 - Preserve platform-neutral role contracts and let each adapter map them to available agent tools.
+
+## Review Update 2026-09-01
+
+- remote head: `b36e0829c6d0140e93cfef2ca599b1b07d4a7797`
+- useful classification: distinguish spike, bounded and architectural work, and only upgrade the design gate when hidden complexity changes the route
+- local adaptation: clear, local and reversible tasks may proceed under existing authorization; universal 2-3-option and approval gates are not adopted
+- worktree cleanup remains fail-closed: when removal is refused, inspect complete status and present commit/move/delete choices; never force removal by default
+- do not copy the upstream five-round fix loop, controller-overrides-user rulings, platform-specific model settings or adapter prose

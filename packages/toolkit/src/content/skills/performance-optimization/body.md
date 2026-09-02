@@ -44,13 +44,32 @@
 - 后端接口：缺索引、锁等待、连接池耗尽、重复计算。
 - 内存/CPU：无界缓存、泄漏、正则回溯、同步重计算。
 
+## 数据库与连接池决策门
+
+- 慢查询先在相同参数和数据条件下保存 before query plan；检查扫描方式是否合理、估算行数与实际行数偏差、额外排序，以及索引是否匹配 filter + sort 的 query shape。
+- 新索引必须重跑 after plan。执行计划或用户指标没有改善时回退，并记录写放大与存储成本。
+- 多个接口同时变慢且时间花在等待连接时，先查 long transaction、未释放连接和 active / idle / wait；不要默认扩大 pool。
+- 每个进程只维护一个 pool，并证明 `instances × pool max` 不超过数据库连接上限；只有 autoscaling / serverless 证据成立时才考虑 multiplexing proxy。
+
+## 缓存正确性决策门
+
+- 只有已测量为昂贵且读显著多于写时才引入缓存；否则选择 `defer / monitor`。
+- 明确一个缓存层、一个失效策略和可接受的 staleness window。
+- key 覆盖 tenant、viewer、locale、permissions、feature flags 等所有结果变体；旧值会造成越权、错账或错误库存的数据默认不缓存。
+- hot key 评估 request coalescing、stale-while-revalidate 或 lock；negative cache 使用更短 TTL，origin error 不得当成 not-found 缓存。
+
 ## 修复纪律
 
 - 先证明瓶颈，再改代码。
 - 一次只优化一个瓶颈。
 - 保留 before / after 数字。
+- 使用同一命令、条件和预算重测；改善没有超过 run-to-run variance 时视为无收益。
+- correctness 先于性能；测试变红或靠少做必要工作换来的提升必须回退。
+- neutral 或更差的变更默认回退；只为已证明有效的主指标选择最小充分 guard。
 - 小收益大复杂度的优化要默认拒绝。
 - 性能关键路径改动要补 benchmark、监控或预算门禁。
+
+数据库、连接池与缓存的按需检查见 `references/backend-performance-checklist.md`。
 
 ## 输出契约
 

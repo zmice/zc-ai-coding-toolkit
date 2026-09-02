@@ -15,6 +15,16 @@
 - 已读相关代码并识别主要约束
 - 愿意在规划阶段保持只读，不边做边改
 
+## 未完成计划保护
+
+写入计划文件或外部任务系统前，先检查是否已有未完成计划：
+
+- 属于同一工作且本轮是修订：在原计划上更新，并保留仍有效的任务和决策。
+- 属于不同工作：停止写入，报告冲突，并由用户选择先完成、废弃旧计划或使用新承载位置。
+- 不批量关闭、删除或覆盖外部任务项；只有用户明确指定范围时才改变其状态。
+
+不要用新计划静默覆盖未完成计划。
+
 ## 执行步骤
 
 1. 进入只读分析模式，先看规格和现有代码
@@ -127,13 +137,13 @@ STOP: <阻塞发现>
 
 ```text
 agent_opportunity:
-- mode: none | readonly-consult | serial-subagent | context-fanout | worktree team
+- mode: none | readonly-consult | serial-subagent | context-fanout | worktree-team
 - dispatch_now: yes | no
 - trigger:
 - dispatch_evidence:
 - recommended Codex agents/workers:
 - runtime capacity:
-- isolation: shared | Codex temporary worktree | zc-team
+- isolation: shared | codex-temp-worktree | zc-team-worktrees
 - context_maintenance:
 - ownership:
 - confirmation:
@@ -141,45 +151,14 @@ agent_opportunity:
 - loop_budget:
 ```
 
-判断规则：
+字段语义、mode、授权和默认 loop 统一遵循 `parallel-agent-dispatch` 的 agent opportunity contract。计划不复制 policy，只记录本次解析后的完整字段：
 
-- `readonly-consult`：适合架构、测试、安全、性能、产品、上游吸收、Codex 适配、安装/更新或审查侧评；复杂计划应先考虑它，再考虑更重的并行。当前任务范围、`AGENTS.md` 或已激活 skill 已覆盖该问题且 host 可用时，通知后直接派发，不能改文件。
-- `agent:context-steward`：当计划会改变模块结构、验证命令、上下文索引或长期项目约定时，以 sidecar 形式加入 `context_maintenance`。它默认 scoped_write，不占用主实现任务；写入只能触碰 `.codex/context/**` 和 `AGENTS.md` managed block，冲突或越界时才降级 fan-in。
-- `serial-subagent`：任务独立但存在依赖顺序，主线程逐个委派并 fan-in。
-- `context-fanout`：任务可按文件、模块或证据问题拆开，写入前必须明确文件所有权、验证命令和 fan-in gate。若计划已被用户接受，低风险写入并行可视为本轮预授权，不必再次逐项确认。
-- `zc agent plan`：用于写入较重、需要恢复或审计 transcript 的可选 controller dry-run；普通 native 只读 fan-out 不以它为前置。
-- Codex temporary worktree：native worker 需要独立构建环境或相邻目录隔离时使用 `zc agent worktree prepare` / `cleanup`；不等同于 tmux team。
-- `worktree team`：只有用户明确要求或确认，且 `zc team plan` 返回可启动时才进入。
-- `none`：任务简单、强耦合、同文件冲突或缺少验证方式。
-
-Codex agents / workers 必须写成可执行角色或本地已知 agent 名；如果当前平台没有对应 agent，就写 `none` 或“主线程只读复核”，不要凭空造角色。
-
-`context_maintenance` 必须写清：
-
-- `needed: yes | no`
-- `agent: zc_context_steward | main-thread`
-- `mode: readonly_audit | scoped_write | fan_in_write`
-- `owned files: .codex/context/**, AGENTS.md managed block`
-- `fan-in: 主线程读取报告和写入证据；只有冲突、越界或来源不明时才决定是否运行 zc context doctor / update --write`
-
-fan-in gate 必须说明：
-
-- 主线程如何整合结果。
-- 谁负责修复问题：`producer owns fix`。
-- 谁负责回归确认：`reviewer owns regression`。
-- 哪些命令或人工检查作为最终验证。
-- 是否需要保留、合并或清理分支 / worktree / 临时文件。
-
-低风险写入并行只适用于非生产、非敏感、非破坏性任务，且文件所有权不重叠、任务已授权实现、验证和 fan-in 明确。worker 数按当前 runtime capacity 和 ready task 数决定；涉及高风险、外部副作用或共享文件时，`confirmation` 必须写成 explicit。
-
-loop_budget 必须说明：
-
-- 只读 consult 默认 1 轮；如果发现互相冲突的结论，主线程先做 fan-in 判断，不继续加派同类 agent。
-- 串行子代理每个 task 最多 2 轮 rework；同一 finding 两次无法关闭，进入 stop gate。
-- Context fan-out 每个 worker 最多 2 次补交；补交必须改变上下文、任务范围或验证方式，不能原样重试。
-- 选择 `zc agent plan` 时必须有文件所有权、验证命令、loop budget、report 路径和 fan-in gate。
-- `zc team` 必须有监控间隔、最长等待、stuck 判定和 shutdown plan；缺少这些字段时不能把计划视为已确认。
-- 出现同文件冲突、重复失败、验证方式缺失或 agent 状态不明时，回到 `planning-and-task-breakdown` 或 `debugging-and-error-recovery`。
+- agent / worker 必须是当前平台真实可执行角色；不可用时记录主线程 fallback。
+- `runtime capacity` 写当前快照，不写跨版本固定上限。
+- `ownership` 列互斥文件或只读问题边界；`fan-in gate` 列整合者、回归责任、验证和清理。
+- `context_maintenance` 记录是否需要 sidecar 及本次 owned files，不重复定义其长期权限。
+- `confirmation` 明确本次是通知式、已预授权或 explicit；高风险和 `worktree-team` 只能是 explicit。
+- `loop_budget` 记录本次轮数、stop condition 和 degraded path。
 
 ## 成功标准
 

@@ -41,6 +41,8 @@
 
 对同一组请求比较 baseline 与 candidate：
 
+运行前冻结独立的 correctness oracle：`Must do`、`Must not do` 和 `Observable evidence`。不得从 candidate 的实现、LOC、文件数或 guidance 反推期望。
+
 ```text
 Evaluation case:
 - Prompt:
@@ -53,11 +55,13 @@ Evaluation case:
 评测顺序：
 
 1. 同时运行 baseline 和 candidate，避免环境变化造成假对比。
-2. 先判断触发，再判断首轮动作、边界、输出和证据。
-3. 客观项用脚本或明确断言；语气、设计感等主观项保留人工审阅。
-4. 记录 token / 行数 / 读取资源数；不能测量时明确标注为静态估算。
-5. 找出对 baseline 与 candidate 都恒真的断言并删除，它们没有区分力。
-6. 只针对观察到的失败改 guidance，然后重跑原场景和至少一个新场景。
+2. 先用 oracle 判断触发、首轮动作、边界、输出、正确性与完整性；只有 baseline 和 candidate 都通过时，才比较 LOC、文件数、结构复杂度、token 和读取资源数。
+3. 更少代码或上下文不能抵消错误或漏功能。任务要求变更却产生 zero-diff 时判 correctness fail；只有 oracle 明确允许 no-op 时 zero-diff 才可通过，并记为 `Behavior delta: none`，不能宣称改善。
+4. 客观项用脚本或明确断言；语气、设计感等主观项保留人工审阅。
+5. 模型 judge 超时、崩溃、不可用或输出无效时标记 `inconclusive`，保留客观 oracle 结果并重跑或转人工裁决，不得静默当成 pass、fail 或 0 分。
+6. 记录 token / 行数 / 读取资源数；不能测量时明确标注为静态估算。
+7. 找出对 baseline 与 candidate 都恒真的断言并删除，它们没有区分力。
+8. 只针对观察到的失败改 guidance，然后重跑原场景和至少一个新场景。
 
 没有可用子代理或评测 harness 时，在主线程按同一 rubric 做人工对照；不要伪造并行、token 或耗时数据。
 
@@ -77,6 +81,9 @@ Skill evaluation:
 - Target:
 - Failure baseline:
 - Representative cases:
+- Oracle result: <pass / fail>
+- Candidate delta: <improved / regressed / none>
+- Judge status: <pass / fail / inconclusive / not-used>
 - Structural checks:
 - Behavior delta:
 - Context delta:

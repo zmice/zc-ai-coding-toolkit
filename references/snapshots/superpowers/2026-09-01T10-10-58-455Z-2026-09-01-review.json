@@ -1,0 +1,1086 @@
+{
+  "upstream": "superpowers",
+  "captured_at": "2026-09-01T10:10:58.455Z",
+  "label": "2026-09-01-review",
+  "metadata": {
+    "title": "Superpowers",
+    "kind": "github-public-repo",
+    "status": "active",
+    "owner": "codex",
+    "source_url": "https://github.com/obra/superpowers.git",
+    "source_paths": [
+      "CLAUDE.md",
+      "README.md",
+      "RELEASE-NOTES.md",
+      "package.json",
+      ".claude-plugin",
+      ".codex-plugin",
+      ".opencode",
+      "docs",
+      "hooks",
+      "skills",
+      "scripts",
+      "tests"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/obra/superpowers.git",
+    "checked_at": "2026-09-01T10:10:58.457Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+  },
+  "source_tree": {
+    "source_url": "https://github.com/obra/superpowers.git",
+    "checked_at": "2026-09-01T10:11:03.532Z",
+    "command": "git fetch/ls-tree source_paths",
+    "head_sha": "b36e0829c6d0140e93cfef2ca599b1b07d4a7797",
+    "source_paths": [
+      "CLAUDE.md",
+      "README.md",
+      "RELEASE-NOTES.md",
+      "package.json",
+      ".claude-plugin",
+      ".codex-plugin",
+      ".opencode",
+      "docs",
+      "hooks",
+      "skills",
+      "scripts",
+      "tests"
+    ],
+    "entry_count": 171,
+    "manifest_sha256": "543dcd1ff5f0acbcd879b1665f1d6322f5e9f1698b028e0e831bb81a741b7276",
+    "entries": [
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f85d3464bba23ce5100d3510f066fe0b5b62f9c4",
+        "path": ".claude-plugin/marketplace.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7e0c66154823e7258db20820e99fc0dd82e0479f",
+        "path": ".claude-plugin/plugin.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "123793e54ffbd933e9a3e6f99e133e8087a08828",
+        "path": ".codex-plugin/plugin.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "080f043f8f63e4e5bb44e29bcde84cd9593871a7",
+        "path": ".opencode/INSTALL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "423e5ed513261485c657ba166b0372a5293639c7",
+        "path": ".opencode/plugins/superpowers.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5f3d7410f82cb3d348a80cbd59c359da9f75e6d8",
+        "path": "CLAUDE.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "09a91c6d03cfa3d874c5c33b6f8cc3d0b2d89645",
+        "path": "README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8b01918c98a0c3321d3acfd7a2940a92a76bb33e",
+        "path": "RELEASE-NOTES.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0d7cd74d0b5d65c60ae44d51dcf11691ae1041f6",
+        "path": "docs/README.kimi.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "11da85425a102a03b7bb598376c5d9e59e6f3276",
+        "path": "docs/README.opencode.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "144f1cea2956f0736a9af65ae4aa6b0566146ed6",
+        "path": "docs/plans/2025-11-22-opencode-support-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bd148b4cb3a4a22ca20d0ebe9d1de875afbf534f",
+        "path": "docs/plans/2025-11-22-opencode-support-implementation.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "52a8b0ea9f938172d703136dd9665c7c14e31c64",
+        "path": "docs/plans/2025-11-28-skills-improvements-from-user-feedback.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "40aa0ad0620d9647a377391247665c611a8a8cb4",
+        "path": "docs/plans/2026-01-17-visual-brainstorming.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4ae9603defaf0d9ff052189a33fe515dd2a4ee2e",
+        "path": "docs/porting-to-a-new-harness.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6ab9fb8a4c2bd8ed79563503c7ab78e6a79099db",
+        "path": "docs/superpowers/plans/2026-01-22-document-review-system.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "224d34986a48ccf908dc8429ec6a7a57c88d36a2",
+        "path": "docs/superpowers/plans/2026-02-19-visual-brainstorming-refactor.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9bfc666e90d57a730fb3cab9f0c118208eb2835f",
+        "path": "docs/superpowers/plans/2026-03-11-zero-dep-brainstorm-server.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0f35d3d283fc4ba03eb61c26fce5b4990e08f790",
+        "path": "docs/superpowers/plans/2026-03-23-codex-app-compatibility.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "183ee744d96e27dab1715f40c51d699c0585157e",
+        "path": "docs/superpowers/plans/2026-04-06-worktree-rototill.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b1c01ca26e624d81de9cf79b481aa70d0238fa7e",
+        "path": "docs/superpowers/plans/2026-05-06-lift-drill-into-evals.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6272acd6491fef345ae28b623e3a8c7844ffa367",
+        "path": "docs/superpowers/plans/2026-05-07-pi-extension-and-evals.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "57cc5fc076d27878adc0450f0c7c196eb64cb1bb",
+        "path": "docs/superpowers/plans/2026-06-09-sdd-task-scoped-review-dispatch.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "09d6c1d445ee22eede4115a6ed2f0184e0b4e190",
+        "path": "docs/superpowers/plans/2026-06-09-visual-companion-issues.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e290dded74e1d45a6fc58066bc70def9814de1cc",
+        "path": "docs/superpowers/plans/2026-06-10-visual-companion-auth-hardening.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "eec99e51e96d293dc71b221bf5c67a4f9906fa3d",
+        "path": "docs/superpowers/plans/2026-06-11-visual-companion-final-hardening-fixup.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "74f225bf6fa299ed9c317773ffffb53a741887d9",
+        "path": "docs/superpowers/plans/2026-07-06-sdd-plan-scoped-workspace.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "93fdc82eaffe2c1141f73f9476dc12f1bbb759de",
+        "path": "docs/superpowers/plans/2026-07-15-sdd-fix-loop-redesign.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7c689bf7aa168530d3797adc7e8dc25488daa529",
+        "path": "docs/superpowers/plans/2026-07-30-codex-efficiency-fixes.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8fccfbf36f22c2f6c910448f1932deaee692c73e",
+        "path": "docs/superpowers/plans/2026-08-06-hermes-version-bump-wiring.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f8f611ebf404a923a8b20d659d4cea56e06124d0",
+        "path": "docs/superpowers/specs/2026-01-22-document-review-system-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "46f88bf3dc1c7d41aa41f221ebfe5fc943ae6572",
+        "path": "docs/superpowers/specs/2026-02-19-visual-brainstorming-refactor-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d92e89fb258091132cbf54c8d9e04c412fe3634a",
+        "path": "docs/superpowers/specs/2026-03-11-zero-dep-brainstorm-server-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c3fecc04cc4af01602f8604035688b59e3a87311",
+        "path": "docs/superpowers/specs/2026-03-23-codex-app-compatibility-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "11c854e7eb6b3cce250784bb6596c363d027ad95",
+        "path": "docs/superpowers/specs/2026-04-06-worktree-rototill-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d3a3cf56ab061567bd77540c78ef346cbad3f94e",
+        "path": "docs/superpowers/specs/2026-05-05-platform-neutral-config-refs-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "34066b1ce30fec2d272e0747b03cee6b8ea73f52",
+        "path": "docs/superpowers/specs/2026-05-05-platform-neutral-prose-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d6492ec83d93222e4d376d02361ea311d0a6d96f",
+        "path": "docs/superpowers/specs/2026-05-05-platform-neutral-readme-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b3e63e5a66557477dfc67b8855dfc80d331dfa55",
+        "path": "docs/superpowers/specs/2026-05-06-lift-drill-into-evals-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "23cdd4a7cc5d685ea64fd3c0c0cb9065f28bec0a",
+        "path": "docs/superpowers/specs/2026-06-09-sdd-task-scoped-review-dispatch-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1ec77cf902cbe3f3261d9d27693416a651e785bb",
+        "path": "docs/superpowers/specs/2026-06-10-positive-instruction-redesign-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "dfec87cfdeac32efad18936ec9b734907e1b019b",
+        "path": "docs/superpowers/specs/2026-06-10-strict-cost-sdd-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "16bf41af5173f3cb69a4cba7356aa2fe24a50d00",
+        "path": "docs/superpowers/specs/2026-06-10-visual-companion-auth-hardening-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "30f588921355534c9709a04d2208bda1318b9004",
+        "path": "docs/superpowers/specs/2026-06-11-visual-companion-final-hardening-fixup-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2ee1872cf8587c2720215e473128552b32366c5e",
+        "path": "docs/superpowers/specs/2026-07-06-sdd-plan-scoped-workspace-eval-results.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ada12023105cee7060c662d5f0ef12d1202df3df",
+        "path": "docs/superpowers/specs/2026-07-06-sdd-plan-scoped-workspace.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "89e3e24bf4cb608cfc2959195ad54403c7c992b3",
+        "path": "docs/superpowers/specs/2026-07-15-sdd-fix-loop-redesign-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5bb1307d9259abde0cb95ac0fd220938b0da2afd",
+        "path": "docs/superpowers/specs/2026-07-30-codex-efficiency-fixes-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4629b0cd3cf6f8e81bf538069d24d7798dce392e",
+        "path": "docs/superpowers/specs/2026-08-05-hermes-version-bump-wiring-design.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "414d69790c708df23b3da1ef21365b40f4112ec3",
+        "path": "docs/testing.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d1bcb84ec10020aa9410655e2b55a547dc59cd89",
+        "path": "docs/windows/polyglot-hooks.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "84e6d33874ab5926035e35bc13dccf21244bb079",
+        "path": "hooks/hooks-cursor.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "67975137aafc8a097bdd1c2b51fea3989b8ad6c0",
+        "path": "hooks/hooks.json"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "ceec3a732d6251abb3c65ba860b7cc5d1f21dfb8",
+        "path": "hooks/run-hook.cmd"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "93a6bc2c6b7269c704378cb6a61fce6aea7ff631",
+        "path": "hooks/session-start"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3a84ce88c91344a7931d3f1d156d2ade317d6577",
+        "path": "package.json"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "14ead00291407c584f58a437f3acf5be1e772e78",
+        "path": "scripts/bump-version.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "190db0140d9e250af4cd8edabb42995c0201803c",
+        "path": "scripts/lint-shell.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "5308e28d9c3460b130abd7e3185374294b33d00f",
+        "path": "scripts/package-codex-plugin.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "bdaa13a357defed6b43e0a769b0ec06e9099b6d3",
+        "path": "scripts/sync-to-codex-plugin.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b56a3b5ed6ea0d6216501e0e401ecb00a1b4675f",
+        "path": "skills/brainstorming/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f540bb8a4f88107e2b37b2871a4c1a55a3b6f720",
+        "path": "skills/brainstorming/scripts/frame-template.html"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e11d26489ce248f37af3e4dd01ddec6a4e88287f",
+        "path": "skills/brainstorming/scripts/helper.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a828b35af64d5c64ca68b9ec78473999ce698874",
+        "path": "skills/brainstorming/scripts/server.cjs"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "016a8e4870142ce2adbe81a021d8b6b9073e7618",
+        "path": "skills/brainstorming/scripts/start-server.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "7cacfe9440043f7a46eac555cd835fad0769c425",
+        "path": "skills/brainstorming/scripts/stop-server.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "60993129de3c445efeff53987b5297dc1acf3eb1",
+        "path": "skills/brainstorming/spec-document-reviewer-prompt.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c145e64388d4441710da016ea665fed5699e2e91",
+        "path": "skills/brainstorming/visual-companion.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3fa091b348bbe0a18eaa0e17e9092c97f7005cbe",
+        "path": "skills/dispatching-parallel-agents/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b51d97d2cc4c2ecc5eabecf27e499aa8c933efac",
+        "path": "skills/executing-plans/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fa8aecaf8813f1b19d19996f7957d1b0121f2d9c",
+        "path": "skills/finishing-a-development-branch/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "950da7b74bf6dbed6b8726d12ddadd65a9f5fda7",
+        "path": "skills/receiving-code-review/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fa4f2f9965591d6d8a7ef4ad47e6ba4d5ac344d0",
+        "path": "skills/requesting-code-review/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b898cb982e8a368e847d31136ac106001173b1d5",
+        "path": "skills/requesting-code-review/code-reviewer.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "aac35b91c07af15eca580a205eb0c894b86e87c8",
+        "path": "skills/subagent-driven-development/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5c8ecd61fba036263bf88d0af24d47125780efa0",
+        "path": "skills/subagent-driven-development/implementer-prompt.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ad74b10b30762affc44173f8ec3228d2877f372f",
+        "path": "skills/subagent-driven-development/re-review-prompt.md"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "31852e2abbeb9a41084f67a9f2ef3cfc3378bce9",
+        "path": "skills/subagent-driven-development/scripts/review-package"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "4e2d16802ecaa23eb9a682663e4c356c4aa5a656",
+        "path": "skills/subagent-driven-development/scripts/sdd-workspace"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "612e14a1ee7ca9c0078d896325935759a1827c24",
+        "path": "skills/subagent-driven-development/scripts/task-brief"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ce796948232b6ae5fb65fd2d1f2f864530201a2e",
+        "path": "skills/subagent-driven-development/task-reviewer-prompt.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9aa03092809feaf93c9bfa985252f6f1c9624692",
+        "path": "skills/systematic-debugging/CREATION-LOG.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "095d194ac041502905f15b01d22d294fb94db8b2",
+        "path": "skills/systematic-debugging/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "703a06b653160d060bbf46ab5c6e0cd7446bd592",
+        "path": "skills/systematic-debugging/condition-based-waiting-example.ts"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "70994f777c586f7d4c43033aac34c7cf0da6688b",
+        "path": "skills/systematic-debugging/condition-based-waiting.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e2483354dc2b62478a2624e34ca18bc0efe887b2",
+        "path": "skills/systematic-debugging/defense-in-depth.md"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "985f5d08ccf8a3f2d40739cfcaf4413bb24bf1cb",
+        "path": "skills/systematic-debugging/find-polluter.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "12ef5222e24e19ab92172b82b69ef1b0c30d9bfa",
+        "path": "skills/systematic-debugging/root-cause-tracing.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "23a6ed7a2044e0c44d74c3101406140f4851aa41",
+        "path": "skills/systematic-debugging/test-academic.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8d13b467e4a98abfffd12161cbc3c418021d6023",
+        "path": "skills/systematic-debugging/test-pressure-1.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2d2315ec8a24ca872bc80d2f4056468ba051462a",
+        "path": "skills/systematic-debugging/test-pressure-2.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "89734b86fdc756488df315d53e5c3ac2d3752cd8",
+        "path": "skills/systematic-debugging/test-pressure-3.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4320d8879a639d0536c2239bb80c9d7257ad8947",
+        "path": "skills/test-driven-development/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d3c4482fd30b4f9084bb61545fe73939a7502c28",
+        "path": "skills/test-driven-development/writing-good-tests.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1381dacb3516b94382dd6ec736ede21ee8ede2b3",
+        "path": "skills/using-git-worktrees/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7ab2eb678f649c8befb94512359ee0b6e9a9a9a4",
+        "path": "skills/using-superpowers/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2e1eac90534af6e1f27df4e18410be8a7b442448",
+        "path": "skills/using-superpowers/references/antigravity-tools.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e4488fb224bb0fa0a33e9ac7dc961174e9f0c150",
+        "path": "skills/using-superpowers/references/codex-tools.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b01b65238a50981aeed22ae52ee20f8b55d16b42",
+        "path": "skills/using-superpowers/references/gemini-tools.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0f1fa57bc1b495462e75c6ce11e798245a34987e",
+        "path": "skills/using-superpowers/references/hermes-tools.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0c1f21713a45255ece4144fd2fee353e4ed4f90e",
+        "path": "skills/using-superpowers/references/pi-tools.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7d45333cc4a49c57a80df6c1fe2fa777a207afbc",
+        "path": "skills/verification-before-completion/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f74605bfa9af7a3fb7e4ad7f17750a86a9b0d728",
+        "path": "skills/writing-plans/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1c12c1d6180395262d7150bdb12a9a90efc9cfa0",
+        "path": "skills/writing-plans/plan-document-reviewer-prompt.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f33f39f523c8a3ae2ec0eaf365a524571df8ff3d",
+        "path": "skills/writing-skills/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "15ea9eae223d9081b602618849791c07a7758f3d",
+        "path": "skills/writing-skills/anthropic-best-practices.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "47881fc85bd6c01b32b84d52ed9a0c73c8d6a089",
+        "path": "skills/writing-skills/examples/CLAUDE_MD_TESTING.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3509e2f028cacaa8118cbc8c80025efb089ec28e",
+        "path": "skills/writing-skills/graphviz-conventions.dot"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9756416a59600b70ecca4044e0919ee7d4a37b21",
+        "path": "skills/writing-skills/persuasion-principles.md"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "59e74b54e8538ff0a358d05c770479b3eb8484aa",
+        "path": "skills/writing-skills/render-graphs.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a5acfeac86f34c7bc625d064e10c8a2f8180b696",
+        "path": "skills/writing-skills/testing-skills-with-subagents.md"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "2d0c869c9ea59d22dc71c854c792d7002c07d8a2",
+        "path": "tests/antigravity/run-tests.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "e10edd42c5002a77b37772a43823fe454b6829e2",
+        "path": "tests/antigravity/test-antigravity-tools.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fc5bb79ec85264517754dbf1b61e26a0a21bf88a",
+        "path": "tests/brainstorm-server/auth.test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6acda4e3901123b6c10e1c19c302e87a3041435b",
+        "path": "tests/brainstorm-server/branding.test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4bb9825c82fe2239ac6705cb741860462a517ca2",
+        "path": "tests/brainstorm-server/browser-launcher.test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "604b611ad4315f82919b45505d776f74922d8d4d",
+        "path": "tests/brainstorm-server/helper.test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c43d8c0de2c249653a870257ea5e22ab14f7b4ae",
+        "path": "tests/brainstorm-server/lifecycle.test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c194943f0e6cd346cbf459c1367121527a0dce32",
+        "path": "tests/brainstorm-server/package-lock.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0cb87f9dabbfd4e9dc754835e9d30e3af74f3088",
+        "path": "tests/brainstorm-server/package.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5d62323cb13b233cbf7016cac4afbf2be24e3595",
+        "path": "tests/brainstorm-server/server.test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a4802dab696221ae3000a71b4cf3a0cd170ad558",
+        "path": "tests/brainstorm-server/start-server.test.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "cbe89837154902520f9503964a242709b0066a80",
+        "path": "tests/brainstorm-server/stop-server.test.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "2a18495ae89465480dc8105599d5e522ef972379",
+        "path": "tests/brainstorm-server/windows-lifecycle.test.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8e98bc32b167fafc19e23a3b5ee6217e13a359e4",
+        "path": "tests/brainstorm-server/ws-protocol.test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "90f1fe1aef3a4fc2ad623a51dcc48e0e2ecd24a9",
+        "path": "tests/claude-code/README.md"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "c408162686d6a720887f265b6257cf41664f1d96",
+        "path": "tests/claude-code/analyze-token-usage.py"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "83217cdad27248ae6ee521aef603ba13322805f3",
+        "path": "tests/claude-code/run-skill-tests.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "9e187610d6a973c6db0aed91dfb8deadfcac3e78",
+        "path": "tests/claude-code/test-helpers.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "841723016a9ceca8028f02e5e20ac811468c2ec2",
+        "path": "tests/claude-code/test-sdd-workspace.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "a783648314a4cf6f2e61af3c7437fc4b9f24e315",
+        "path": "tests/claude-code/test-subagent-driven-development-integration.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "151fc64d04668567c4980301dc28f323bd5424b5",
+        "path": "tests/claude-code/test-subagent-driven-development.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "077ea19c360b66a4ab16d2c91d2bbc66e043704c",
+        "path": "tests/claude-code/test-worktree-native-preference.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "58caad7a09bc395fb2f4aefede6db56dfd0223de",
+        "path": "tests/claude-code/test-worktree-path-policy.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "01de3948477d6fa213130562ef0da3517be9e2b5",
+        "path": "tests/codex-plugin-sync/test-sync-to-codex-plugin.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "4301a06eec1cd4d8874571ac5f95b8295d459fd6",
+        "path": "tests/codex/test-marketplace-manifest.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "947cb6db1f920278a9c73d021d6c79aa5ec22af8",
+        "path": "tests/codex/test-package-codex-plugin.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "16ea31f4d6fab49994d0e92ac73a5f150edcb627",
+        "path": "tests/devin/test-devin-plugin.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e998dc5daafa6b4dd78ef0dac3174020c95edc7a",
+        "path": "tests/explicit-skill-requests/prompts/action-oriented.txt"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5881908bb900e2f73949860033db303ed5efdd1a",
+        "path": "tests/explicit-skill-requests/prompts/after-planning-flow.txt"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "efb6c389c6b370cd602041945756d19da8df8162",
+        "path": "tests/explicit-skill-requests/prompts/claude-suggested-it.txt"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c995fc7832509a9510814659974f2792abe9c706",
+        "path": "tests/explicit-skill-requests/prompts/i-know-what-sdd-means.txt"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4a136965e60c65e6db2ea9c6eeec59420fb416cb",
+        "path": "tests/explicit-skill-requests/prompts/mid-conversation-execute-plan.txt"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "70fec751959d5af901b651db5a6c3ed3a3c987f5",
+        "path": "tests/explicit-skill-requests/prompts/please-use-brainstorming.txt"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "17f781d5c0fd273f75635d7e6d7a669e909b88a2",
+        "path": "tests/explicit-skill-requests/prompts/skip-formalities.txt"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2255f99603530d091b50a61e4a127578ec3a9415",
+        "path": "tests/explicit-skill-requests/prompts/subagent-driven-development-please.txt"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d4077a21fed29a12e062bc3a449bb6c1ee68e71f",
+        "path": "tests/explicit-skill-requests/prompts/use-systematic-debugging.txt"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "b4c5707296868837c5c394116d7f5d3fea0fd9f7",
+        "path": "tests/explicit-skill-requests/run-all.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "69ccd0a4800b345afa0c421065b1435aa680c82f",
+        "path": "tests/explicit-skill-requests/run-extended-multiturn-test.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "9079e9d5cfccefe9192107ec180b6946a69158f8",
+        "path": "tests/explicit-skill-requests/run-haiku-test.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "d4c0adad2a0426b39638e2c354709e2c31d7244c",
+        "path": "tests/explicit-skill-requests/run-multiturn-test.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "821117c39cb8871293176e746101ad54c9c36df6",
+        "path": "tests/explicit-skill-requests/run-test.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+        "path": "tests/hermes/__init__.py"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "561cd8ca522add8bed083d6c1fcad4442855b1c3",
+        "path": "tests/hermes/conftest.py"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8b60153c697cc0d4f2e9963101b20ac7009c6208",
+        "path": "tests/hermes/test_bootstrap.py"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9c6c4f0811a54b00111aefc15e26c9c450dbaeb7",
+        "path": "tests/hermes/test_plugin.py"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "c1508290e9813de1a7d20b24d3ca3c8927fbc11c",
+        "path": "tests/hooks/test-session-start.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "f7bb21fe712beb59a4df90181a5de370e3d297c2",
+        "path": "tests/kimi/run-tests.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "073ab84c1cef8bb71a025e8643e282d12e3c9bc1",
+        "path": "tests/kimi/test-plugin-manifest.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "d9b100ef0d6b87c675924c0fb8ce7fbd4dde9fb9",
+        "path": "tests/opencode/run-tests.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "cd2a732cd2d5ad030414b953e21b9e403ab88699",
+        "path": "tests/opencode/setup.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "32149aed33037d7bcda36dc875546d390b501c78",
+        "path": "tests/opencode/test-bootstrap-caching.mjs"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "958e9940b116ac764323030814436e6236b2979f",
+        "path": "tests/opencode/test-bootstrap-caching.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "83af3f197d668573cf276a81ee3326077a187243",
+        "path": "tests/opencode/test-plugin-loading.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "b9f3e08a8e5e2c5dccfde33daefde0571db81bd7",
+        "path": "tests/opencode/test-priority.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "da79f3d5ede6d022a22a14a3087fcca60a621355",
+        "path": "tests/opencode/test-tools.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d7af9cb2ae125341eaab1e53bea8d2a2d7448dda",
+        "path": "tests/pi/test-pi-extension.mjs"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "141bcd9e4d912be2986a6b1ad9d1b6eaa4c69295",
+        "path": "tests/shell-lint/test-lint-shell.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "0902e7d9d606a94916a098f92312977397a7860b",
+        "path": "tests/systematic-debugging/test-find-polluter.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "195d88a11a4faea7d3844be2a3d7e47ed3b2ed4f",
+        "path": "tests/version-bump/test-bump-version.sh"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "349cd47e66513703e0a850150938ea6e4bacafee",
+        "path": "tests/writing-skills/test-render-graphs.sh"
+      }
+    ]
+  },
+  "notes": {
+    "path": "references/notes/superpowers.md",
+    "content": "# Superpowers\r\n\r\nSource: `https://github.com/obra/superpowers`\r\n\r\n## Status\r\n\r\nRegistered from historical upstream tracking. Initial baseline snapshot captured in the new governance layer.\r\n\r\n## Historical Role\r\n\r\n- Commit history previously tracked it as an architecture reference.\r\n- It influenced review strategy, role decomposition, and \"role as skill\" thinking.\r\n\r\n## Expected Downstream Value\r\n\r\n- Review workflow patterns\r\n- Role boundary design\r\n- Multi-agent execution heuristics\r\n\r\n## Boundaries\r\n\r\n- Treat it as an architecture reference, not as a direct content source to mirror.\r\n\r\n## Snapshot Baseline\r\n\r\n- baseline: `references/snapshots/superpowers/2026-04-18T18-02-14-443Z-2026-04-19-baseline.json`\r\n- current governance status: `active`\r\n\r\n## Latest Reviewed Upstream\r\n\r\n- remote head: `f2cbfbefebbfef77321e4c9abc9e949826bea9d7`\r\n- observed date: 2026-05-15\r\n- notable upstream change: v5.1.0 refreshes worktree guidance, code-reviewer prompt material, Codex / OpenCode plugin sync surfaces, and release notes. The most relevant delta is still worktree lifecycle clarity and explicit transcript-style verification.\r\n\r\n## Latest Remote Evidence\r\n\r\n- remote head: `896224c4b1879920ab573417e68fd51d2ccc9072`\r\n- observed date: 2026-06-29\r\n- evidence: `pnpm upstream -- report superpowers --format json --with-remote`\r\n- finding: previous `source_paths` (`prompts`, `instructions`, `agents`) missed all registered-path changes while upstream had 130 changed paths.\r\n- registry update: track current useful surfaces including `skills`, `docs`, `hooks`, `scripts`, `tests`, `.claude-plugin`, `.codex-plugin`, `.opencode`, `README.md`, `CLAUDE.md`, release notes, and `package.json`.\r\n\r\n## Latest Remote Evidence 2026-07-02\r\n\r\n- remote head: `f268f7c953744036f0fa7e9d4b73535c04e57cb8`\r\n- evidence: `pnpm upstream -- report all --format md --with-remote`\r\n- finding: registered paths changed in 122 files. The most relevant deltas are `writing-skills` guidance, new-harness portability docs, Codex plugin sync surface, and subagent-driven development review package / task brief mechanics.\r\n\r\n## Extractable Upgrades\r\n\r\n- Worktree setup should select `.worktrees/` before `worktrees/`, then verify project-local directories are ignored.\r\n- Parallel dispatch should require explicit task independence, file ownership, and fan-in verification.\r\n- Shutdown is not branch closure; branch/worktree ownership must be resolved separately.\r\n- Worktree cleanup text must not imply that deleting a worktree is always lossless; inspect status and decide merge / keep / discard first.\r\n- New-harness or multi-worker work should leave an acceptance transcript: task ownership, changed files, evidence, conflicts, and cleanup state.\r\n- Skill authoring should treat guidance as behavior-shaping assets: classify the baseline failure first, choose the guidance form that fits, micro-test wording against no-guidance controls, and avoid workflow summaries in discovery descriptions.\r\n- Cross-harness support should keep skill bodies action-oriented and platform-neutral; platform adapters provide tool mapping and bootstrap/install delivery.\r\n- Subagent review can reduce context and cost by handing task briefs, reports, review packages, and progress ledgers as files instead of pasting accumulated history into prompts.\r\n\r\n## Non-Adoption Boundary\r\n\r\n- Do not copy Superpowers commands wholesale.\r\n- Do not create hidden worktrees without proving ignore safety.\r\n- Do not import Superpowers scripts or prompts directly; convert the durable mechanics into this repo's `zc agent plan` controller model and toolkit content.\r\n\r\n## Recommended Phase\r\n\r\n- Phase 1: `zc team plan`, worktree safety checks, fan-in status output, and safer worktree cleanup wording in toolkit content.\r\n- Phase 2: richer subagent review prompts after the team runtime is stable.\r\n\r\n## Latest Remote Evidence 2026-07-29\r\n\r\n- remote head: `44c9b2d6e889982ac18c27d05a19fefe335194e1`\r\n- evidence: `pnpm upstream -- report all --format json --with-remote` plus shallow-clone content review\r\n- finding: upstream added plan-scoped scratch workspaces, resumable fix loops, scoped re-review, a circuit breaker, and a positive guide for falsifiable tests\r\n- finding: Codex packaging now declares an explicit empty hook surface when hooks should not be auto-discovered\r\n\r\n## Absorbed 2026-07-29\r\n\r\n- Compress `subagent-driven-development` around a controller-owned, plan-scoped ledger and file-based handoffs.\r\n- Resume the original producer only when the next round changes its input; after the local loop budget, adjudicate rather than retry forever.\r\n- Add a high-signal test reference that requires independently derived expectations, observable behavior, and a mutation check.\r\n\r\n## Retained Local Boundary 2026-07-29\r\n\r\n- Keep the local default at two fix rounds instead of copying the upstream five-round loop.\r\n- Do not copy `.superpowers/` paths, scripts, model names, or prompt templates.\r\n- Preserve platform-neutral role contracts and let each adapter map them to available agent tools.\n\n## Review Update 2026-09-01\n\n- remote head: `b36e0829c6d0140e93cfef2ca599b1b07d4a7797`\n- useful classification: distinguish spike, bounded and architectural work, and only upgrade the design gate when hidden complexity changes the route\n- local adaptation: clear, local and reversible tasks may proceed under existing authorization; universal 2-3-option and approval gates are not adopted\n- worktree cleanup remains fail-closed: when removal is refused, inspect complete status and present commit/move/delete choices; never force removal by default\n- do not copy the upstream five-round fix loop, controller-overrides-user rulings, platform-specific model settings or adapter prose\n"
+  }
+}

@@ -117,3 +117,11 @@ Already covered locally:
 - expanded `source_paths` to include `evals`, `references`, and the complete `scripts` governance surface
 - reason: deterministic routing fixtures, reference-link checks, artifact-path checks, and version validation must be visible to upstream review even when they are not copied into this toolkit
 - non-adoption: upstream runner code and its fixed artifact paths remain reference-only; local routing evaluation requires a separate ranking contract because `recommendToolkitAssets` currently resolves exact identities rather than natural-language prompts
+
+## Review Update 2026-09-01
+
+- remote head: `d2c37ef6225dd8726cdd369a8030307f48592d26`
+- reviewed changes: constraint-driven development, performance guidance, planning safety, eval fixtures and lint implementation
+- candidate upgrades: protect unrelated unfinished plans; use current-value ratchets and detect weakened gates; expand performance evidence for query plans, index shape, pool exhaustion, cache invalidation/stampede and regression guards
+- no new `constraint-driven-development` asset or `/constraints` command; mechanisms must enter existing principles, CI, review and performance assets only when locally scoped
+- unregistered platform manifests and copied command surfaces remain outside `source_paths` this cycle; the note records the non-adoption decision instead of mirroring adapters

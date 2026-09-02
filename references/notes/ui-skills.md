@@ -36,3 +36,10 @@ Source: `https://github.com/ibelick/ui-skills`
 - 保持 `evaluating`
 - 吸收最小上下文路由和证据门禁到新的 `ui-ux-review`
 - 通过 micro-eval 证明路由改善后，再决定是否升级为 active upstream
+
+## Review Update 2026-09-01
+
+- remote head: `f2dadf221a166a79606b337d08ce0b04d0d2bfd9`
+- registered change: only `README.md`; `DESIGN.md` and `skills/**` are unchanged
+- new CLI, remote MCP, Playbook and Astro/Cloudflare site runtime are distribution surfaces, not canonical UI guidance for this toolkit
+- Playbook guidance is either already covered by local accessibility/design references or expresses product-specific visual preferences; no content sync or `source_paths` expansion is required

@@ -15,7 +15,7 @@
 ## Forms and Authentication
 
 - 每个控件是否有标签；点击标签能否聚焦控件
-- Enter、换行和快捷提交是否符合控件类型与平台习惯
+- Enter、换行和快捷提交是否符合控件类型与平台习惯；自定义 Enter 提交是否覆盖 IME composition，并实测中日韩输入候选确认不会误提交
 - 错误是否靠近字段，提交后是否聚焦首个错误
 - `name`、`autocomplete`、`type`、`inputmode` 和 spellcheck 是否符合数据含义
 - 是否允许粘贴、密码管理器和一次性验证码自动填充

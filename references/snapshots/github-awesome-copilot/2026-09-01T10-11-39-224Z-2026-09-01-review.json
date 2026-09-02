@@ -1,0 +1,130 @@
+{
+  "upstream": "github-awesome-copilot",
+  "captured_at": "2026-09-01T10:11:39.224Z",
+  "label": "2026-09-01-review",
+  "metadata": {
+    "title": "Awesome GitHub Copilot",
+    "kind": "github-public-repo",
+    "status": "active",
+    "owner": "codex",
+    "source_url": "https://github.com/github/awesome-copilot.git",
+    "source_paths": [
+      "README.md",
+      "AGENTS.md",
+      ".schemas",
+      ".github/plugin/marketplace.json",
+      "instructions/agent-skills.instructions.md",
+      "eng/validate-skills.mjs",
+      "eng/lib",
+      "plugins/external.json"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/github/awesome-copilot.git",
+    "checked_at": "2026-09-01T10:11:39.225Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "5eaae7e2cde26b5cf86682fb31e758da0288aef7"
+  },
+  "source_tree": {
+    "source_url": "https://github.com/github/awesome-copilot.git",
+    "checked_at": "2026-09-01T10:11:51.739Z",
+    "command": "git fetch/ls-tree source_paths",
+    "head_sha": "5eaae7e2cde26b5cf86682fb31e758da0288aef7",
+    "source_paths": [
+      "README.md",
+      "AGENTS.md",
+      ".schemas",
+      ".github/plugin/marketplace.json",
+      "instructions/agent-skills.instructions.md",
+      "eng/validate-skills.mjs",
+      "eng/lib",
+      "plugins/external.json"
+    ],
+    "entry_count": 13,
+    "manifest_sha256": "6aa032b28f76a148dbcb1d116dae5a669daef2085d07c506a7db4c158ddc817e",
+    "entries": [
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ce585c8ebdc05bd08317c101ab62ee86a867ec00",
+        "path": ".github/plugin/marketplace.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "22b0428b7b96b977660082bca8624d19a6a10ae4",
+        "path": ".schemas/collection.schema.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f0465d88c155545c428948a7edb29fa6108d0077",
+        "path": ".schemas/cookbook.schema.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4de6fc091673f9f8b248d8bed9142171e0a967a6",
+        "path": ".schemas/tools.schema.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "362de259c3eb4234426ab68b43cd18948af5d4d8",
+        "path": "AGENTS.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "31d139d2d7598b4b9cb3c3685f25e133bff3c1ac",
+        "path": "README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3a5d886c0259799f084ecb26ccf319acc7d9d780",
+        "path": "eng/lib/external-plugin-source-ref-sha.mjs"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4fb9e312c74bd89c3e887c5728351ce3d72919d7",
+        "path": "eng/lib/license.mjs"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "861890493c2aee0c76d18cf157c2e7981b180132",
+        "path": "eng/lib/markdown.mjs"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4b1edb5f6108ece18689876aa02f119e4a3c9df6",
+        "path": "eng/lib/markdown.test.mjs"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8aa05db79af6484b6644a8062f13ccd58d9aeffb",
+        "path": "eng/validate-skills.mjs"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9c0bc7cf46d23b6e48436b5f1e9de3d37f57f311",
+        "path": "instructions/agent-skills.instructions.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8c3442d1a95366adb5041eea50b56c0c16edc6dc",
+        "path": "plugins/external.json"
+      }
+    ]
+  },
+  "notes": {
+    "path": "references/notes/github-awesome-copilot.md",
+    "content": "# Awesome GitHub Copilot\r\n\r\nSource: `https://github.com/github/awesome-copilot`\r\n\r\n## Status\r\n\r\nActive GitHub-maintained community collection. Use it primarily as a governance and validation reference rather than a prompt catalog to mirror.\r\n\r\n## Latest Remote Evidence\r\n\r\n- remote head: `8ae5a99109124c22288eee0254da61741e44d12a`\r\n- observed date: 2026-07-29\r\n- evidence: sparse checkout of `README.md`, `AGENTS.md`, schemas, skill-authoring instructions, and validation scripts\r\n\r\n## Extractable Upgrades\r\n\r\n- Treat discovery metadata as a contract: concise WHAT, WHEN, and high-signal keywords.\r\n- Distinguish scripts, references, static assets, and editable templates.\r\n- Put non-obvious gotchas ahead of general explanations.\r\n- Validate names, descriptions, folder identity, links, and bounded asset sizes with machine checks.\r\n- Offer a machine-readable catalog surface without injecting the whole catalog into agent context.\r\n\r\n## Non-Adoption Boundary\r\n\r\n- Community-contributed assets require individual security, provenance, and license review.\r\n- Do not import hundreds of skills, agents, hooks, or workflows wholesale.\r\n- Do not assume GitHub Copilot directory conventions are native to Codex.\r\n\r\n## Recommended Phase\r\n\r\n- Use the repository's validation discipline to strengthen toolkit authoring guidance and future lint rules.\r\n- Keep cross-platform directory mapping in platform adapters.\r\n\r\n## Latest Remote Evidence 2026-08-05\r\n\r\n- remote head: `dab758a392cd6b06e806c1aa0444e2bc463b32f9`\r\n- previous reviewed head: `8ae5a99109124c22288eee0254da61741e44d12a`\r\n- notable change: the external marketplace added `GoogleChrome/modern-web-guidance` with Apache-2.0 provenance and a pinned release reference\r\n- validation changes: external plugin metadata validation now covers semver, SPDX identifiers, author fields, and unknown fields more strictly\r\n- adjacent examples: new canvas extensions and accessibility / Playwright learning-hub material provide evaluation scenarios, not prompt content to copy\r\n\r\n## Current Decision 2026-08-05\r\n\r\n- Track `.github/plugin/marketplace.json`, `plugins/external.json`, and `eng/lib` as governance inputs.\r\n- Register `modern-web-guidance` independently instead of importing it through the GitHub marketplace catalog.\r\n- Continue rejecting wholesale marketplace content absorption.\n\n## Review Update 2026-09-01\n\n- remote head: `5eaae7e2cde26b5cf86682fb31e758da0288aef7`\n- registered changes mainly describe Agent Plugins v1 packaging, marketplace generation and pinned external plugin refs\n- the plugin v1 layout is a separate platform-compatibility topic; this review does not change `packages/platform-*`\n- unregistered `anti-ui-slop` repeats local project-design-system, minimal-reference and real-render finish gates; the paid MCP dependency and community catalog are not adopted\n- keep immutable external refs as a governance principle, but do not widen `source_paths` to mirror the community skill catalog\n"
+  }
+}

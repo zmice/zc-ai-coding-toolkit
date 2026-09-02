@@ -39,6 +39,7 @@
 
 ## Forms and Authentication
 
+- [ ] 自定义 Enter 提交不会在中文、日文、韩文 IME 候选确认期间误提交；检查 composition 状态，保留显式提交控件并进行真实输入验证
 - [ ] 必填、格式和错误信息不只靠颜色提示，并与字段程序化关联
 - [ ] 提交失败后提供错误摘要，并将焦点移到首个可修复错误
 - [ ] 已知用户信息使用正确 `autocomplete`、`name`、`type` 和 `inputmode`

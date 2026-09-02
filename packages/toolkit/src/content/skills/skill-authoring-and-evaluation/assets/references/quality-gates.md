@@ -53,11 +53,23 @@
 - baseline 与 candidate 是否有区分度
 - 是否能由脚本验证；不能时由谁人工判断
 
+判定顺序：
+
+| 状态 | 处理 |
+|---|---|
+| correctness oracle 未通过 | fail；LOC、结构和 token 优势不能抵消 |
+| oracle 通过且行为或产物等价 | `Behavior delta: none`；只有明确允许 no-op 时可通过 |
+| oracle 通过且候选有有效改善 | 再比较结构、上下文和运行成本 |
+| judge 超时、崩溃、不可用或输出无效 | `inconclusive`；保留客观结果，重跑或人工裁决 |
+
+correctness oracle 必须在运行前冻结，且不能由 candidate 的实现、文件数或 guidance 反推。
+
 ## 6. Release Evidence
 
 - content / schema lint
 - broken link 和 attachment 检查
 - 相关 loader / generator 测试
 - 至少一组 baseline / candidate 对照
+- correctness oracle 结果、zero-diff 判定和 judge 状态
 - 上下文预算前后差异
 - 未覆盖平台和剩余风险
