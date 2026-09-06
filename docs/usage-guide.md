@@ -434,7 +434,7 @@ qodercn plugins uninstall zc-toolkit
   - 显式 `--global` 时生成薄入口到 `~/.codex/AGENTS.md`
   - 显式 `--global` 时生成插件到 `~/.codex/plugins/zc-toolkit/`，插件 Markdown agents 位于插件自己的 `agents/`
   - 插件内 skill 使用无前缀目录和 frontmatter，例如 `skills/start/SKILL.md`、`skills/sdd-tdd-workflow/SKILL.md`
-  - 插件同时生成 `commands/<command>.md` 和 `agents/<agent>.md`
+  - 插件生成 `agents/<agent>.md`；command 由同名 `skills/<command>/SKILL.md` 承接，不再生成重复的 `commands/<command>.md`
   - 界面实现使用 `$zc-toolkit:ui`；只读界面审查使用 `$zc-toolkit:ui-ux-review`；`frontend-specialist` 会按任务意图在实现、审查和浏览器验证之间分流
   - UI/UX 清单、许可证和设计系统参考随 skill 生成到 `skills/<skill>/references/`，运行时不依赖联网下载
   - 插件路线的 `AGENTS.md` 只保留全局规则、入口映射和文件索引，入口写成 `$zc-toolkit:start` / `$zc-toolkit:sdd-tdd`；传统直装的 `AGENTS.md` 继续写成 `$zc-start` / `$zc-sdd-tdd`
