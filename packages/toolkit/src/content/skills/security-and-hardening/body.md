@@ -6,12 +6,14 @@ Security-first development practices for web applications. Treat every external 
 
 ## When to Use
 
-- Building anything that accepts user input
+- Changing how untrusted input is validated, interpreted, or used
 - Implementing authentication or authorization
 - Storing or transmitting sensitive data
-- Integrating with external APIs or services
+- Changing trust boundaries when integrating external APIs or services
 - Adding file uploads, webhooks, or callbacks
 - Handling payment or PII data
+
+仅提及数据库或第三方服务、修改说明文案或做不影响信任边界的机械调整，不自动触发本流程。显式安全审查请求仍适用；只读取与实际风险相关的控制项。
 
 ## Security Boundary System
 

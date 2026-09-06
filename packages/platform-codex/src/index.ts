@@ -4,7 +4,6 @@ import {
   attachPlanMetadata,
   createAttachmentArtifacts,
   createMarkdownAgentArtifact,
-  createMarkdownCommandArtifact,
   createSkillArtifact,
   createInstallPlan,
   describeAsset,
@@ -248,31 +247,6 @@ function pickCommands(
     .filter((asset): asset is ToolkitAssetLike => Boolean(asset));
 }
 
-function uniqueCommands(commands: readonly ToolkitAssetLike[]): readonly ToolkitAssetLike[] {
-  const seen = new Set<string>();
-  const result: ToolkitAssetLike[] = [];
-
-  for (const command of commands) {
-    if (seen.has(command.id)) {
-      continue;
-    }
-
-    seen.add(command.id);
-    result.push(command);
-  }
-
-  return result;
-}
-
-function excludeCommands(
-  commands: readonly ToolkitAssetLike[],
-  excluded: readonly ToolkitAssetLike[],
-): readonly ToolkitAssetLike[] {
-  const excludedIds = new Set(excluded.map((asset) => asset.id));
-
-  return commands.filter((asset) => !excludedIds.has(asset.id));
-}
-
 function renderCommandEntryList(
   commands: readonly ToolkitAssetLike[],
   naming: SkillNaming,
@@ -291,7 +265,6 @@ function renderCodexEntryGuide(
   naming: SkillNaming,
 ): string {
   const commandIndex = createCommandIndex(assets);
-  const allCommands = Array.from(commandIndex.values());
   const primary = pickCommands(commandIndex, ["start"]);
   const workflow = pickCommands(commandIndex, [
     "product-analysis",
@@ -302,32 +275,6 @@ function renderCodexEntryGuide(
     "onboard",
     "ctx-health",
   ]);
-  const stage = pickCommands(commandIndex, [
-    "task-plan",
-    "spec",
-    "build",
-    "verify",
-    "plan-review",
-    "idea",
-    "ship",
-  ]);
-  const governance = pickCommands(commandIndex, [
-    "context-init",
-    "learn",
-    "retro",
-    "commit",
-    "ci",
-  ]);
-  const guardrails = pickCommands(commandIndex, ["guard", "careful", "freeze"]);
-  const alreadyGrouped = uniqueCommands([
-    ...primary,
-    ...workflow,
-    ...stage,
-    ...governance,
-    ...guardrails,
-  ]);
-  const specialist = excludeCommands(allCommands, alreadyGrouped);
-
   return `## 入口选择
 
 这里控制的是推荐入口顺序，不裁剪 Codex 安装资产。所有匹配 Codex 的 assets 都会生成到插件或项目目录中。
@@ -340,21 +287,9 @@ ${renderCommandEntryList(primary, naming)}
 
 ${renderCommandEntryList(workflow, naming)}
 
-### 阶段 / 收尾入口
-
-${renderCommandEntryList(stage, naming)}
-
 ### 专项入口（按需召回）
 
-${renderCommandEntryList(specialist, naming)}
-
-### 上下文、发布和治理入口
-
-${renderCommandEntryList(governance, naming)}
-
-### 防护入口
-
-${renderCommandEntryList(guardrails, naming)}
+阶段、专项、治理与防护能力按任务需要读取下方 skills 目录中的对应 SKILL.md；入口摘要不重复展开全部描述。已授权范围内持续执行，遇到授权缺失或关键决策时再暂停。
 `;
 }
 
@@ -393,7 +328,7 @@ Codex agent role 注册位于 \`${layout.displayConfigFile}\` 的 \`[agents.*]\`
 
 - \`$zc-start\`、\`$zc-spec\`、\`$zc-build\` 这类是 command-alias skill
 - \`$zc-sdd-tdd-workflow\`、\`$zc-debugging-and-error-recovery\` 这类是专题/流程 skill
-- \`zc_*\` 这类是 Codex custom agent，只在显式要求多 agent / 指定 agent 时使用
+- \`zc_*\` 这类是 Codex custom agent，按用户要求或已授权任务中的独立协作收益使用，遵循下方派发契约
 
 ## 核心规则
 
@@ -435,7 +370,6 @@ function renderPluginCompanionAgentsFile(options: {
   readonly assets: readonly ToolkitAssetLike[];
   readonly pluginName: string;
   readonly displayEntryFile: string;
-  readonly displayPluginCommandsDir: string;
   readonly displayPluginSkillsDir: string;
   readonly displayPluginAgentsDir: string;
 }): string {
@@ -474,14 +408,13 @@ ${renderCodexEntryGuide(options.assets, pluginMentionNaming)}
 ## Codex 调用方式
 
 - Codex 中通过插件 namespace 调用 skill，例如 \`$${options.pluginName}:start\`、\`$${options.pluginName}:context-init\`、\`$${options.pluginName}:quality-review\`
-- 插件同时提供原生 command 文件；实际 slash command 名称以 Codex 展示的插件 namespace 为准
+- 每个 command 以同名 skill 提供；不再分发旧 slash command 与 source-command-* 迁移入口
 - 如果旧文档或跨平台说明里出现 \`zc:*\`，它是稳定兼容语义名
 - 常见兼容示例：
 ${compatibilityExamples}
 
 ## 详细内容在哪里
 
-- 插件 commands：\`${options.displayPluginCommandsDir}/<command>.md\`
 - 插件 skills：\`${options.displayPluginSkillsDir}/<command-or-skill>/SKILL.md\`
 - 插件 agents：\`${options.displayPluginAgentsDir}/<agent>.md\`
 - 当前入口文件：\`${options.displayEntryFile}\`
@@ -780,22 +713,6 @@ function renderCodexCommandAliasArtifacts(
   });
 }
 
-function renderCodexPluginCommandArtifacts(
-  assets: readonly ToolkitAssetLike[],
-): readonly PlatformArtifact[] {
-  return assets.map((asset) => {
-    const slug = toCodexSkillSlug(asset);
-
-    return createMarkdownCommandArtifact({
-      path: `commands/${slug}.md`,
-      asset,
-      name: slug,
-      description: asset.summary ?? describeAsset(asset),
-      body: asset.body ?? `# /${slug}\n`,
-    });
-  });
-}
-
 function renderCodexPluginAgentArtifacts(
   assets: readonly ToolkitAssetLike[],
 ): readonly PlatformArtifact[] {
@@ -869,12 +786,8 @@ export function createCodexPluginGenerationPlan(
     matchedAssets,
     capability: {
       ...createCapability(layout),
-      surfaces: ["plugin-dir", "commands-dir", "skills-dir", "agents-dir"],
+      surfaces: ["plugin-dir", "skills-dir", "agents-dir"],
       entryFile: undefined,
-      commands: {
-        relativeDir: "commands",
-        fileExtension: ".md",
-      },
       agents: {
         relativeDir: "agents",
         fileExtension: ".md",
@@ -888,7 +801,6 @@ export function createCodexPluginGenerationPlan(
           version: pluginVersion,
         }),
       },
-      ...renderCodexPluginCommandArtifacts(commandAssets),
       ...renderCodexCommandAliasArtifacts(commandAssets, layout, pluginSkillNaming),
       ...renderCodexSkillArtifacts(skillAssets, layout, pluginSkillNaming),
       ...renderCodexPluginAgentArtifacts(agentAssets),
@@ -923,9 +835,6 @@ export function createCodexMarketplaceGenerationPlan(
   const displayPluginSkillsDir = marketplaceScope === "global"
     ? `~/.codex/plugins/${pluginName}/skills`
     : `${pluginRoot}/skills`;
-  const displayPluginCommandsDir = marketplaceScope === "global"
-    ? `~/.codex/plugins/${pluginName}/commands`
-    : `${pluginRoot}/commands`;
   const displayPluginAgentsDir = marketplaceScope === "global"
     ? `~/.codex/plugins/${pluginName}/agents`
     : `${pluginRoot}/agents`;
@@ -934,17 +843,13 @@ export function createCodexMarketplaceGenerationPlan(
     ...pluginPlan,
     capability: {
       ...pluginPlan.capability,
-      surfaces: ["entry-file", "plugin-dir", "commands-dir", "skills-dir", "agents-dir"],
+      surfaces: ["entry-file", "plugin-dir", "skills-dir", "agents-dir"],
       entryFile: {
         fileName: entryFile,
       },
       skills: {
         relativeDir: `${pluginRoot}/skills`,
         fileName: capability.skills!.fileName,
-      },
-      commands: {
-        relativeDir: `${pluginRoot}/commands`,
-        fileExtension: ".md",
       },
       agents: {
         relativeDir: `${pluginRoot}/agents`,
@@ -968,7 +873,6 @@ export function createCodexMarketplaceGenerationPlan(
           assets: pluginPlan.matchedAssets,
           pluginName,
           displayEntryFile,
-          displayPluginCommandsDir,
           displayPluginSkillsDir,
           displayPluginAgentsDir,
         }),

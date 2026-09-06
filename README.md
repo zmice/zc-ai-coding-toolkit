@@ -79,7 +79,7 @@ zc platform plugin codex --global --uninstall --plan
 
 | 平台 | 入口文件 | Commands | Skills | Agents | Extension / Plugin | 统一入口适配 |
 | --- | --- | --- | --- | --- | --- | --- |
-| Codex | `AGENTS.md` | Plugin commands + skill alias | Yes | Plugin agents + zc-managed direct-install agents | Git marketplace plugin / zc-managed local bundle | `zc:start -> $zc-toolkit:start` / `$zc-start` |
+| Codex | `AGENTS.md` | 同名 skill 承接 command | Yes | Plugin agents + zc-managed direct-install agents | Git marketplace plugin / zc-managed local bundle | `zc:start -> $zc-toolkit:start` / `$zc-start` |
 | Claude Code | `CLAUDE.md` | Yes | - | Yes | - | `zc:start -> /zc-start` |
 | OpenCode | `AGENTS.md` | Yes | Yes | Yes | - | `zc:start -> /zc-start` |
 | Qwen | `QWEN.md` | Yes | Yes | Yes | Yes | `zc:start -> zc:start` |
@@ -89,7 +89,7 @@ zc platform plugin codex --global --uninstall --plan
 
 - Codex 推荐通过官方 Git marketplace 安装插件，插件 skill 用 `$zc-toolkit:start` 这类 namespace 限定入口
 - Codex 传统直装通过 `$zc-*` skill 别名承接统一语义
-- Codex 插件原生携带 `commands/`、`skills/` 和 `agents/`；官方 marketplace 安装不需要额外修改用户 config
+- Codex 插件携带 `skills/` 和 `agents/`，command 由同名 skill 承接，保留 `zc:*` 语义；旧 slash / `source-command-*` 迁移入口不再分发，已有缓存需升级后核验；官方 marketplace 安装不需要额外修改用户 config
 - Codex `--upgrade` 能把旧 Desktop / 本地 marketplace 安装事务式迁移到 Git marketplace，并清理会遮蔽 Git source 的旧 personal marketplace 条目；Windows npm `.cmd` shim 和 CRLF companion 文件由跨平台兼容层处理
 - `--with-agents` 与 `zc platform agents codex` 负责 Codex 官方 standalone custom-agent TOML；需要逐角色固定 `model`、`model_reasoning_effort` 或 `sandbox_mode` 时必须保留这条配置面，前者用独立回执约束 status、升级和卸载
 - Claude Code 和 OpenCode 通过 `/zc-*` 命令承接统一语义

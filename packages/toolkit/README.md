@@ -65,7 +65,7 @@ Recommendation: <action> because <specific evidence, trade-off, and rejected alt
 ### Commands
 
 - `api`：API — 设计和审查 API 接口，确保一致性、易用性和向后兼容性。
-- `build`：构建 — 按 TDD 的 Red-Green-Refactor 循环进行增量构建，确保每次只完成一个任务且系统始终可编译、可测试。
+- `build`：构建 — 按已有计划增量实现并验证，每个切片完成后继续已授权任务；行为变更配合 TDD。
 - `careful`：预警 — 激活 Careful 模式，AI 在执行任何危险命令前显示风险警告并要求确认。
 - `ci`：CI/CD — 搭建或优化 CI/CD 管道，配置质量门禁、自动化测试和部署策略。
 - `commit`：提交 — 引导规范化 Git 提交，确保原子提交、描述性消息和提交前检查。

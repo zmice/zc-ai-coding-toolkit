@@ -43,6 +43,13 @@
 
 运行前冻结独立的 correctness oracle：`Must do`、`Must not do` 和 `Observable evidence`。不得从 candidate 的实现、LOC、文件数或 guidance 反推期望。
 
+涉及真实 skill 或多 agent 时，先验证评测环境：
+
+- 用运行时技能列表核对启用资产与实际路径；禁用插件不等于隔离全局 skills。限定资产读取范围，并在模型调用前用无内容探针验证必要的拒读边界。
+- 保存 prompt、资产、测试和 oracle 的基线哈希；运行后核对受保护文件与实际修改，不能只采信最终答复。
+- 多 agent 验收需要原生派发、子任务标识、返回状态和主线程合流证据。模型自报“已派发”不能证明执行；采集面缺失事件时记为 `inconclusive`，不算通过或虚报。
+- 临时任务未必支持事后读取历史，先确认事件采集能力；把基础设施失败、额外资产读取和模型行为失败分开记录。
+
 ```text
 Evaluation case:
 - Prompt:

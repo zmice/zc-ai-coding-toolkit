@@ -246,7 +246,7 @@ npm install -g @qwen-code/qwen-code@latest
 
 | 平台 | 产物 |
 | --- | --- |
-| `codex` | 推荐通过官方 Git marketplace 从 `zmice/zc-codex-marketplace` 安装和更新 `zc-toolkit`；插件原生包含 `commands/`、`skills/`、`agents/`；传统安装仍生成 `AGENTS.md`、`config.toml`、`skills/zc-*/SKILL.md`、`agents/zc-*.toml` |
+| `codex` | 推荐通过官方 Git marketplace 从 `zmice/zc-codex-marketplace` 安装和更新 `zc-toolkit`；插件包含 `skills/`、`agents/`，command 由同名 skill 承接，不再分发旧 slash / `source-command-*` 迁移入口；传统安装仍生成 `AGENTS.md`、`config.toml`、`skills/zc-*/SKILL.md`、`agents/zc-*.toml` |
 | `claude` | `CLAUDE.md`、`.claude/commands`、`.claude/agents` |
 | `opencode` | `AGENTS.md`、`.opencode/commands`、`.opencode/skills`、`.opencode/agents` |
 | `qwen` | 用户级优先通过官方 `qwen extensions` CLI 从 `https://github.com/zmice/zc-qwen-extension.git` 安装和更新 `zc-toolkit`；扩展目录位于 `.qwen/extensions/zc-toolkit/`，其中包含 `QWEN.md`、带 `version` 的 `qwen-extension.json`、`commands/`、`skills/`、`agents/` |

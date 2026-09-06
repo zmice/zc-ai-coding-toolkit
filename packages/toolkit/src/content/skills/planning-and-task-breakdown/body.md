@@ -133,7 +133,7 @@ STOP: <阻塞发现>
 
 ## Agent Opportunity
 
-计划阶段必须给出明确的多 agent 结论，而不是只写“可并行”：
+计划阶段按独立任务和协作收益给出判断。无派发时仅记录 `mode=none`、`dispatch_now=no` 与理由；需要派发才展开下列字段，不因任务涉及多个文件就默认派发：
 
 ```text
 agent_opportunity:
@@ -151,7 +151,7 @@ agent_opportunity:
 - loop_budget:
 ```
 
-字段语义、mode、授权和默认 loop 统一遵循 `parallel-agent-dispatch` 的 agent opportunity contract。计划不复制 policy，只记录本次解析后的完整字段：
+字段语义、mode、授权和默认 loop 统一遵循 `parallel-agent-dispatch` 的 agent opportunity contract。准备派发时记录本次解析结果，不重复已有且仍有效的字段：
 
 - agent / worker 必须是当前平台真实可执行角色；不可用时记录主线程 fallback。
 - `runtime capacity` 写当前快照，不写跨版本固定上限。
@@ -182,5 +182,5 @@ agent_opportunity:
 ## 与其他技能的衔接
 
 - 接在 `spec-driven-development` 之后
-- 计划确认后交给 `incremental-implementation`
+- 计划可执行且实现已获授权后交给 `incremental-implementation`；仅缺少关键决策或必要授权时暂停
 - 涉及方案争议时，可搭配 `multi-perspective-review`

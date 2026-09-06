@@ -1,7 +1,7 @@
 kind: skill
 name: documentation-and-adrs
 title: 文档与 ADR
-description: 记录关键决策与长期文档。适用于架构决策、公共 API 变更、功能交付或任何未来工程师和代理需要理解的上下文沉淀。
+description: 编写或更新长期项目文档、架构决策与公共契约说明；普通实现任务不默认生成 ADR。
 tier: recommended
 audience: default
 stability: stable

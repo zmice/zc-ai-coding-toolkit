@@ -15,7 +15,7 @@
 
 | 平台 | Entry / Memory | Commands | Skills | Agents | Extension / Plugin | 用户级 | 项目级 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Codex | `AGENTS.md` | plugin-level `commands/` | `~/.codex/skills` + plugin skills | standalone `.codex/agents/*.toml` + `[agents]`；plugin-level `agents/` 保留为已验证打包 surface | 通用 Plugins Directory + Git/local marketplace + `codex plugin` CLI | Yes | Yes |
+| Codex | `AGENTS.md` | 本工具包以同名 skill 承接 command，避免旧 `commands/` 迁移成重复 skill | `~/.codex/skills` + plugin skills | standalone `.codex/agents/*.toml` + `[agents]`；plugin-level `agents/` 保留为已验证打包 surface | 通用 Plugins Directory + Git/local marketplace + `codex plugin` CLI | Yes | Yes |
 | Claude Code | `CLAUDE.md` | `~/.claude/commands` / `.claude/commands` | 未见官方 skills 目录模型 | `~/.claude/agents` / `.claude/agents` | 未见官方 plugin 安装模型 | Yes | Yes |
 | Qwen | `QWEN.md` | extension 内支持 | `~/.qwen/skills` / `.qwen/skills` | extension 内支持 | `~/.qwen/extensions` / `.qwen/extensions` + 官方 `qwen extensions` CLI | Yes | Yes |
 | OpenCode | `AGENTS.md` | `~/.config/opencode/commands` / `.opencode/commands` | `~/.config/opencode/skills` / `.opencode/skills` | `~/.config/opencode/agents` / `.opencode/agents` | 未见独立 plugin 安装模型 | Yes | Yes |
@@ -198,7 +198,7 @@
 
 | 平台 | 目标实现 | 覆盖评价 |
 | --- | --- | --- |
-| Codex | 项目级传统安装仍支持 `AGENTS.md` + `.codex/config.toml` + skills + agents；推荐分发使用 Git marketplace plugin。插件包携带 commands / skills / agents，receipt-backed companion 同步 standalone TOML roles；toolkit 已映射 native lifecycle、context fork、runtime capacity、thread reuse 和 Codex temp-worktree policy | 分发、九个角色、标量 role config 与执行策略已对齐；host runtime 自动 smoke、MCP/skills nested config 和全局 `[agents]` 所有权合并待补 |
+| Codex | 项目级传统安装仍支持 `AGENTS.md` + `.codex/config.toml` + skills + agents；推荐分发使用 Git marketplace plugin。插件包携带 skills / agents，command 保留同名 skill 与 `zc:*` 语义；receipt-backed companion 同步 standalone TOML roles；toolkit 已映射 native lifecycle、context fork、runtime capacity、thread reuse 和 Codex temp-worktree policy | 新包不再提供旧 slash / `source-command-*` 入口；已安装缓存去重需升级后验证；host runtime 自动 smoke、MCP/skills nested config 和全局 `[agents]` 所有权合并待补 |
 | Claude Code | `CLAUDE.md` + `commands/zc-*.md` + `agents/zc-*.md`；不覆盖 `enterprise policy`、`CLAUDE.local.md`、`@imports` 目标文件 | 目录化原生安装 |
 | Qwen | 优先通过官方 `qwen extensions` CLI 管理 `zc-toolkit` 的发布态 extension bundle；扩展内容为 `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md` + `qwen-extension.json` + `commands` + `skills` + `agents` | extension 原生安装 |
 | OpenCode | `AGENTS.md` + `.opencode/commands/zc-*.md` + `.opencode/skills/zc-*/SKILL.md` + `.opencode/agents/zc-*.md` + 全局对应目录 | 目录化原生安装 |

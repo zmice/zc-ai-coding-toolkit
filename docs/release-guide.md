@@ -82,7 +82,7 @@
 - 确认 `zc-codex-marketplace` 已同步，且 `zc platform plugin codex --upgrade --json` 能识别 Git / 非 Git / 缺失 marketplace，完成刷新或带回滚迁移后重新安装插件并返回 installed/available 状态。
 - 确认 Windows CI 的 CLI job 实际执行 npm `.cmd` shim 回归用例，且 Codex 全局回执没有重复 `.codex` 目录。
 - 确认 `zc platform plugin codex --install --plan --json` 同时包含 marketplace 注册和 `codex plugin add`。
-- 确认发布 bundle 原生包含 `commands/*.md`、`skills/*/SKILL.md` 和 `agents/*.md`，且本地 marketplace 生成不额外写用户级 agent config。
+- 确认 Codex 发布 bundle 原生包含 `skills/*/SKILL.md` 和 `agents/*.md`，不再重复生成 `commands/*.md`；旧 slash / `source-command-*` 调用迁移到 `$zc-toolkit:<名称>`，且本地 marketplace 生成不额外写用户级 agent config。
 - 确认 `zc platform plugin codex --install --with-agents --plan --json` 同时声明 plugin 与 companion agent 两个阶段，但不会写入本机。
 - 确认发布 bundle 的 `assets/zc-agents/manifest.json` 中 plugin version、内容指纹和 artifact hashes 与实际文件一致。
 - 确认 `zc platform plugin codex --status --with-agents --json` 能聚合官方 plugin 状态和 companion 回执，且 status 不写文件。

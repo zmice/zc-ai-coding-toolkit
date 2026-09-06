@@ -11,10 +11,12 @@
 - `skills/zc-<skill>/SKILL.md`
 - `agents/zc-<agent>.toml`
 - Codex 项目上下文初始化计划：`AGENTS.md` managed block + `.codex/context/*`
-- 可选 Codex plugin bundle：`.codex-plugin/plugin.json` + `commands/` + `skills/` + `agents/` + `assets/zc-agents/`
+- 可选 Codex plugin bundle：`.codex-plugin/plugin.json` + `skills/` + `agents/` + `assets/zc-agents/`
 - 可选 Codex marketplace bundle：`.agents/plugins/marketplace.json` + `AGENTS.md` / `.codex/AGENTS.md` + `plugins/zc-toolkit/` / `.codex/plugins/zc-toolkit/`
 
-`.codex/config.toml` / `.codex/agents/` 与插件内 `commands/` / `agents/` 是两条不同安装面。插件 Markdown agent 提供角色说明；需要逐角色覆盖 Codex session settings 时，standalone TOML 是官方配置面。
+`.codex/config.toml` / `.codex/agents/` 与插件内 `skills/` / `agents/` 是两条不同安装面。插件 Markdown agent 提供角色说明；需要逐角色覆盖 Codex session settings 时，standalone TOML 是官方配置面。
+
+插件中的每个 command 仅生成一个同名 skill，保留完整正文及 `zc:*` 语义。新 bundle 不再分发 `commands/`，避免 Codex 将它再次迁移为 `source-command-*` skill。原生 skill 调用继续保留；旧 slash command 或显式 `source-command-*` 调用需要改用同名 skill，不承诺这些旧入口兼容。此生成规则不修改本机缓存，也不保证已有会话中的迁移入口立即消失。传统 standalone 安装的 `zc-*` 命名不变。
 
 standalone / companion `agents/zc-<agent>.toml` 会从 canonical `codex_agent` 元数据生成 `model`、`model_reasoning_effort` 和 `sandbox_mode`。其中 model / reasoning 是有意的 role hard pin；sandbox 只是请求的默认隔离档位，parent turn 的 live sandbox / approval override 仍是实际权限边界。`mcp_servers`、`skills.config` 与顶层 `[agents]` 默认值尚未由本包生成。
 
@@ -72,13 +74,12 @@ zc platform install codex --plan --json
   - 同时安装 `<path>/agents/zc-<agent>.toml`
 - `generate --bundle codex-plugin --dir <path>`
   - 生成 `<path>/.codex-plugin/plugin.json`
-  - 生成 `<path>/commands/<command>.md`
   - 生成 `<path>/skills/<command>/SKILL.md`
   - 生成 `<path>/skills/<skill>/SKILL.md`
   - 生成 `<path>/agents/<agent>.md`
   - 插件自身已经提供 `zc-toolkit` 命名空间，因此 skill 名不再额外加 `zc-` 前缀
   - 用于 Codex plugin marketplace / 本地 plugin 打包场景，不替代项目级 `AGENTS.md`
-  - plugin-level commands / agents 是 manifest 的同级自动发现 surface，不额外虚构 manifest 字段
+  - plugin-level agents 保留自动发现 surface，commands 由同名 skills 承接
   - `assets/zc-agents/manifest.json`、`config/agents.toml` 和 `agents/*.toml` 是逐角色显式运行时配置 payload；只有显式 `--with-agents` 会消费
 - `plugin codex`
   - 推荐消费路径是 `plugin codex --install`，对齐官方 `codex plugin marketplace add` + `codex plugin add`
@@ -106,7 +107,6 @@ zc platform install codex --plan --json
   - 生成 `<path>/.agents/plugins/marketplace.json`
   - 生成 `<path>/AGENTS.md`
   - 生成 `<path>/plugins/zc-toolkit/.codex-plugin/plugin.json`
-  - 生成 `<path>/plugins/zc-toolkit/commands/<command>.md`
   - 生成 `<path>/plugins/zc-toolkit/skills/<command>/SKILL.md`
   - 生成 `<path>/plugins/zc-toolkit/skills/<skill>/SKILL.md`
   - 生成 `<path>/plugins/zc-toolkit/agents/<agent>.md`
@@ -117,7 +117,6 @@ zc platform install codex --plan --json
   - 生成 `~/.agents/plugins/marketplace.json`
   - 生成 `~/.codex/AGENTS.md`
   - 生成 `~/.codex/plugins/zc-toolkit/.codex-plugin/plugin.json`
-  - 生成 `~/.codex/plugins/zc-toolkit/commands/<command>.md`
   - 生成 `~/.codex/plugins/zc-toolkit/skills/<command>/SKILL.md`
   - 生成 `~/.codex/plugins/zc-toolkit/skills/<skill>/SKILL.md`
   - 生成 `~/.codex/plugins/zc-toolkit/agents/<agent>.md`

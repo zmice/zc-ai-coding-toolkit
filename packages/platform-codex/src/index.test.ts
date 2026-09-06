@@ -511,6 +511,28 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.ok(plan.artifacts[1]?.content.includes('config_file = "agents/zc-code-reviewer.toml"'));
   });
 
+  it("distributes each command once as a skill while retaining its body and semantic alias", () => {
+    const plan = createCodexPluginGenerationPlan(manifest);
+    assert.ok(!plan.artifacts.some((artifact) => artifact.path.startsWith("commands/")));
+    assert.equal(plan.capability.commands, undefined);
+    for (const command of manifest.assets.filter((asset) => asset.kind === "command")) {
+      const slug = command.name!;
+      const matches = plan.artifacts.filter((artifact) => artifact.path === `skills/${slug}/SKILL.md`);
+      assert.equal(matches.length, 1);
+      assert.ok(matches[0]!.content.includes(`$${slug}`));
+      assert.ok(matches[0]!.content.includes(`zc:${slug}`));
+      assert.ok(matches[0]!.content.includes(command.body!.trim()));
+    }
+    assert.ok(plan.artifacts.find((artifact) => artifact.path === "skills/start/SKILL.md")!.content.includes("# 开始"));
+    const marketplace = createCodexMarketplaceGenerationPlan(manifest);
+    const entry = marketplace.artifacts.find((artifact) => artifact.path === templateFiles.agents)!.content;
+    for (const match of entry.matchAll(/`zc:([a-z-]+)` ->/gu)) {
+      assert.ok(marketplace.artifacts.some((artifact) => artifact.path === `plugins/zc-toolkit/skills/${match[1]}/SKILL.md`));
+    }
+    assert.ok(!entry.includes("### 阶段 / 收尾入口"));
+    assert.ok(!entry.includes("### 上下文、发布和治理入口"));
+  });
+
   it("creates a Codex plugin generation plan with manifest and bundled skills", () => {
     const plan = createCodexPluginGenerationPlan(manifest, {
       pluginVersion: "0.2.5",
@@ -519,16 +541,12 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.equal(plan.platform, platformName);
     assert.deepEqual(plan.capability.surfaces, [
       "plugin-dir",
-      "commands-dir",
       "skills-dir",
       "agents-dir",
     ]);
     assert.equal(plan.capability.entryFile, undefined);
     assert.deepEqual(plan.artifacts.map((artifact) => artifact.path), [
       templateFiles.pluginManifest,
-      "commands/start.md",
-      "commands/context-init.md",
-      "commands/api.md",
       "skills/start/SKILL.md",
       "skills/context-init/SKILL.md",
       "skills/api/SKILL.md",
@@ -538,13 +556,10 @@ describe("@zmice/platform-codex scaffold", () => {
       "assets/zc-agents/config/agents.toml",
       "assets/zc-agents/agents/zc-code-reviewer.toml",
     ]);
-    const startCommand = plan.artifacts.find((artifact) => artifact.path === "commands/start.md");
     const startSkill = plan.artifacts.find((artifact) => artifact.path === "skills/start/SKILL.md");
     const contextSkill = plan.artifacts.find((artifact) => artifact.path === "skills/context-init/SKILL.md");
     const apiSkill = plan.artifacts.find((artifact) => artifact.path === "skills/api/SKILL.md");
     const nativeAgent = plan.artifacts.find((artifact) => artifact.path === "agents/code-reviewer.md");
-    assert.ok(startCommand?.content.startsWith('---\nname: "start"'));
-    assert.ok(startCommand?.content.includes("# 开始"));
     assert.ok(startSkill?.content.includes('name: "start"'));
     assert.ok(startSkill?.content.includes("$start"));
     assert.ok(!startSkill?.content.includes("$zc-start"));
@@ -625,7 +640,7 @@ describe("@zmice/platform-codex scaffold", () => {
       pluginVersion: "0.7.0",
     });
 
-    assert.ok(plan.artifacts.some((artifact) => artifact.path === "commands/ui.md"));
+    assert.ok(!plan.artifacts.some((artifact) => artifact.path.startsWith("commands/")));
     assert.ok(plan.artifacts.some((artifact) => artifact.path === "skills/ui/SKILL.md"));
     assert.ok(plan.artifacts.some((artifact) => artifact.path === "skills/frontend-ui-engineering/SKILL.md"));
     assert.ok(plan.artifacts.some((artifact) => artifact.path === "skills/ui-ux-review/SKILL.md"));
@@ -684,9 +699,6 @@ describe("@zmice/platform-codex scaffold", () => {
       templateFiles.marketplace,
       templateFiles.agents,
       "plugins/zc-toolkit/.codex-plugin/plugin.json",
-      "plugins/zc-toolkit/commands/start.md",
-      "plugins/zc-toolkit/commands/context-init.md",
-      "plugins/zc-toolkit/commands/api.md",
       "plugins/zc-toolkit/skills/start/SKILL.md",
       "plugins/zc-toolkit/skills/context-init/SKILL.md",
       "plugins/zc-toolkit/skills/api/SKILL.md",
@@ -699,22 +711,21 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.deepEqual(plan.capability.surfaces, [
       "entry-file",
       "plugin-dir",
-      "commands-dir",
       "skills-dir",
       "agents-dir",
     ]);
     assert.equal(plan.capability.entryFile?.fileName, templateFiles.agents);
-    assert.equal(plan.capability.commands?.relativeDir, "plugins/zc-toolkit/commands");
+    assert.equal(plan.capability.commands, undefined);
     assert.equal(plan.capability.skills?.relativeDir, "plugins/zc-toolkit/skills");
     assert.equal(plan.capability.agents?.relativeDir, "plugins/zc-toolkit/agents");
     assert.ok(plan.artifacts[1]?.content.includes("Codex zc-toolkit 插件入口"));
     assert.ok(plan.artifacts[1]?.content.includes("Codex 调用方式"));
     assert.ok(plan.artifacts[1]?.content.includes("`$zc-toolkit:start`、`$zc-toolkit:context-init`、`$zc-toolkit:quality-review`"));
-    assert.ok(plan.artifacts[1]?.content.includes("原生 command 文件"));
+    assert.ok(plan.artifacts[1]?.content.includes("每个 command 以同名 skill 提供"));
     assert.ok(plan.artifacts[1]?.content.includes("`zc:start` -> `$zc-toolkit:start`"));
     assert.ok(plan.artifacts[1]?.content.includes("专项入口（按需召回）"));
     assert.ok(!plan.artifacts[1]?.content.includes("$zc-start"));
-    assert.ok(plan.artifacts[1]?.content.includes("plugins/zc-toolkit/commands/<command>.md"));
+    assert.ok(!plan.artifacts[1]?.content.includes("plugins/zc-toolkit/commands/"));
     assert.ok(plan.artifacts[1]?.content.includes("plugins/zc-toolkit/skills/<command-or-skill>/SKILL.md"));
     assert.ok(plan.artifacts[1]?.content.includes("plugins/zc-toolkit/agents/<agent>.md"));
     const repoStartSkill = plan.artifacts.find(
@@ -752,9 +763,6 @@ describe("@zmice/platform-codex scaffold", () => {
       templateFiles.marketplace,
       ".codex/AGENTS.md",
       ".codex/plugins/zc-toolkit/.codex-plugin/plugin.json",
-      ".codex/plugins/zc-toolkit/commands/start.md",
-      ".codex/plugins/zc-toolkit/commands/context-init.md",
-      ".codex/plugins/zc-toolkit/commands/api.md",
       ".codex/plugins/zc-toolkit/skills/start/SKILL.md",
       ".codex/plugins/zc-toolkit/skills/context-init/SKILL.md",
       ".codex/plugins/zc-toolkit/skills/api/SKILL.md",
@@ -765,14 +773,14 @@ describe("@zmice/platform-codex scaffold", () => {
       ".codex/plugins/zc-toolkit/assets/zc-agents/agents/zc-code-reviewer.toml",
     ]);
     assert.equal(plan.capability.entryFile?.fileName, ".codex/AGENTS.md");
-    assert.equal(plan.capability.commands?.relativeDir, ".codex/plugins/zc-toolkit/commands");
+    assert.equal(plan.capability.commands, undefined);
     assert.equal(plan.capability.skills?.relativeDir, ".codex/plugins/zc-toolkit/skills");
     assert.equal(plan.capability.agents?.relativeDir, ".codex/plugins/zc-toolkit/agents");
-    assert.ok(plan.artifacts[1]?.content.includes("~/.codex/plugins/zc-toolkit/commands/<command>.md"));
+    assert.ok(!plan.artifacts[1]?.content.includes("~/.codex/plugins/zc-toolkit/commands/"));
     assert.ok(plan.artifacts[1]?.content.includes("~/.codex/plugins/zc-toolkit/skills/<command-or-skill>/SKILL.md"));
     assert.ok(plan.artifacts[1]?.content.includes("~/.codex/plugins/zc-toolkit/agents/<agent>.md"));
     assert.ok(plan.artifacts[1]?.content.includes("Codex 调用方式"));
-    assert.ok(plan.artifacts[1]?.content.includes("原生 command 文件"));
+    assert.ok(plan.artifacts[1]?.content.includes("每个 command 以同名 skill 提供"));
     assert.ok(plan.artifacts[1]?.content.includes("`$zc-toolkit:start`"));
 
     const marketplace = JSON.parse(plan.artifacts[0]!.content) as {

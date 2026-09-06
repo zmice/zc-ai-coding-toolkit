@@ -50,7 +50,7 @@ zc platform plugin codex --upgrade --with-agents
 zc platform plugin codex --uninstall --with-agents
 ```
 
-插件目录包含 `agents/` 与 `commands/`，不需要额外 manifest 字段。`assets/zc-agents/` 是显式运行时配置桥：`zc` 从官方 CLI 返回的 `installedPath` 或 `source.path` 精确定位插件根，再按回执写入 `~/.codex/config.toml` 和 `~/.codex/agents/`。升级仍显示 `updatePending` 时不会提前覆盖 agents；卸载只删除回执明确拥有的文件。
+插件目录包含 `skills/` 与 `agents/`，command 通过同名 skill 提供，不再生成重复的 `commands/`。`$<skill>`（含插件 namespace）与 `zc:*` 语义保留；旧 slash 和 `source-command-*` 迁移入口不再分发。已安装缓存需在后续升级及新会话中核验。`assets/zc-agents/` 是显式运行时配置桥：`zc` 从官方 CLI 返回的 `installedPath` 或 `source.path` 精确定位插件根，再按回执写入 `~/.codex/config.toml` 和 `~/.codex/agents/`。升级仍显示 `updatePending` 时不会提前覆盖 agents；卸载只删除回执明确拥有的文件。
 
 确认标准不是只看插件已安装。运行 `zc platform plugin codex --status --with-agents --json`，应同时满足：
 
@@ -105,7 +105,7 @@ pnpm upstream -- report all --format md --with-remote
 
 | 平台 | 当前安装形态 | 统一入口适配 |
 | --- | --- | --- |
-| Codex | 推荐：Git marketplace plugin（commands + skills + agents）；本地/传统：`AGENTS.md` + `config.toml` + `skills/` + `agents/` | 传统 `zc:start -> $zc-start`；插件 `zc:start -> $zc-toolkit:start` |
+| Codex | 推荐：Git marketplace plugin（skills + agents，command 由同名 skill 承接）；本地/传统：`AGENTS.md` + `config.toml` + `skills/` + `agents/` | 传统 `zc:start -> $zc-start`；插件 `zc:start -> $zc-toolkit:start` |
 | Claude Code | `CLAUDE.md` + `commands/` + `agents/` | `zc:start -> /zc-start` |
 | OpenCode | `AGENTS.md` + `commands/` + `skills/` + `agents/` | `zc:start -> /zc-start` |
 | Qwen | `QWEN.md` + extension 目录 | `zc:start -> zc:start` |

@@ -187,7 +187,10 @@ function main() {
     assertFile(join(codexMarketplaceRoot, ".gitattributes"), /assets\/zc-agents\/\*\* text eol=lf/);
     assertFile(join(codexMarketplaceRoot, ".agents", "plugins", "marketplace.json"), /"path": "\.\/plugins\/zc-toolkit"/);
     assertFile(join(codexMarketplaceRoot, "plugins", "zc-toolkit", ".codex-plugin", "plugin.json"), /"name": "zc-toolkit"/);
-    assertFile(join(codexMarketplaceRoot, "plugins", "zc-toolkit", "skills", "start", "SKILL.md"));
+    assertFile(join(codexMarketplaceRoot, "plugins", "zc-toolkit", "skills", "start", "SKILL.md"), /zc:start/);
+    if (existsSync(join(codexMarketplaceRoot, "plugins", "zc-toolkit", "commands"))) {
+      throw new Error("Codex bundle must expose commands as skills without a duplicate legacy commands directory");
+    }
     run(
       "node",
       ["apps/cli/dist/cli/index.js", "platform", "install", "claude", "--dir", installRoot],
