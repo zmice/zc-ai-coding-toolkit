@@ -63,3 +63,15 @@ baseline 固定为 HEAD `e97b7c77300596532de9acf017bf76850dedf71e`，不把已�
 1. 发布流程获授权后交付正式插件，再核对新任务实际加载的 skill 路径/内容与 child model 日志。
 2. 增加真实修改任务的固定样本与可采集的原生子任务运行记录；完整 guidance A/B 尚未运行。
 3. OCR 的覆盖/证伪机制已吸收；固定版本 delegate 的可选适配和本项目 PR 对照尚未接入，不作为默认 CI 门禁。
+
+## 后续正式发布验收（2026-09-26）
+
+上文“未发布”描述的是实施阶段快照。用户随后授权发布，现已发布 `@zmice/zc@0.11.1`，tag 指向 `94040e2c2c910bedbbcd6c93a0238f6187bd78b1`。npm 包 SHA-1 为 `699b9f61b4bd22c3231dd435c081f2c6b330f312`，与成功发布日志一致；发布期间 npm 异步处理完成后才执行升级。
+
+- 发布前补齐 config/receipt 普通写入异常回滚与 prune 失败重试保护，两项独立审查 finding 已关闭。版本前、版本后完整门禁均通过，CLI 258 passed / 1 skipped；不承诺进程终止或断电下的原子性。
+- GitHub Release（run `36192122757`）、Codex marketplace（`36192122461`）、Qwen 仓库（`36192122486`）均成功。Quest CN（`36192122413`）因缺少 `QODER_CN_PLUGIN_REPO_TOKEN` 失败，没有替换或创建凭据。
+- 本机与 `dev-server` 已从 npm 安装 CLI 0.11.1，通过官方 Git marketplace 升级插件；独立 status 均为 `overallStatus=complete`、plugin 0.11.1、agents 11/11 up-to-date，missing/drifted/stale/untracked 均为 0。
+- 非受管配置内容保持一致，服务器 Codex wrapper 哈希不变；配置解析与 81 assets / 0 errors / 0 warnings 的 toolkit lint 通过。本机新缓存为 `~/.codex/plugins/cache/zc-toolkit/zc-toolkit/0.11.1`，71 skills、10 agents；新版派发和审查覆盖 reference 与发布源码一致。
+- 升级前备份：本机 `~/.codex/platform-state/release-backups/20260926-0.11.1/`，服务器同名 home 相对路径。原本的用户文件 `apps/cli/AGENTS.md` 内容保持不变且未提交。
+
+正式插件交付已完成；已有任务不视为自动重载，需要新任务加载新版。先前缺少 child 自身模型日志、真实修改任务 A/B 与 OCR delegate 试点的限制仍然保留，发布成功不替代这些证据。
