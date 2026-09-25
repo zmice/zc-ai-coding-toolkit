@@ -1,0 +1,392 @@
+{
+  "date": "2026-09-26",
+  "type": "synthetic-action-and-reasoning-smoke",
+  "nativeRoleProbe": {
+    "parentThreadId": "01a0da49-1698-77a0-978e-89c70e00a9c8",
+    "observedToolCall": "spawn_agent",
+    "observedArguments": {
+      "task_name": "role_probe",
+      "agent_type": "zc_lightweight_researcher",
+      "fork_turns": "none"
+    },
+    "observedToolResult": { "task_name": "/root/role_probe" },
+    "childRuntimeModelStatus": "inconclusive: child turn_context unavailable",
+    "note": "Dispatch arguments and result verified from parent response_item records. The earlier unsupported-parameter claim was a model self-report contradicted by this actual call."
+  },
+  "prompt": "这是固定样本模型评测，不执行实际工程任务。不要使用工具、读文件或派发；只基于下述完整材料回答。每项给具体结果和理由，每项不超过100字。不得声称运行测试。返回JSON对象，键1至6。\n1 定位：路由 POST /orders -> OrderController.create -> service.create -> repo.insert。repo.insert返回{rowCount:0}而service直接返回201。指出缺少判断的最小层与失败测试断言，不扩展架构。\n2 文档事实核查：给定文档“delegate preview只枚举筛选文件；完整模式才调用LLM进行反思过滤”。判断“delegate保证finding经过反思过滤”为支持/反驳/未决，并给依据。\n3 小修复：async function path(p){while(!await exists(p)){p=dirname(p)} return await realpath(p)}，并发者可删除p。提供最小修复伪代码，ENOENT可向父级恢复，EACCES必须继续抛出，根目录失败须终止。\n4 一般实现：受管配置旧回执model=A，生成model=B；现有model分别为缺失、A、USER三种。给三种合并结果和下次卸载保护规则，不能覆盖USER。\n5 审查：diff变更a.ts,b.test.ts,c.bin。reviewer仅读a.ts报告无问题；b.test.ts被默认排除，c.bin二进制无法读。能否声明整体验收通过？给覆盖回执和下一步。不要把排除视为已审查。\n6 安全/架构：API从请求body读取tenantId，然后SELECT * FROM orders WHERE tenant_id = :tenantId，参数绑定已正确；调用者身份只在JWT subject中。指出仍存在的高风险、最小修复与负例测试。不要误报SQL注入。\n",
+  "scoring": "Controller manual scoring against six explicit requirements; not blinded, no edits/tools required; all four model responses satisfy the principal requirements. Not a production implementation benchmark.",
+  "limits": [
+    "One combined prompt per configuration; no statistical inference",
+    "CLI startup/network/cache differ; elapsed time is end-to-end",
+    "Requested model confirmed from turn_context, not proof of provider internals or billing",
+    "Full guidance baseline/candidate CLI comparison rejected by automatic approval review; no retry/external transfer"
+  ],
+  "runs": [
+    {
+      "name": "gpt-5.6-terra-high",
+      "requestedModel": "gpt-5.6-terra",
+      "requestedEffort": "high",
+      "runtime": [
+        {
+          "model": "gpt-5.6-terra",
+          "effort": "high"
+        }
+      ],
+      "threadId": "01a0da42-f8fc-7760-b520-e003919715ea",
+      "promptSha256": "1b0249253c385f29efdfccee823e9a5a79febf4d47b3a4c87fb4bf5e58f21a06",
+      "elapsedMs": 52791,
+      "exitCode": 0,
+      "timeout": false,
+      "usage": {
+        "input_tokens": 27146,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 368,
+        "reasoning_output_tokens": 72
+      },
+      "events": [
+        {
+          "type": "thread.started",
+          "thread_id": "01a0da42-f8fc-7760-b520-e003919715ea"
+        },
+        {
+          "type": "turn.started"
+        },
+        {
+          "type": "item.completed",
+          "item": {
+            "id": "item_0",
+            "type": "agent_message",
+            "text": "{\n  \"1\": \"最小层：service.create。rowCount!==1时返回失败/抛错，不能201。失败测试断言repo返回0时响应非201且不报告创建成功。\",\n  \"2\": \"反驳。文档仅称preview枚举筛选文件；只有完整模式调用LLM作反思过滤，故delegate不保证该过滤。\",\n  \"3\": \"for(;;){try{return await realpath(p)}catch(e){if(e.code==='ENOENT'&&p!==dirname(p)){p=dirname(p);continue}throw e}}\",\n  \"4\": \"缺失→写B；A→更新B；USER→保留USER。下次卸载仅删除当前值仍为受管B且回执匹配的项，绝不删USER。\",\n  \"5\": \"不能。仅审a.ts；b.test.ts未审，c.bin不可读，覆盖不完整。回执应列已审/排除/不可读；下一步审测试并确认二进制来源或人工验收。\",\n  \"6\": \"高风险是越权跨租户读取，非SQL注入。最小修复：从JWT可信租户声明/服务端映射取tenantId，忽略body。负例：用户传其他租户ID仍不得返回其订单。\"\n}"
+          }
+        },
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 27146,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 368,
+            "reasoning_output_tokens": 72
+          }
+        }
+      ]
+    },
+    {
+      "name": "gpt-6-sol-high",
+      "requestedModel": "gpt-6-sol",
+      "requestedEffort": "high",
+      "runtime": [
+        {
+          "model": "gpt-6-sol",
+          "effort": "high"
+        }
+      ],
+      "threadId": "01a0da42-e632-7be0-89ad-e93eec76402d",
+      "promptSha256": "1b0249253c385f29efdfccee823e9a5a79febf4d47b3a4c87fb4bf5e58f21a06",
+      "elapsedMs": 60992,
+      "exitCode": 0,
+      "timeout": false,
+      "usage": {
+        "input_tokens": 26814,
+        "cached_input_tokens": 7296,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 552,
+        "reasoning_output_tokens": 262
+      },
+      "events": [
+        {
+          "type": "thread.started",
+          "thread_id": "01a0da42-e632-7be0-89ad-e93eec76402d"
+        },
+        {
+          "type": "turn.started"
+        },
+        {
+          "type": "item.completed",
+          "item": {
+            "id": "item_0",
+            "type": "agent_message",
+            "text": "{\n  \"1\": \"service.create须检查repo.insert的rowCount；为0时不得返回201。失败测试断言rowCount=0时创建失败且响应非201。\",\n  \"2\": \"反驳。preview只枚举筛选文件；文档仅称完整模式调用LLM进行反思过滤，因此不能保证所有finding都经过过滤。\",\n  \"3\": \"循环尝试realpath(p)；遇ENOENT则改试dirname(p)，EACCES直接抛出；到根目录仍失败就终止。不能只依赖先前的exists结果。\",\n  \"4\": \"现有值缺失→写B；A→更新为B；USER→保留USER。下次卸载仅删除有受管回执且仍等于最后写入值的配置。\",\n  \"5\": \"不能。覆盖回执：a.ts已读且无发现；b.test.ts被排除、未审；c.bin无法读取、未审。下一步补审测试及二进制影响，再给整体验收结论。\",\n  \"6\": \"高风险是越权读取其他租户订单。最小修复：从已认证身份确定或校验tenantId后查询。负例：用户请求其他租户ID，应被拒绝且不返回订单。\"\n}"
+          }
+        },
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 26814,
+            "cached_input_tokens": 7296,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 552,
+            "reasoning_output_tokens": 262
+          }
+        }
+      ]
+    },
+    {
+      "name": "gpt-5.6-luna-medium",
+      "requestedModel": "gpt-5.6-luna",
+      "requestedEffort": "medium",
+      "runtime": [
+        {
+          "model": "gpt-5.6-luna",
+          "effort": "medium"
+        }
+      ],
+      "threadId": "01a0da42-f86d-7110-9e89-47d7d48a7eae",
+      "promptSha256": "1b0249253c385f29efdfccee823e9a5a79febf4d47b3a4c87fb4bf5e58f21a06",
+      "elapsedMs": 51729,
+      "exitCode": 0,
+      "timeout": false,
+      "usage": {
+        "input_tokens": 24267,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 594,
+        "reasoning_output_tokens": 336
+      },
+      "events": [
+        {
+          "type": "thread.started",
+          "thread_id": "01a0da42-f86d-7110-9e89-47d7d48a7eae"
+        },
+        {
+          "type": "turn.started"
+        },
+        {
+          "type": "item.completed",
+          "item": {
+            "id": "item_0",
+            "type": "agent_message",
+            "text": "{\n  \"1\": \"最小缺失层是service：rowCount===0应失败；测试断言不返回201，并断言抛出持久化失败或返回500。\",\n  \"2\": \"反驳。文档明确delegate preview只枚举文件，只有完整模式调用LLM，不能保证finding经过反思过滤。\",\n  \"3\": \"伪代码：循环realpath；ENOENT改为父目录；EACCES立即抛出；到根仍失败则终止，不再回退。\",\n  \"4\": \"缺失→B；A→B；USER→USER。卸载仅删除当前值等于受管回执B的配置，USER永不覆盖或删除。\",\n  \"5\": \"不能通过。覆盖仅有a.ts；b.test.ts未审查、c.bin未读。下一步纳入b并读取或校验c，再出完整回执。\",\n  \"6\": \"风险是租户越权：可伪造body tenantId读他户数据。应从JWT subject映射授权tenant并忽略body；负例断言跨租户请求403且不执行查询。\"\n}"
+          }
+        },
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 24267,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 594,
+            "reasoning_output_tokens": 336
+          }
+        }
+      ]
+    },
+    {
+      "name": "gpt-6-luna-high",
+      "requestedModel": "gpt-6-luna",
+      "requestedEffort": "high",
+      "runtime": [
+        {
+          "model": "gpt-6-luna",
+          "effort": "high"
+        }
+      ],
+      "threadId": "01a0da42-f814-7d10-9545-c702d9f79967",
+      "promptSha256": "1b0249253c385f29efdfccee823e9a5a79febf4d47b3a4c87fb4bf5e58f21a06",
+      "elapsedMs": 51755,
+      "exitCode": 0,
+      "timeout": false,
+      "usage": {
+        "input_tokens": 26243,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 356,
+        "reasoning_output_tokens": 0
+      },
+      "events": [
+        {
+          "type": "thread.started",
+          "thread_id": "01a0da42-f814-7d10-9545-c702d9f79967"
+        },
+        {
+          "type": "turn.started"
+        },
+        {
+          "type": "item.completed",
+          "item": {
+            "id": "item_0",
+            "type": "agent_message",
+            "text": "{\n  \"1\": \"判断缺失在 service 层：insert 的 rowCount 为 0 时不能返回 201。失败测试断言：响应不是 201（并断言返回相应失败状态）；无需扩展架构。\",\n  \"2\": \"反驳。文档明确只有完整模式才调用 LLM 做反思过滤；delegate preview 只枚举筛选文件，不能保证 finding 经过反思过滤。\",\n  \"3\": \"伪代码：循环尝试 realpath(p)；若成功返回；若错误非 ENOENT 则抛出；若 p 已是根目录则抛出；否则 p=dirname(p) 后重试。仅 ENOENT 可向父级恢复，EACCES 必须抛出。\",\n  \"4\": \"合并：缺失→B；A→B；USER→USER。下次卸载只删除当前值仍等于本工具上次写入值的配置；USER 值保留。\",\n  \"5\": \"不能。覆盖回执：a.ts 已审；b.test.ts 默认排除、未审；c.bin 二进制不可读、未审。下一步明确处理并审查后两项，再给整体验收结论。\",\n  \"6\": \"高风险：请求可伪造 tenantId，造成跨租户越权读取。最小修复：从已验证 JWT subject 解析授权租户并用于查询，不信任 body 的 tenantId。负例测试：身份仅获租户 A 权限却提交租户 B，断言拒绝且不返回 B 的订单。\"\n}"
+          }
+        },
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 26243,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 356,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "role-probe",
+      "requestedModel": "gpt-6-sol",
+      "requestedEffort": "medium",
+      "runtime": [
+        {
+          "model": "gpt-6-sol",
+          "effort": "medium"
+        }
+      ],
+      "threadId": "01a0da47-a23a-7812-ac40-2e4ca9530b58",
+      "promptSha256": "586bf373375efd70202f6efa925a2c58a817ef6390f8811c5bcc0d5e8a741421",
+      "elapsedMs": 63070,
+      "exitCode": 0,
+      "timeout": false,
+      "usage": {
+        "input_tokens": 108147,
+        "cached_input_tokens": 3712,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 294,
+        "reasoning_output_tokens": 209
+      },
+      "events": [
+        {
+          "type": "thread.started",
+          "thread_id": "01a0da47-a23a-7812-ac40-2e4ca9530b58"
+        },
+        {
+          "type": "item.completed",
+          "item": {
+            "id": "item_0",
+            "type": "error",
+            "message": "Configured service tier `priority` is not advertised as supported for model `gpt-6-sol` and will be omitted from requests."
+          }
+        },
+        {
+          "type": "item.completed",
+          "item": {
+            "id": "item_1",
+            "type": "error",
+            "message": "Model metadata for `gpt-6-sol` not found. Defaulting to fallback metadata; this can degrade performance and cause issues."
+          }
+        },
+        {
+          "type": "turn.started"
+        },
+        {
+          "type": "item.completed",
+          "item": {
+            "id": "item_2",
+            "type": "reasoning",
+            "text": "**Verifying requested configuration**\n**Reporting missing fork parameter**"
+          }
+        },
+        {
+          "type": "item.completed",
+          "item": {
+            "id": "item_3",
+            "type": "agent_message",
+            "text": "本会话的派发工具支持 `zc_lightweight_researcher` 角色，但不提供 `fork_turns` 参数，无法按要求显式设置 `fork_turns=\"none\"`。为避免不符合条件的派发，我没有调用子代理。因此没有 child id 或子代理答复；也未读取项目文件、修改配置或派发其他任务。"
+          }
+        },
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 108147,
+            "cached_input_tokens": 3712,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 294,
+            "reasoning_output_tokens": 209
+          }
+        }
+      ]
+    },
+    {
+      "name": "role-probe-native",
+      "requestedModel": "gpt-6-sol",
+      "requestedEffort": "medium",
+      "runtime": [
+        {
+          "model": "gpt-6-sol",
+          "effort": "medium"
+        }
+      ],
+      "threadId": "01a0da49-1698-77a0-978e-89c70e00a9c8",
+      "promptSha256": "5f82ef7dd1b9c09601c10dbdcb905e8a5c91916ae6e9e2e456f44ee10381e173",
+      "elapsedMs": 71195,
+      "exitCode": 0,
+      "timeout": false,
+      "usage": {
+        "input_tokens": 109884,
+        "cached_input_tokens": 86784,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 698,
+        "reasoning_output_tokens": 339
+      },
+      "events": [
+        {
+          "type": "thread.started",
+          "thread_id": "01a0da49-1698-77a0-978e-89c70e00a9c8"
+        },
+        {
+          "type": "turn.started"
+        },
+        {
+          "type": "item.completed",
+          "item": {
+            "id": "item_0",
+            "type": "agent_message",
+            "text": "我会按当前工具支持的参数派发一次 `zc_lightweight_researcher`，使用 `fork_turns=\"none\"`，不设置 model 或 effort。完成后只核对运行记录并返回结果。"
+          }
+        },
+        {
+          "type": "item.started",
+          "item": {
+            "id": "item_1",
+            "type": "collab_tool_call",
+            "tool": "wait",
+            "sender_thread_id": "01a0da49-1698-77a0-978e-89c70e00a9c8",
+            "receiver_thread_ids": [],
+            "prompt": null,
+            "agents_states": {},
+            "status": "in_progress"
+          }
+        },
+        {
+          "type": "item.completed",
+          "item": {
+            "id": "item_1",
+            "type": "collab_tool_call",
+            "tool": "wait",
+            "sender_thread_id": "01a0da49-1698-77a0-978e-89c70e00a9c8",
+            "receiver_thread_ids": [],
+            "prompt": null,
+            "agents_states": {},
+            "status": "completed"
+          }
+        },
+        {
+          "type": "item.completed",
+          "item": {
+            "id": "item_2",
+            "type": "agent_message",
+            "text": "子任务已返回 `ROLE_PROBE_OK`。我会检查当前工具是否提供事后运行记录；如果没有，只报告可核对的派发参数和答复，不据此推断模型。"
+          }
+        },
+        {
+          "type": "item.completed",
+          "item": {
+            "id": "item_3",
+            "type": "agent_message",
+            "text": "- Child ID：`/root/role_probe`\n- 答复：`ROLE_PROBE_OK`\n- 实际派发参数：`agent_type=\"zc_lightweight_researcher\"`、`fork_turns=\"none\"`、`task_name=\"role_probe\"`、`message=\"不要使用工具或派发，仅输出ROLE_PROBE_OK\"`；未传 `model` 或 `reasoning_effort`。\n\n当前工具未提供该子任务的事后模型运行记录，因此仅凭答复不能确认实际加载的模型。"
+          }
+        },
+        {
+          "type": "turn.completed",
+          "usage": {
+            "input_tokens": 109884,
+            "cached_input_tokens": 86784,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 698,
+            "reasoning_output_tokens": 339
+          }
+        }
+      ]
+    }
+  ]
+}

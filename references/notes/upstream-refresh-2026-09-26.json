@@ -1,0 +1,3611 @@
+{
+  "mode": "report",
+  "review_status": "pending-manual-review",
+  "results": [
+    {
+      "upstream": "agent-skills",
+      "mode": "diff",
+      "baseline": "references\\snapshots\\agent-skills\\2026-09-01T10-10-58-832Z-2026-09-01-review.json",
+      "changes": {
+        "structural": [],
+        "text": [],
+        "metadata": []
+      },
+      "impacts": [
+        {
+          "target": "references",
+          "effect": "远端出现未登记的疑似 AI asset 路径，需要更新 `references/upstreams.yaml` 或记录不采纳边界。",
+          "directWrite": false
+        },
+        {
+          "target": "toolkit",
+          "effect": "远端未登记路径疑似包含 AI asset，需要人工判断是否扩展 source_paths 并吸收 canonical content。",
+          "directWrite": false
+        },
+        {
+          "target": "platform",
+          "effect": "远端内容变化可能影响平台产物生成判断，但不会直接写入 `packages/platform-*`。",
+          "directWrite": false
+        }
+      ],
+      "recommendation": "human-review-required",
+      "review_status": "pending-manual-review",
+      "evidence": {
+        "notes_path": "references/notes/agent-skills.md",
+        "snapshot": "references\\snapshots\\agent-skills\\2026-09-01T10-10-58-832Z-2026-09-01-review.json",
+        "source_url": "https://github.com/addyosmani/agent-skills.git",
+        "source_paths": [
+          "LICENSE",
+          "README.md",
+          "skills",
+          "commands",
+          ".claude-plugin/plugin.json",
+          ".github/workflows/test-plugin-install.yml",
+          "docs/getting-started.md",
+          "evals",
+          "references",
+          "scripts"
+        ],
+        "remote": {
+          "source_url": "https://github.com/addyosmani/agent-skills.git",
+          "checked_at": "2026-09-25T19:56:40.655Z",
+          "command": "git ls-remote HEAD",
+          "head_sha": "bcab6a1b8503100e8618c3b4e32cc78de43de769"
+        },
+        "remote_content": {
+          "source_url": "https://github.com/addyosmani/agent-skills.git",
+          "checked_at": "2026-09-25T19:56:52.838Z",
+          "command": "git fetch/diff source_paths",
+          "baseline_head_sha": "d2c37ef6225dd8726cdd369a8030307f48592d26",
+          "head_sha": "bcab6a1b8503100e8618c3b4e32cc78de43de769",
+          "source_paths": [
+            "LICENSE",
+            "README.md",
+            "skills",
+            "commands",
+            ".claude-plugin/plugin.json",
+            ".github/workflows/test-plugin-install.yml",
+            "docs/getting-started.md",
+            "evals",
+            "references",
+            "scripts"
+          ],
+          "changed_paths": [
+            {
+              "status": "M",
+              "path": ".claude-plugin/plugin.json"
+            },
+            {
+              "status": "M",
+              "path": ".github/workflows/test-plugin-install.yml"
+            },
+            {
+              "status": "M",
+              "path": "README.md"
+            },
+            {
+              "status": "M",
+              "path": "commands/planning.toml"
+            },
+            {
+              "status": "M",
+              "path": "docs/getting-started.md"
+            },
+            {
+              "status": "M",
+              "path": "evals/README.md"
+            },
+            {
+              "status": "M",
+              "path": "evals/cases/code-simplification.json"
+            },
+            {
+              "status": "M",
+              "path": "evals/cases/deprecation-and-migration.json"
+            },
+            {
+              "status": "M",
+              "path": "evals/cases/doubt-driven-development.json"
+            },
+            {
+              "status": "M",
+              "path": "evals/cases/frontend-ui-engineering.json"
+            },
+            {
+              "status": "M",
+              "path": "evals/cases/planning-and-task-breakdown.json"
+            },
+            {
+              "status": "M",
+              "path": "evals/cases/security-and-hardening.json"
+            },
+            {
+              "status": "M",
+              "path": "evals/cases/using-agent-skills.json"
+            },
+            {
+              "status": "A",
+              "path": "evals/plugin/code-review-fires/graders/off-by-one.md"
+            },
+            {
+              "status": "A",
+              "path": "evals/plugin/code-review-fires/graders/severity-labels.md"
+            },
+            {
+              "status": "A",
+              "path": "evals/plugin/code-review-fires/graders/skill-fired.md"
+            },
+            {
+              "status": "A",
+              "path": "evals/plugin/code-review-fires/prompt.md"
+            },
+            {
+              "status": "A",
+              "path": "evals/plugin/code-review-stays-quiet/graders/not-fired.md"
+            },
+            {
+              "status": "A",
+              "path": "evals/plugin/code-review-stays-quiet/graders/tdd-fired.md"
+            },
+            {
+              "status": "A",
+              "path": "evals/plugin/code-review-stays-quiet/prompt.md"
+            },
+            {
+              "status": "A",
+              "path": "evals/skill-impact.md"
+            },
+            {
+              "status": "M",
+              "path": "references/observability-checklist.md"
+            },
+            {
+              "status": "M",
+              "path": "references/security-checklist.md"
+            },
+            {
+              "status": "M",
+              "path": "scripts/lib/skill-lint-test.js"
+            },
+            {
+              "status": "M",
+              "path": "scripts/lib/skill-lint.js"
+            },
+            {
+              "status": "M",
+              "path": "scripts/run-evals-test.js"
+            },
+            {
+              "status": "M",
+              "path": "scripts/run-evals.js"
+            },
+            {
+              "status": "M",
+              "path": "scripts/validate-commands-test.js"
+            },
+            {
+              "status": "M",
+              "path": "scripts/validate-commands.js"
+            },
+            {
+              "status": "M",
+              "path": "scripts/validate-reference-links-test.js"
+            },
+            {
+              "status": "M",
+              "path": "scripts/validate-reference-links.js"
+            },
+            {
+              "status": "M",
+              "path": "skills/constraint-driven-development/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/context-engineering/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/debugging-and-error-recovery/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/deprecation-and-migration/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/documentation-and-adrs/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/doubt-driven-development/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/frontend-ui-engineering/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/git-workflow-and-versioning/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/incremental-implementation/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/interview-me/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/observability-and-instrumentation/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/security-and-hardening/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/security-and-hardening/references/hardening-patterns.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/shipping-and-launch/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/source-driven-development/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/spec-driven-development/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/test-driven-development/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/using-agent-skills/SKILL.md"
+            }
+          ],
+          "unregistered_changed_path_count": 21,
+          "unregistered_changed_paths": [
+            ".agents/plugins/marketplace.json",
+            ".claude-plugin/marketplace.json",
+            ".codex-plugin/plugin.json",
+            ".gemini/commands/planning.toml",
+            "CONTRIBUTING.md",
+            "docs/adoption-guide.md",
+            "docs/advanced-per-agent-configuration.md",
+            "docs/antigravity-setup.md",
+            "docs/codex-setup.md",
+            "docs/copilot-cli-setup.md",
+            "docs/copilot-setup.md",
+            "docs/gemini-cli-setup.md",
+            "docs/skill-anatomy.md",
+            "hooks/SIMPLIFY-IGNORE.md",
+            "hooks/hooks.json",
+            "hooks/sdd-cache-test.sh",
+            "hooks/session-start-test.sh",
+            "hooks/session-start.sh",
+            "hooks/simplify-ignore-test.sh",
+            "hooks/simplify-ignore.sh",
+            "plugin.json"
+          ],
+          "unregistered_ai_asset_path_count": 4,
+          "unregistered_ai_asset_paths": [
+            ".agents/plugins/marketplace.json",
+            ".claude-plugin/marketplace.json",
+            ".codex-plugin/plugin.json",
+            ".gemini/commands/planning.toml"
+          ],
+          "source_paths_gap": false,
+          "status": "changed"
+        }
+      }
+    },
+    {
+      "upstream": "superpowers",
+      "mode": "diff",
+      "baseline": "references\\snapshots\\superpowers\\2026-09-01T10-10-58-455Z-2026-09-01-review.json",
+      "changes": {
+        "structural": [],
+        "text": [],
+        "metadata": []
+      },
+      "impacts": [
+        {
+          "target": "references",
+          "effect": "远端出现未登记的疑似 AI asset 路径，需要更新 `references/upstreams.yaml` 或记录不采纳边界。",
+          "directWrite": false
+        },
+        {
+          "target": "toolkit",
+          "effect": "远端未登记路径疑似包含 AI asset，需要人工判断是否扩展 source_paths 并吸收 canonical content。",
+          "directWrite": false
+        },
+        {
+          "target": "platform",
+          "effect": "远端内容变化可能影响平台产物生成判断，但不会直接写入 `packages/platform-*`。",
+          "directWrite": false
+        }
+      ],
+      "recommendation": "human-review-required",
+      "review_status": "pending-manual-review",
+      "evidence": {
+        "notes_path": "references/notes/superpowers.md",
+        "snapshot": "references\\snapshots\\superpowers\\2026-09-01T10-10-58-455Z-2026-09-01-review.json",
+        "source_url": "https://github.com/obra/superpowers.git",
+        "source_paths": [
+          "CLAUDE.md",
+          "README.md",
+          "RELEASE-NOTES.md",
+          "package.json",
+          ".claude-plugin",
+          ".codex-plugin",
+          ".opencode",
+          "docs",
+          "hooks",
+          "skills",
+          "scripts",
+          "tests"
+        ],
+        "remote": {
+          "source_url": "https://github.com/obra/superpowers.git",
+          "checked_at": "2026-09-25T19:56:40.667Z",
+          "command": "git ls-remote HEAD",
+          "head_sha": "8ca22dba9a94f28898bbce59f2537ff4d87c747d"
+        },
+        "remote_content": {
+          "source_url": "https://github.com/obra/superpowers.git",
+          "checked_at": "2026-09-25T19:56:52.987Z",
+          "command": "git fetch/diff source_paths",
+          "baseline_head_sha": "b36e0829c6d0140e93cfef2ca599b1b07d4a7797",
+          "head_sha": "8ca22dba9a94f28898bbce59f2537ff4d87c747d",
+          "source_paths": [
+            "CLAUDE.md",
+            "README.md",
+            "RELEASE-NOTES.md",
+            "package.json",
+            ".claude-plugin",
+            ".codex-plugin",
+            ".opencode",
+            "docs",
+            "hooks",
+            "skills",
+            "scripts",
+            "tests"
+          ],
+          "changed_paths": [
+            {
+              "status": "M",
+              "path": ".claude-plugin/marketplace.json"
+            },
+            {
+              "status": "M",
+              "path": ".claude-plugin/plugin.json"
+            },
+            {
+              "status": "M",
+              "path": ".codex-plugin/plugin.json"
+            },
+            {
+              "status": "M",
+              "path": ".opencode/INSTALL.md"
+            },
+            {
+              "status": "M",
+              "path": ".opencode/plugins/superpowers.js"
+            },
+            {
+              "status": "D",
+              "path": "CLAUDE.md"
+            },
+            {
+              "status": "M",
+              "path": "README.md"
+            },
+            {
+              "status": "M",
+              "path": "RELEASE-NOTES.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/README.opencode.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/porting-to-a-new-harness.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/superpowers/plans/2026-08-27-diagnosing-superpowers.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/superpowers/specs/2026-08-27-diagnosing-superpowers-design.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/testing.md"
+            },
+            {
+              "status": "M",
+              "path": "hooks/session-start"
+            },
+            {
+              "status": "M",
+              "path": "package.json"
+            },
+            {
+              "status": "M",
+              "path": "scripts/sync-to-codex-plugin.sh"
+            },
+            {
+              "status": "M",
+              "path": "skills/brainstorming/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/brainstorming/visual-companion.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/prompts/analyst-common.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/prompts/cost-and-time.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/prompts/plan-adherence.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/prompts/quality-evidence.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/prompts/repeated-work.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/prompts/request-conflicts.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/prompts/scrub-audit.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/prompts/scrub.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/prompts/similar-session.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/prompts/skill-timeline.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/prompts/stumbles.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/references/context-safety.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/references/github-issues.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/references/redaction-policy.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/references/session-discovery.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/templates/bundle-README.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/templates/case.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/templates/issue.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/diagnosing-superpowers/templates/report.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/executing-plans/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/executing-plans/scripts/task-done"
+            },
+            {
+              "status": "A",
+              "path": "skills/executing-plans/scripts/task-start"
+            },
+            {
+              "status": "M",
+              "path": "skills/requesting-code-review/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/requesting-code-review/code-reviewer.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/subagent-driven-development/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/subagent-driven-development/re-review-prompt.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/subagent-driven-development/scripts/review-package"
+            },
+            {
+              "status": "M",
+              "path": "skills/subagent-driven-development/scripts/sdd-workspace"
+            },
+            {
+              "status": "M",
+              "path": "skills/subagent-driven-development/scripts/task-brief"
+            },
+            {
+              "status": "M",
+              "path": "skills/subagent-driven-development/task-reviewer-prompt.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/systematic-debugging/root-cause-tracing.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/test-driven-development/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/using-superpowers/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/using-superpowers/references/claude-code-tools.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/using-superpowers/references/muse-tools.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/writing-plans/SKILL.md"
+            },
+            {
+              "status": "D",
+              "path": "skills/writing-plans/plan-document-reviewer-prompt.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/writing-skills/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "tests/claude-code/run-skill-tests.sh"
+            },
+            {
+              "status": "A",
+              "path": "tests/claude-code/test-executing-plans-scripts.sh"
+            },
+            {
+              "status": "M",
+              "path": "tests/claude-code/test-sdd-workspace.sh"
+            },
+            {
+              "status": "M",
+              "path": "tests/codex-plugin-sync/test-sync-to-codex-plugin.sh"
+            },
+            {
+              "status": "A",
+              "path": "tests/diagnosing-superpowers/test-skill-structure.sh"
+            },
+            {
+              "status": "M",
+              "path": "tests/opencode/run-tests.sh"
+            },
+            {
+              "status": "M",
+              "path": "tests/opencode/test-bootstrap-caching.mjs"
+            },
+            {
+              "status": "A",
+              "path": "tests/opencode/test-session-bootstrap.mjs"
+            },
+            {
+              "status": "A",
+              "path": "tests/opencode/test-session-bootstrap.sh"
+            },
+            {
+              "status": "A",
+              "path": "tests/opencode/test-skill-registration.mjs"
+            },
+            {
+              "status": "A",
+              "path": "tests/opencode/test-skill-registration.sh"
+            }
+          ],
+          "unregistered_changed_path_count": 13,
+          "unregistered_changed_paths": [
+            ".cursor-plugin/plugin.json",
+            ".devin-plugin/plugin.json",
+            ".github/ISSUE_TEMPLATE/diagnosis_report.md",
+            ".github/ISSUE_TEMPLATE/platform_support.md",
+            ".hermes-plugin/plugin.yaml",
+            ".kimi-plugin/plugin.json",
+            ".muse-plugin/marketplace.json",
+            ".muse-plugin/plugin.json",
+            ".version-bump.json",
+            "AGENTS.md",
+            "CODE_OF_CONDUCT.md",
+            "gemini-extension.json",
+            "index.js"
+          ],
+          "unregistered_ai_asset_path_count": 1,
+          "unregistered_ai_asset_paths": [
+            "AGENTS.md"
+          ],
+          "source_paths_gap": false,
+          "status": "changed"
+        }
+      }
+    },
+    {
+      "upstream": "everything-claude-code",
+      "mode": "diff",
+      "baseline": "references\\snapshots\\everything-claude-code\\2026-09-01T10-10-50-144Z-2026-09-01-review.json",
+      "changes": {
+        "structural": [],
+        "text": [],
+        "metadata": []
+      },
+      "impacts": [
+        {
+          "target": "references",
+          "effect": "远端出现未登记的疑似 AI asset 路径，需要更新 `references/upstreams.yaml` 或记录不采纳边界。",
+          "directWrite": false
+        },
+        {
+          "target": "toolkit",
+          "effect": "远端未登记路径疑似包含 AI asset，需要人工判断是否扩展 source_paths 并吸收 canonical content。",
+          "directWrite": false
+        },
+        {
+          "target": "platform",
+          "effect": "远端内容变化可能影响平台产物生成判断，但不会直接写入 `packages/platform-*`。",
+          "directWrite": false
+        }
+      ],
+      "recommendation": "human-review-required",
+      "review_status": "pending-manual-review",
+      "evidence": {
+        "notes_path": "references/notes/everything-claude-code.md",
+        "snapshot": "references\\snapshots\\everything-claude-code\\2026-09-01T10-10-50-144Z-2026-09-01-review.json",
+        "source_url": "https://github.com/affaan-m/everything-claude-code.git",
+        "source_paths": [
+          "README.md",
+          "AGENTS.md",
+          "CLAUDE.md",
+          "docs",
+          "commands",
+          "agents",
+          "skills",
+          ".agents/plugins/marketplace.json",
+          ".agents/skills"
+        ],
+        "remote": {
+          "source_url": "https://github.com/affaan-m/everything-claude-code.git",
+          "checked_at": "2026-09-25T19:56:40.675Z",
+          "command": "git ls-remote HEAD",
+          "head_sha": "e482e579415fde18357cafce70f177ae19fd7f03"
+        },
+        "remote_content": {
+          "source_url": "https://github.com/affaan-m/everything-claude-code.git",
+          "checked_at": "2026-09-25T19:56:53.042Z",
+          "command": "git fetch/diff source_paths",
+          "baseline_head_sha": "ca185ef5f7667078a1e70a763bd3a9c71c48acf0",
+          "head_sha": "e482e579415fde18357cafce70f177ae19fd7f03",
+          "source_paths": [
+            "README.md",
+            "AGENTS.md",
+            "CLAUDE.md",
+            "docs",
+            "commands",
+            "agents",
+            "skills",
+            ".agents/plugins/marketplace.json",
+            ".agents/skills"
+          ],
+          "changed_paths": [
+            {
+              "status": "M",
+              "path": ".agents/plugins/marketplace.json"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/agent-introspection-debugging/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/agent-sort/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/api-design/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/article-writing/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/backend-patterns/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/benchmark-methodology/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/brand-discovery/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/brand-voice/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/bun-runtime/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/coding-standards/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/competitive-platform-analysis/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/competitive-report-structure/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/content-engine/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/crosspost/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/deep-research/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/dmux-workflows/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/documentation-lookup/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/e2e-testing/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/eval-harness/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/everything-claude-code/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/exa-search/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/fal-ai-media/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/frontend-patterns/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/frontend-slides/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/investor-materials/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/investor-outreach/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/market-research/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/mcp-server-patterns/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/mle-workflow/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/nextjs-turbopack/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/plan-canvas/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/product-capability/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/security-review/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/strategic-compact/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/tdd-workflow/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/unified-memory/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/verification-loop/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/video-editing/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": ".agents/skills/x-api/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "AGENTS.md"
+            },
+            {
+              "status": "M",
+              "path": "README.md"
+            },
+            {
+              "status": "M",
+              "path": "commands/plan-prd.md"
+            },
+            {
+              "status": "M",
+              "path": "commands/prp-pr.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/ARCHITECTURE-IMPROVEMENTS.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/COMMAND-REGISTRY.json"
+            },
+            {
+              "status": "D",
+              "path": "docs/ECC-2.0-SESSION-ADAPTER-DISCOVERY.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/HERMES-OPENCLAW-MIGRATION.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/ITO-DESK.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/LANE-RULES.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/MEGA-PLAN-REPO-PROMPTS-2026-03-12.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/PHASE1-ISSUE-BUNDLE-2026-03-12.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/PR-399-REVIEW-2026-03-12.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/PR-QUEUE-TRIAGE-2026-03-13.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/ROADMAP.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/SELECTIVE-INSTALL-ARCHITECTURE.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/SELECTIVE-INSTALL-DESIGN.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/SESSION-ADAPTER-CONTRACT.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/architecture/cross-harness.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/architecture/eval-harness-frameworks.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/architecture/session-adapter-contract.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/control-plane/TCAS-HOOK.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/control-plane/VIEW-CONTRACT.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/de-DE/README.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/design/ecc-memory-vault.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/es/AGENTS.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/es/README.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/es/rules/common/agents.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/fixes/HOOK-FIX-20260421-ADDENDUM.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/fixes/INSTALL-HOOK-WRAPPER-FIX-20260422.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/fixes/PATCH-SETTINGS-SIMPLE-FIX-20260422.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/ja-JP/AGENTS.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/ja-JP/README.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/ja-JP/rules/common/agents.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/ja-JP/skills/github-ops/SKILL.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/ja-JP/skills/motion-ui/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/pt-BR/README.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/releases/1.10.0/discussion-announcement.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/releases/1.8.0/x-quote-eval-skills.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/releases/1.8.0/x-quote-plankton-deslop.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/releases/2.1.0/assets/ecc-plan-canvas-demo.webm"
+            },
+            {
+              "status": "A",
+              "path": "docs/releases/2.2.0/ecc-2.2-release-readiness.tdd.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/releases/2.2.0/ecc-ito-real-cli-bridge.tdd.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/releases/2.2.1/patch-execution.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/releases/2.2.1/release-notes.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/security/ecc-039-powershell-gateguard-plan.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/testing/ecc-2.2-release-readiness.tdd.md"
+            },
+            {
+              "status": "D",
+              "path": "docs/testing/ecc-ito-real-cli-bridge.tdd.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/tr/AGENTS.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/tr/README.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/tr/rules/common/agents.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/tr/the-shortform-guide.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/uk-UA/README.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/ur/README.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/zh-CN/AGENTS.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/zh-CN/README.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/zh-CN/rules/common/agents.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/zh-CN/skills/github-ops/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/zh-CN/the-shortform-guide.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/autonomous-agent-harness/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/benchmark-methodology/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/continuous-learning-v2/agents/observer-loop.sh"
+            },
+            {
+              "status": "M",
+              "path": "skills/continuous-learning-v2/hooks/observe.sh"
+            },
+            {
+              "status": "M",
+              "path": "skills/cost-tracking/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/counterparty-channel-discipline/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/counterparty-channel-discipline/references/channel-policy.example.yaml"
+            },
+            {
+              "status": "A",
+              "path": "skills/counterparty-channel-discipline/references/strict-prompt.template.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/esign-field-placement/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/esign-field-placement/references/placement-checklist.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/eval-harness/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/fal-ai-media/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/frontend-a11y/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/frontend-slides/scripts/export-pdf.sh"
+            },
+            {
+              "status": "M",
+              "path": "skills/gateguard/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/github-ops/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/master-agreement-generator/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/master-agreement-generator/references/master-template.example.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/master-agreement-generator/references/spec.example.json"
+            },
+            {
+              "status": "A",
+              "path": "skills/master-agreement-generator/scripts/build-agreement.js"
+            },
+            {
+              "status": "D",
+              "path": "skills/motion-ui/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/operator-approval-loop/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/operator-approval-loop/references/approval-ledger.sql"
+            },
+            {
+              "status": "A",
+              "path": "skills/operator-approval-loop/references/approval_claims.py"
+            },
+            {
+              "status": "M",
+              "path": "skills/plan-canvas/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/rails-patterns/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/security-review/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/skill-comply/scripts/grader.py"
+            },
+            {
+              "status": "M",
+              "path": "skills/skill-comply/tests/test_grader.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/SOURCE.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/.gitignore"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/HANDOFF-TEMPLATE.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/LICENSE"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/apply.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/blender_prop.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/distill.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/falapi.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/forge.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/mint.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/mint3d.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/pipeline.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/pyproject.toml"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/requirements-live.txt"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/requirements.txt"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/resolve_ingest.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/taste/__init__.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/taste/assemble.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/taste/cadence.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/taste/falapi.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/taste/frames.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/taste/grade.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/taste/pack.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/taste/plates.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/taste/render3d.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/taste/resolve.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/taste/timeline.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/README.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/__init__.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/__main__.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/apply.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/assets.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/cli.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/contract.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/distill.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/export.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/fixtures/flashethereal/cadence.json"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/fixtures/flashethereal/flashethereal-cut.edl"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/fixtures/flashethereal/grade.json"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/fixtures/flashethereal/grounding.txt"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/fixtures/flashethereal/pack.json"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/fixtures/flashethereal/spec.json"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/integration.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/interview.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/media/__init__.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/media/capcut.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/media/common.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/media/glitch.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/media/manim_geo.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/media/stills.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/pack.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/provenance.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/providers.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/resolve.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/schema.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/timeline.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/tasteforge/workflow.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/verify.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/scripts/workflow_graphs.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_apply.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_assets.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_cli.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_distill.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_integration.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_interview.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_media_utilities.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_multimodal_contract.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_multimodal_workflow.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_offline_fixture.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_pack.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_provenance.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_providers.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_resolve.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_schema.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/tests/test_timeline_export.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/workflows/README.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/workflows/taste-apply-motion.json"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/workflows/taste-apply.json"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/workflows/taste-distill.json"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-application/workflows/taste-prop3d.json"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-distillation/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-distillation/scripts/distill.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-distillation/scripts/mint.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-distillation/scripts/requirements-live.txt"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-distillation/scripts/requirements.txt"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-distillation/scripts/taste/__init__.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-distillation/scripts/taste/assemble.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-distillation/scripts/taste/cadence.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-distillation/scripts/taste/falapi.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-distillation/scripts/taste/frames.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-distillation/scripts/taste/grade.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-distillation/scripts/taste/pack.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-distillation/scripts/taste/plates.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-distillation/scripts/taste/render3d.py"
+            },
+            {
+              "status": "A",
+              "path": "skills/taste-distillation/scripts/taste/timeline.py"
+            },
+            {
+              "status": "M",
+              "path": "skills/taste/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/tasteforge-video/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/tdd-workflow/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/unified-memory/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/video-editing/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/video-editing/assets/fusion/ito-production-v1/ITO_PROD_HighlightBloom.setting"
+            },
+            {
+              "status": "A",
+              "path": "skills/video-editing/assets/fusion/ito-production-v1/ITO_PROD_LumaHalo.setting"
+            },
+            {
+              "status": "A",
+              "path": "skills/video-editing/assets/fusion/ito-production-v1/ITO_PROD_RGBFringe.setting"
+            },
+            {
+              "status": "A",
+              "path": "skills/video-editing/assets/fusion/ito-production-v1/README.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/video-editing/assets/fusion/ito-production-v1/install_ito_production_v1.lua"
+            },
+            {
+              "status": "A",
+              "path": "skills/video-editing/assets/fusion/ito-production-v1/provenance.json"
+            },
+            {
+              "status": "A",
+              "path": "skills/video-editing/assets/fusion/ito-v28/ITO_V28_FlashEtherealBloom.setting"
+            },
+            {
+              "status": "A",
+              "path": "skills/video-editing/assets/fusion/ito-v28/ITO_V28_RGBDisplacement.setting"
+            },
+            {
+              "status": "A",
+              "path": "skills/video-editing/assets/fusion/ito-v28/ITO_V28_SubjectHalo.setting"
+            },
+            {
+              "status": "A",
+              "path": "skills/video-editing/assets/fusion/ito-v28/README.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/video-editing/assets/fusion/ito-v28/install_ito_v28.lua"
+            },
+            {
+              "status": "A",
+              "path": "skills/video-editing/assets/fusion/ito-v28/provenance.json"
+            }
+          ],
+          "unregistered_changed_path_count": 288,
+          "unregistered_changed_paths": [
+            ".adal/README.md",
+            ".claude-plugin/marketplace.json",
+            ".claude-plugin/plugin.json",
+            ".claude/workflows/ecc-pro-security-roadmap.js",
+            ".codex-plugin/plugin.json",
+            ".cursor/skills/unified-memory/SKILL.md",
+            ".github/dependabot.yml",
+            ".github/workflows/ci.yml",
+            ".github/workflows/discussion-announce.yml",
+            ".github/workflows/generator-generic-ossf-slsa3-publish.yml",
+            ".github/workflows/maintenance.yml",
+            ".github/workflows/release-announce.yml",
+            ".github/workflows/release.yml",
+            ".github/workflows/reusable-release.yml",
+            ".github/workflows/reusable-test.yml",
+            ".github/workflows/reusable-validate.yml",
+            ".github/workflows/supply-chain-watch.yml",
+            ".github/workflows/taste-skills.yml",
+            ".opencode/index.ts",
+            ".opencode/package-lock.json",
+            ".opencode/package.json",
+            ".opencode/plugins/ecc-hooks.ts",
+            ".opencode/plugins/index.ts",
+            ".opencode/tools/changed-files.ts",
+            ".opencode/tools/index.ts",
+            ".opencode/tsconfig.json",
+            ".pi/README.md",
+            ".pi/extensions/hook-runtime.js",
+            ".pi/extensions/index.ts",
+            ".pr/security-evidence-3171.md",
+            "CHANGELOG.md",
+            "README.zh-CN.md",
+            "RULES.md",
+            "SOUL.md",
+            "SPONSORS.md",
+            "VERSION",
+            "WORKING-CONTEXT.md",
+            "agent.yaml",
+            "assets/images/sponsors/serpapi-logo-dark-mode.svg",
+            "assets/images/sponsors/serpapi-logo-light-mode.svg",
+            "assets/star-history-dark.svg",
+            "assets/star-history-light.svg",
+            "config/project-stack-mappings.json",
+            "ecc2/Cargo.lock",
+            "ecc2/README.md",
+            "ecc2/src/main.rs",
+            "ecc2/src/session/output.rs",
+            "ecc2/src/session/store.rs",
+            "ecc2/src/tui/dashboard.rs",
+            "examples/coordination-inventory/README.md"
+          ],
+          "unregistered_ai_asset_path_count": 7,
+          "unregistered_ai_asset_paths": [
+            ".claude-plugin/marketplace.json",
+            ".claude-plugin/plugin.json",
+            ".codex-plugin/plugin.json",
+            ".cursor/skills/unified-memory/SKILL.md",
+            "tests/skills/build-agreement.test.js",
+            "tests/skills/desk-pattern-skills.test.js",
+            "tests/skills/test_approval_delivery_claims.py"
+          ],
+          "source_paths_gap": false,
+          "status": "changed"
+        }
+      }
+    },
+    {
+      "upstream": "gstack",
+      "mode": "diff",
+      "baseline": "references\\snapshots\\gstack\\2026-09-01T10-11-01-973Z-2026-09-01-review.json",
+      "changes": {
+        "structural": [],
+        "text": [],
+        "metadata": []
+      },
+      "impacts": [
+        {
+          "target": "references",
+          "effect": "远端出现未登记的疑似 AI asset 路径，需要更新 `references/upstreams.yaml` 或记录不采纳边界。",
+          "directWrite": false
+        },
+        {
+          "target": "toolkit",
+          "effect": "远端未登记路径疑似包含 AI asset，需要人工判断是否扩展 source_paths 并吸收 canonical content。",
+          "directWrite": false
+        },
+        {
+          "target": "platform",
+          "effect": "远端内容变化可能影响平台产物生成判断，但不会直接写入 `packages/platform-*`。",
+          "directWrite": false
+        }
+      ],
+      "recommendation": "human-review-required",
+      "review_status": "pending-manual-review",
+      "evidence": {
+        "notes_path": "references/notes/gstack.md",
+        "snapshot": "references\\snapshots\\gstack\\2026-09-01T10-11-01-973Z-2026-09-01-review.json",
+        "source_url": "https://github.com/garrytan/gstack.git",
+        "source_paths": [
+          "README.md",
+          "CLAUDE.md",
+          "package.json",
+          "agents",
+          "browser-skills",
+          "careful",
+          "context-restore",
+          "context-save",
+          "devex-review",
+          "docs",
+          "investigate",
+          "plan-devex-review",
+          "qa",
+          "review",
+          "skillify",
+          "spec"
+        ],
+        "remote": {
+          "source_url": "https://github.com/garrytan/gstack.git",
+          "checked_at": "2026-09-25T19:56:40.681Z",
+          "command": "git ls-remote HEAD",
+          "head_sha": "2a113ae7e623f590095bcaaa0cc581c9a10a6632"
+        },
+        "remote_content": {
+          "source_url": "https://github.com/garrytan/gstack.git",
+          "checked_at": "2026-09-25T19:56:53.064Z",
+          "command": "git fetch/diff source_paths",
+          "baseline_head_sha": "e76f65a8da31ec14776a965c608222c1aecad656",
+          "head_sha": "2a113ae7e623f590095bcaaa0cc581c9a10a6632",
+          "source_paths": [
+            "README.md",
+            "CLAUDE.md",
+            "package.json",
+            "agents",
+            "browser-skills",
+            "careful",
+            "context-restore",
+            "context-save",
+            "devex-review",
+            "docs",
+            "investigate",
+            "plan-devex-review",
+            "qa",
+            "review",
+            "skillify",
+            "spec"
+          ],
+          "changed_paths": [
+            {
+              "status": "M",
+              "path": "CLAUDE.md"
+            },
+            {
+              "status": "M",
+              "path": "README.md"
+            },
+            {
+              "status": "M",
+              "path": "careful/bin/check-careful.sh"
+            },
+            {
+              "status": "M",
+              "path": "careful/bin/hook-extract.sh"
+            },
+            {
+              "status": "M",
+              "path": "context-restore/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "context-save/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "devex-review/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "devex-review/SKILL.md.tmpl"
+            },
+            {
+              "status": "M",
+              "path": "docs/ADDING_A_HOST.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/BROWSER_INTERNALS.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/OPENCLAW.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/OVERLAY_BENCHMARK_CONTRACT.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/PROJECT_STRUCTURE.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/REMOTE_BROWSER_ACCESS.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/SLOP_SCAN.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/TESTING_INTERNALS.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/TEST_PORTFOLIO.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/askuserquestion-split.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/cso-release-qualification.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/cso-scanners.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/designs/IMPECCABLE_INTEROP.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/designs/fork-port-residual-2026-09/REPORT.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/designs/fork-port-residual-2026-09/SHAS.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/designs/fork-port-residual-2026-09/records-other.json"
+            },
+            {
+              "status": "A",
+              "path": "docs/designs/fork-port-residual-2026-09/refuters.json"
+            },
+            {
+              "status": "A",
+              "path": "docs/designs/fork-port-residual-2026-09/residual-index-lite.json"
+            },
+            {
+              "status": "A",
+              "path": "docs/designs/fork-port-residual-2026-09/summary.json"
+            },
+            {
+              "status": "M",
+              "path": "docs/domain-skills.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/howto-diagrams-and-formats.md"
+            },
+            {
+              "status": "A",
+              "path": "docs/memorable-workflow-memory.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/skills.md"
+            },
+            {
+              "status": "M",
+              "path": "investigate/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "investigate/SKILL.md.tmpl"
+            },
+            {
+              "status": "M",
+              "path": "package.json"
+            },
+            {
+              "status": "M",
+              "path": "plan-devex-review/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "plan-devex-review/SKILL.md.tmpl"
+            },
+            {
+              "status": "M",
+              "path": "plan-devex-review/sections/review-sections.md"
+            },
+            {
+              "status": "M",
+              "path": "plan-devex-review/sections/review-sections.md.tmpl"
+            },
+            {
+              "status": "M",
+              "path": "qa/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "qa/SKILL.md.tmpl"
+            },
+            {
+              "status": "M",
+              "path": "qa/references/issue-taxonomy.md"
+            },
+            {
+              "status": "M",
+              "path": "qa/sections/qa-patterns.md"
+            },
+            {
+              "status": "M",
+              "path": "qa/sections/test-bootstrap.md"
+            },
+            {
+              "status": "M",
+              "path": "qa/templates/qa-report-template.md"
+            },
+            {
+              "status": "M",
+              "path": "review/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "review/SKILL.md.tmpl"
+            },
+            {
+              "status": "M",
+              "path": "review/design-checklist.md"
+            },
+            {
+              "status": "M",
+              "path": "review/sections/adversarial.md"
+            },
+            {
+              "status": "M",
+              "path": "review/sections/adversarial.md.tmpl"
+            },
+            {
+              "status": "M",
+              "path": "review/sections/plan-completion.md"
+            },
+            {
+              "status": "M",
+              "path": "review/sections/review-army.md"
+            },
+            {
+              "status": "M",
+              "path": "review/specialists/maintainability.md"
+            },
+            {
+              "status": "M",
+              "path": "review/specialists/testing.md"
+            },
+            {
+              "status": "M",
+              "path": "skillify/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "spec/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "spec/sections/gate-and-file.md"
+            },
+            {
+              "status": "M",
+              "path": "spec/sections/gate-and-file.md.tmpl"
+            }
+          ],
+          "unregistered_changed_path_count": 1795,
+          "unregistered_changed_paths": [
+            ".github/PULL_REQUEST_TEMPLATE.md",
+            ".github/actions/register-gstack-skills/action.yml",
+            ".github/cookie-workflow-manual-review.json",
+            ".github/cookie-workflow-manual-review.md",
+            ".github/docker/Dockerfile.ci",
+            ".github/scripts/dia-gui-readiness.c",
+            ".github/scripts/dia-launch-driver.mjs",
+            ".github/scripts/qualify-dia-macos.ts",
+            ".github/scripts/run-cookie-native-qualification.ps1",
+            ".github/scripts/run-dia-native-qualification.ts",
+            ".github/workflows/cso-runtime-images.yml",
+            ".github/workflows/cso-runtime-promote.yml",
+            ".github/workflows/cso-runtime-qualification.yml",
+            ".github/workflows/cso-scanner-images.yml",
+            ".github/workflows/evals-periodic.yml",
+            ".github/workflows/evals.yml",
+            ".github/workflows/free-tests.yml",
+            ".github/workflows/make-pdf-gate.yml",
+            ".github/workflows/osv-scanner.yml",
+            ".github/workflows/quality-gate.yml",
+            ".github/workflows/skill-docs.yml",
+            ".github/workflows/version-gate.yml",
+            ".github/workflows/windows-free-tests.yml",
+            ".github/workflows/windows-setup-e2e.yml",
+            ".gitignore",
+            ".gitlab-ci.yml",
+            ".osv-scanner.toml",
+            "AGENTS.md",
+            "ARCHITECTURE.md",
+            "BROWSER.md",
+            "CHANGELOG.md",
+            "CONTRIBUTING.md",
+            "DESIGN.md",
+            "NOTICE.md",
+            "SKILL.md",
+            "SKILL.md.tmpl",
+            "TODOS.md",
+            "VERSION",
+            "agents-digest/gstack-AGENTS.md",
+            "autoplan/SKILL.md",
+            "autoplan/SKILL.md.tmpl",
+            "autoplan/bin/phase-publication-hook",
+            "autoplan/bin/phase-publication-hook.ts",
+            "autoplan/sections/ceo-phase.md",
+            "autoplan/sections/ceo-phase.md.tmpl",
+            "autoplan/sections/design-phase.md",
+            "autoplan/sections/design-phase.md.tmpl",
+            "autoplan/sections/dx-phase.md",
+            "autoplan/sections/dx-phase.md.tmpl",
+            "autoplan/sections/eng-phase.md"
+          ],
+          "unregistered_ai_asset_path_count": 1,
+          "unregistered_ai_asset_paths": [
+            "AGENTS.md"
+          ],
+          "source_paths_gap": false,
+          "status": "changed"
+        }
+      }
+    },
+    {
+      "upstream": "andrej-karpathy-skills",
+      "mode": "diff",
+      "baseline": "references\\snapshots\\andrej-karpathy-skills\\2026-06-12T05-03-41-583Z-2026-06-12-review.json",
+      "changes": {
+        "structural": [],
+        "text": [
+          {
+            "path": "references/notes/andrej-karpathy-skills.md",
+            "summary": "治理说明正文变化（有效行数 47 -> 47）。"
+          }
+        ],
+        "metadata": []
+      },
+      "impacts": [
+        {
+          "target": "references",
+          "effect": "治理记录或审阅结论需要更新，但当前命令不会直接写回。",
+          "directWrite": false
+        }
+      ],
+      "recommendation": "human-review-required",
+      "review_status": "pending-manual-review",
+      "evidence": {
+        "notes_path": "references/notes/andrej-karpathy-skills.md",
+        "snapshot": "references\\snapshots\\andrej-karpathy-skills\\2026-06-12T05-03-41-583Z-2026-06-12-review.json",
+        "source_url": "https://github.com/multica-ai/andrej-karpathy-skills.git",
+        "source_paths": [
+          "CLAUDE.md",
+          "README.md",
+          "EXAMPLES.md",
+          "skills/karpathy-guidelines"
+        ],
+        "remote": {
+          "source_url": "https://github.com/multica-ai/andrej-karpathy-skills.git",
+          "checked_at": "2026-09-25T19:57:17.357Z",
+          "command": "git ls-remote HEAD",
+          "head_sha": "2c606141936f1eeef17fa3043a72095b4765b9c2"
+        },
+        "remote_content": {
+          "source_url": "https://github.com/multica-ai/andrej-karpathy-skills.git",
+          "checked_at": "2026-09-25T19:57:29.483Z",
+          "command": "git fetch/diff source_paths",
+          "baseline_head_sha": "2c606141936f1eeef17fa3043a72095b4765b9c2",
+          "head_sha": "2c606141936f1eeef17fa3043a72095b4765b9c2",
+          "source_paths": [
+            "CLAUDE.md",
+            "README.md",
+            "EXAMPLES.md",
+            "skills/karpathy-guidelines"
+          ],
+          "changed_paths": [],
+          "unregistered_changed_path_count": 0,
+          "unregistered_changed_paths": [],
+          "unregistered_ai_asset_path_count": 0,
+          "unregistered_ai_asset_paths": [],
+          "source_paths_gap": false,
+          "status": "unchanged-same-head"
+        }
+      }
+    },
+    {
+      "upstream": "openai-plugins",
+      "mode": "diff",
+      "baseline": "references\\snapshots\\openai-plugins\\2026-07-29T06-56-34-718Z-2026-07-29-review.json",
+      "changes": {
+        "structural": [],
+        "text": [
+          {
+            "path": "references/notes/openai-plugins.md",
+            "summary": "治理说明正文变化（有效行数 24 -> 33）。"
+          }
+        ],
+        "metadata": [
+          {
+            "field": "status",
+            "before": "active",
+            "after": "archived"
+          }
+        ]
+      },
+      "impacts": [
+        {
+          "target": "references",
+          "effect": "治理记录或审阅结论需要更新，但当前命令不会直接写回。",
+          "directWrite": false
+        },
+        {
+          "target": "toolkit",
+          "effect": "变更可能影响 canonical content 的采纳决策，但不会直接写入 `packages/toolkit`。 远端未登记路径疑似包含 AI asset，需要人工判断是否扩展 source_paths 并吸收 canonical content。",
+          "directWrite": false
+        },
+        {
+          "target": "platform",
+          "effect": "变更可能影响平台产物生成判断，但不会直接写入 `packages/platform-*`。",
+          "directWrite": false
+        },
+        {
+          "target": "references",
+          "effect": "远端出现未登记的疑似 AI asset 路径，需要更新 `references/upstreams.yaml` 或记录不采纳边界。",
+          "directWrite": false
+        }
+      ],
+      "recommendation": "human-review-required",
+      "review_status": "pending-manual-review",
+      "evidence": {
+        "notes_path": "references/notes/openai-plugins.md",
+        "snapshot": "references\\snapshots\\openai-plugins\\2026-07-29T06-56-34-718Z-2026-07-29-review.json",
+        "source_url": "https://github.com/openai/plugins.git",
+        "source_paths": [
+          "README.md",
+          ".agents/plugins",
+          "plugins/plugin-eval",
+          "plugins/superpowers",
+          "plugins/figma/agents",
+          "plugins/figma/commands",
+          "plugins/figma/hooks.json",
+          "plugins/vercel/agents",
+          "plugins/vercel/commands"
+        ],
+        "remote": {
+          "source_url": "https://github.com/openai/plugins.git",
+          "checked_at": "2026-09-25T19:57:17.397Z",
+          "command": "git ls-remote HEAD",
+          "head_sha": "1dc195897af4161d039b80d8471ec0a10c9bbc89"
+        },
+        "remote_content": {
+          "source_url": "https://github.com/openai/plugins.git",
+          "checked_at": "2026-09-25T19:57:29.434Z",
+          "command": "git fetch/diff source_paths",
+          "baseline_head_sha": "11c74d6ba24d3a6d48f54a194cd00ef3beea18f9",
+          "head_sha": "1dc195897af4161d039b80d8471ec0a10c9bbc89",
+          "source_paths": [
+            "README.md",
+            ".agents/plugins",
+            "plugins/plugin-eval",
+            "plugins/superpowers",
+            "plugins/figma/agents",
+            "plugins/figma/commands",
+            "plugins/figma/hooks.json",
+            "plugins/vercel/agents",
+            "plugins/vercel/commands"
+          ],
+          "changed_paths": [
+            {
+              "status": "M",
+              "path": ".agents/plugins/api_marketplace.json"
+            },
+            {
+              "status": "M",
+              "path": ".agents/plugins/marketplace.json"
+            },
+            {
+              "status": "A",
+              "path": "plugins/superpowers/.codex-plugin/assets/composer-icon.svg"
+            },
+            {
+              "status": "A",
+              "path": "plugins/superpowers/.codex-plugin/assets/logo.png"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/.codex-plugin/plugin.json"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/README.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/assets/app-icon.png"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/assets/superpowers-small.svg"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/brainstorming/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/brainstorming/scripts/frame-template.html"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/brainstorming/scripts/helper.js"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/brainstorming/scripts/server.cjs"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/brainstorming/scripts/start-server.sh"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/brainstorming/scripts/stop-server.sh"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/brainstorming/spec-document-reviewer-prompt.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/brainstorming/visual-companion.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/dispatching-parallel-agents/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/executing-plans/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/finishing-a-development-branch/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/receiving-code-review/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/requesting-code-review/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/requesting-code-review/code-reviewer.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/subagent-driven-development/SKILL.md"
+            },
+            {
+              "status": "D",
+              "path": "plugins/superpowers/skills/subagent-driven-development/code-quality-reviewer-prompt.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/subagent-driven-development/implementer-prompt.md"
+            },
+            {
+              "status": "A",
+              "path": "plugins/superpowers/skills/subagent-driven-development/re-review-prompt.md"
+            },
+            {
+              "status": "A",
+              "path": "plugins/superpowers/skills/subagent-driven-development/scripts/review-package"
+            },
+            {
+              "status": "A",
+              "path": "plugins/superpowers/skills/subagent-driven-development/scripts/sdd-workspace"
+            },
+            {
+              "status": "A",
+              "path": "plugins/superpowers/skills/subagent-driven-development/scripts/task-brief"
+            },
+            {
+              "status": "D",
+              "path": "plugins/superpowers/skills/subagent-driven-development/spec-reviewer-prompt.md"
+            },
+            {
+              "status": "A",
+              "path": "plugins/superpowers/skills/subagent-driven-development/task-reviewer-prompt.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/systematic-debugging/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/systematic-debugging/find-polluter.sh"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/test-driven-development/SKILL.md"
+            },
+            {
+              "status": "D",
+              "path": "plugins/superpowers/skills/test-driven-development/testing-anti-patterns.md"
+            },
+            {
+              "status": "A",
+              "path": "plugins/superpowers/skills/test-driven-development/writing-good-tests.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/using-git-worktrees/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/using-superpowers/SKILL.md"
+            },
+            {
+              "status": "A",
+              "path": "plugins/superpowers/skills/using-superpowers/references/antigravity-tools.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/using-superpowers/references/codex-tools.md"
+            },
+            {
+              "status": "D",
+              "path": "plugins/superpowers/skills/using-superpowers/references/copilot-tools.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/using-superpowers/references/gemini-tools.md"
+            },
+            {
+              "status": "A",
+              "path": "plugins/superpowers/skills/using-superpowers/references/hermes-tools.md"
+            },
+            {
+              "status": "A",
+              "path": "plugins/superpowers/skills/using-superpowers/references/pi-tools.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/verification-before-completion/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/writing-plans/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/writing-plans/plan-document-reviewer-prompt.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/writing-skills/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/writing-skills/anthropic-best-practices.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/writing-skills/persuasion-principles.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/superpowers/skills/writing-skills/render-graphs.js"
+            }
+          ],
+          "unregistered_changed_path_count": 3527,
+          "unregistered_changed_paths": [
+            "plugins/actively/.app.json",
+            "plugins/actively/.codex-plugin/plugin.json",
+            "plugins/actively/assets/logo.png",
+            "plugins/adobe/.app.json",
+            "plugins/adobe/.codex-plugin/plugin.json",
+            "plugins/adobe/skills/adobe-batch-edit-photos/SKILL.md",
+            "plugins/adobe/skills/adobe-batch-edit-photos/agents/openai.yaml",
+            "plugins/adobe/skills/adobe-batch-edit-photos/assets/icon-large.svg",
+            "plugins/adobe/skills/adobe-batch-edit-photos/assets/icon-small.svg",
+            "plugins/adobe/skills/adobe-create-mockups/SKILL.md",
+            "plugins/adobe/skills/adobe-create-mockups/agents/openai.yaml",
+            "plugins/adobe/skills/adobe-create-mockups/assets/icon-large.svg",
+            "plugins/adobe/skills/adobe-create-mockups/assets/icon-small.svg",
+            "plugins/adobe/skills/adobe-create-social-variations/SKILL.md",
+            "plugins/adobe/skills/adobe-create-social-variations/agents/openai.yaml",
+            "plugins/adobe/skills/adobe-create-social-variations/assets/icon-large.svg",
+            "plugins/adobe/skills/adobe-create-social-variations/assets/icon-small.svg",
+            "plugins/adobe/skills/adobe-design-from-template/SKILL.md",
+            "plugins/adobe/skills/adobe-design-from-template/agents/openai.yaml",
+            "plugins/adobe/skills/adobe-design-from-template/assets/icon-large.svg",
+            "plugins/adobe/skills/adobe-design-from-template/assets/icon-small.svg",
+            "plugins/adobe/skills/adobe-edit-quick-cut/SKILL.md",
+            "plugins/adobe/skills/adobe-edit-quick-cut/agents/openai.yaml",
+            "plugins/adobe/skills/adobe-edit-quick-cut/assets/icon-large.svg",
+            "plugins/adobe/skills/adobe-edit-quick-cut/assets/icon-small.svg",
+            "plugins/adobe/skills/adobe-retouch-portraits/SKILL.md",
+            "plugins/adobe/skills/adobe-retouch-portraits/agents/openai.yaml",
+            "plugins/adobe/skills/adobe-retouch-portraits/assets/icon-large.svg",
+            "plugins/adobe/skills/adobe-retouch-portraits/assets/icon-small.svg",
+            "plugins/aiera/.app.json",
+            "plugins/aiera/.codex-plugin/plugin.json",
+            "plugins/aiera/assets/app-icon.svg",
+            "plugins/aiera/assets/logo.png",
+            "plugins/airtable/.codex-plugin/plugin.json",
+            "plugins/airtable/.mcp.json",
+            "plugins/airtable/agents/openai.yaml",
+            "plugins/airtable/assets/composer-icon.svg",
+            "plugins/airtable/assets/icon.svg",
+            "plugins/airtable/assets/logo-dark.png",
+            "plugins/airtable/assets/logo.png",
+            "plugins/alation/.app.json",
+            "plugins/alation/.codex-plugin/plugin.json",
+            "plugins/alation/assets/logo.png",
+            "plugins/alpaca/.app.json",
+            "plugins/alpaca/.codex-plugin/plugin.json",
+            "plugins/alpaca/assets/app-icon.png",
+            "plugins/amplitude/.app.json",
+            "plugins/amplitude/.codex-plugin/plugin.json",
+            "plugins/amplitude/assets/app-icon.png",
+            "plugins/apollo/.app.json"
+          ],
+          "unregistered_ai_asset_path_count": 2529,
+          "unregistered_ai_asset_paths": [
+            "plugins/adobe/skills/adobe-batch-edit-photos/SKILL.md",
+            "plugins/adobe/skills/adobe-batch-edit-photos/agents/openai.yaml",
+            "plugins/adobe/skills/adobe-batch-edit-photos/assets/icon-large.svg",
+            "plugins/adobe/skills/adobe-batch-edit-photos/assets/icon-small.svg",
+            "plugins/adobe/skills/adobe-create-mockups/SKILL.md",
+            "plugins/adobe/skills/adobe-create-mockups/agents/openai.yaml",
+            "plugins/adobe/skills/adobe-create-mockups/assets/icon-large.svg",
+            "plugins/adobe/skills/adobe-create-mockups/assets/icon-small.svg",
+            "plugins/adobe/skills/adobe-create-social-variations/SKILL.md",
+            "plugins/adobe/skills/adobe-create-social-variations/agents/openai.yaml",
+            "plugins/adobe/skills/adobe-create-social-variations/assets/icon-large.svg",
+            "plugins/adobe/skills/adobe-create-social-variations/assets/icon-small.svg",
+            "plugins/adobe/skills/adobe-design-from-template/SKILL.md",
+            "plugins/adobe/skills/adobe-design-from-template/agents/openai.yaml",
+            "plugins/adobe/skills/adobe-design-from-template/assets/icon-large.svg",
+            "plugins/adobe/skills/adobe-design-from-template/assets/icon-small.svg",
+            "plugins/adobe/skills/adobe-edit-quick-cut/SKILL.md",
+            "plugins/adobe/skills/adobe-edit-quick-cut/agents/openai.yaml",
+            "plugins/adobe/skills/adobe-edit-quick-cut/assets/icon-large.svg",
+            "plugins/adobe/skills/adobe-edit-quick-cut/assets/icon-small.svg",
+            "plugins/adobe/skills/adobe-retouch-portraits/SKILL.md",
+            "plugins/adobe/skills/adobe-retouch-portraits/agents/openai.yaml",
+            "plugins/adobe/skills/adobe-retouch-portraits/assets/icon-large.svg",
+            "plugins/adobe/skills/adobe-retouch-portraits/assets/icon-small.svg",
+            "plugins/airtable/agents/openai.yaml",
+            "plugins/atlassian-rovo/skills/capture-tasks-from-meeting-notes/SKILL.md",
+            "plugins/atlassian-rovo/skills/capture-tasks-from-meeting-notes/agents/openai.yaml",
+            "plugins/atlassian-rovo/skills/capture-tasks-from-meeting-notes/references/action-item-patterns.md",
+            "plugins/atlassian-rovo/skills/generate-status-report/SKILL.md",
+            "plugins/atlassian-rovo/skills/generate-status-report/agents/openai.yaml",
+            "plugins/atlassian-rovo/skills/generate-status-report/references/jql-patterns.md",
+            "plugins/atlassian-rovo/skills/generate-status-report/references/report-templates.md",
+            "plugins/atlassian-rovo/skills/generate-status-report/scripts/jql_builder.py",
+            "plugins/atlassian-rovo/skills/search-company-knowledge/SKILL.md",
+            "plugins/atlassian-rovo/skills/search-company-knowledge/agents/openai.yaml",
+            "plugins/atlassian-rovo/skills/spec-to-backlog/SKILL.md",
+            "plugins/atlassian-rovo/skills/spec-to-backlog/agents/openai.yaml",
+            "plugins/atlassian-rovo/skills/spec-to-backlog/references/breakdown-examples.md",
+            "plugins/atlassian-rovo/skills/spec-to-backlog/references/epic-templates.md",
+            "plugins/atlassian-rovo/skills/spec-to-backlog/references/ticket-writing-guide.md",
+            "plugins/atlassian-rovo/skills/triage-issue/SKILL.md",
+            "plugins/atlassian-rovo/skills/triage-issue/agents/openai.yaml",
+            "plugins/atlassian-rovo/skills/triage-issue/references/bug-report-templates.md",
+            "plugins/atlassian-rovo/skills/triage-issue/references/search-patterns.md",
+            "plugins/base44/skills/base44-cli/SKILL.md",
+            "plugins/base44/skills/base44-cli/agents/openai.yaml",
+            "plugins/base44/skills/base44-cli/references/agents-pull.md",
+            "plugins/base44/skills/base44-cli/references/agents-push.md",
+            "plugins/base44/skills/base44-cli/references/auth-login.md",
+            "plugins/base44/skills/base44-cli/references/auth-logout.md"
+          ],
+          "source_paths_gap": false,
+          "status": "changed"
+        }
+      }
+    },
+    {
+      "upstream": "anthropic-skills",
+      "mode": "diff",
+      "baseline": "references\\snapshots\\anthropic-skills\\2026-08-27T14-55-41-463Z-2026-08-27-monitoring-coverage.json",
+      "changes": {
+        "structural": [],
+        "text": [
+          {
+            "path": "references/notes/anthropic-skills.md",
+            "summary": "治理说明正文变化（有效行数 36 -> 36）。"
+          }
+        ],
+        "metadata": []
+      },
+      "impacts": [
+        {
+          "target": "references",
+          "effect": "治理记录或审阅结论需要更新，但当前命令不会直接写回。",
+          "directWrite": false
+        },
+        {
+          "target": "references",
+          "effect": "远端出现未登记的疑似 AI asset 路径，需要更新 `references/upstreams.yaml` 或记录不采纳边界。",
+          "directWrite": false
+        },
+        {
+          "target": "toolkit",
+          "effect": "远端未登记路径疑似包含 AI asset，需要人工判断是否扩展 source_paths 并吸收 canonical content。",
+          "directWrite": false
+        },
+        {
+          "target": "platform",
+          "effect": "远端内容变化可能影响平台产物生成判断，但不会直接写入 `packages/platform-*`。",
+          "directWrite": false
+        }
+      ],
+      "recommendation": "human-review-required",
+      "review_status": "pending-manual-review",
+      "evidence": {
+        "notes_path": "references/notes/anthropic-skills.md",
+        "snapshot": "references\\snapshots\\anthropic-skills\\2026-08-27T14-55-41-463Z-2026-08-27-monitoring-coverage.json",
+        "source_url": "https://github.com/anthropics/skills.git",
+        "source_paths": [
+          "README.md",
+          "THIRD_PARTY_NOTICES.md",
+          ".claude-plugin",
+          "spec",
+          "template",
+          "skills/skill-creator",
+          "skills/frontend-design"
+        ],
+        "remote": {
+          "source_url": "https://github.com/anthropics/skills.git",
+          "checked_at": "2026-09-25T19:57:17.407Z",
+          "command": "git ls-remote HEAD",
+          "head_sha": "33375500bcea98d610eb30ce10ac4e59b89c390d"
+        },
+        "remote_content": {
+          "source_url": "https://github.com/anthropics/skills.git",
+          "checked_at": "2026-09-25T19:57:29.509Z",
+          "command": "git fetch/diff source_paths",
+          "baseline_head_sha": "3b3fad96af16a10759d930941b4520ba0c40edae",
+          "head_sha": "33375500bcea98d610eb30ce10ac4e59b89c390d",
+          "source_paths": [
+            "README.md",
+            "THIRD_PARTY_NOTICES.md",
+            ".claude-plugin",
+            "spec",
+            "template",
+            "skills/skill-creator",
+            "skills/frontend-design"
+          ],
+          "changed_paths": [
+            {
+              "status": "M",
+              "path": "skills/frontend-design/SKILL.md"
+            }
+          ],
+          "unregistered_changed_path_count": 69,
+          "unregistered_changed_paths": [
+            "skills/claude-api/SKILL.md",
+            "skills/claude-api/csharp/claude-api/README.md",
+            "skills/claude-api/csharp/claude-api/batches.md",
+            "skills/claude-api/csharp/claude-api/files-api.md",
+            "skills/claude-api/csharp/claude-api/streaming.md",
+            "skills/claude-api/csharp/claude-api/tool-use.md",
+            "skills/claude-api/curl/examples.md",
+            "skills/claude-api/curl/managed-agents.md",
+            "skills/claude-api/go/claude-api/README.md",
+            "skills/claude-api/go/claude-api/files-api.md",
+            "skills/claude-api/go/claude-api/streaming.md",
+            "skills/claude-api/go/claude-api/tool-use.md",
+            "skills/claude-api/go/managed-agents/README.md",
+            "skills/claude-api/java/claude-api/README.md",
+            "skills/claude-api/java/claude-api/files-api.md",
+            "skills/claude-api/java/claude-api/streaming.md",
+            "skills/claude-api/java/claude-api/tool-use.md",
+            "skills/claude-api/java/managed-agents/README.md",
+            "skills/claude-api/php/claude-api/README.md",
+            "skills/claude-api/php/claude-api/batches.md",
+            "skills/claude-api/php/claude-api/files-api.md",
+            "skills/claude-api/php/claude-api/streaming.md",
+            "skills/claude-api/php/claude-api/tool-use.md",
+            "skills/claude-api/php/managed-agents/README.md",
+            "skills/claude-api/python/claude-api/README.md",
+            "skills/claude-api/python/claude-api/batches.md",
+            "skills/claude-api/python/claude-api/files-api.md",
+            "skills/claude-api/python/claude-api/sdk-upgrade.md",
+            "skills/claude-api/python/claude-api/streaming.md",
+            "skills/claude-api/python/claude-api/tool-use.md",
+            "skills/claude-api/python/managed-agents/README.md",
+            "skills/claude-api/ruby/claude-api/README.md",
+            "skills/claude-api/ruby/claude-api/streaming.md",
+            "skills/claude-api/ruby/claude-api/tool-use.md",
+            "skills/claude-api/ruby/managed-agents/README.md",
+            "skills/claude-api/shared/admin-api.md",
+            "skills/claude-api/shared/agent-design.md",
+            "skills/claude-api/shared/anthropic-cli.md",
+            "skills/claude-api/shared/claude-platform-on-aws.md",
+            "skills/claude-api/shared/cost-optimization.md",
+            "skills/claude-api/shared/error-codes.md",
+            "skills/claude-api/shared/live-sources.md",
+            "skills/claude-api/shared/managed-agents-api-reference.md",
+            "skills/claude-api/shared/managed-agents-client-patterns.md",
+            "skills/claude-api/shared/managed-agents-core.md",
+            "skills/claude-api/shared/managed-agents-environments.md",
+            "skills/claude-api/shared/managed-agents-events.md",
+            "skills/claude-api/shared/managed-agents-memory.md",
+            "skills/claude-api/shared/managed-agents-multiagent.md",
+            "skills/claude-api/shared/managed-agents-onboarding.md"
+          ],
+          "unregistered_ai_asset_path_count": 69,
+          "unregistered_ai_asset_paths": [
+            "skills/claude-api/SKILL.md",
+            "skills/claude-api/csharp/claude-api/README.md",
+            "skills/claude-api/csharp/claude-api/batches.md",
+            "skills/claude-api/csharp/claude-api/files-api.md",
+            "skills/claude-api/csharp/claude-api/streaming.md",
+            "skills/claude-api/csharp/claude-api/tool-use.md",
+            "skills/claude-api/curl/examples.md",
+            "skills/claude-api/curl/managed-agents.md",
+            "skills/claude-api/go/claude-api/README.md",
+            "skills/claude-api/go/claude-api/files-api.md",
+            "skills/claude-api/go/claude-api/streaming.md",
+            "skills/claude-api/go/claude-api/tool-use.md",
+            "skills/claude-api/go/managed-agents/README.md",
+            "skills/claude-api/java/claude-api/README.md",
+            "skills/claude-api/java/claude-api/files-api.md",
+            "skills/claude-api/java/claude-api/streaming.md",
+            "skills/claude-api/java/claude-api/tool-use.md",
+            "skills/claude-api/java/managed-agents/README.md",
+            "skills/claude-api/php/claude-api/README.md",
+            "skills/claude-api/php/claude-api/batches.md",
+            "skills/claude-api/php/claude-api/files-api.md",
+            "skills/claude-api/php/claude-api/streaming.md",
+            "skills/claude-api/php/claude-api/tool-use.md",
+            "skills/claude-api/php/managed-agents/README.md",
+            "skills/claude-api/python/claude-api/README.md",
+            "skills/claude-api/python/claude-api/batches.md",
+            "skills/claude-api/python/claude-api/files-api.md",
+            "skills/claude-api/python/claude-api/sdk-upgrade.md",
+            "skills/claude-api/python/claude-api/streaming.md",
+            "skills/claude-api/python/claude-api/tool-use.md",
+            "skills/claude-api/python/managed-agents/README.md",
+            "skills/claude-api/ruby/claude-api/README.md",
+            "skills/claude-api/ruby/claude-api/streaming.md",
+            "skills/claude-api/ruby/claude-api/tool-use.md",
+            "skills/claude-api/ruby/managed-agents/README.md",
+            "skills/claude-api/shared/admin-api.md",
+            "skills/claude-api/shared/agent-design.md",
+            "skills/claude-api/shared/anthropic-cli.md",
+            "skills/claude-api/shared/claude-platform-on-aws.md",
+            "skills/claude-api/shared/cost-optimization.md",
+            "skills/claude-api/shared/error-codes.md",
+            "skills/claude-api/shared/live-sources.md",
+            "skills/claude-api/shared/managed-agents-api-reference.md",
+            "skills/claude-api/shared/managed-agents-client-patterns.md",
+            "skills/claude-api/shared/managed-agents-core.md",
+            "skills/claude-api/shared/managed-agents-environments.md",
+            "skills/claude-api/shared/managed-agents-events.md",
+            "skills/claude-api/shared/managed-agents-memory.md",
+            "skills/claude-api/shared/managed-agents-multiagent.md",
+            "skills/claude-api/shared/managed-agents-onboarding.md"
+          ],
+          "source_paths_gap": false,
+          "status": "changed"
+        }
+      }
+    },
+    {
+      "upstream": "github-awesome-copilot",
+      "mode": "diff",
+      "baseline": "references\\snapshots\\github-awesome-copilot\\2026-09-01T10-11-39-224Z-2026-09-01-review.json",
+      "changes": {
+        "structural": [],
+        "text": [],
+        "metadata": []
+      },
+      "impacts": [
+        {
+          "target": "references",
+          "effect": "远端出现未登记的疑似 AI asset 路径，需要更新 `references/upstreams.yaml` 或记录不采纳边界。",
+          "directWrite": false
+        },
+        {
+          "target": "toolkit",
+          "effect": "远端未登记路径疑似包含 AI asset，需要人工判断是否扩展 source_paths 并吸收 canonical content。",
+          "directWrite": false
+        },
+        {
+          "target": "platform",
+          "effect": "远端内容变化可能影响平台产物生成判断，但不会直接写入 `packages/platform-*`。",
+          "directWrite": false
+        }
+      ],
+      "recommendation": "human-review-required",
+      "review_status": "pending-manual-review",
+      "evidence": {
+        "notes_path": "references/notes/github-awesome-copilot.md",
+        "snapshot": "references\\snapshots\\github-awesome-copilot\\2026-09-01T10-11-39-224Z-2026-09-01-review.json",
+        "source_url": "https://github.com/github/awesome-copilot.git",
+        "source_paths": [
+          "README.md",
+          "AGENTS.md",
+          ".schemas",
+          ".github/plugin/marketplace.json",
+          "instructions/agent-skills.instructions.md",
+          "eng/validate-skills.mjs",
+          "eng/lib",
+          "plugins/external.json"
+        ],
+        "remote": {
+          "source_url": "https://github.com/github/awesome-copilot.git",
+          "checked_at": "2026-09-25T19:57:17.426Z",
+          "command": "git ls-remote HEAD",
+          "head_sha": "6c4d33b9cfca967a28bb2962ef4d55e4a384c88c"
+        },
+        "remote_content": {
+          "source_url": "https://github.com/github/awesome-copilot.git",
+          "checked_at": "2026-09-25T19:57:29.639Z",
+          "command": "git fetch/diff source_paths",
+          "baseline_head_sha": "5eaae7e2cde26b5cf86682fb31e758da0288aef7",
+          "head_sha": "6c4d33b9cfca967a28bb2962ef4d55e4a384c88c",
+          "source_paths": [
+            "README.md",
+            "AGENTS.md",
+            ".schemas",
+            ".github/plugin/marketplace.json",
+            "instructions/agent-skills.instructions.md",
+            "eng/validate-skills.mjs",
+            "eng/lib",
+            "plugins/external.json"
+          ],
+          "changed_paths": [
+            {
+              "status": "M",
+              "path": ".github/plugin/marketplace.json"
+            },
+            {
+              "status": "M",
+              "path": "AGENTS.md"
+            },
+            {
+              "status": "M",
+              "path": "README.md"
+            },
+            {
+              "status": "M",
+              "path": "plugins/external.json"
+            }
+          ],
+          "unregistered_changed_path_count": 347,
+          "unregistered_changed_paths": [
+            ".all-contributorsrc",
+            ".codespellrc",
+            ".gitattributes",
+            ".github/aw/actions-lock.json",
+            ".github/copilot-instructions.md",
+            ".github/github-app.yml",
+            ".github/skills/agentic-workflows/SKILL.md",
+            ".github/skills/code-review/SKILL.md",
+            ".github/workflows/advanced-copilot-cli-sync.lock.yml",
+            ".github/workflows/agentics-maintenance.yml",
+            ".github/workflows/cli-for-beginners-sync.lock.yml",
+            ".github/workflows/codeowner-update.lock.yml",
+            ".github/workflows/copilot-setup-steps.yml",
+            ".github/workflows/copilot-workshops-sync.lock.yml",
+            ".github/workflows/deploy-website-preview.yml",
+            ".github/workflows/deploy-website.yml",
+            ".github/workflows/duplicate-resource-detector.lock.yml",
+            ".github/workflows/external-plugin-command-router.yml",
+            ".github/workflows/external-plugin-intake.yml",
+            ".github/workflows/external-plugin-pr-quality-gates-writer.yml",
+            ".github/workflows/external-plugin-pr-quality-gates.yml",
+            ".github/workflows/external-plugin-quality-gates.yml",
+            ".github/workflows/learning-hub-updater.lock.yml",
+            ".github/workflows/learning-hub-updater.md",
+            ".github/workflows/pr-duplicate-check.lock.yml",
+            ".github/workflows/pr-quality-signal.lock.yml",
+            ".github/workflows/pr-quality-signal.md",
+            ".github/workflows/resource-staleness-report.lock.yml",
+            ".gitignore",
+            "CODEOWNERS",
+            "CONTRIBUTING.md",
+            "agents/arm-migration.agent.md",
+            "agents/gem-browser-tester.agent.md",
+            "agents/gem-code-simplifier.agent.md",
+            "agents/gem-debugger.agent.md",
+            "agents/gem-devops.agent.md",
+            "agents/gem-documentation-writer.agent.md",
+            "agents/gem-implementer.agent.md",
+            "agents/gem-mobile-tester.agent.md",
+            "agents/gem-orchestrator.agent.md",
+            "agents/gem-planner.agent.md",
+            "agents/gem-researcher.agent.md",
+            "agents/gem-reviewer.agent.md",
+            "agents/gem-skill-creator.agent.md",
+            "cookbook/copilot-sdk/README.md",
+            "cookbook/copilot-sdk/dotnet/README.md",
+            "cookbook/copilot-sdk/dotnet/accessibility-report.md",
+            "cookbook/copilot-sdk/dotnet/error-handling.md",
+            "cookbook/copilot-sdk/dotnet/in-process-runtime.md",
+            "cookbook/copilot-sdk/dotnet/managing-local-files.md"
+          ],
+          "unregistered_ai_asset_path_count": 59,
+          "unregistered_ai_asset_paths": [
+            ".github/skills/agentic-workflows/SKILL.md",
+            ".github/skills/code-review/SKILL.md",
+            "agents/arm-migration.agent.md",
+            "agents/gem-browser-tester.agent.md",
+            "agents/gem-code-simplifier.agent.md",
+            "agents/gem-debugger.agent.md",
+            "agents/gem-devops.agent.md",
+            "agents/gem-documentation-writer.agent.md",
+            "agents/gem-implementer.agent.md",
+            "agents/gem-mobile-tester.agent.md",
+            "agents/gem-orchestrator.agent.md",
+            "agents/gem-planner.agent.md",
+            "agents/gem-researcher.agent.md",
+            "agents/gem-reviewer.agent.md",
+            "agents/gem-skill-creator.agent.md",
+            "skills/acquire-codebase-knowledge/SKILL.md",
+            "skills/agent-architecture/LICENSE.txt",
+            "skills/agent-architecture/SKILL.md",
+            "skills/agent-architecture/agents/openai.yaml",
+            "skills/agent-architecture/references/architecture-contract.md",
+            "skills/agent-architecture/references/architecture-selection.md",
+            "skills/agent-architecture/references/audit.md",
+            "skills/agent-architecture/references/capability-design.md",
+            "skills/agent-architecture/references/design.md",
+            "skills/agent-architecture/references/diagnostic-review.md",
+            "skills/agent-architecture/references/discovery-protocol.md",
+            "skills/agent-architecture/references/evaluation-design.md",
+            "skills/agent-architecture/references/execution-continuity.md",
+            "skills/agent-architecture/references/result-delivery.md",
+            "skills/agent-architecture/references/scenarios.md",
+            "skills/agent-architecture/references/source-map.md",
+            "skills/agent-architecture/references/validation-loop.md",
+            "skills/ai-team-orchestration/references/anti-patterns.md",
+            "skills/ai-team-orchestration/references/brainstorm-format.md",
+            "skills/ai-team-orchestration/references/project-brief-template.md",
+            "skills/ai-team-orchestration/references/sprint-plan-template.md",
+            "skills/api-breaking-change-detector/SKILL.md",
+            "skills/azure-devops-cli/references/advanced-usage.md",
+            "skills/azure-devops-cli/references/boards-and-iterations.md",
+            "skills/docs-sync-audit/SKILL.md",
+            "skills/docs-sync-audit/scripts/docs_drift.py",
+            "skills/flowstudio-power-automate-build/SKILL.md",
+            "skills/flowstudio-power-automate-debug/SKILL.md",
+            "skills/flowstudio-power-automate-governance/SKILL.md",
+            "skills/flowstudio-power-automate-mcp/SKILL.md",
+            "skills/flowstudio-power-automate-mcp/references/tool-reference.md",
+            "skills/flowstudio-power-automate-monitoring/SKILL.md",
+            "skills/gem-devops-guidelines/SKILL.md",
+            "skills/macos-golden-gate-design/SKILL.md",
+            "skills/macos-golden-gate-design/references/design-patterns.md"
+          ],
+          "source_paths_gap": false,
+          "status": "changed"
+        }
+      }
+    },
+    {
+      "upstream": "vercel-agent-skills",
+      "mode": "diff",
+      "baseline": "references\\snapshots\\vercel-agent-skills\\2026-09-01T10-11-46-998Z-2026-09-01-review.json",
+      "changes": {
+        "structural": [],
+        "text": [],
+        "metadata": []
+      },
+      "impacts": [
+        {
+          "target": "references",
+          "effect": "当前未发现需要传播的治理变化。",
+          "directWrite": false
+        }
+      ],
+      "recommendation": "human-review-required",
+      "review_status": "pending-manual-review",
+      "evidence": {
+        "notes_path": "references/notes/vercel-agent-skills.md",
+        "snapshot": "references\\snapshots\\vercel-agent-skills\\2026-09-01T10-11-46-998Z-2026-09-01-review.json",
+        "source_url": "https://github.com/vercel-labs/agent-skills.git",
+        "source_paths": [
+          "README.md",
+          "AGENTS.md",
+          "skills"
+        ],
+        "remote": {
+          "source_url": "https://github.com/vercel-labs/agent-skills.git",
+          "checked_at": "2026-09-25T19:57:29.486Z",
+          "command": "git ls-remote HEAD",
+          "head_sha": "063bee94c3f4df8453406c830b0a7df0f2860278"
+        },
+        "remote_content": {
+          "source_url": "https://github.com/vercel-labs/agent-skills.git",
+          "checked_at": "2026-09-25T19:57:41.547Z",
+          "command": "git fetch/diff source_paths",
+          "baseline_head_sha": "063bee94c3f4df8453406c830b0a7df0f2860278",
+          "head_sha": "063bee94c3f4df8453406c830b0a7df0f2860278",
+          "source_paths": [
+            "README.md",
+            "AGENTS.md",
+            "skills"
+          ],
+          "changed_paths": [],
+          "unregistered_changed_path_count": 0,
+          "unregistered_changed_paths": [],
+          "unregistered_ai_asset_path_count": 0,
+          "unregistered_ai_asset_paths": [],
+          "source_paths_gap": false,
+          "status": "unchanged-same-head"
+        }
+      }
+    },
+    {
+      "upstream": "vercel-web-interface-guidelines",
+      "mode": "diff",
+      "baseline": "references\\snapshots\\vercel-web-interface-guidelines\\2026-08-27T14-32-52-204Z-2026-08-27-ui-review-source-tree.json",
+      "changes": {
+        "structural": [],
+        "text": [
+          {
+            "path": "references/notes/vercel-web-interface-guidelines.md",
+            "summary": "治理说明正文变化（有效行数 24 -> 25）。"
+          }
+        ],
+        "metadata": []
+      },
+      "impacts": [
+        {
+          "target": "references",
+          "effect": "治理记录或审阅结论需要更新，但当前命令不会直接写回。",
+          "directWrite": false
+        }
+      ],
+      "recommendation": "human-review-required",
+      "review_status": "pending-manual-review",
+      "evidence": {
+        "notes_path": "references/notes/vercel-web-interface-guidelines.md",
+        "snapshot": "references\\snapshots\\vercel-web-interface-guidelines\\2026-08-27T14-32-52-204Z-2026-08-27-ui-review-source-tree.json",
+        "source_url": "https://github.com/vercel-labs/web-interface-guidelines.git",
+        "source_paths": [
+          "LICENSE",
+          "README.md",
+          "AGENTS.md",
+          "command.md",
+          "install.sh"
+        ],
+        "remote": {
+          "source_url": "https://github.com/vercel-labs/web-interface-guidelines.git",
+          "checked_at": "2026-09-25T19:57:41.549Z",
+          "command": "git ls-remote HEAD",
+          "head_sha": "e3d624baaf29dc1fc645aff3e38f03e564d2d6b1"
+        },
+        "remote_content": {
+          "source_url": "https://github.com/vercel-labs/web-interface-guidelines.git",
+          "checked_at": "2026-09-25T19:57:53.677Z",
+          "command": "git fetch/diff source_paths",
+          "baseline_head_sha": "e3d624baaf29dc1fc645aff3e38f03e564d2d6b1",
+          "head_sha": "e3d624baaf29dc1fc645aff3e38f03e564d2d6b1",
+          "source_paths": [
+            "LICENSE",
+            "README.md",
+            "AGENTS.md",
+            "command.md",
+            "install.sh"
+          ],
+          "changed_paths": [],
+          "unregistered_changed_path_count": 0,
+          "unregistered_changed_paths": [],
+          "unregistered_ai_asset_path_count": 0,
+          "unregistered_ai_asset_paths": [],
+          "source_paths_gap": false,
+          "status": "unchanged-same-head"
+        }
+      }
+    },
+    {
+      "upstream": "modern-web-guidance",
+      "mode": "diff",
+      "baseline": "references\\snapshots\\modern-web-guidance\\2026-09-01T10-11-46-694Z-2026-09-01-review.json",
+      "changes": {
+        "structural": [],
+        "text": [],
+        "metadata": []
+      },
+      "impacts": [
+        {
+          "target": "references",
+          "effect": "远端出现未登记的疑似 AI asset 路径，需要更新 `references/upstreams.yaml` 或记录不采纳边界。",
+          "directWrite": false
+        },
+        {
+          "target": "toolkit",
+          "effect": "远端未登记路径疑似包含 AI asset，需要人工判断是否扩展 source_paths 并吸收 canonical content。",
+          "directWrite": false
+        },
+        {
+          "target": "platform",
+          "effect": "远端内容变化可能影响平台产物生成判断，但不会直接写入 `packages/platform-*`。",
+          "directWrite": false
+        }
+      ],
+      "recommendation": "human-review-required",
+      "review_status": "pending-manual-review",
+      "evidence": {
+        "notes_path": "references/notes/modern-web-guidance.md",
+        "snapshot": "references\\snapshots\\modern-web-guidance\\2026-09-01T10-11-46-694Z-2026-09-01-review.json",
+        "source_url": "https://github.com/GoogleChrome/modern-web-guidance.git",
+        "source_paths": [
+          "LICENSE",
+          "README.md",
+          "policies",
+          "skills"
+        ],
+        "remote": {
+          "source_url": "https://github.com/GoogleChrome/modern-web-guidance.git",
+          "checked_at": "2026-09-25T19:57:53.680Z",
+          "command": "git ls-remote HEAD",
+          "head_sha": "22ab18dfb50a5d7e3bdcf471c14076a5534eae4e"
+        },
+        "remote_content": {
+          "source_url": "https://github.com/GoogleChrome/modern-web-guidance.git",
+          "checked_at": "2026-09-25T19:58:05.907Z",
+          "command": "git fetch/diff source_paths",
+          "baseline_head_sha": "56c61c9ee79a8df1a98822309c04847a57f56000",
+          "head_sha": "22ab18dfb50a5d7e3bdcf471c14076a5534eae4e",
+          "source_paths": [
+            "LICENSE",
+            "README.md",
+            "policies",
+            "skills"
+          ],
+          "changed_paths": [
+            {
+              "status": "M",
+              "path": "README.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/SKILL.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/css/css-layout.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/forms/animated-select-picker.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/forms/branded-select-styling.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/forms/custom-select-picker-layouts.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/forms/ime-safe-enter-submit.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/forms/rich-media-picker.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/performance/calculate-total-foreground-time.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/performance/conditional-async-dependencies.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/performance/detect-initial-visibility-state.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/performance/identify-heavy-scripts.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/performance/identify-inp-causes.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/modern-web-guidance/guides/performance/out-of-order-html-streaming.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/performance/performance.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/modern-web-guidance/guides/security/sanitize-untrusted-html.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/security/security.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/ui-atoms/resilient-context-menus-and-nested-dropdowns.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/ui-behaviors/anchor-positioning-tab-underline.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/ui-behaviors/interest-triggered-tooltips.md"
+            },
+            {
+              "status": "M",
+              "path": "skills/modern-web-guidance/guides/ui-components/persistent-app-tours.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/modern-web-guidance/guides/ui-components/progress-ring.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/modern-web-guidance/guides/ui-components/scrollspy.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/modern-web-guidance/guides/ui-components/spinner.md"
+            },
+            {
+              "status": "A",
+              "path": "skills/modern-web-guidance/guides/visual-design/contrast-color.md"
+            }
+          ],
+          "unregistered_changed_path_count": 12,
+          "unregistered_changed_paths": [
+            ".agents/plugins/marketplace.json",
+            ".claude-plugin/marketplace.json",
+            ".claude-plugin/plugin.json",
+            ".codex-plugin/plugin.json",
+            ".cursor-plugin/plugin.json",
+            ".github/img/logo-square.svg",
+            ".github/plugin/plugin.json",
+            ".grok-plugin/marketplace.json",
+            "assets/logo.png",
+            "gemini-extension.json",
+            "kimi.plugin.json",
+            "package.json"
+          ],
+          "unregistered_ai_asset_path_count": 4,
+          "unregistered_ai_asset_paths": [
+            ".agents/plugins/marketplace.json",
+            ".claude-plugin/marketplace.json",
+            ".claude-plugin/plugin.json",
+            ".codex-plugin/plugin.json"
+          ],
+          "source_paths_gap": false,
+          "status": "changed"
+        }
+      }
+    },
+    {
+      "upstream": "ui-skills",
+      "mode": "diff",
+      "baseline": "references\\snapshots\\ui-skills\\2026-09-01T10-11-46-141Z-2026-09-01-review.json",
+      "changes": {
+        "structural": [],
+        "text": [],
+        "metadata": []
+      },
+      "impacts": [
+        {
+          "target": "references",
+          "effect": "远端出现未登记的疑似 AI asset 路径，需要更新 `references/upstreams.yaml` 或记录不采纳边界。",
+          "directWrite": false
+        },
+        {
+          "target": "toolkit",
+          "effect": "远端未登记路径疑似包含 AI asset，需要人工判断是否扩展 source_paths 并吸收 canonical content。",
+          "directWrite": false
+        },
+        {
+          "target": "platform",
+          "effect": "远端内容变化可能影响平台产物生成判断，但不会直接写入 `packages/platform-*`。",
+          "directWrite": false
+        }
+      ],
+      "recommendation": "human-review-required",
+      "review_status": "pending-manual-review",
+      "evidence": {
+        "notes_path": "references/notes/ui-skills.md",
+        "snapshot": "references\\snapshots\\ui-skills\\2026-09-01T10-11-46-141Z-2026-09-01-review.json",
+        "source_url": "https://github.com/ibelick/ui-skills.git",
+        "source_paths": [
+          "LICENSE",
+          "README.md",
+          "DESIGN.md",
+          "skills"
+        ],
+        "remote": {
+          "source_url": "https://github.com/ibelick/ui-skills.git",
+          "checked_at": "2026-09-25T19:57:53.792Z",
+          "command": "git ls-remote HEAD",
+          "head_sha": "fd0889bdf72aee45c32028b4643b09735d5b5a34"
+        },
+        "remote_content": {
+          "source_url": "https://github.com/ibelick/ui-skills.git",
+          "checked_at": "2026-09-25T19:58:05.881Z",
+          "command": "git fetch/diff source_paths",
+          "baseline_head_sha": "f2dadf221a166a79606b337d08ce0b04d0d2bfd9",
+          "head_sha": "fd0889bdf72aee45c32028b4643b09735d5b5a34",
+          "source_paths": [
+            "LICENSE",
+            "README.md",
+            "DESIGN.md",
+            "skills"
+          ],
+          "changed_paths": [
+            {
+              "status": "M",
+              "path": "DESIGN.md"
+            },
+            {
+              "status": "M",
+              "path": "README.md"
+            }
+          ],
+          "unregistered_changed_path_count": 165,
+          "unregistered_changed_paths": [
+            ".dev.vars.example",
+            ".gitignore",
+            "AGENTS.md",
+            "astro.config.mjs",
+            "package-lock.json",
+            "package.json",
+            "public/UI-OG-X.png",
+            "public/UI-OG.png",
+            "public/_headers",
+            "public/designmd-ogimage-x.png",
+            "public/designmd-ogimage.png",
+            "public/favicon.svg",
+            "public/fonts/InterVariable.woff2",
+            "public/uiskills-favicon-dark.webp",
+            "public/uiskills-favicon-light.webp",
+            "public/uiskills-logo-dark.webp",
+            "public/uiskills-logo-light.webp",
+            "scripts/update-github-stars.mjs",
+            "src/config/features.ts",
+            "src/content/design-md/amplitude.md",
+            "src/content/design-md/ant-design.md",
+            "src/content/design-md/atlassian.md",
+            "src/content/design-md/clerk.md",
+            "src/content/design-md/culture-amp.md",
+            "src/content/design-md/dsfr.md",
+            "src/content/design-md/executor.md",
+            "src/content/design-md/firecrawl.md",
+            "src/content/design-md/heygen-hyperframes.md",
+            "src/content/design-md/juspay.md",
+            "src/content/design-md/mintlify.md",
+            "src/content/design-md/nuxt.md",
+            "src/content/design-md/open-food-facts.md",
+            "src/content/design-md/oxidecomputer.md",
+            "src/content/design-md/quiverai.md",
+            "src/content/design-md/unicef.md",
+            "src/content/design-md/vercel.md",
+            "src/content/design-md/voltagent.md",
+            "src/data/agent-skills-digests.json",
+            "src/data/collections.ts",
+            "src/data/design-md-index.json",
+            "src/data/design-md.ts",
+            "src/data/github-stars.ts",
+            "src/data/jobs.ts",
+            "src/data/playbook.ts",
+            "src/data/registry.ts",
+            "src/env.d.ts",
+            "src/layouts/Layout.astro",
+            "src/lib/cache-headers.ts",
+            "src/lib/code-highlighter.ts",
+            "src/lib/collection-catalog.ts"
+          ],
+          "unregistered_ai_asset_path_count": 6,
+          "unregistered_ai_asset_paths": [
+            "AGENTS.md",
+            "src/pages/agents/[id].astro",
+            "src/pages/agents/index.astro",
+            "src/pages/skills/[...slug].astro",
+            "src/pages/skills/index.astro",
+            "src/pages/skills/topics.astro"
+          ],
+          "source_paths_gap": false,
+          "status": "changed"
+        }
+      }
+    },
+    {
+      "upstream": "awesome-design-md",
+      "mode": "diff",
+      "baseline": "references\\snapshots\\awesome-design-md\\2026-08-27T14-32-46-481Z-2026-08-27-baseline-source-tree.json",
+      "changes": {
+        "structural": [],
+        "text": [],
+        "metadata": []
+      },
+      "impacts": [
+        {
+          "target": "toolkit",
+          "effect": "远端登记路径已有内容变化，需要人工判断是否影响 canonical content。",
+          "directWrite": false
+        },
+        {
+          "target": "platform",
+          "effect": "远端内容变化可能影响平台产物生成判断，但不会直接写入 `packages/platform-*`。",
+          "directWrite": false
+        }
+      ],
+      "recommendation": "human-review-required",
+      "review_status": "pending-manual-review",
+      "evidence": {
+        "notes_path": "references/notes/awesome-design-md.md",
+        "snapshot": "references\\snapshots\\awesome-design-md\\2026-08-27T14-32-46-481Z-2026-08-27-baseline-source-tree.json",
+        "source_url": "https://github.com/VoltAgent/awesome-design-md.git",
+        "source_paths": [
+          "LICENSE",
+          "README.md",
+          "CONTRIBUTING.md",
+          "design-md"
+        ],
+        "remote": {
+          "source_url": "https://github.com/VoltAgent/awesome-design-md.git",
+          "checked_at": "2026-09-25T19:57:53.817Z",
+          "command": "git ls-remote HEAD",
+          "head_sha": "f6961238d5cddcf8042a74a70fc400ec67181abb"
+        },
+        "remote_content": {
+          "source_url": "https://github.com/VoltAgent/awesome-design-md.git",
+          "checked_at": "2026-09-25T19:58:05.872Z",
+          "command": "git fetch/diff source_paths",
+          "baseline_head_sha": "8147538b4226ae41e2487a9179e3bcc1f68e8554",
+          "head_sha": "f6961238d5cddcf8042a74a70fc400ec67181abb",
+          "source_paths": [
+            "LICENSE",
+            "README.md",
+            "CONTRIBUTING.md",
+            "design-md"
+          ],
+          "changed_paths": [
+            {
+              "status": "M",
+              "path": "README.md"
+            }
+          ],
+          "unregistered_changed_path_count": 0,
+          "unregistered_changed_paths": [],
+          "unregistered_ai_asset_path_count": 0,
+          "unregistered_ai_asset_paths": [],
+          "source_paths_gap": false,
+          "status": "changed"
+        }
+      }
+    },
+    {
+      "upstream": "ponytail",
+      "mode": "diff",
+      "baseline": "references\\snapshots\\ponytail\\2026-09-01T10-05-06-515Z-2026-09-01-evaluation.json",
+      "changes": {
+        "structural": [],
+        "text": [],
+        "metadata": []
+      },
+      "impacts": [
+        {
+          "target": "references",
+          "effect": "远端出现未登记的疑似 AI asset 路径，需要更新 `references/upstreams.yaml` 或记录不采纳边界。",
+          "directWrite": false
+        },
+        {
+          "target": "toolkit",
+          "effect": "远端未登记路径疑似包含 AI asset，需要人工判断是否扩展 source_paths 并吸收 canonical content。",
+          "directWrite": false
+        },
+        {
+          "target": "platform",
+          "effect": "远端内容变化可能影响平台产物生成判断，但不会直接写入 `packages/platform-*`。",
+          "directWrite": false
+        }
+      ],
+      "recommendation": "human-review-required",
+      "review_status": "pending-manual-review",
+      "evidence": {
+        "notes_path": "references/notes/ponytail.md",
+        "snapshot": "references\\snapshots\\ponytail\\2026-09-01T10-05-06-515Z-2026-09-01-evaluation.json",
+        "source_url": "https://github.com/dietrichgebert/ponytail.git",
+        "source_paths": [
+          "LICENSE",
+          "README.md",
+          "AGENTS.md",
+          "skills/ponytail",
+          "skills/ponytail-review",
+          "skills/ponytail-audit",
+          "skills/ponytail-debt",
+          "benchmarks/agentic",
+          "benchmarks/results/2026-06-18-agentic.md",
+          "docs/agent-portability.md",
+          "hooks/claude-codex-hooks.json"
+        ],
+        "remote": {
+          "source_url": "https://github.com/dietrichgebert/ponytail.git",
+          "checked_at": "2026-09-25T19:57:53.890Z",
+          "command": "git ls-remote HEAD",
+          "head_sha": "e3ba2aa6f1e6f0bc4d69eb09c9f0d0a93af56156"
+        },
+        "remote_content": {
+          "source_url": "https://github.com/dietrichgebert/ponytail.git",
+          "checked_at": "2026-09-25T19:58:05.965Z",
+          "command": "git fetch/diff source_paths",
+          "baseline_head_sha": "2ed6c52c9d7e5e56942508591085fd45dea277d3",
+          "head_sha": "e3ba2aa6f1e6f0bc4d69eb09c9f0d0a93af56156",
+          "source_paths": [
+            "LICENSE",
+            "README.md",
+            "AGENTS.md",
+            "skills/ponytail",
+            "skills/ponytail-review",
+            "skills/ponytail-audit",
+            "skills/ponytail-debt",
+            "benchmarks/agentic",
+            "benchmarks/results/2026-06-18-agentic.md",
+            "docs/agent-portability.md",
+            "hooks/claude-codex-hooks.json"
+          ],
+          "changed_paths": [
+            {
+              "status": "M",
+              "path": "README.md"
+            },
+            {
+              "status": "M",
+              "path": "docs/agent-portability.md"
+            }
+          ],
+          "unregistered_changed_path_count": 24,
+          "unregistered_changed_paths": [
+            ".claude-plugin/plugin.json",
+            ".codex-plugin/plugin.json",
+            ".devin-plugin/plugin.json",
+            ".github/plugin/plugin.json",
+            ".qoder-plugin/plugin.json",
+            "README.es.md",
+            "README.ko.md",
+            "assets/retriever-icon.png",
+            "assets/retriever-logo-dark.svg",
+            "assets/retriever-logo-light.svg",
+            "docs/cursor-hooks.md",
+            "gemini-extension.json",
+            "hooks/cursor-hooks.json",
+            "hooks/ponytail-activate.js",
+            "hooks/ponytail-mode-tracker.js",
+            "hooks/ponytail-runtime.js",
+            "package.json",
+            "plugin.yaml",
+            "ponytail-mcp/package.json",
+            "scripts/cursor-hooks.js",
+            "scripts/uninstall.js",
+            "tests/cursor-hooks.test.js",
+            "tests/hooks.test.js",
+            "tests/uninstall.test.js"
+          ],
+          "unregistered_ai_asset_path_count": 2,
+          "unregistered_ai_asset_paths": [
+            ".claude-plugin/plugin.json",
+            ".codex-plugin/plugin.json"
+          ],
+          "source_paths_gap": false,
+          "status": "changed"
+        }
+      }
+    }
+  ]
+}

@@ -4,7 +4,7 @@ Source: `https://github.com/openai/plugins`
 
 ## Status
 
-Archived official Codex plugin example repository. It superseded `openai/skills` as the first-party example repository, but it is no longer the active source of truth for current Codex runtime behavior.
+As of 2026-09-26, GitHub reports this repository as unarchived. It is being re-evaluated as a packaging reference, not as the source of truth for current Codex runtime behavior. The archival observations below are historical evidence, not its current lifecycle status.
 
 Use it as historical evidence for plugin directory structure. Use the current Codex Plugins, Subagents, and Config Reference documentation for supported installation, configuration, orchestration, and permission behavior.
 
@@ -15,6 +15,16 @@ Current sources:
 - `https://learn.chatgpt.com/docs/config-file/config-reference`
 
 ## Latest Remote Evidence
+
+### Refresh 2026-09-26
+
+- GitHub repository API: `archived=false`, `pushed_at=2026-09-24T17:41:07Z`.
+- Remote HEAD: `1dc195897af4161d039b80d8471ec0a10c9bbc89`.
+- Registered paths: 51 changed; unregistered paths: 3,527 changed. This is a broad catalog change, not approval to import it.
+- Registry status changes from `archived` to `evaluating`; runtime support still requires current official documentation and local adapter verification.
+- Evidence: [GitHub repository API](https://api.github.com/repos/openai/plugins), [fixed commit](https://github.com/openai/plugins/commit/1dc195897af4161d039b80d8471ec0a10c9bbc89), and [refresh report](upstream-refresh-2026-09-26.json).
+
+### Historical observation
 
 - remote head: `11c74d6ba24d3a6d48f54a194cd00ef3beea18f9`
 - observed date: 2026-08-17

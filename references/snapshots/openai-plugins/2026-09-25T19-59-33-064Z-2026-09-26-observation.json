@@ -1,0 +1,1104 @@
+{
+  "upstream": "openai-plugins",
+  "captured_at": "2026-09-25T19:59:33.064Z",
+  "label": "2026-09-26-observation",
+  "metadata": {
+    "title": "OpenAI Plugins",
+    "kind": "github-public-repo",
+    "status": "archived",
+    "owner": "codex",
+    "source_url": "https://github.com/openai/plugins.git",
+    "source_paths": [
+      "README.md",
+      ".agents/plugins",
+      "plugins/plugin-eval",
+      "plugins/superpowers",
+      "plugins/figma/agents",
+      "plugins/figma/commands",
+      "plugins/figma/hooks.json",
+      "plugins/vercel/agents",
+      "plugins/vercel/commands"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/openai/plugins.git",
+    "checked_at": "2026-09-25T19:59:33.066Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "1dc195897af4161d039b80d8471ec0a10c9bbc89"
+  },
+  "source_tree": {
+    "source_url": "https://github.com/openai/plugins.git",
+    "checked_at": "2026-09-25T19:59:45.169Z",
+    "command": "git fetch/ls-tree source_paths",
+    "head_sha": "1dc195897af4161d039b80d8471ec0a10c9bbc89",
+    "source_paths": [
+      "README.md",
+      ".agents/plugins",
+      "plugins/plugin-eval",
+      "plugins/superpowers",
+      "plugins/figma/agents",
+      "plugins/figma/commands",
+      "plugins/figma/hooks.json",
+      "plugins/vercel/agents",
+      "plugins/vercel/commands"
+    ],
+    "entry_count": 175,
+    "manifest_sha256": "9df4f82edb571efdca472f06eb417134655b69cd874d084d626f03be8c0e2041",
+    "entries": [
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "480f8761303cd79b6fe121d8268565ca35974ac3",
+        "path": ".agents/plugins/api_marketplace.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ea8a0c4bc4530ea9a5ddafcd5937da58c0e33ac9",
+        "path": ".agents/plugins/marketplace.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e901b40b9d643a5f878157158759fa0a6d3e2909",
+        "path": "README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0487dcaac9a15e13a72b25ed4f2a7a3aa1a2b8be",
+        "path": "plugins/figma/agents/design-parity-review-agent.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fc36f81adb66dc66d865f538af79c9a4181c00d6",
+        "path": "plugins/figma/agents/design-system-rules-agent.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ff79e0b94395c67c8a8e1d13d9a7e7e18ebed3a3",
+        "path": "plugins/figma/agents/figma-code-connect-agent.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e44cc53e24bc06f4667c8b18312f4cdf0f2445a7",
+        "path": "plugins/figma/agents/figma-implementation-agent.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "dd64163fdf4f69b3c766f9b44c8fe25e98c30b28",
+        "path": "plugins/figma/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "124053623e6585a0e28c262ef5c2964b3edaef6c",
+        "path": "plugins/figma/commands/connect-figma-components.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e7399aad34c185b45c9b82b669c789f1c2a2a9b9",
+        "path": "plugins/figma/commands/create-design-system-rules.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8469ba1bf46919960300fb0bb76cdc931982bcb5",
+        "path": "plugins/figma/commands/implement-from-figma.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "824758300a071bf4ff5bc4f45147ce95372a68b3",
+        "path": "plugins/figma/commands/review-design-parity.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0904b23a9f3f1fc02e67f5c74e3e9178cf5af56e",
+        "path": "plugins/figma/hooks.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b41eb1de581a8aca540f7d7c5e5fec4426fe2af6",
+        "path": "plugins/plugin-eval/.codex-plugin/plugin.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "26c80293a402402631d1b67f498538e9c4f13a05",
+        "path": "plugins/plugin-eval/.gitignore"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "052a176149fd5aa87a2e3e6b834abe49e680f515",
+        "path": "plugins/plugin-eval/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7d8b12a9f1bbea1684b1a896f86578807bf5d940",
+        "path": "plugins/plugin-eval/assets/plugin-eval.svg"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3165d0c9ded54f7202c5d6bb75139d71044d47a3",
+        "path": "plugins/plugin-eval/fixtures/coverage-samples/coverage-final.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ccaf24cad3fea0763492df4782263f7b77d141a6",
+        "path": "plugins/plugin-eval/fixtures/coverage-samples/coverage.xml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "37daa6e9708882702807edb4a09c0d3f9a4dee2f",
+        "path": "plugins/plugin-eval/fixtures/coverage-samples/lcov.info"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "30c91c78edd1a7b987ce1b8129d0211c710beac9",
+        "path": "plugins/plugin-eval/fixtures/metric-pack/emit-pack.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c9f824cab8c7cca04d3440ba89e7033aba7c8be4",
+        "path": "plugins/plugin-eval/fixtures/metric-pack/manifest.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bea41c0cc8a132ea81385097bd088e5a21192f25",
+        "path": "plugins/plugin-eval/fixtures/minimal-plugin/.codex-plugin/plugin.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c16bdb14f17f91c333bdcc79063052f8be907839",
+        "path": "plugins/plugin-eval/fixtures/minimal-plugin/assets/minimal.svg"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "31bcbd38f708aea06d67de0b4180ce3f8644a532",
+        "path": "plugins/plugin-eval/fixtures/minimal-plugin/skills/minimal-plugin-skill/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2a6efd9e569de57b5f2bbea157000a775e0020a6",
+        "path": "plugins/plugin-eval/fixtures/minimal-skill/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "34a0b9b0e7ae3e727d0b9a6e21d592ead6661f8e",
+        "path": "plugins/plugin-eval/fixtures/minimal-skill/references/details.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8cc3685b5cd272d344cf332ff0156e5c48c8ea0b",
+        "path": "plugins/plugin-eval/fixtures/multi-skill-plugin/.codex-plugin/plugin.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4ed8732b8860d81cdde3cb089fa14900d1d4880f",
+        "path": "plugins/plugin-eval/fixtures/multi-skill-plugin/assets/multi.svg"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3abb67f9504794a649590398b2e6746a11f5eb23",
+        "path": "plugins/plugin-eval/fixtures/multi-skill-plugin/skills/alpha/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "21d90069e52edb6b65818a9306fb4f20f36c81ac",
+        "path": "plugins/plugin-eval/fixtures/multi-skill-plugin/skills/beta/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2598120bc70ffcea8a1e0f2a9a218c1436ffd9ea",
+        "path": "plugins/plugin-eval/fixtures/observed-usage/responses.jsonl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1fff47be4b9562b2806c65707a894f1fc5905ac3",
+        "path": "plugins/plugin-eval/fixtures/ts-python-sample/src/sample.py"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fdbbd305f2afafdea79bb03d36d15e8e2103ad92",
+        "path": "plugins/plugin-eval/fixtures/ts-python-sample/src/sample.ts"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4a892b60692a5d0248523f18a3704bf523ff8531",
+        "path": "plugins/plugin-eval/fixtures/ts-python-sample/tests/sample.test.ts"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0330c02d899598a43cf351ad8bca0a8fc25e0911",
+        "path": "plugins/plugin-eval/fixtures/ts-python-sample/tests/test_sample.py"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "34bac97504422b59145b0ee198eb8da4083d9a57",
+        "path": "plugins/plugin-eval/package.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "508fcb0b0dd3232d4df447c034e59a53bdfa1435",
+        "path": "plugins/plugin-eval/references/benchmark-harness.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a9a44af3178ac829fd7782dbcb2d33ec2600a5a8",
+        "path": "plugins/plugin-eval/references/chat-first-workflows.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cdbcafaf3f7a9e1a5a72ca3e27f353d07785d542",
+        "path": "plugins/plugin-eval/references/evaluation-result-schema.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "07dee22a84e150a996211db0a592d34f19e7d829",
+        "path": "plugins/plugin-eval/references/metric-pack-manifest.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "08d5265c74795e9609c9f1187afcdb59e274797b",
+        "path": "plugins/plugin-eval/references/observed-usage.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "734955689222e06c2f0ccb856acf97a46f39b36e",
+        "path": "plugins/plugin-eval/references/technical-design.md"
+      },
+      {
+        "mode": "100755",
+        "type": "blob",
+        "object": "e3236af34ee0fcfd28d55e64928945122e7ba416",
+        "path": "plugins/plugin-eval/scripts/plugin-eval.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "eef80263a398d9535d3341457150ef79e286c349",
+        "path": "plugins/plugin-eval/skills/evaluate-plugin/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e9177c9821cbb2e9be1514183ae703797426606e",
+        "path": "plugins/plugin-eval/skills/evaluate-plugin/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fc42e3b3e88821a8d811acea1287bac8b58f4cab",
+        "path": "plugins/plugin-eval/skills/evaluate-skill/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6229bde63e4eaae58f5e7e2d1e0c879ff5142aef",
+        "path": "plugins/plugin-eval/skills/evaluate-skill/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4b8aa0b878bad8a1c92c1ec4d8f1ce4e06280a9a",
+        "path": "plugins/plugin-eval/skills/improve-skill/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4b92c9911e5b78598d5740733ac8ff79f6fc54f4",
+        "path": "plugins/plugin-eval/skills/improve-skill/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e7b7795253554383f75633c9b0133849e975662f",
+        "path": "plugins/plugin-eval/skills/metric-pack-designer/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "35d64691902782887657255cb09d173a330cd229",
+        "path": "plugins/plugin-eval/skills/metric-pack-designer/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3d58206a936c83ae15cc274a623604f64925f17d",
+        "path": "plugins/plugin-eval/skills/plugin-eval/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bf8bec76fe7c9269c06cae91d1dc16069a642c32",
+        "path": "plugins/plugin-eval/skills/plugin-eval/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6709727dce6f5b6a763ea99a935bee55e4d0860c",
+        "path": "plugins/plugin-eval/src/cli.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "db2543a7bc092823e22710eaf1a7598a7e16d297",
+        "path": "plugins/plugin-eval/src/core/analyze.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "766ce625774ec699672d9872e8aee21a542cd7c6",
+        "path": "plugins/plugin-eval/src/core/baseline.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "edb660fe1e3312ec1e2e80f7776ee02a06c68a7d",
+        "path": "plugins/plugin-eval/src/core/benchmark-events.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "20e5c4d358a0db741168f15de5d63445b1967012",
+        "path": "plugins/plugin-eval/src/core/benchmark-workspace.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5a6c89b70c28bd9aa6a185ee1fae224ae6c8ebdd",
+        "path": "plugins/plugin-eval/src/core/benchmark.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8e58e35176185b67b731be84ab3110dfc7418486",
+        "path": "plugins/plugin-eval/src/core/budget.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c1101bcbeb57699cbe1da577f329e0d150052403",
+        "path": "plugins/plugin-eval/src/core/compare.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7fa116167039ca1629f4f948f72a222bbb10162e",
+        "path": "plugins/plugin-eval/src/core/improvement-brief.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e5237e65bdd389bb9d8f01bcbdb8a8373a0e84e8",
+        "path": "plugins/plugin-eval/src/core/measurement-plan.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9421603daae36728c48525baee6b5b751f1f63b1",
+        "path": "plugins/plugin-eval/src/core/metric-packs.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c8b2b921d7e6f95415d39a137859ae0758720a8e",
+        "path": "plugins/plugin-eval/src/core/observed-usage.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3f594d2dcd13f07f1acdb124cf3a49aa0c0b44bc",
+        "path": "plugins/plugin-eval/src/core/presentation.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c95736cd4b90e257bab56f6eeb0dab19122c3175",
+        "path": "plugins/plugin-eval/src/core/schema.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "df8c0238a153ec49fdf338bfa3f063fb538ebc57",
+        "path": "plugins/plugin-eval/src/core/scoring.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ca5545acb91abd7f1ce71167385401caf8e30ab1",
+        "path": "plugins/plugin-eval/src/core/target.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d19f97a9ec02be1885f999cc150b763a8cbefd8d",
+        "path": "plugins/plugin-eval/src/core/workflow-guide.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b9afa61a995be9b7ea60494d02ec8b7130549522",
+        "path": "plugins/plugin-eval/src/evaluators/code.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ba902cad7f185fc681adc479cf2d9efae4ef545c",
+        "path": "plugins/plugin-eval/src/evaluators/coverage.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "468c7dec94e62664e60ac345bce2270eed8d28b7",
+        "path": "plugins/plugin-eval/src/evaluators/plugin.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "17b7d83af61ef2fdd80cea6aae32075b09b4f476",
+        "path": "plugins/plugin-eval/src/evaluators/python.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b7c2dbcd5f4ede66f9b2388412fba0e5b8617929",
+        "path": "plugins/plugin-eval/src/evaluators/skill.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "db812ff7afdb4497360a2f7b05ea59123f09d9c6",
+        "path": "plugins/plugin-eval/src/evaluators/typescript.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c08f1a313c4fab0e4ec46bf995476d064b082448",
+        "path": "plugins/plugin-eval/src/index.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d4264f55bcb2bd67448960ddcfd0b00e5abdc961",
+        "path": "plugins/plugin-eval/src/lib/files.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b3a4bc33bd0822107fb745cd2aa4c1fa503e14ab",
+        "path": "plugins/plugin-eval/src/lib/frontmatter.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "604e29bba91fda09645cb285041bcb9237c246d7",
+        "path": "plugins/plugin-eval/src/lib/tokens.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c44c41d4feccb0580c4234e747573442d1cef3d3",
+        "path": "plugins/plugin-eval/src/renderers/html.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4da7f8ca0f8a2fe2485e68b144191d4b193dd34d",
+        "path": "plugins/plugin-eval/src/renderers/index.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d05284bc886ace0747fb333826a6ca2ab6510340",
+        "path": "plugins/plugin-eval/src/renderers/markdown.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4ada4f6d31ffa8eb0204337341d3471050c38ba1",
+        "path": "plugins/plugin-eval/tests/plugin-eval.test.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c514fe33a692cfaf4f6321e9e6c520df6a8d2769",
+        "path": "plugins/superpowers/.codex-plugin/assets/composer-icon.svg"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "25518da4625e850d97b15a9e0a27e7115969dc0d",
+        "path": "plugins/superpowers/.codex-plugin/assets/logo.png"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "688466c0ae3df4f8ea5b0dc707e37ea3501e233a",
+        "path": "plugins/superpowers/.codex-plugin/plugin.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f6422545a4b5485c81346080d8d34c53b5cf9292",
+        "path": "plugins/superpowers/CODE_OF_CONDUCT.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "abf0390320aa14406af7a520b9b0739fdda9bf08",
+        "path": "plugins/superpowers/LICENSE"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "09a91c6d03cfa3d874c5c33b6f8cc3d0b2d89645",
+        "path": "plugins/superpowers/README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "25518da4625e850d97b15a9e0a27e7115969dc0d",
+        "path": "plugins/superpowers/assets/app-icon.png"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c514fe33a692cfaf4f6321e9e6c520df6a8d2769",
+        "path": "plugins/superpowers/assets/superpowers-small.svg"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b56a3b5ed6ea0d6216501e0e401ecb00a1b4675f",
+        "path": "plugins/superpowers/skills/brainstorming/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "66b37b253e170ab003b73538da96df26828f45cb",
+        "path": "plugins/superpowers/skills/brainstorming/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f540bb8a4f88107e2b37b2871a4c1a55a3b6f720",
+        "path": "plugins/superpowers/skills/brainstorming/scripts/frame-template.html"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e11d26489ce248f37af3e4dd01ddec6a4e88287f",
+        "path": "plugins/superpowers/skills/brainstorming/scripts/helper.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a828b35af64d5c64ca68b9ec78473999ce698874",
+        "path": "plugins/superpowers/skills/brainstorming/scripts/server.cjs"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "016a8e4870142ce2adbe81a021d8b6b9073e7618",
+        "path": "plugins/superpowers/skills/brainstorming/scripts/start-server.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7cacfe9440043f7a46eac555cd835fad0769c425",
+        "path": "plugins/superpowers/skills/brainstorming/scripts/stop-server.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "60993129de3c445efeff53987b5297dc1acf3eb1",
+        "path": "plugins/superpowers/skills/brainstorming/spec-document-reviewer-prompt.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c145e64388d4441710da016ea665fed5699e2e91",
+        "path": "plugins/superpowers/skills/brainstorming/visual-companion.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3fa091b348bbe0a18eaa0e17e9092c97f7005cbe",
+        "path": "plugins/superpowers/skills/dispatching-parallel-agents/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bef505ee177d39d01b0db572a061bd61d8699ff0",
+        "path": "plugins/superpowers/skills/dispatching-parallel-agents/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b51d97d2cc4c2ecc5eabecf27e499aa8c933efac",
+        "path": "plugins/superpowers/skills/executing-plans/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9fe12eb95f01ef4557c3318eff3fd07b3bf4ab0c",
+        "path": "plugins/superpowers/skills/executing-plans/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fa8aecaf8813f1b19d19996f7957d1b0121f2d9c",
+        "path": "plugins/superpowers/skills/finishing-a-development-branch/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e4b6aa8e44dd36b09263a80ba744e1de6f3fae6b",
+        "path": "plugins/superpowers/skills/finishing-a-development-branch/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "950da7b74bf6dbed6b8726d12ddadd65a9f5fda7",
+        "path": "plugins/superpowers/skills/receiving-code-review/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "89f1ffba3b6b67276e9af5f78bedf5b84f5039c1",
+        "path": "plugins/superpowers/skills/receiving-code-review/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fa4f2f9965591d6d8a7ef4ad47e6ba4d5ac344d0",
+        "path": "plugins/superpowers/skills/requesting-code-review/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "aa9d517943941bf236a090d58bcc406907616c2e",
+        "path": "plugins/superpowers/skills/requesting-code-review/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b898cb982e8a368e847d31136ac106001173b1d5",
+        "path": "plugins/superpowers/skills/requesting-code-review/code-reviewer.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "aac35b91c07af15eca580a205eb0c894b86e87c8",
+        "path": "plugins/superpowers/skills/subagent-driven-development/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7d40cd6f3384352c84f860ad9019224b864de915",
+        "path": "plugins/superpowers/skills/subagent-driven-development/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5c8ecd61fba036263bf88d0af24d47125780efa0",
+        "path": "plugins/superpowers/skills/subagent-driven-development/implementer-prompt.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ad74b10b30762affc44173f8ec3228d2877f372f",
+        "path": "plugins/superpowers/skills/subagent-driven-development/re-review-prompt.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "31852e2abbeb9a41084f67a9f2ef3cfc3378bce9",
+        "path": "plugins/superpowers/skills/subagent-driven-development/scripts/review-package"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4e2d16802ecaa23eb9a682663e4c356c4aa5a656",
+        "path": "plugins/superpowers/skills/subagent-driven-development/scripts/sdd-workspace"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "612e14a1ee7ca9c0078d896325935759a1827c24",
+        "path": "plugins/superpowers/skills/subagent-driven-development/scripts/task-brief"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ce796948232b6ae5fb65fd2d1f2f864530201a2e",
+        "path": "plugins/superpowers/skills/subagent-driven-development/task-reviewer-prompt.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9aa03092809feaf93c9bfa985252f6f1c9624692",
+        "path": "plugins/superpowers/skills/systematic-debugging/CREATION-LOG.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "095d194ac041502905f15b01d22d294fb94db8b2",
+        "path": "plugins/superpowers/skills/systematic-debugging/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1306dcc2abcc26841f9ed9615048170483a99e60",
+        "path": "plugins/superpowers/skills/systematic-debugging/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "703a06b653160d060bbf46ab5c6e0cd7446bd592",
+        "path": "plugins/superpowers/skills/systematic-debugging/condition-based-waiting-example.ts"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "70994f777c586f7d4c43033aac34c7cf0da6688b",
+        "path": "plugins/superpowers/skills/systematic-debugging/condition-based-waiting.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e2483354dc2b62478a2624e34ca18bc0efe887b2",
+        "path": "plugins/superpowers/skills/systematic-debugging/defense-in-depth.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "985f5d08ccf8a3f2d40739cfcaf4413bb24bf1cb",
+        "path": "plugins/superpowers/skills/systematic-debugging/find-polluter.sh"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "12ef5222e24e19ab92172b82b69ef1b0c30d9bfa",
+        "path": "plugins/superpowers/skills/systematic-debugging/root-cause-tracing.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "23a6ed7a2044e0c44d74c3101406140f4851aa41",
+        "path": "plugins/superpowers/skills/systematic-debugging/test-academic.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8d13b467e4a98abfffd12161cbc3c418021d6023",
+        "path": "plugins/superpowers/skills/systematic-debugging/test-pressure-1.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2d2315ec8a24ca872bc80d2f4056468ba051462a",
+        "path": "plugins/superpowers/skills/systematic-debugging/test-pressure-2.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "89734b86fdc756488df315d53e5c3ac2d3752cd8",
+        "path": "plugins/superpowers/skills/systematic-debugging/test-pressure-3.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4320d8879a639d0536c2239bb80c9d7257ad8947",
+        "path": "plugins/superpowers/skills/test-driven-development/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "729f55acc1ce08c3eebf9fd4004a55f299cf5204",
+        "path": "plugins/superpowers/skills/test-driven-development/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d3c4482fd30b4f9084bb61545fe73939a7502c28",
+        "path": "plugins/superpowers/skills/test-driven-development/writing-good-tests.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1381dacb3516b94382dd6ec736ede21ee8ede2b3",
+        "path": "plugins/superpowers/skills/using-git-worktrees/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7c145e4088b0a0f719e1b3ea062e16f285b81e9e",
+        "path": "plugins/superpowers/skills/using-git-worktrees/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7ab2eb678f649c8befb94512359ee0b6e9a9a9a4",
+        "path": "plugins/superpowers/skills/using-superpowers/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3d2f1ad708e162677c5c701a8fdc17acc61f6516",
+        "path": "plugins/superpowers/skills/using-superpowers/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2e1eac90534af6e1f27df4e18410be8a7b442448",
+        "path": "plugins/superpowers/skills/using-superpowers/references/antigravity-tools.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e4488fb224bb0fa0a33e9ac7dc961174e9f0c150",
+        "path": "plugins/superpowers/skills/using-superpowers/references/codex-tools.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b01b65238a50981aeed22ae52ee20f8b55d16b42",
+        "path": "plugins/superpowers/skills/using-superpowers/references/gemini-tools.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0f1fa57bc1b495462e75c6ce11e798245a34987e",
+        "path": "plugins/superpowers/skills/using-superpowers/references/hermes-tools.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0c1f21713a45255ece4144fd2fee353e4ed4f90e",
+        "path": "plugins/superpowers/skills/using-superpowers/references/pi-tools.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7d45333cc4a49c57a80df6c1fe2fa777a207afbc",
+        "path": "plugins/superpowers/skills/verification-before-completion/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6033d3f16f33fc33d268a74e3c83018c6fcfe99c",
+        "path": "plugins/superpowers/skills/verification-before-completion/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f74605bfa9af7a3fb7e4ad7f17750a86a9b0d728",
+        "path": "plugins/superpowers/skills/writing-plans/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "07ea2d27c5caebc4e743563a17c8887d0aebc648",
+        "path": "plugins/superpowers/skills/writing-plans/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1c12c1d6180395262d7150bdb12a9a90efc9cfa0",
+        "path": "plugins/superpowers/skills/writing-plans/plan-document-reviewer-prompt.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f33f39f523c8a3ae2ec0eaf365a524571df8ff3d",
+        "path": "plugins/superpowers/skills/writing-skills/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ef0bde6e768436a6bdf765f1deb287188be24c96",
+        "path": "plugins/superpowers/skills/writing-skills/agents/openai.yaml"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "15ea9eae223d9081b602618849791c07a7758f3d",
+        "path": "plugins/superpowers/skills/writing-skills/anthropic-best-practices.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "47881fc85bd6c01b32b84d52ed9a0c73c8d6a089",
+        "path": "plugins/superpowers/skills/writing-skills/examples/CLAUDE_MD_TESTING.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3509e2f028cacaa8118cbc8c80025efb089ec28e",
+        "path": "plugins/superpowers/skills/writing-skills/graphviz-conventions.dot"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9756416a59600b70ecca4044e0919ee7d4a37b21",
+        "path": "plugins/superpowers/skills/writing-skills/persuasion-principles.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "59e74b54e8538ff0a358d05c770479b3eb8484aa",
+        "path": "plugins/superpowers/skills/writing-skills/render-graphs.js"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a5acfeac86f34c7bc625d064e10c8a2f8180b696",
+        "path": "plugins/superpowers/skills/writing-skills/testing-skills-with-subagents.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fb68118dd57bf0537c77dc58c982a2670108771f",
+        "path": "plugins/vercel/agents/ai-architect.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "586195b6200272277c268ab20eca5b1e41d07979",
+        "path": "plugins/vercel/agents/ai-architect.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9192ce65d25d77d456cd234890aac4f86bcf5fae",
+        "path": "plugins/vercel/agents/deployment-expert.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "66231edda2b0b767a380481bd4f05dd231468618",
+        "path": "plugins/vercel/agents/deployment-expert.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6cb87df48fb7bb8c1d90197e52701198fdd088c5",
+        "path": "plugins/vercel/agents/performance-optimizer.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fbe1ea7533167591c122f3ef701e7433cfb6479e",
+        "path": "plugins/vercel/agents/performance-optimizer.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "27a1af229746bfcb3eb6be001bbccf12351845ff",
+        "path": "plugins/vercel/commands/_conventions.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "dd7aed9e52c2997218304ef0727066db22b1be46",
+        "path": "plugins/vercel/commands/bootstrap.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1a54c6db5c9d74fc5caa331284cf5d4273202768",
+        "path": "plugins/vercel/commands/bootstrap.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0920b43ce9efaa4848440100c5386de584a862b2",
+        "path": "plugins/vercel/commands/deploy.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c00f3cc580355f13561eb09a0cc909ba0c1a7cb7",
+        "path": "plugins/vercel/commands/deploy.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "63f8936fa52c52df40e748b777e85a6ec2ef5c77",
+        "path": "plugins/vercel/commands/env.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e347dd6429dc9590951740a9d7ca17cbd1b9e6e3",
+        "path": "plugins/vercel/commands/env.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "26f6ee1b7c08d645e8ec024814b2f2aaae0f1348",
+        "path": "plugins/vercel/commands/marketplace.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c70c8c87fc2bddb2e6b5aff128db1f4afbabcad9",
+        "path": "plugins/vercel/commands/marketplace.md.tmpl"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "014c4a09f7fa264fca58a069ac3c1f954c6c27a1",
+        "path": "plugins/vercel/commands/status.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b2d822342dc42e4fa64aa77f3415c69f629f8ead",
+        "path": "plugins/vercel/commands/status.md.tmpl"
+      }
+    ]
+  },
+  "notes": {
+    "path": "references/notes/openai-plugins.md",
+    "content": "# OpenAI Plugins\r\n\r\nSource: `https://github.com/openai/plugins`\r\n\r\n## Status\r\n\r\nArchived official Codex plugin example repository. It superseded `openai/skills` as the first-party example repository, but it is no longer the active source of truth for current Codex runtime behavior.\r\n\r\nUse it as historical evidence for plugin directory structure. Use the current Codex Plugins, Subagents, and Config Reference documentation for supported installation, configuration, orchestration, and permission behavior.\r\n\r\nCurrent sources:\r\n\r\n- `https://developers.openai.com/plugins/build/plugins`\r\n- `https://learn.chatgpt.com/docs/agent-configuration/subagents`\r\n- `https://learn.chatgpt.com/docs/config-file/config-reference`\r\n\r\n## Latest Remote Evidence\r\n\r\n- remote head: `11c74d6ba24d3a6d48f54a194cd00ef3beea18f9`\r\n- observed date: 2026-08-17\r\n- remote content status: unchanged from the 2026-07-29 snapshot\r\n- repository lifecycle: archived by OpenAI on 2026-08-16 and now read-only\r\n- evidence: `pnpm upstream -- report openai-plugins --format md --with-remote`, the archived GitHub repository page, and current official Codex Plugins / Subagents documentation\r\n- important correction: a Codex plugin can contain `skills/`, plugin-level `agents/`, `commands/`, `hooks.json`, assets, and MCP/app configuration around the required `.codex-plugin/plugin.json`\r\n\r\n## Extractable Upgrades\r\n\r\n- Treat `.codex-plugin/plugin.json` as the stable identity and keep optional surfaces beside it instead of encoding all content into the manifest.\r\n- Keep plugin-level agents and commands as a packaged surface where the target runtime discovers them, but do not infer current subagent configuration or lifecycle semantics from the archived example repository.\r\n- Keep standalone `~/.codex/agents/*.toml` / `.codex/agents/*.toml` and `[agents]` configuration as the current documented custom-agent control surface for model, reasoning, sandbox, MCP, skills, concurrency, and interrupt behavior.\r\n- Keep marketplace policy, plugin content, and user authentication lifecycle as separate concerns.\r\n- Add a skill / plugin evaluation loop with static checks, token-budget explanations, representative scenarios, baseline comparison, and a prioritized improvement brief.\r\n- Keep public marketplace distribution distinct from local or Git marketplace development and team distribution.\r\n\r\n## Non-Adoption Boundary\r\n\r\n- Do not copy connector credentials, app registrations, MCP binaries, vendor assets, or third-party plugin content.\r\n- Do not assume every ChatGPT plugin capability is available in every Codex surface.\r\n- Do not remove standalone TOML custom agents or `[agents.*] config_file` compatibility based only on the archived repository's plugin-level agent examples.\r\n- Do not treat repository archival as removal of installed plugin support; it changes the governance source priority, not the local artifact contract by itself.\r\n- Do not ingest the deprecated `openai/skills` catalog as a new active upstream.\r\n\r\n## Recommended Phase\r\n\r\n- Delivered: generate plugin agents and commands, retain deterministic plugin manifests, and keep receipt-backed TOML companion agents for direct-install compatibility.\r\n- Current: treat official Codex Subagents documentation and the installed runtime as the active multi-agent alignment baseline.\r\n- Next: align custom-agent configuration, native orchestration policy, and lifecycle smoke tests before expanding the role catalog.\r\n"
+  }
+}

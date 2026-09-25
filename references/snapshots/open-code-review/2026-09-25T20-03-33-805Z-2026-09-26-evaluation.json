@@ -1,0 +1,1014 @@
+{
+  "upstream": "open-code-review",
+  "captured_at": "2026-09-25T20:03:33.805Z",
+  "label": "2026-09-26-evaluation",
+  "metadata": {
+    "title": "Alibaba Open Code Review",
+    "kind": "github-public-repo",
+    "status": "evaluating",
+    "owner": "codex",
+    "source_url": "https://github.com/alibaba/open-code-review.git",
+    "source_paths": [
+      "LICENSE",
+      "README.md",
+      "go.mod",
+      "package.json",
+      "skills/open-code-review",
+      "skills/open-code-review-delegate",
+      "internal/agent",
+      "internal/delegate",
+      "internal/diff",
+      "internal/config",
+      "internal/model",
+      "pages/src/content/docs/en/architecture.md",
+      "pages/src/content/docs/en/review-rules.md",
+      "pages/src/content/docs/en/telemetry.md",
+      "pages/src/content/docs/en/installation.md"
+    ]
+  },
+  "remote": {
+    "source_url": "https://github.com/alibaba/open-code-review.git",
+    "checked_at": "2026-09-25T20:03:33.807Z",
+    "command": "git ls-remote HEAD",
+    "head_sha": "486022daaf14f7142275eddb9b3cacc3cc5dadfa"
+  },
+  "source_tree": {
+    "source_url": "https://github.com/alibaba/open-code-review.git",
+    "checked_at": "2026-09-25T20:03:45.897Z",
+    "command": "git fetch/ls-tree source_paths",
+    "head_sha": "486022daaf14f7142275eddb9b3cacc3cc5dadfa",
+    "source_paths": [
+      "LICENSE",
+      "README.md",
+      "go.mod",
+      "package.json",
+      "skills/open-code-review",
+      "skills/open-code-review-delegate",
+      "internal/agent",
+      "internal/delegate",
+      "internal/diff",
+      "internal/config",
+      "internal/model",
+      "pages/src/content/docs/en/architecture.md",
+      "pages/src/content/docs/en/review-rules.md",
+      "pages/src/content/docs/en/telemetry.md",
+      "pages/src/content/docs/en/installation.md"
+    ],
+    "entry_count": 158,
+    "manifest_sha256": "68d6b96731cb5e7e7f6b68d036d2089c65be8a25c0aed89cf08599d99bacc4d8",
+    "entries": [
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5db038258492ce47a5f3d27d78562c90d3f78331",
+        "path": "LICENSE"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "45618b0b4a0e4549e3fc3371cb5b075b225b5cc4",
+        "path": "README.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "cf1d1266b1404c871d4a854e65f57502753181a0",
+        "path": "go.mod"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2de06d9f382e1cddfc1685de8c1e96c4943e1aa7",
+        "path": "internal/agent/agent.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b9300e13fef210bf2c7ffce94255f920e79f67aa",
+        "path": "internal/agent/agent_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4fde605115db6760062877cc1f1f9a260bc09234",
+        "path": "internal/agent/budget_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f035db8da7f33feef92f06d59e0bb6dbe3599891",
+        "path": "internal/agent/coverage_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "021dff014c2694ca02891f316f28c34f10cd1d4b",
+        "path": "internal/agent/estimate.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f3e203482ac9de166a208dd0cf3ef3f8358e9c8f",
+        "path": "internal/agent/estimate_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "83bf0f6d8e64084fba2e317ecfc0786cea96311b",
+        "path": "internal/agent/getters_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "336202eb56234adcea481b3fe00f7cc565bdbed0",
+        "path": "internal/agent/grouping.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7ff26c5e15ba6fffe59940c0b516278ca424c598",
+        "path": "internal/agent/grouping_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d5b1eb6f77da2b85a9862851ce5e3d0a17ed9e7b",
+        "path": "internal/agent/identity.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0a77dd77c98a82cce355cb09fcad6ce12aacadb2",
+        "path": "internal/agent/identity_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "250374c06f98b164834de571c6397896863f52c2",
+        "path": "internal/agent/init_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "19fdc75cbc1bdae16df1f36f1ea8faced583e579",
+        "path": "internal/agent/manifest_hash_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "967bbbf27e9c4e6f3cbc6629575cad73f45ce4da",
+        "path": "internal/agent/manifest_integration_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2873ed7e4a542261115ea19791c7976e11a6e686",
+        "path": "internal/agent/preview.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "81082b0a9f1dfa12719e0b0d5c0608fc8a0b3413",
+        "path": "internal/agent/preview_run_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "60a94a26da36e858824ebad66b1e877d9074c5cf",
+        "path": "internal/agent/preview_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "aae1a573d5900df5ffa12f54680679280f2985e6",
+        "path": "internal/agent/retry_identity_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e99895bc31c2a2006d94984b461cfb3009edcc6b",
+        "path": "internal/agent/sealed_input_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "771c616f9c21f475eb9895aec49fa6d0b1924f13",
+        "path": "internal/agent/selection.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "acdf1f6a0bfd78caa589267f3169bdbb1c897dc9",
+        "path": "internal/agent/test_home_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2911feb41954988c7817ff3acf2b5ed031bca1e8",
+        "path": "internal/agent/testmain_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f36f4d58f037a2c6da699d87765cd6a36836c5b8",
+        "path": "internal/agent/util.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8c0e92fd7b624cc6b28257c55d5e43a96f09265e",
+        "path": "internal/agent/util_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8f0130a0d874d3d1d88f779a711dd801efb7d3e9",
+        "path": "internal/config/allowlist/allowed_ext.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a319f4ec411107efb54581c90560129d708a22ae",
+        "path": "internal/config/allowlist/allowed_ext_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "052583b84f07f75c7654966d809f5e978a1cf4ee",
+        "path": "internal/config/allowlist/default_exclude_patterns.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1bac8c22b9bdcf5b5137fba7ca7d1c800fc5bec1",
+        "path": "internal/config/allowlist/default_secret_patterns.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e731ef20c3c7777e7466bc9b76eb1c95ebe5fa49",
+        "path": "internal/config/allowlist/secret_path.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "87500a484553cf3c1cf4ca8a2d057d4ae7082ae3",
+        "path": "internal/config/allowlist/secret_path_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "62b5931a8865ca3428918c9ddc0e61a7a65aed80",
+        "path": "internal/config/allowlist/supported_file_types.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "01a33f6c49a37757cbf9fdc2b26de06b906ffc61",
+        "path": "internal/config/rules/canonical_config_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5408b150d4c2f56358b2b516c87980b148ee6957",
+        "path": "internal/config/rules/resolve_github_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "563b58fcb98f748f533c6f08cd2096281f7fd619",
+        "path": "internal/config/rules/rule_docs/arkts.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5bdb8d9d118d92cb942d00f4c97b0973efebe278",
+        "path": "internal/config/rules/rule_docs/astro.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0eeaee6f9d0fb4b67f74cf4d2ce3e422221c03e5",
+        "path": "internal/config/rules/rule_docs/bicep.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9a392500d69903733847f1e635fc733c11429257",
+        "path": "internal/config/rules/rule_docs/build_gradle.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a63e46aec3949a3bdc2e9b8a822af49d26122654",
+        "path": "internal/config/rules/rule_docs/c.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f32e7ebe79ca40a50b2c0b7c5d57f615dfa977e2",
+        "path": "internal/config/rules/rule_docs/capnp.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f4b5adab2debef023aa5390d61c744a0a808badf",
+        "path": "internal/config/rules/rule_docs/cargo_toml.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "20747f155cad107584598445e8c4d255e6231a00",
+        "path": "internal/config/rules/rule_docs/composer_json.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5cd38e9d5e417b1a3ad019424863d3997a1435ee",
+        "path": "internal/config/rules/rule_docs/cpp.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3a497dbbf30d49959de55d28bbe7d083e231fc94",
+        "path": "internal/config/rules/rule_docs/default.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fc58e2a81e1d3a6d98675710dfb2b4417952a5e0",
+        "path": "internal/config/rules/rule_docs/elm.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "07e1d040dced10ddef391810fe2484b9d1ffec18",
+        "path": "internal/config/rules/rule_docs/freemarker.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f2c8a1d7a68bc8e1cd80c652135a3ddf256887e6",
+        "path": "internal/config/rules/rule_docs/fsharp.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d5ccdf94288a448effa19afacfba8b91d2a78fd6",
+        "path": "internal/config/rules/rule_docs/github_config.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "22104aca2c3a6878b91250f0964ad4fddb29f1f2",
+        "path": "internal/config/rules/rule_docs/github_workflows.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "855f1690c1566ee9b6c7f018d144773e538fc657",
+        "path": "internal/config/rules/rule_docs/go.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3c20f90c84770647f58432176223f27327205edc",
+        "path": "internal/config/rules/rule_docs/graphql.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "42bb8217aeeebec63d5c2847e0e625e24c802b75",
+        "path": "internal/config/rules/rule_docs/handlebars_mustache.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "857abbd5f28d649571a450b1cf08ec739fbcbc11",
+        "path": "internal/config/rules/rule_docs/haskell.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "875fc5217fad16d146f5704fd77e0c3e47ef6b91",
+        "path": "internal/config/rules/rule_docs/java.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "80db656f4931a67faeb36dd481d9c6ffdfd3e055",
+        "path": "internal/config/rules/rule_docs/json.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "63917cd2770964ab85bb3cef5b00840c9bd2f43b",
+        "path": "internal/config/rules/rule_docs/jsonnet.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "429310ca9ac14e5264213fe14b4bb9b6321abe1c",
+        "path": "internal/config/rules/rule_docs/julia.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3beff2b09931c72587dfac9cdf1a7978817f5401",
+        "path": "internal/config/rules/rule_docs/kotlin.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "88043dbd9dadfc49d15e82524c6273ab621b6f04",
+        "path": "internal/config/rules/rule_docs/mapper_dao_xml.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0c470db9eca896d46adfa05d67da559e012c0a55",
+        "path": "internal/config/rules/rule_docs/matlab.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "31e00efa9e328522c46d91b8896e59f4b7337cc8",
+        "path": "internal/config/rules/rule_docs/nim.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1a66e43b5a5315ed8341a4318db8bd6578e4480c",
+        "path": "internal/config/rules/rule_docs/nix.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7a46c13cd85b917ae4c471f4c6c409f338daab20",
+        "path": "internal/config/rules/rule_docs/objc.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "635952431ba312098908439ed6f29258de1684c8",
+        "path": "internal/config/rules/rule_docs/ocaml.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4e9c7779dbb9c16c319522dbb3084f6d7e3e4d71",
+        "path": "internal/config/rules/rule_docs/package_json.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c7775c892a5cf525ad63e493593239dd1c772835",
+        "path": "internal/config/rules/rule_docs/php.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "df904c73dc356df50e8337f7ad457c4b931a01f7",
+        "path": "internal/config/rules/rule_docs/po.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3313cdeb44a3ec9df0340911fda4844098696c6e",
+        "path": "internal/config/rules/rule_docs/pom_xml.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "25369c1bd7db66166363304b6e551710ff7c456c",
+        "path": "internal/config/rules/rule_docs/pot.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a5a8544636c70b30a7440217811f22f258814ddf",
+        "path": "internal/config/rules/rule_docs/prisma.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3106daac21f3e2b827ce730c1cef5e848f6f2e8e",
+        "path": "internal/config/rules/rule_docs/properties.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5d06a342253aa3ae277e567c2aaaa8c0be06290d",
+        "path": "internal/config/rules/rule_docs/protobuf.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "401dd4b5bc4727c65bc50edeb73839105d3eda77",
+        "path": "internal/config/rules/rule_docs/pug.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "99f439261d679e04291d187282aa0075b1c4b2d6",
+        "path": "internal/config/rules/rule_docs/python.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8d3fef2bc43b79f13e3353fc0e3dee80d5058a3a",
+        "path": "internal/config/rules/rule_docs/r.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "beda337c780801263ceb8506955a3fe4bd8c74ea",
+        "path": "internal/config/rules/rule_docs/rego.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "022b9b60defe187317a592b4c826928668fea7e1",
+        "path": "internal/config/rules/rule_docs/rust.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e5159c922faf81e931db5db9f3a27143c726c245",
+        "path": "internal/config/rules/rule_docs/solidity.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "528e99fa1b36ab38ba81a0c2424a232819451dc3",
+        "path": "internal/config/rules/rule_docs/swift.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e17595f6db74a3592edeedd30f78df499863570a",
+        "path": "internal/config/rules/rule_docs/terraform.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c144573c4e2cbca0adba4b23ae237c0c663f15b6",
+        "path": "internal/config/rules/rule_docs/thrift.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5fca87dce897c6a04eed676d3e23649c11ec804a",
+        "path": "internal/config/rules/rule_docs/ts_js_tsx_jsx.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "88ac1f494d4f08dec0ef68f9ef87b2f6e11604b0",
+        "path": "internal/config/rules/rule_docs/verilog.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "5e67421abc5e213b7a78e26fc9a5fc8c6aee2ca3",
+        "path": "internal/config/rules/rule_docs/vhdl.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "dca06598898e4d7460aad0df1210e7b8acad2e24",
+        "path": "internal/config/rules/rule_docs/vyper.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d53fc53499c9cc83d00bd647752ee8518fe9678e",
+        "path": "internal/config/rules/rule_docs/yaml.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "795db4f61b6a4e95dd5dc3b3476e0846b549673e",
+        "path": "internal/config/rules/rule_docs/zig.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a0e73655e362daa93d6ff26e1aef3e845dab47be",
+        "path": "internal/config/rules/sniffer.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8e3aeeaa7c4676c6b80aa015516fc458b1d714c2",
+        "path": "internal/config/rules/sniffer_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "403c46a56e2d5b6fed40dfb00826ce3174aec0dd",
+        "path": "internal/config/rules/system_rules.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e66f14a58b1ee16116eb6f7a36cc9c3d8c6bb692",
+        "path": "internal/config/rules/system_rules.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3a6bbddd62b24c3716d0bcd01645aa995f03df15",
+        "path": "internal/config/rules/system_rules_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6d0bbd9cc65d17e018ba77183b8cb15c974dc30b",
+        "path": "internal/config/rules/system_rules_unmarshal_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d37cb2a80c5a16071c51c14bc65d43ff0cf021e0",
+        "path": "internal/config/rules/test_home_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "4e5afce66bf35c60165019b735bada5ed29fd324",
+        "path": "internal/config/template/effort.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "22f2d8d99772f9d535204d337df6ee1a6e5b901e",
+        "path": "internal/config/template/effort_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "57d36e251ac6256fd36f5481a12ec412f745d5b5",
+        "path": "internal/config/template/prompts/grouping_task_system.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ec8d174b61290136cced65a19a8cf15148f068f0",
+        "path": "internal/config/template/prompts/grouping_task_user.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "24fc86f2238866bac12b2495e3443f3972d4d510",
+        "path": "internal/config/template/prompts/main_task_system.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8592f4a8492a7f865f4fb7665d95a2b85250b0f0",
+        "path": "internal/config/template/prompts/main_task_user.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "6e649e095cca1587a9e90e19f49d3fd5e57e7ada",
+        "path": "internal/config/template/prompts/memory_compression_task_system.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c9a696825060d60e14f2b68fb5b6e76a1189bf98",
+        "path": "internal/config/template/prompts/memory_compression_task_user.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d2c1630dc3abeb040bcfac85773590932174e127",
+        "path": "internal/config/template/prompts/plan_task_system.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3f36027d8657a344fa9abd16b5016cfa84a28a7b",
+        "path": "internal/config/template/prompts/plan_task_user.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1da1e3ee0ac782c39ad85141e655091d4ad548c7",
+        "path": "internal/config/template/prompts/re_location_task_system.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a32e7fa499bd51bfc6ce634b250d74760267b9e9",
+        "path": "internal/config/template/prompts/re_location_task_user.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3de2e867c0734c76d341bf6c12ee824633a3e3cb",
+        "path": "internal/config/template/prompts/review_filter_task_system.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "fa85b9813de16752059b03891c52bc01750505e3",
+        "path": "internal/config/template/prompts/review_filter_task_user.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "d1e54699f0a6ec17da26113c554ae96407ae04ad",
+        "path": "internal/config/template/scan_template.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e1c4c79a0f8d7406c05cb5955d844e89fe508619",
+        "path": "internal/config/template/task_template.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f037d7ddb13d8359808e02bc29c5cc82aef63297",
+        "path": "internal/config/template/template.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "df13ecd0bfd8338c4f64c596051748dfba2d1ec2",
+        "path": "internal/config/template/template_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7a6c4af46f667aba2ffe763e913de44422392485",
+        "path": "internal/config/testconnection/task.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3d7282e12a5fcfe52b8b6b3bf03256608418b7ad",
+        "path": "internal/config/testconnection/testconnection.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8e108b74fa805b5f10141990014ff16d75ecab80",
+        "path": "internal/config/testconnection/testconnection_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "1b3275f278ff708ffafa194a90f4302dc045875e",
+        "path": "internal/config/toolsconfig/tools.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8508912fbc48c691ca6b48ddf3f35a00ee657253",
+        "path": "internal/config/toolsconfig/toolsconfig.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "895a4532da94d40851196309904242fcb01f9eb6",
+        "path": "internal/config/toolsconfig/toolsconfig_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0e10502384f3c708642f6d4068da555168a3e2e9",
+        "path": "internal/delegate/format.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "c4f3a5ba416afbb282ef56660d0310eacb9b8117",
+        "path": "internal/delegate/format_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3e7d8ba80ec4f455e95dc91d6e2df4cad6bc8daf",
+        "path": "internal/delegate/rulegroup.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3496055a8f3376680cf55c4f03e53a14f225ec86",
+        "path": "internal/delegate/rulegroup_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0f72828f903f3facdae64813ec0e0359c79f90a0",
+        "path": "internal/diff/crlf_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "bbec97f937f02ab5e38329d6d801ccd4e0f59734",
+        "path": "internal/diff/first_line_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "babfd1e7e2743cca1956504b9b8fe6d09bfec07b",
+        "path": "internal/diff/git.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "e8d13d5d03a95e6692b4675f89c233b7ab7eca09",
+        "path": "internal/diff/git_cquoted_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b236d6241c488d58027f75f2b14518da53c63a18",
+        "path": "internal/diff/git_error_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3409d0f54e2f31fe4264243110e15e2905b82dcf",
+        "path": "internal/diff/git_resolve_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a45ddc40b522984613142a5c4714a246ee333df5",
+        "path": "internal/diff/git_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7c4fd32a569f2ba9b4c22c64bb983500a5ca4fe6",
+        "path": "internal/diff/gitignore.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a3c7837bf4f0cb826a6c8fa4bffa644df21fb87e",
+        "path": "internal/diff/gitignore_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "52fcc321a91764c9ab8ee955d1e1d8f6883a208c",
+        "path": "internal/diff/hunk.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0027635e1e1625c43ffa0d26badc05ae90a89335",
+        "path": "internal/diff/hunk_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "2e3e42145aeb0a68300d9b5a4e05a76afffb7e64",
+        "path": "internal/diff/parser.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ab83535c733b26a7af946a74cc255554801a3b27",
+        "path": "internal/diff/parser_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f91787d3ba29e02f28920e6bdfa97f3207c6b0be",
+        "path": "internal/diff/quotedpath.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f93daaacef48e722eaa89e1cb67a91630fbf221a",
+        "path": "internal/diff/quotedpath_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "223a52f86fbcd0238042d8d766585a2e049ebcc7",
+        "path": "internal/diff/relocate_across_files_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9c3e8994be43e29008b3776b0877272d4069bfd5",
+        "path": "internal/diff/relocation.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "3df0cf52fdacd57acffd373a3586b5f37cbc482a",
+        "path": "internal/diff/relocation_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "8443dfd70924bf1df5028b5063980bf7142b3023",
+        "path": "internal/diff/resolver.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "ac5ba85cfccd5beda4612c1ec8b3dbdced3ea62d",
+        "path": "internal/diff/resolver_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "985a14c0c5c61047eb043724623935d185fd8059",
+        "path": "internal/diff/workspace_file.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "49261f449f1270719ed9e3c5299b0d9bc05f0a34",
+        "path": "internal/diff/workspace_file_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "073f8397d8061e18ba85c0f3f7d19f55cb62ca52",
+        "path": "internal/model/diff.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "9d96ab6e003e6fd15bc86e973e1681b65e3a3443",
+        "path": "internal/model/model_test.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "7d3ed22b80c0cf437338331e6c0291b65d56352a",
+        "path": "internal/model/preview.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "f91891464f856f5f086685476954a045bda03c9e",
+        "path": "internal/model/review.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "0926789aee5336297d9c2acfafea86c19c06c2ec",
+        "path": "internal/model/scan.go"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a9cf671cb2b5c1cc454f87e79c42c54abb5b6069",
+        "path": "package.json"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "94b2f730301ab3c13146b0549f936e803363dee0",
+        "path": "pages/src/content/docs/en/architecture.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b446734c44131035fac8cdb723d6fc72d00148cc",
+        "path": "pages/src/content/docs/en/installation.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "b29c5c4769b0cefcdc1b758de8da21d24445d8f2",
+        "path": "pages/src/content/docs/en/review-rules.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "a74052c2e7945b8d90db6128c647639c0acfaf50",
+        "path": "pages/src/content/docs/en/telemetry.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "77aa5ed221e02d1e1f2a4a2d7be342197a3a6016",
+        "path": "skills/open-code-review-delegate/SKILL.md"
+      },
+      {
+        "mode": "100644",
+        "type": "blob",
+        "object": "01317b749e475294236fc85999a4f277c88bbc5a",
+        "path": "skills/open-code-review/SKILL.md"
+      }
+    ]
+  },
+  "notes": {
+    "path": "references/notes/open-code-review.md",
+    "content": "# Alibaba Open Code Review 评估\n\n日期：2026-09-26（Asia/Shanghai）。状态：`evaluating`，未安装、未接入运行时、未调用其模型端点。\n\n## 版本与证据边界\n\n- 项目：[alibaba/open-code-review](https://github.com/alibaba/open-code-review)。\n- 本次能力研究固定发布版 `v1.12.9`，annotated tag 对象 `2c30c7001d3d30a3fdf3ed5513eed4bd879442b0`，peeled commit `bccbc15f785269400735d5255540c231e6c02b6d`；已用 `git ls-remote` 核验。\n- 本轮远端主干 HEAD：`486022daaf14f7142275eddb9b3cacc3cc5dadfa`。治理快照跟踪主干；以下能力判断来自发布版，不能当成两版本完全相同的证明。\n- 第一方资料与源码静态研究，不是本仓库真实 review A/B，也不是 Windows CLI 运行验收。\n\n## 推荐\n\n先在现有审查流程补充覆盖记账和 finding 证伪，再小范围评估可选 `ocr delegate`。当前不替换 review skill，不作为默认依赖或 CI 阻塞门禁。\n\n本项目已有五维审查、严重度、具体位置、验证证据、反馈闭环和 Codex agent 所有权/有界循环。OCR 真正可补强的是可机器核验的文件选择、排除原因、按路径解析规则，以及完整模式的评论锚定。\n\n## 能力与限制\n\n| 能力 | 发布版所具备的机制 | 需要保留的限制 |\n| --- | --- | --- |\n| 文件覆盖 | workspace/commit/range 输入，枚举 diff 后过滤，preview 可解释排除原因 | 默认排除测试、fixture、generated 等；大 diff 也可能被跳过。文件都被记账不等于文件都被审查 |\n| 分组 | 完整模式由 LLM 根据文件元数据分组，未分组文件退回单文件，超限拆分 | 语义分组本身不是确定性算法；完整性守卫和 fallback 才是确定性部分 |\n| 规则 | CLI、项目、全局、内置规则分层；层内首个匹配生效 | 规则选中不代表模型遵循；试点必须显式纳入测试文件 |\n| 行定位 | `existing_code` 片段匹配到 diff，必要时模型 relocation 后再解析 | 失败可能留下 `0/0`；重复片段仍需验证，不能声称绝对精确 |\n| 反思过滤 | 完整模式额外调用 LLM，删除可由当前 diff 直接证伪的评论 | 仍有误删/漏报风险；不是确定性正确性证明 |\n| delegation | `ocr delegate preview --format json` 与 `ocr delegate rule --format json` 提供选择/规则；OCR 侧无需 API key | 推理由 host agent 完成，仍消耗 Codex 额度；没有完整模式的语义分组、自动行定位、relocation、反思过滤和 findings 聚合 |\n\nOCR 内部并发、OCR 委托 host、Codex custom-agent 派发是三种不同机制。不得用 OCR 的并发宣称完成了本项目的原生 agent 派发、所有权或 fan-in 验证。\n\n## 优先吸收的最小机制\n\n1. 固定 review 的 base/head 或工作树快照，枚举 `changed / reviewable / excluded`。\n2. 每个文件留下 `reviewed / skipped(reason) / failed` 回执；未知状态不得算完整。\n3. finding 必须绑定代码证据、触发条件和影响；输出前检查反例、已有 guard、调用方约束与重复报告。\n4. 单独记录未审范围、失败和待验证假设，不用“零 finding”代替完整审查。\n5. 维持本项目 `Critical / Important / Suggestion`，通过适配层映射外部分类。\n\n候选落点是现有 `code-review-and-quality`、`review-response-and-resolution` 和 `agent:code-reviewer`，详细 schema/示例放 supporting reference。这里只记录提案，尚未修改这些资产。\n\n## 可选集成路线\n\n- 第一阶段：原生 Git 文件清单和覆盖回执，不增加安装要求。\n- 第二阶段：仅当存在已固定、经验证的 OCR CLI 时，调用 delegation 的 JSON 接口；不可用时回退原生 Git。不得隐式安装或更新。\n- 第三阶段：如确需自动行定位、反思过滤与会话查看，再隔离试点完整模式；明确模型端点和代码发送范围后运行。\n\n完整模式会向配置的模型端点发送 diff/读取上下文；本地 session JSONL 可含 prompt、response、工具调用与源码。路径级 secret 过滤不能保证普通源码没有秘密。Telemetry 与本地会话留存是不同边界。\n\n平台文档列有 Windows/Linux/macOS 的 AMD64/ARM64；Git 要求 `>=2.41`。试点应固定二进制/包版本并检查摘要及更新行为，不能以 `latest` 运行得出可复现实验结论。\n\n许可证为 Apache-2.0。若复制或改写其 skill/规则/源码，按实际文件保留适用许可证、NOTICE 与变更声明；本轮仅登记和总结机制。\n\n## 验收实验（尚未执行）\n\n选 8 个有可验证缺陷或人工结论的历史 PR：toolkit、CLI、platform、混合变更各 2 个。固定 base/head、host model/effort、输入与预算，对比当前流程、覆盖回执候选、可选 delegation 三组；单独核对全局插件是否影响基线。\n\n- 文件记账率 100%，排除测试必须显式说明；secret 路径不得进入 review 内容。\n- 人工核验有效 finding、误报、已知缺陷漏报和行号落点；失败/未审不得算通过。\n- 记录总 token（含 host）、耗时、输入/输出口径；采集不到则标记不可测。\n- 建议试点门槛：重要缺陷发现不少于基线、误报不增加、有效 diff 行定位至少 95%；成本增加超过 20% 时，需有新增重要缺陷证据才接受。门槛为本地实验提案，不是上游承诺。\n- 结果仅代表这些样本。上游宣称的约 1/9 token、更高 Precision/F1、较低 Recall 不构成本项目收益证明。\n\n## 第一方证据\n\n- [固定发布 commit](https://github.com/alibaba/open-code-review/commit/bccbc15f785269400735d5255540c231e6c02b6d)\n- [架构](https://github.com/alibaba/open-code-review/blob/bccbc15f785269400735d5255540c231e6c02b6d/pages/src/content/docs/en/architecture.md)\n- [规则与过滤](https://github.com/alibaba/open-code-review/blob/bccbc15f785269400735d5255540c231e6c02b6d/pages/src/content/docs/en/review-rules.md)\n- [delegation skill](https://github.com/alibaba/open-code-review/blob/bccbc15f785269400735d5255540c231e6c02b6d/skills/open-code-review-delegate/SKILL.md)\n- [会话与 telemetry](https://github.com/alibaba/open-code-review/blob/bccbc15f785269400735d5255540c231e6c02b6d/pages/src/content/docs/en/telemetry.md)\n- [安装](https://github.com/alibaba/open-code-review/blob/bccbc15f785269400735d5255540c231e6c02b6d/pages/src/content/docs/en/installation.md)\n- [许可证](https://github.com/alibaba/open-code-review/blob/bccbc15f785269400735d5255540c231e6c02b6d/LICENSE)\n- [上游 benchmark](https://github.com/alibaba/aacr-bench)\n\n只读协作：`ocr_value_review`（`zc_architect`，`fork_turns=none`）提供发布版专项分析；主线程核验 release tag、远端 HEAD、实际目录与本地流程后合流。没有由该 agent 产生文件修改。\n"
+  }
+}

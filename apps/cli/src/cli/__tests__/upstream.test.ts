@@ -373,7 +373,7 @@ describe("upstream governance commands", () => {
     };
 
     expect(payload.mode).toBe("report");
-    expect(payload.results).toHaveLength(14);
+    expect(payload.results).toHaveLength(15);
     expect(payload.results.map((entry) => entry.upstream)).toEqual([
       "agent-skills",
       "superpowers",
@@ -388,10 +388,11 @@ describe("upstream governance commands", () => {
       "modern-web-guidance",
       "ui-skills",
       "awesome-design-md",
+      "open-code-review",
       "ponytail",
     ]);
-    expect(result.stderr).toContain("正在采集远端证据：0/14");
-    expect(result.stderr).toContain("远端证据采集完成：14/14");
+    expect(result.stderr).toContain("正在采集远端证据：0/15");
+    expect(result.stderr).toContain("远端证据采集完成：15/15");
   });
 
   it("snapshot 会追加不可变快照，并输出生成路径", async () => {
