@@ -20,6 +20,8 @@ controller owns fan-in
 4. 扫描任务之间和全局约束之间的冲突；只有会改变路线的冲突才暂停询问。
 5. 给每个任务写 brief、验证命令和默认两轮 loop budget。
 
+任务内检查点与无进展停线沿用 `parallel-agent-dispatch` 的共享契约；Codex 派发前读取其 native lifecycle reference，host 支持时显式选择 `fork_turns`，自包含的独立任务默认 `none`；不支持时记录实际隔离能力。完成即返回，不以两轮预算允许单轮无限延伸。
+
 完整角色、文件格式、状态和循环协议见 `references/execution-protocol.md`。
 
 ## 每任务 Quick Path
@@ -28,12 +30,12 @@ controller owns fan-in
 2. 写最小 task brief；精确值只保留一份，不粘贴完整会话历史。
 3. 独立任务启动新线程；要求 implementer 先读 brief、按 TDD 实现、自审并写 report。
 4. 同一任务收到 `NEEDS_CONTEXT`、finding 或补验证请求时，优先通过 `followup_task` 恢复 owning thread；只注入上下文且不立即执行时才使用 `send_message`。收到 `BLOCKED` 时改变范围、上下文、模型或验证方式。
-5. 生成 scoped review package，交给独立 reviewer 同时给出规格和质量 verdict。
+5. 按下方 Review 深度表生成 scoped review package；需要独立审查的任务才交给独立 reviewer，同时给出规格和质量 verdict。
 6. finding 优先退回原 producer；reviewer 给出复验标准并做 scoped re-review。
 7. 修复仍失败且预算耗尽时，由 controller adjudicate：缩小任务、改派、接手或进入 stop gate。
 8. 两个 verdict 均通过后，在 plan ledger 记录完成、证据和未决风险。
 
-不要在同一任务上并行派多个 implementer。不要因为 worker 自审通过就跳过独立 task review。
+不要在同一任务上并行派多个 implementer。worker 自审不能替代该表要求的独立 task review；表中“机械修改”明确只做 implementer 自审加 controller 检查，不强制另起 reviewer。
 
 ## 恢复与上下文
 
@@ -55,7 +57,7 @@ controller owns fan-in
 
 | 任务 | Review |
 |---|---|
-| 1-2 个文件、机械修改 | implementer 自审 + controller 检查 |
+| 1-2 个文件、机械、无接口或风险边界变化 | implementer 自审 + controller 检查；记录采用此深度的依据 |
 | 多文件或接口变化 | 独立 task reviewer + scoped re-review |
 | 架构、高风险、安全、性能 | 规格与质量分离，并追加对应专家审查 |
 

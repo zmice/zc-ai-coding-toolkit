@@ -44,6 +44,7 @@ describe("Codex agents receipt", () => {
       contentFingerprint: "agent-fingerprint",
       installedAt: "2026-07-28T00:00:00.000Z",
       managedAgentNames: ["zc_code_reviewer"],
+      managedAgentDefaults: [],
     }));
     expect(receipt.artifacts).toHaveLength(1);
     expect(receipt.artifacts[0]).toEqual(expect.objectContaining({
@@ -54,6 +55,23 @@ describe("Codex agents receipt", () => {
     expect(getCodexAgentsReceiptOwnedPaths(receipt)).toEqual([
       join(root, "agents/zc-code-reviewer.toml"),
     ]);
+  });
+
+  it("keeps default-key ownership separate from agent file ownership", () => {
+    const receipt = createCodexAgentsReceipt({
+      root: "/home/test/.codex",
+      scope: "global",
+      pluginId: "zc-toolkit@zc-toolkit",
+      pluginVersion: "0.6.0",
+      contentFingerprint: "agent-fingerprint",
+      managedAgentDefaults: [{ key: "default_subagent_model", value: "gpt-5.6-terra" }],
+      artifacts: [],
+    });
+
+    expect(receipt.managedAgentDefaults).toEqual([
+      { key: "default_subagent_model", value: "gpt-5.6-terra" },
+    ]);
+    expect(receipt.artifacts).toEqual([]);
   });
 
   it("uses scope-aware receipt paths and round-trips the receipt", async () => {

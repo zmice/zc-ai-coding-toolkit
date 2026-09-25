@@ -103,6 +103,7 @@ dispatch_contract:
 
 - Codex 可用时优先使用真实 custom agent / subagent，如 `zc_code_reviewer`、`zc_test_engineer`、`zc_security_auditor`、`zc_performance_engineer`、`zc_architect`、`zc_product_owner`。
 - 每次 native dispatch 记录 thread id、context fork、实际 role/model、状态和 fallback；同一任务 rework 复用 owning thread。
+- Codex 派发前读取 `references/codex-native-lifecycle.md`；host 支持 `fork_turns` 时显式传参，不支持时核对实际隔离机制，不能用省略参数代替最小上下文选择。
 - 只读 agent 必须明确“不改文件”。
 - 写入 worker 必须收到完整任务文本、文件所有权、验证命令和返回格式。
 - 平台没有可用 dispatch tool 时，记录 `fallback=main-thread`，不要把未执行的 agent assist 当成已执行。
@@ -152,6 +153,7 @@ worker 收到绝对 worktree path；fan-in 收集完成且 agent 进入终态后
 
 并行不是无限循环。每个 fan-out 都必须有明确预算：
 
+- 任务内检查点、协调消息和续跑条件统一按 `references/agent-opportunity-contract.md` 执行；返工轮数不等于允许单轮无限工作。
 - 只读 consult 默认 1 轮；结论冲突时主线程先做 fan-in，不继续无差别加派。
 - 单个 worker 缺失产物最多补交 2 次；每次补交必须改变上下文、任务范围或验证方式。
 - 同一 review finding 最多 2 轮修复/回归；仍未关闭时停线，由主线程缩小范围、改派或回到计划。

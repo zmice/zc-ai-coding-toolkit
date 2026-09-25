@@ -430,6 +430,7 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.ok(plan.artifacts[0]?.content.includes("不裁剪 Codex 安装资产"));
     assert.ok(plan.artifacts[0]?.content.includes("config.toml"));
     assert.ok(plan.artifacts[1]?.content.includes("[agents.zc_code_reviewer]"));
+    assert.match(plan.artifacts[1]?.content ?? "", /\[agents\]\ndefault_subagent_model = "gpt-6-sol"\ndefault_subagent_reasoning_effort = "medium"/);
     assert.ok(plan.artifacts[1]?.content.includes('config_file = "agents/zc-code-reviewer.toml"'));
     assert.ok(plan.artifacts[2]?.content.includes("command-alias skill"));
     assert.ok(plan.artifacts[2]?.content.includes("$zc-start"));
@@ -614,6 +615,10 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.equal(companionManifest.pluginVersion, "0.2.5");
     assert.match(companionManifest.contentFingerprint, /^[a-f0-9]{64}$/u);
     assert.equal(companionManifest.config.path, "config/agents.toml");
+    const companionConfig = plan.artifacts.find(
+      (artifact) => artifact.path === "assets/zc-agents/config/agents.toml",
+    );
+    assert.match(companionConfig?.content ?? "", /\[agents\]\ndefault_subagent_model = "gpt-6-sol"\ndefault_subagent_reasoning_effort = "medium"/);
     assert.match(companionManifest.config.sha256, /^[a-f0-9]{64}$/u);
     assert.deepEqual(companionManifest.agents.map((agent) => ({
       name: agent.name,

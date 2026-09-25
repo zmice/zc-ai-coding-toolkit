@@ -83,4 +83,26 @@ describe("Codex agents lifecycle", () => {
       "",
     ].join("\n"));
   });
+
+  it("removes only unchanged receipt-owned subagent defaults", async () => {
+    const root = await mkdtemp(join(tmpdir(), "zc-agent-defaults-"));
+    const configPath = join(root, "config.toml");
+    await writeFile(configPath, [
+      "[agents]",
+      'default_subagent_model = "gpt-user"',
+      'default_subagent_reasoning_effort = "medium"',
+      "",
+    ].join("\n"));
+
+    await stripCodexAgentConfigFile(configPath, false, [], [
+      { key: "default_subagent_model", value: "gpt-5.6-terra" },
+      { key: "default_subagent_reasoning_effort", value: "medium" },
+    ]);
+
+    expect(await readFile(configPath, "utf8")).toBe([
+      "[agents]",
+      'default_subagent_model = "gpt-user"',
+      "",
+    ].join("\n"));
+  });
 });

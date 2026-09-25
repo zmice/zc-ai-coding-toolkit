@@ -54,6 +54,7 @@
 - `decision log`：关键取舍和采用原因
 - `evidence`：读取过的规格、代码、配置、测试或上游证据
 - `open risks`：尚未证明的风险和验证方式
+- `risk ownership map`：把隐含风险逐项映射到 owner、触发它的任务或证据、验证和未关闭时的 stop gate；格式见 `references/risk-ownership-map.md`
 - `stop gates`：会改变架构、数据模型、破坏性边界、并行边界或验收口径的阻塞决策
 - `agent_opportunity`：本计划是否需要只读协助、串行子代理、上下文级并行、可选 `zc agent plan`、Codex 临时 worktree 或 `zc team`，并列出匹配的 Codex agents / workers、runtime capacity、确认边界和 fan-in gate
 - `fan-out eligibility`：是否能并行、按哪些文件或模块拆、是否有确认边界、是否需要 `zc agent plan` 或 `zc team plan`
@@ -110,6 +111,7 @@ STOP: <阻塞发现>
   - Acceptance criteria:
   - Verification:
   - Dependencies:
+  - Risks -> owner -> verification:
 ```
 
 规则：
@@ -118,6 +120,7 @@ STOP: <阻塞发现>
 - `P2`：应在同一分支处理，否则会留下明显质量缺口
 - `P3`：可延后的跟进项，必须说明为什么不阻塞当前目标
 - 每个任务必须来自具体发现、需求或证据；不能为了填表新增空任务
+- 隐含风险（兼容性、数据、权限、并发、回滚、依赖、可观测性和验收缺口）不能只留在描述里；每项都必须映射到 owner 与验证，无法映射时进入 stop gate。
 - 任务标题用动作开头，能直接交给实现阶段
 
 ## Definition of Done 分层

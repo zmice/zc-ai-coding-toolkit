@@ -199,15 +199,16 @@ describe("loadToolkitManifest", () => {
       ["qwen", "codex", "claude", "opencode", "qoder-cn"]
     );
     const codexRoleMatrix = {
-      "agent:architect": ["gpt-5.6-sol", "high", "read-only"],
-      "agent:security-auditor": ["gpt-5.6-sol", "high", "read-only"],
-      "agent:code-reviewer": ["gpt-5.6-terra", "high", "read-only"],
-      "agent:performance-engineer": ["gpt-5.6-terra", "high", "read-only"],
-      "agent:backend-specialist": ["gpt-5.6-terra", "medium", "workspace-write"],
-      "agent:frontend-specialist": ["gpt-5.6-terra", "medium", "workspace-write"],
-      "agent:test-engineer": ["gpt-5.6-terra", "medium", "workspace-write"],
-      "agent:product-owner": ["gpt-5.6-terra", "medium", "read-only"],
-      "agent:context-steward": ["gpt-5.6-luna", "medium", "workspace-write"]
+      "agent:architect": ["gpt-6-sol", "high", "read-only"],
+      "agent:security-auditor": ["gpt-6-sol", "high", "read-only"],
+      "agent:code-reviewer": ["gpt-6-sol", "high", "read-only"],
+      "agent:performance-engineer": ["gpt-6-sol", "high", "read-only"],
+      "agent:backend-specialist": ["gpt-6-sol", "medium", "workspace-write"],
+      "agent:frontend-specialist": ["gpt-6-sol", "medium", "workspace-write"],
+      "agent:test-engineer": ["gpt-6-sol", "medium", "workspace-write"],
+      "agent:product-owner": ["gpt-6-sol", "medium", "read-only"],
+      "agent:context-steward": ["gpt-6-luna", "high", "workspace-write"],
+      "agent:lightweight-researcher": ["gpt-6-luna", "high", "read-only"]
     } as const;
 
     for (const [agentId, [model, modelReasoningEffort, sandboxMode]] of Object.entries(codexRoleMatrix)) {

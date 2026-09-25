@@ -15,17 +15,18 @@
 
 ## 执行步骤
 
-1. 先理解变更意图，再看测试和验证证据
-2. 按五个维度审查：
+1. 固定本轮 diff identity，枚举完整 changed-file manifest；逐文件留下 `reviewed`、`skipped(reason)` 或 `failed` 回执。未知或未审范围阻断 Approve。
+2. 先理解变更意图，再看测试和验证证据
+3. 按五个维度审查：
    - 正确性
    - 可读性
    - 架构
    - 安全性
    - 性能
-3. 把发现按 `Critical / Important / Suggestion` 分级
-4. 对每条问题给出具体位置和修复方向
-5. 审查结论给出后，要求作者进入 review 响应闭环，逐条收敛问题
-6. 所有 Critical 清零并完成必要回归验证后，才算通过
+4. 把发现按 `Critical / Important / Suggestion` 分级
+5. 对每条 finding 给出位置、触发条件、影响、代码证据、已检查的反例或 guard，以及修复和复验方向；不能证实的内容标为假设，不作为 finding。
+6. 审查结论给出后，要求作者进入 review 响应闭环，逐条收敛问题
+7. 所有 Critical 清零、未审范围已处理且完成必要回归验证后，才算通过
 
 ## 成功标准
 
@@ -34,6 +35,7 @@
 - 报告能让作者快速定位问题和采取动作
 - 评审没有用“看起来还行”替代事实判断
 - 审查后的问题处理路径清楚，不把“提了意见”误当成“问题已关闭”
+- review identity、完整文件清单和逐文件回执可复核；零 finding 不代表完整审查
 
 ## 推荐结论格式
 
@@ -118,6 +120,7 @@ Recommendation: <Approve / Request changes / Defer> because <evidence, risk, and
 
 - 更详细的安全审查指导，请见 `references/security-checklist.md`
 - 更详细的性能审查检查项，请见 `references/performance-checklist.md`
+- 覆盖回执、阻断条件和 finding 证伪格式见 `references/review-coverage-contract.md`
 - 上述上游清单的许可证声明随产物分发于 `references/LICENSE-agent-skills.txt`
 
 ## 常见合理化说辞
@@ -151,3 +154,4 @@ Recommendation: <Approve / Request changes / Defer> because <evidence, risk, and
 - [ ] 测试通过
 - [ ] 构建成功
 - [ ] 已记录验证故事（改了什么、如何验证）
+- [ ] diff identity、changed-file manifest 与 `reviewed / skipped(reason) / failed` 回执完整；没有未知或未审范围

@@ -18,7 +18,15 @@ describe("Codex agent companion", () => {
   it("loads a version-matched companion payload from an installed plugin", async () => {
     const pluginRoot = await mkdtemp(join(tmpdir(), "zc-codex-plugin-"));
     const companionRoot = join(pluginRoot, "assets/zc-agents");
-    const configContent = "[agents.zc_code_reviewer]\nconfig_file = \"agents/zc-code-reviewer.toml\"\n";
+    const configContent = [
+      "[agents]",
+      'default_subagent_model = "gpt-5.6-terra"',
+      'default_subagent_reasoning_effort = "medium"',
+      "",
+      "[agents.zc_code_reviewer]",
+      'config_file = "agents/zc-code-reviewer.toml"',
+      "",
+    ].join("\n");
     const agentContent = "name = \"zc_code_reviewer\"\ndescription = \"Review code\"\ndeveloper_instructions = \"Review carefully\"\n";
     await mkdir(join(companionRoot, "config"), { recursive: true });
     await mkdir(join(companionRoot, "agents"), { recursive: true });

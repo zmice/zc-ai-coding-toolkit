@@ -38,13 +38,20 @@
 
 ## Context Fork
 
-`fork_turns` 选择遵循最小充分原则：
+先核对当前派发工具的参数 schema；提供 `fork_turns` 时必须显式选择，省略参数不能视作节省上下文。某些 CLI 没有此字段：使用该 host 可验证的最小上下文机制并记录实际参数；无法确认隔离语义时记录限制，由 controller 判断是否降级串行，不传不存在的参数，也不虚报 `none`。支持该字段时遵循：
 
-- `none`：默认用于代码地图、独立资料核查、窄范围只读问题；task brief 自包含
-- 最近 N 轮：用于需要当前决策、局部 diff 或最近错误输出的 implementer / reviewer
+- `none`：自包含 brief 的独立任务默认使用，包括 implementer / reviewer、代码地图和资料核查；brief 包含目标、绝对路径、约束、所有权、必要接口决策、验证与检查点
+- 最近 N 轮：仅在 brief 无法完整表达所需近期决策时选最小 N，说明依赖；不要仅因是 implementer / reviewer 就继承历史
 - `all`：只有任务真正依赖完整讨论历史时使用；需要说明原因
 
 不要把完整聊天历史、无关工具输出或其他 worker ledger 复制给 agent。reviewer 只接收 brief、report、scoped diff、验证证据和未决 finding。
+
+## 读取与返回预算
+
+- controller 与 child 都先列出当前待证问题，再用搜索定位和必要片段取证；首批通常不超过 3 个文件、工具输出约 4,000 tokens。完整规格确实不可拆分时可扩大，并说明解决哪个问题；这些是可调整预算，不是运行时硬限制。
+- 已读资产不重复全文读取；上游文档只取关联章节，不把整页导航、完整日志或全仓 diff 回灌。独立读取可合并，但应先限制每份结果的范围。
+- brief 写 `read scope / output budget / stop condition`；child 默认返回约 1,200 中文字以内的结论、文件位置、验证摘要和未决项，长证据放本地文件并给定位。
+- controller 信任已有可靠定位，复核接口、风险和冲突；不重新遍历 child 已覆盖的所有源码。证据足够回答当前问题或满足验收即停止读取；日志只能证明已输出摘要，不能据此声称实际 token 硬上限。
 
 ## Runtime Capacity
 
@@ -54,23 +61,20 @@
 
 ```text
 available child slots = host session limit - capacity-consuming child threads reported by the host
-batch size = min(independent ready tasks, available child slots)
+batch size <= min(independent ready tasks with justified benefit, available child slots)
 ```
 
 - 主线程始终保留 controller / integrator 职责，不把全部任务和 fan-in 一起外包
 - 有两个以上独立证据问题时即可 fan-out；不要求任务先达到高风险或大文件数门槛
-- 首批占满有收益的 available child slots；任一 agent 完成后再从 ready queue 补位
+- 首批只派当前必要的最小批次；完成后先 fan-in，再判断 ready queue 是否仍需派发，不自动填满 available child slots
 - 达到容量时降级为分批并行或串行，不把 capacity exhaustion 写成任务失败
 - 只为“可能有帮助”而重复派相同问题会浪费成本；同一问题只保留一个 owner
 
 ## Role And Model Defaults
 
-优先使用已经生成的 `zc_*` role。role TOML 的 `model`、`model_reasoning_effort` 优先于显式 spawn、`[agents]` default 和 parent default，因此硬 pin 必须是有意的角色默认值：
+优先使用已经生成的 `zc_*` role。每个角色的 `meta.yaml` 是 model 与 reasoning effort 的唯一事实源；普通任务、高风险任务、轻量核查和 context steward 的当前映射都从该元数据读取，不在本 lifecycle 复制角色名单。用户已有默认设置优先保留；role TOML 的 `model`、`model_reasoning_effort` 仍优先于显式 spawn、`[agents]` default 和 parent default。
 
-- frontier/high：架构、安全等高影响判断
-- balanced/high：代码审查、性能分析
-- balanced/medium：后端、前端、测试、产品等常规工作
-- fast/medium：边界清楚的上下文维护和机械核查
+当前 host 尚未加载匹配角色或其元数据时，不虚报可用：由主线程处理，或在 host 允许显式模型选择时使用同等边界的通用 agent。实际生效的 role、model 和 effort 以当前 host 配置及新子任务记录为准。
 
 如果任务需要临时升级但某个 role 已硬 pin 模型，改用更合适的 role 或不带硬 pin 的通用 worker；不要声称显式 spawn 一定覆盖 role TOML。
 
@@ -82,6 +86,8 @@ batch size = min(independent ready tasks, available child slots)
 - 同一任务 clarification / fix / regression 复用 owning thread
 - 原 agent 已失败且输入、范围、模型和验证方式都没有变化时，不原样重派
 - 改派前记录为什么旧 owner 不再适合，以及新输入发生了什么变化
+- 阶段完成只交接结论、变更位置、验证和未决项，不把长期积累的完整上下文继续传给独立任务；不为省额度擅自创建用户可见的新任务、丢弃历史或降低模型与必要验证。
+- 执行共享契约的任务内检查点；仅有返工次数不能约束单轮消耗。不要假定 completed 会立即释放容量，下一批以 host 当前状态为准。
 
 ## Nested Delegation
 

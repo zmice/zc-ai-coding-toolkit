@@ -3,11 +3,25 @@ import { access, mkdir, mkdtemp, readFile, realpath, rm, symlink, unlink, writeF
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { promisify } from "node:util";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { CodexAgentWorktreeManager } from "../codex-worktree-manager.js";
 
 const execFileAsync = promisify(execFile);
 const cleanupPaths = new Set<string>();
+const disappearingPath = vi.hoisted(() => ({ value: "" }));
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const fs = await importOriginal<typeof import("node:fs/promises")>();
+  return {
+    ...fs,
+    realpath: async (...args: Parameters<typeof fs.realpath>) => {
+      if (String(args[0]) === disappearingPath.value) {
+        disappearingPath.value = "";
+        await fs.unlink(args[0]);
+      }
+      return fs.realpath(...args);
+    },
+  };
+});
 
 async function createDirectoryLink(target: string, path: string): Promise<void> {
   await symlink(target, path, process.platform === "win32" ? "junction" : "dir");
@@ -54,6 +68,7 @@ async function createManager(): Promise<{
 
 describe("CodexAgentWorktreeManager", () => {
   afterEach(async () => {
+    disappearingPath.value = "";
     for (const path of cleanupPaths) {
       await rm(path, { recursive: true, force: true });
     }
@@ -301,6 +316,19 @@ describe("CodexAgentWorktreeManager", () => {
       await access(lease.path);
       await expect(access(lockPath)).rejects.toThrow();
     }
+  });
+
+  it("tolerates a released lock disappearing during path canonicalization", async () => {
+    const { manager } = await createManager();
+    const plan = await manager.planPrepare({ runId: "run-disappearing", taskId: "task-disappearing" });
+    const lockPath = `${plan.receiptPath}.lock`;
+    await mkdir(dirname(lockPath), { recursive: true });
+    await writeFile(lockPath, JSON.stringify({ schemaVersion: 1, pid: process.pid, createdAt: new Date().toISOString() }));
+    disappearingPath.value = lockPath;
+    const lease = await manager.prepare({ runId: plan.runId, taskId: plan.taskId });
+    expect(disappearingPath.value).toBe("");
+    await access(lease.path);
+    await expect(access(lockPath)).rejects.toThrow();
   });
 
   it("waits for a healthy lease lock without writing recovery objects into Git", async () => {

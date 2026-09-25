@@ -52,6 +52,7 @@
 - 用户明确要求 agent 时，在可用且任务边界允许的情况下真实派发；无法派发要说明原因。
 - 有可独立验证的问题、需要专项风险审查或互斥实现任务，且主线程能同时推进有用工作时，考虑 `readonly-consult` / `context-fanout`。
 - 强耦合、小任务或缺少独立子问题时由主线程处理；复杂或高风险任务仍应评估协作，不能把精简输出当成跳过风险判断。
+- 派发前明确最小上下文、任务内检查点和完成即返回的条件；可用槽位不是派发目标。Codex host 支持 `fork_turns` 时必须显式选择，独立任务默认 `none`，完整历史仅在确有依赖时使用；不支持该字段时按 `parallel-agent-dispatch` 的 Codex lifecycle reference 核对实际隔离能力。
 
 无派发时只需 `agent_opportunity: mode=none, dispatch_now=no` 和理由；简单任务可省略。准备派发时记录：
 

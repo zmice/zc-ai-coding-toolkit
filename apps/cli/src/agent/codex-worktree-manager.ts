@@ -188,14 +188,19 @@ async function canonicalizePotentialPath(path: string): Promise<string> {
   let current = resolve(path);
   const missingSegments: string[] = [];
 
-  while (!(await pathExists(current))) {
-    const parent = dirname(current);
-    if (parent === current) break;
-    missingSegments.unshift(basename(current));
-    current = parent;
+  for (;;) {
+    try {
+      return join(await realpath(current), ...missingSegments);
+    } catch (error) {
+      // Lease locks may be released while their paths are being checked.
+      // Only a missing path may fall back to its nearest existing ancestor.
+      if (!isNodeError(error, "ENOENT")) throw error;
+      const parent = dirname(current);
+      if (parent === current) throw error;
+      missingSegments.unshift(basename(current));
+      current = parent;
+    }
   }
-
-  return join(await realpath(current), ...missingSegments);
 }
 
 async function assertSymlinkFreeOwnedPath(

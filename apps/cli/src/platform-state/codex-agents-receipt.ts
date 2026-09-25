@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import type { ManagedCodexAgentDefault } from "../utils/codex-config-merge.js";
 
 export const codexAgentsReceiptSchemaVersion = 1 as const;
 export const codexAgentsReceiptFileName = "zc-toolkit-agents.install-receipt.json";
@@ -23,6 +24,7 @@ export interface CodexAgentsReceipt {
   readonly root: string;
   readonly installedAt: string;
   readonly managedAgentNames: readonly string[];
+  readonly managedAgentDefaults?: readonly ManagedCodexAgentDefault[];
   readonly artifacts: readonly CodexAgentsReceiptArtifact[];
 }
 
@@ -38,6 +40,7 @@ export interface CreateCodexAgentsReceiptInput {
     readonly path: string;
     readonly content: string;
   }[];
+  readonly managedAgentDefaults?: readonly ManagedCodexAgentDefault[];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -92,6 +95,14 @@ function isCodexAgentsReceiptArtifact(value: unknown): value is CodexAgentsRecei
   );
 }
 
+function isManagedCodexAgentDefault(value: unknown): value is ManagedCodexAgentDefault {
+  return (
+    isRecord(value)
+    && (value.key === "default_subagent_model" || value.key === "default_subagent_reasoning_effort")
+    && typeof value.value === "string"
+  );
+}
+
 function isCodexAgentsReceipt(value: unknown): value is CodexAgentsReceipt {
   if (!(
     isRecord(value)
@@ -105,6 +116,8 @@ function isCodexAgentsReceipt(value: unknown): value is CodexAgentsReceipt {
     && typeof value.installedAt === "string"
     && Array.isArray(value.managedAgentNames)
     && value.managedAgentNames.every((name) => typeof name === "string")
+    && (value.managedAgentDefaults === undefined
+      || (Array.isArray(value.managedAgentDefaults) && value.managedAgentDefaults.every(isManagedCodexAgentDefault)))
     && Array.isArray(value.artifacts)
     && value.artifacts.every(isCodexAgentsReceiptArtifact)
   )) {
@@ -149,6 +162,7 @@ export function createCodexAgentsReceipt(
     root: input.root,
     installedAt: typeof installedAt === "string" ? installedAt : installedAt.toISOString(),
     managedAgentNames,
+    managedAgentDefaults: input.managedAgentDefaults ?? [],
     artifacts: agentArtifacts.map((artifact) => ({
       path: artifact.path,
       sha256: hashContent(artifact.content),

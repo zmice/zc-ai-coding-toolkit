@@ -21,7 +21,7 @@
 
 - 核对 scoped diff，不重做实现
 - 同时给出规格合规与代码质量 verdict，或按高风险场景拆成两个 reviewer
-- finding 包含风险、触发条件、期望结果和复验方式
+- finding 包含位置、代码证据、触发条件、影响、反例或已有 guard、期望结果和复验方式
 - 修复后负责关闭或维持原 finding
 
 ## Plan Workspace
@@ -84,16 +84,17 @@ Implementation report:
 ```text
 Review package:
 - task brief:
-- base / head:
+- diff identity (base / head / range or working-tree snapshot):
 - commits:
 - scoped diff:
+- complete changed-file manifest and per-file review receipt:
 - implementation report:
 - binding constraints:
 - verification evidence:
 - known risks:
 ```
 
-基线必须覆盖该任务全部提交，不能用会漏掉多提交的快捷范围。
+基线必须覆盖该任务全部提交，不能用会漏掉多提交的快捷范围。逐文件回执、未知状态的阻断规则与 finding 证伪格式见 `code-review-and-quality` 的 `references/review-coverage-contract.md`。
 
 ## Review Record
 

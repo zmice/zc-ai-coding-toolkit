@@ -3,8 +3,10 @@ import { describe, it } from "vitest";
 
 import {
   isCodexAgentConfigContent,
+  mergeOwnedCodexAgentConfigWithDefaults,
   mergeOwnedCodexAgentConfig,
   mergeCodexAgentConfig,
+  stripManagedZcAgentSections,
 } from "./codex-config-merge.js";
 
 describe("codex config merge", () => {
@@ -115,5 +117,146 @@ describe("codex config merge", () => {
     const merged = mergeOwnedCodexAgentConfig(existing, "", ["zc_code_reviewer"]);
 
     assert.equal(merged, '[[mcp_servers]]\nname = "keep-me"\n');
+  });
+
+  it("keeps user subagent defaults and avoids a duplicate agents table", () => {
+    const existing = [
+      "[agents] # user defaults",
+      "default_subagent_model = 'gpt-user'",
+      'default_subagent_reasoning_effort = "high"',
+      "",
+    ].join("\n");
+    const generated = [
+      "[agents]",
+      'default_subagent_model = "gpt-5.6-terra"',
+      'default_subagent_reasoning_effort = "medium"',
+      "",
+      "[agents.zc_code_reviewer]",
+      'config_file = "agents/zc-code-reviewer.toml"',
+      "",
+    ].join("\n");
+
+    const result = mergeOwnedCodexAgentConfigWithDefaults(existing, generated, [], []);
+
+    assert.equal((result.content.match(/^\[agents\](?:\s*#.*)?$/gmu) ?? []).length, 1);
+    assert.match(result.content, /default_subagent_model = 'gpt-user'/);
+    assert.match(result.content, /default_subagent_reasoning_effort = "high"/);
+    assert.deepEqual(result.managedDefaults, []);
+    assert.equal(
+      mergeOwnedCodexAgentConfig(result.content, generated, [], result.managedDefaults),
+      result.content,
+    );
+    assert.match(result.content, /default_subagent_reasoning_effort = "high"\n\n\[agents\.zc_code_reviewer\]/);
+  });
+
+  it("owns only injected defaults and leaves user-modified owned defaults during removal", () => {
+    const generated = [
+      "[agents]",
+      'default_subagent_model = "gpt-5.6-terra"',
+      'default_subagent_reasoning_effort = "medium"',
+      "",
+    ].join("\n");
+    const first = mergeOwnedCodexAgentConfigWithDefaults(undefined, generated, [], []);
+    const changedByUser = first.content.replace('default_subagent_model = "gpt-5.6-terra"', 'default_subagent_model = "gpt-user"');
+
+    assert.deepEqual(first.managedDefaults, [
+      { key: "default_subagent_model", value: "gpt-5.6-terra" },
+      { key: "default_subagent_reasoning_effort", value: "medium" },
+    ]);
+    assert.equal(
+      stripManagedZcAgentSections(changedByUser, [], first.managedDefaults),
+      [
+        "[agents]",
+        'default_subagent_model = "gpt-user"',
+      ].join("\n"),
+    );
+  });
+
+  it("ends managed-agent stripping before a following agents defaults table", () => {
+    const content = [
+      "[agents.zc_old]",
+      'config_file = "agents/zc-old.toml"',
+      "",
+      "[agents] # user defaults",
+      "default_subagent_model = 'gpt-user'",
+      "",
+    ].join("\n");
+
+    assert.equal(
+      stripManagedZcAgentSections(content, ["zc_old"]),
+      [
+        "[agents] # user defaults",
+        "default_subagent_model = 'gpt-user'",
+      ].join("\n"),
+    );
+  });
+
+  it("rejects inline agents instead of silently creating a conflicting table", () => {
+    assert.throws(
+      () => mergeOwnedCodexAgentConfigWithDefaults(
+        'agents = { default_subagent_model = "gpt-user" }\n',
+        '[agents]\ndefault_subagent_model = "gpt-5.6-terra"\n',
+        [],
+        [],
+      ),
+      /无法安全合并 inline 或 quoted \[agents\] 默认配置/,
+    );
+  });
+
+  it("merges into a whitespace-normalized agents table", () => {
+    const result = mergeOwnedCodexAgentConfigWithDefaults(
+      '[ agents ]\ndefault_subagent_model = "gpt-user"\n',
+      '[agents]\ndefault_subagent_model = "gpt-5.6-terra"\ndefault_subagent_reasoning_effort = "medium"\n',
+      [],
+      [],
+    );
+
+    assert.equal((result.content.match(/^\[\s*agents\s*\]$/gmu) ?? []).length, 1);
+    assert.match(result.content, /default_subagent_model = "gpt-user"/);
+    assert.match(result.content, /default_subagent_reasoning_effort = "medium"/);
+  });
+
+  it("rejects dotted default assignments that conflict with an agents table", () => {
+    assert.throws(
+      () => mergeOwnedCodexAgentConfigWithDefaults(
+        'agents.default_subagent_model = "gpt-user"\n',
+        '[agents]\ndefault_subagent_model = "gpt-5.6-terra"\n',
+        [],
+        [],
+      ),
+      /无法安全合并 inline 或 quoted \[agents\] 默认配置/,
+    );
+  });
+
+  it("rejects quoted dotted and inline agents definitions without appending a table", () => {
+    for (const existing of [
+      'agents."default_subagent_model" = "gpt-user"\n',
+      '"agents".default_subagent_model = "gpt-user"\n',
+      "'agents'.'default_subagent_model' = 'gpt-user'\n",
+      '"agents" = { default_subagent_model = "gpt-user" }\n',
+      'agents.max_concurrent_threads_per_session = 3\n',
+    ]) {
+      assert.throws(
+        () => mergeOwnedCodexAgentConfigWithDefaults(
+          existing,
+          '[agents]\ndefault_subagent_model = "gpt-5.6-terra"\n',
+          [],
+          [],
+        ),
+        /无法安全合并/,
+      );
+    }
+  });
+
+  it("rejects agents array tables that cannot carry global defaults", () => {
+    assert.throws(
+      () => mergeOwnedCodexAgentConfigWithDefaults(
+        '[[agents]]\nname = "custom"\n',
+        '[agents]\ndefault_subagent_model = "gpt-5.6-terra"\n',
+        [],
+        [],
+      ),
+      /无法安全合并 inline 或 quoted \[agents\] 默认配置/,
+    );
   });
 });

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EventEmitter } from "node:events";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -2815,6 +2815,45 @@ describe("platform CLI", () => {
     expect(process.exitCode).toBeUndefined();
 
     logSpy.mockRestore();
+  });
+
+  it("keeps stale-file ownership when prune fails so a retry can remove it", async () => {
+    const codexRoot = mkdtempSync(join(tmpdir(), "zc-prune-retry-"));
+    const agentsDir = join(codexRoot, "agents");
+    mkdirSync(agentsDir, { recursive: true });
+    const stalePath = join(agentsDir, "zc-old-reviewer.toml");
+    writeFileSync(stalePath, 'name = "zc_old_reviewer"\n');
+    const receiptPath = join(codexRoot, "platform-state/zc-toolkit-agents.install-receipt.json");
+    mkdirSync(join(codexRoot, "platform-state"));
+    const oldReceipt = { schemaVersion: 1, artifacts: [{ path: stalePath }] };
+    writeFileSync(receiptPath, JSON.stringify(oldReceipt));
+    platformMocks.resolveInstallTarget.mockResolvedValue({ root: codexRoot, source: "official-global" });
+    platformMocks.createCodexAgentInstallPlan.mockReturnValue(createCodexAgentInstallPlan(
+      codexRoot,
+      [{ path: join(codexRoot, "config.toml"), content: "[agents.zc_code_reviewer]\n" }],
+      "global",
+    ));
+    platformMocks.readCodexAgentsReceipt.mockImplementation(async () => JSON.parse(readFileSync(receiptPath, "utf8")));
+    platformMocks.writeCodexAgentsReceipt.mockImplementation(async (_path: string, value: unknown) => {
+      writeFileSync(receiptPath, JSON.stringify(value));
+    });
+    platformMocks.writeArtifacts.mockResolvedValue({ created: 0, overwritten: 0, unchanged: 1, skipped: 0, dryRun: false });
+    platformMocks.removeManagedPaths.mockRejectedValueOnce(new Error("injected stale deletion failure"));
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      await runPlatformAgents("codex", { global: true, sync: true, prune: true, json: true });
+      expect(JSON.parse(readFileSync(receiptPath, "utf8"))).toEqual(oldReceipt);
+      expect(platformMocks.writeCodexAgentsReceipt).not.toHaveBeenCalled();
+
+      await runPlatformAgents("codex", { global: true, sync: true, prune: true, json: true });
+      expect(platformMocks.removeManagedPaths).toHaveBeenCalledTimes(2);
+      expect(platformMocks.removeManagedPaths).toHaveBeenNthCalledWith(2, [stalePath]);
+      expect(platformMocks.writeCodexAgentsReceipt).toHaveBeenCalledTimes(1);
+      expect(JSON.parse(readFileSync(receiptPath, "utf8"))).not.toEqual(oldReceipt);
+    } finally {
+      logSpy.mockRestore();
+      rmSync(codexRoot, { recursive: true, force: true });
+    }
   });
 
   it("migrates a receipt-owned legacy Qoder install after official plugin registration succeeds", async () => {

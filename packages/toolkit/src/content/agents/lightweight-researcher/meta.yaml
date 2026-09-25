@@ -1,0 +1,23 @@
+kind: agent
+name: lightweight-researcher
+title: 轻量只读研究员
+description: 处理自包含、窄范围的代码定位、文档事实核查和清单整理，只返回证据与未决项；不承担实现、架构决策或安全审计。
+tier: recommended
+audience: advanced
+stability: evolving
+suggests:
+  - skill:parallel-agent-dispatch
+tools:
+  - Read
+  - Grep
+  - Glob
+codex_agent:
+  model: gpt-6-luna
+  model_reasoning_effort: high
+  sandbox_mode: read-only
+platforms:
+  - codex
+source:
+  upstream: toolkit-original
+  strategy: curated
+  notes: 为窄范围只读证据收集提供轻量角色，避免将机械核查交给高推理专业角色。

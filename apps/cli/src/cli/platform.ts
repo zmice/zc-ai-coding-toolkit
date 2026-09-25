@@ -55,6 +55,8 @@ import {
   listZcAgentConfigNames,
   mergeCodexAgentConfig,
   mergeOwnedCodexAgentConfig,
+  mergeOwnedCodexAgentConfigWithDefaults,
+  type ManagedCodexAgentDefault,
 } from "../utils/codex-config-merge.js";
 import {
   inspectReceiptManagedCodexAgents,
@@ -64,6 +66,7 @@ import {
   createCodexCompanionAgentInstallPlan,
   loadCodexAgentCompanion,
 } from "../utils/codex-agent-companion.js";
+import { withCodexAgentConfigReceiptRollback } from "../utils/codex-agent-config-transaction.js";
 import {
   QwenOfficialCliUnavailableError,
   installQwenExtensionFromOfficialRepoWithCli,
@@ -955,6 +958,7 @@ function hasNodeErrorCode(error: unknown, code: string): boolean {
 async function mergeCodexAgentConfigArtifact(
   artifact: GeneratedArtifact,
   managedAgentNames?: readonly string[],
+  managedAgentDefaults: readonly ManagedCodexAgentDefault[] = [],
 ): Promise<GeneratedArtifact> {
   let existingContent: string | undefined;
 
@@ -972,7 +976,12 @@ async function mergeCodexAgentConfigArtifact(
     ...artifact,
     content: managedAgentNames === undefined
       ? mergeCodexAgentConfig(existingContent, artifact.content)
-      : mergeOwnedCodexAgentConfig(existingContent, artifact.content, managedAgentNames),
+      : mergeOwnedCodexAgentConfig(
+        existingContent,
+        artifact.content,
+        managedAgentNames,
+        managedAgentDefaults,
+      ),
   };
 }
 
@@ -996,6 +1005,7 @@ async function writePlatformArtifacts(
     readonly dryRun: boolean;
     readonly overwrite: OverwriteMode;
     readonly managedAgentNames?: readonly string[];
+    readonly managedAgentDefaults?: readonly ManagedCodexAgentDefault[];
   },
 ): Promise<WriteArtifactsResult> {
   const artifactWriteOptions = {
@@ -1012,7 +1022,11 @@ async function writePlatformArtifacts(
   const regularArtifacts = artifacts.filter((artifact) => !configPaths.has(artifact.path));
   const mergedConfigArtifacts = await Promise.all(
     configArtifacts.map((artifact) =>
-      mergeCodexAgentConfigArtifact(artifact, options.managedAgentNames)),
+      mergeCodexAgentConfigArtifact(
+        artifact,
+        options.managedAgentNames,
+        options.managedAgentDefaults,
+      )),
   );
 
   if (options.dryRun) {
@@ -1165,6 +1179,7 @@ async function inspectCodexAgentArtifact(artifact: GeneratedArtifact): Promise<C
 async function inspectCodexAgentConfigArtifact(
   artifact: GeneratedArtifact,
   managedAgentNames: readonly string[],
+  managedAgentDefaults: readonly ManagedCodexAgentDefault[] = [],
 ): Promise<CodexAgentArtifactStatus> {
   const existing = await readTextIfExists(artifact.path);
 
@@ -1180,12 +1195,30 @@ async function inspectCodexAgentConfigArtifact(
     existing,
     artifact.content,
     managedAgentNames,
+    managedAgentDefaults,
   );
   return {
     path: artifact.path,
     kind: "config",
     state: existing === merged ? "up-to-date" : "drifted",
   };
+}
+
+async function resolveNextManagedCodexAgentDefaults(
+  plan: PlatformPlanLike,
+  receipt: CodexAgentsReceipt | null,
+): Promise<readonly ManagedCodexAgentDefault[]> {
+  const configArtifact = getCodexAgentConfigArtifact(plan);
+  if (!configArtifact) {
+    return [];
+  }
+  const existing = await readTextIfExists(configArtifact.path);
+  return mergeOwnedCodexAgentConfigWithDefaults(
+    existing ?? undefined,
+    configArtifact.content,
+    receipt?.managedAgentNames ?? [],
+    receipt?.managedAgentDefaults ?? [],
+  ).managedDefaults;
 }
 
 async function inspectCodexAgents(
@@ -1209,6 +1242,7 @@ async function inspectCodexAgents(
       ? [await inspectCodexAgentConfigArtifact(
         configArtifact,
         receipt?.managedAgentNames ?? [],
+        receipt?.managedAgentDefaults ?? [],
       )]
       : []),
     ...(await Promise.all(agentArtifacts.map(inspectCodexAgentArtifact))),
@@ -1332,7 +1366,7 @@ function summarizeCodexAgents(args: {
     if (args.operation === "uninstall") {
       lines.push(
         `移除 agent 文件 ${args.result.removed ?? 0}，原本缺失 ${args.result.missing ?? 0}`,
-        `配置清理：${args.result.configChanged ? "已移除 [agents.zc_*]" : args.result.configMissing ? "config.toml 不存在" : "无需变更"}`,
+        `配置清理：${args.result.configChanged ? "已移除受管 [agents.zc_*] 与未被改写的默认键" : args.result.configMissing ? "config.toml 不存在" : "无需变更"}`,
       );
     }
   }
@@ -2212,6 +2246,7 @@ async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void>
         join(root, "config.toml"),
         false,
         existingReceipt?.managedAgentNames ?? [],
+        existingReceipt?.managedAgentDefaults ?? [],
       );
       await deleteCodexAgentsReceipt(receiptPath);
       const payload = buildCodexPluginCompanionPayload({
@@ -2409,15 +2444,7 @@ async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void>
       return;
     }
 
-    const writeResult = await writePlatformArtifacts(
-      "codex",
-      plan.artifacts,
-      {
-        dryRun: false,
-        overwrite: "force",
-        managedAgentNames: existingReceipt?.managedAgentNames ?? [],
-      },
-    );
+    const nextManagedDefaults = await resolveNextManagedCodexAgentDefaults(plan, existingReceipt);
     const receipt = createCodexAgentsReceipt({
       root,
       scope: "global",
@@ -2425,9 +2452,27 @@ async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void>
       pluginVersion: companion.pluginVersion,
       installedPluginPath: companion.installedPluginPath,
       contentFingerprint: companion.contentFingerprint,
+      managedAgentDefaults: nextManagedDefaults,
       artifacts: plan.artifacts,
     });
-    await writeCodexAgentsReceipt(receiptPath, receipt);
+    const writeResult = await withCodexAgentConfigReceiptRollback(
+      plan.artifacts.filter((artifact) => isCodexAgentConfigArtifact("codex", artifact)).map((artifact) => artifact.path),
+      receiptPath,
+      async () => {
+        const result = await writePlatformArtifacts(
+          "codex",
+          plan.artifacts,
+          {
+            dryRun: false,
+            overwrite: "force",
+            managedAgentNames: existingReceipt?.managedAgentNames ?? [],
+            managedAgentDefaults: existingReceipt?.managedAgentDefaults ?? [],
+          },
+        );
+        await writeCodexAgentsReceipt(receiptPath, receipt);
+        return result;
+      },
+    );
     const payload = buildCodexPluginCompanionPayload({
       mode: "result",
       overallStatus: pluginResult.updatePending ? "update-pending" : "complete",
@@ -2782,7 +2827,7 @@ function summarizeCodexPluginUninstall(args: {
 
   if (args.includeAgents) {
     lines.push(
-      `配置清理：${args.configChanged ? "已移除 [agents.zc_*]" : args.configMissing ? "config.toml 不存在" : "无需变更"}`,
+      `配置清理：${args.configChanged ? "已移除受管 [agents.zc_*] 与未被改写的默认键" : args.configMissing ? "config.toml 不存在" : "无需变更"}`,
     );
   }
 
@@ -2862,6 +2907,7 @@ async function runCodexPluginLocalUninstall(opts: PlatformPluginOpts): Promise<v
         agents.configPath,
         true,
         agents.receipt?.managedAgentNames ?? [],
+        agents.receipt?.managedAgentDefaults ?? [],
       )
       : { changed: false, missing: false };
     emitOutput(
@@ -2904,6 +2950,7 @@ async function runCodexPluginLocalUninstall(opts: PlatformPluginOpts): Promise<v
       agents.configPath,
       false,
       agents.receipt?.managedAgentNames ?? [],
+      agents.receipt?.managedAgentDefaults ?? [],
     )
     : { changed: false, missing: false };
 
@@ -3407,6 +3454,7 @@ export async function runPlatformAgents(
           configArtifact.path,
           Boolean(opts.plan),
           receipt?.managedAgentNames ?? listZcAgentConfigNames(configArtifact.content),
+          receipt?.managedAgentDefaults ?? [],
         )
         : { changed: false, missing: true };
       const result = {
@@ -3461,38 +3509,51 @@ export async function runPlatformAgents(
       const owned = new Set(receipt ? getCodexAgentsReceiptOwnedPaths(receipt) : []);
       return paths.filter((path) => owned.has(path) && !expected.has(path));
     });
-    const writeResult = await writePlatformArtifacts(
+    const nextManagedDefaults = await resolveNextManagedCodexAgentDefaults(plan, receipt);
+    const writeAgents = () => writePlatformArtifacts(
       target,
       plan.artifacts,
       {
         dryRun: Boolean(opts.plan),
         overwrite: "force",
         managedAgentNames: receipt?.managedAgentNames ?? [],
+        managedAgentDefaults: receipt?.managedAgentDefaults ?? [],
       },
     );
-    const pruneResult = opts.prune
-      ? opts.plan
-        ? await estimateRemovedPaths(staleAgentFiles)
-        : await removeManagedPaths(staleAgentFiles)
-      : { removed: 0, missing: 0 };
+    const { writeResult, pruneResult } = opts.plan
+      ? {
+        writeResult: await writeAgents(),
+        pruneResult: opts.prune
+          ? await estimateRemovedPaths(staleAgentFiles)
+          : { removed: 0, missing: 0 },
+      }
+      : await withCodexAgentConfigReceiptRollback(
+        plan.artifacts.filter((artifact) => isCodexAgentConfigArtifact(target, artifact)).map((artifact) => artifact.path),
+        receiptPath,
+        async () => {
+          const writeResult = await writeAgents();
+          const pruneResult = opts.prune
+            ? await removeManagedPaths(staleAgentFiles)
+            : { removed: 0, missing: 0 };
+          const nextReceipt = createCodexAgentsReceipt({
+            root,
+            scope,
+            pluginId: `${codexMarketplacePluginName}@${codexMarketplacePluginName}`,
+            pluginVersion: getCliVersion(),
+            contentFingerprint: plan.metadata?.fingerprint.value ?? getCliVersion(),
+            managedAgentDefaults: nextManagedDefaults,
+            artifacts: plan.artifacts,
+          });
+          await writeCodexAgentsReceipt(receiptPath, nextReceipt);
+          return { writeResult, pruneResult };
+        },
+      );
     const result = {
       ...writeResult,
       staleRemoved: pruneResult.removed,
       staleMissing: pruneResult.missing,
       receiptPath,
     };
-
-    if (!opts.plan) {
-      const nextReceipt = createCodexAgentsReceipt({
-        root,
-        scope,
-        pluginId: `${codexMarketplacePluginName}@${codexMarketplacePluginName}`,
-        pluginVersion: getCliVersion(),
-        contentFingerprint: plan.metadata?.fingerprint.value ?? getCliVersion(),
-        artifacts: plan.artifacts,
-      });
-      await writeCodexAgentsReceipt(receiptPath, nextReceipt);
-    }
 
     emitOutput(
       format,

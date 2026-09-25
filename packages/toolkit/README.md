@@ -141,6 +141,7 @@ Recommendation: <action> because <specific evidence, trade-off, and rejected alt
 
 ### Agents
 
+- `lightweight-researcher`：轻量只读研究员 — 对指定范围做代码定位、文档事实核查和清单整理；Codex 使用 GPT-6 Luna/high，不承担实现或专项审计。
 - `architect`：架构师 — 负责系统设计决策、技术选型评估、模块边界划分和架构权衡分析。
 - `backend-specialist`：后端工程师 — 专注服务端实现模式、中间件设计、数据访问层、错误处理和缓存策略。
 - `code-reviewer`：代码审查 — 在代码完成后进行七维度代码审查，并给出重构建议与 DX 评估。
