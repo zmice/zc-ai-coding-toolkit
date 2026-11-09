@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-11-09",
+  "scope": "Local synthetic fixtures; not model UI A/B or production readiness",
+  "upstream": {
+    "repository": "heydamir/unslop",
+    "commit": "97daa3eb365670ea3f87ed85356cbfcee18105a5"
+  },
+  "environment": {
+    "os": "Windows",
+    "node": "24.18.0",
+    "playwright": "1.65.0",
+    "chrome": "156.0.8078.80",
+    "ffmpeg": "5.0.1"
+  },
+  "upstream_tests": {
+    "without_playwright": {
+      "pass": 22,
+      "skip": 4,
+      "fail": 0
+    },
+    "snapshot_with_browser": {
+      "pass": 12,
+      "skip": 0,
+      "fail": 0
+    },
+    "story_meta_tests_are_not_end_to_end": true
+  },
+  "snapshot": {
+    "exitCode": 0,
+    "inputBefore": "runtime-edited",
+    "inputAfter": "initial",
+    "shadowBefore": "Shadow content",
+    "shadowAfter": null,
+    "canvasBefore": [
+      255,
+      112,
+      67,
+      255
+    ],
+    "canvasAfter": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "scriptTagsRemoved": true,
+    "handlerStillExecutes": true,
+    "largeResourceRemainsNetworkReference": true,
+    "responsiveImageInlined": true,
+    "lazyImageInlined": true,
+    "liveScreenshot": true
+  },
+  "story": {
+    "exitCode": 0,
+    "timedOut": false,
+    "siblingRead": true,
+    "httpStatus": 200,
+    "existingFramesMarkerRemoved": true,
+    "framesCleaned": true,
+    "instrumentation": "preload observes server address only; upstream source unmodified",
+    "video": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 2160,
+          "height": 2160,
+          "r_frame_rate": "60/1"
+        }
+      ],
+      "format": {
+        "duration": "6.866667"
+      }
+    }
+  },
+  "artifacts": [
+    {
+      "path": ".cache/unslop-upstream-tests-before-deps.log",
+      "sha256": "8dd7f8061fe67e4d4b0ad83a958f3ddbaf79629dff36ffa5d606aabeee6d59f6",
+      "bytes": 2302
+    },
+    {
+      "path": ".cache/unslop-snapshot-browser-tests.log",
+      "sha256": "fffdb83bde1b6f40a35eda082c0e329eecb084fcb203bc5b3e06c5d89e7326ab",
+      "bytes": 1108
+    },
+    {
+      "path": ".cache/unslop-lab-runtime/snapshot-proof-VOuDQF/result.json",
+      "sha256": "ab4bb10bac7e63c3d248a2d30dfb431fe72b8b937ba757a6a3ae0642fcca4797",
+      "bytes": 1005
+    },
+    {
+      "path": ".cache/unslop-lab-runtime/snapshot-proof-VOuDQF/snapshot.live.png",
+      "sha256": "560a458c07580915490968ac2abb19341f9926d3fc59fae6282988436e8500d0",
+      "bytes": 17521
+    },
+    {
+      "path": ".cache/unslop-lab-runtime/snapshot-proof-VOuDQF/snapshot-render.png",
+      "sha256": "b2b2b80b42e0df5b088651d79a467df7757f8d26063d605a1e60895db73628de",
+      "bytes": 13693
+    },
+    {
+      "path": ".cache/unslop-lab-runtime/story-proof-JPehhI/result.json",
+      "sha256": "a13fca382f98efc5c729aab352feefa2903761837d691d69a54ebe1019a6ecf5",
+      "bytes": 685
+    },
+    {
+      "path": ".cache/unslop-lab-runtime/story-proof-JPehhI/story.mp4",
+      "sha256": "e5266d245d69149da56a10a601e0776c34e4a51c996d96065f3fc9569a12ddf5",
+      "bytes": 870973
+    },
+    {
+      "path": ".cache/unslop-lab-runtime/story-proof-JPehhI/middle.png",
+      "sha256": "8f121931db1842c40969a07dd09e19adc4b80b01fae5341f81ff3126407ceb3a",
+      "bytes": 267615
+    },
+    {
+      "path": ".cache/unslop-lab-runtime/snapshot-probe.mjs",
+      "sha256": "4daf16b92b4f5c12d39d63d57ce5743d8a064ed679ef73ef06e5afb85f629868",
+      "bytes": 4904
+    },
+    {
+      "path": ".cache/unslop-lab-runtime/story-probe.mjs",
+      "sha256": "8fef5365414171ba8138b6a4a6f33c67159c6eff9cb478a3abfe57288a72afda",
+      "bytes": 4449
+    },
+    {
+      "path": ".cache/unslop-lab-runtime/server-observer.mjs",
+      "sha256": "eb70c18a31377386462216efb06e3f611706c99368f3177d397673da61811ffc",
+      "bytes": 402
+    }
+  ]
+}

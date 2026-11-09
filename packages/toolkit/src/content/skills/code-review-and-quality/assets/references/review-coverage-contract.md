@@ -6,6 +6,12 @@
 
 先记录不可歧义的 `diff identity`：提交审查写 `base`、`head` 与完整 range；工作树审查写 `HEAD`、暂存/未暂存状态、生成时间、完整补丁的 SHA-256 和 changed-file manifest。manifest 为每个 changed file 记录内容 SHA-256，包括 untracked 与二进制文件（对原始字节哈希）；不能只用 `HEAD`、状态或时间代替内容冻结。随后从该 identity 枚举完整 `changed files`，再标出 reviewable、排除和失败文件。改变 identity 后必须重新枚举，不能把旧清单混入新结论。
 
+清单中的审查对象同时记录路径、Git 变更状态和来源层（暂存、工作树或 untracked）；不要按路径单独去重。同一路径被暂存删除后又创建为 untracked 时，是两个需要分别解释的对象。改名保留原路径和目标路径，二进制变化保留原始字节哈希及实际检查方式。
+
+获取用于审查和哈希的 Git 文本补丁时禁用 external diff 与 textconv（`--no-ext-diff --no-textconv`），避免外部程序改变证据或在采集时执行。保留命令退出状态并核对输出是否完整；工具提示截断、读取失败或路径清单不全时，标记缺口并按文件/区段补读，不能记录为完整审阅。
+
+Git 的 `change_status` 与审阅回执的 `review_status` 分别记录，不要相互覆盖。
+
 ```text
 Review coverage:
 - diff identity:
@@ -13,8 +19,10 @@ Review coverage:
 - manifest source / generated at:
 - changed files:
   - path:
+    change_status: <Git status, including rename endpoints>
+    source_layer: staged | worktree | untracked
     content SHA-256:
-    status: reviewed | skipped | failed
+    review_status: reviewed | skipped | failed
     reason: <required for skipped / failed>
     reviewer or owner:
     evidence:
@@ -51,3 +59,7 @@ Finding:
 ## 结论门禁
 
 `Approve` 需要 coverage verdict 为 `complete`、没有未处置 Critical 或 Important、必要验证证据可信且剩余风险已写明。`Request changes` 和 `Defer` 同样附带 coverage receipt；前者写清阻断 finding，后者写清未审范围、owner、恢复条件和为什么当前不能合并。Important 只能按正文既有的明确延后理由处理，不能因有 coverage receipt 而任意放行。文本回执本身只证明记录存在，不等于代码、测试或运行时行为已经验证。
+
+## 方法来源与改写
+
+同路径变更身份与原始补丁采集方法参考 [Alibaba Open Code Review delegation skill](https://github.com/alibaba/open-code-review/blob/0d403392073bcb0d3894c5364b0a85e7b6a47e0d/plugins/open-code-review/skills/open-code-review-delegate/SKILL.md)（Apache-2.0）。本项目用中文重写，保留本地 diff identity、内容哈希、review_status 与阻断规则；不依赖或调用 OCR CLI。适用许可证随产物提供于 [LICENSE-open-code-review.txt](LICENSE-open-code-review.txt)。

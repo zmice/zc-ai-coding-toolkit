@@ -36,8 +36,8 @@ Codex 项目可通过 `zc context init` 生成同类索引到 `.codex/context/`�
 
 - `packages/toolkit/README.md`
 - `packages/toolkit/src/content/`
-- `packages/toolkit/src/content-lint.ts`
-- `packages/toolkit/src/query.ts`
+- `packages/toolkit/src/lint/content-lint.ts`
+- `packages/toolkit/src/query/toolkit-query.ts`
 
 适用任务：
 
@@ -141,7 +141,7 @@ Codex 项目可通过 `zc context init` 生成同类索引到 `.codex/context/`�
 - `.codex/context/project.md`（如果已运行 `zc context init`）
 - `packages/toolkit/README.md`
 - 目标资产目录下的 `meta.yaml` 和 `body.md`
-- `packages/toolkit/src/content-lint.ts`
+- `packages/toolkit/src/lint/content-lint.ts`
 - 相关查询/测试文件
 
 ### 做上游同步分析

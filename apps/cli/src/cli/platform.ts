@@ -101,6 +101,7 @@ type PlatformOutputFormat = "text" | "json";
 type PlatformInstallScope = "project" | "global" | "dir";
 type PlatformInstallMethod = "filesystem" | "qwen-cli" | "qoder-cn-cli";
 type PlatformGenerateBundleType = "release-bundle" | "codex-plugin" | "codex-marketplace" | "qoder-cn-plugin";
+type CodexPluginManifestFormat = "compatibility" | "portable";
 type PlatformAction = "generate" | "install" | "update" | "repair" | "uninstall";
 type PlatformTargetSelectorOpts = {
   dir?: string;
@@ -135,6 +136,7 @@ type PlatformGenerateOpts = PlatformTargetSelectorOpts & {
   plan?: boolean;
   json?: boolean;
   bundle?: PlatformGenerateBundleType;
+  pluginManifestFormat?: CodexPluginManifestFormat;
 };
 const platformNames: readonly PlatformName[] = ["qwen", "codex", "claude", "opencode", "qoder-cn"];
 const codexPluginManifestPath = ".codex-plugin/plugin.json";
@@ -237,11 +239,11 @@ interface PlatformModule {
   createCodexGenerationPlan?: (manifest: PlatformManifestLike, opts?: { manifestSource?: string; extensionVersion?: string }) => GenerationPlan;
   createCodexPluginGenerationPlan?: (
     manifest: PlatformManifestLike,
-    opts?: { manifestSource?: string; pluginVersion?: string; extensionVersion?: string }
+    opts?: { manifestSource?: string; pluginVersion?: string; extensionVersion?: string; pluginManifestFormat?: CodexPluginManifestFormat }
   ) => GenerationPlan;
   createCodexMarketplaceGenerationPlan?: (
     manifest: PlatformManifestLike,
-    opts?: { manifestSource?: string; pluginVersion?: string; extensionVersion?: string; scope?: InstallScope }
+    opts?: { manifestSource?: string; pluginVersion?: string; extensionVersion?: string; scope?: InstallScope; pluginManifestFormat?: CodexPluginManifestFormat }
   ) => GenerationPlan;
   createCodexInstallPlan?: (
     manifest: PlatformManifestLike,
@@ -941,6 +943,21 @@ async function cleanupCodexPluginContentForForce(
   }
 }
 
+async function assertNoStalePortableManifest(artifacts: readonly { readonly path: string }[]): Promise<void> {
+  for (const artifact of artifacts) {
+    if (!artifact.path.replace(/\\/g, "/").endsWith(`/${codexPluginManifestPath}`)) continue;
+    const portablePath = join(dirname(dirname(artifact.path)), "plugin.json");
+    if (artifacts.some((item) => item.path === portablePath)) continue;
+    try {
+      await readFile(portablePath);
+    } catch (error) {
+      if (hasNodeErrorCode(error, "ENOENT")) continue;
+      throw error;
+    }
+    throw new Error(`目标存在 portable plugin.json：${portablePath}。请使用 --plugin-manifest-format portable 或输出到空目录；不会保留过期清单或删除用户文件。`);
+  }
+}
+
 function isCodexAgentConfigArtifact(target: PlatformName, artifact: GeneratedArtifact): boolean {
   const normalizedPath = artifact.path.replace(/\\/g, "/");
 
@@ -1613,12 +1630,45 @@ function parseCodexCliJsonOutput(result: CodexCliCommandResult): unknown {
   }
 }
 
-async function detectCodexPluginCliCapability(): Promise<CodexPluginCliCapability> {
+function parseCodexPluginList(result: CodexCliCommandResult): Record<string, unknown> {
+  let value: unknown;
+  try {
+    value = JSON.parse(result.stdout.trim());
+  } catch {
+    throw new Error("Codex plugin list 返回无效 JSON，无法确认插件状态。");
+  }
+  if (!isUnknownRecord(value) || !Array.isArray(value.installed) || !Array.isArray(value.available)
+    || [...value.installed, ...value.available].some((entry) => !isUnknownRecord(entry)
+      || (typeof entry.pluginId !== "string" && typeof entry.name !== "string"))) {
+    throw new Error("Codex plugin list 返回不受支持的结构，无法确认插件状态。");
+  }
+  return value;
+}
+
+function parseCodexMarketplaceList(result: CodexCliCommandResult): Record<string, unknown> {
+  let value: unknown;
+  try {
+    value = JSON.parse(result.stdout.trim());
+  } catch {
+    throw new Error("Codex plugin marketplace list 返回无效 JSON，无法确认 marketplace 来源。");
+  }
+  if (!isUnknownRecord(value) || !Array.isArray(value.marketplaces)) {
+    throw new Error("Codex plugin marketplace list 返回不受支持的结构，无法确认 marketplace 来源。");
+  }
+  return value;
+}
+
+async function detectCodexPluginCliCapability(operation: CodexPluginGitOperation): Promise<CodexPluginCliCapability> {
   const versionResult = await runCodexCliCommand(["--version"], { allowFailure: true });
   const version = versionResult.code === 0
     ? versionResult.stdout.trim() || versionResult.stderr.trim() || null
     : null;
-  const officialProbe = await runCodexCliCommand(["plugin", "add", "--help"], {
+  const probeArgs = operation === "status" ? ["plugin", "list", "--help"]
+    : operation === "upgrade" ? ["plugin", "marketplace", "upgrade", "--help"]
+    : operation === "uninstall" ? ["plugin", "remove", "--help"]
+    : operation === "register" ? ["plugin", "marketplace", "add", "--help"]
+    : ["plugin", "add", "--help"];
+  const officialProbe = await runCodexCliCommand(probeArgs, {
     allowFailure: true,
   });
 
@@ -1641,7 +1691,7 @@ async function detectCodexPluginCliCapability(): Promise<CodexPluginCliCapabilit
   }
 
   throw new Error(
-    `当前 Codex CLI${version ? `（${version}）` : ""}既不支持官方 plugin lifecycle，也不支持旧 marketplace 注册命令；请先更新 Codex CLI。`,
+    `当前 Codex CLI${version ? `（${version}）` : ""}不支持 ${formatShellCommand("codex", probeArgs)}；请检查 Codex CLI 能力。`,
   );
 }
 
@@ -1811,6 +1861,7 @@ async function runCodexMarketplaceGitMode(
     "--available",
     "--json",
   ];
+  const preflightStatusArgs = ["plugin", "list", "--available", "--json"];
   const uninstallArgs = ["plugin", "remove", pluginId, "--json"];
   const installCommand = formatShellCommand("codex", installArgs);
   const upgradeCommand = formatShellCommand("codex", upgradeArgs);
@@ -1820,7 +1871,7 @@ async function runCodexMarketplaceGitMode(
   const commandArgsByOperation: Record<CodexPluginGitOperation, readonly string[][]> = {
     register: [addArgs],
     install: [addArgs, installArgs],
-    upgrade: [marketplaceListArgs, upgradeArgs, installArgs, statusArgs],
+    upgrade: [preflightStatusArgs, marketplaceListArgs, upgradeArgs, installArgs, statusArgs],
     status: [statusArgs],
     uninstall: [uninstallArgs],
   };
@@ -1836,7 +1887,7 @@ async function runCodexMarketplaceGitMode(
   let legacyPluginBackupPath: string | null = null;
 
   if (execute) {
-    cliCapability = await detectCodexPluginCliCapability();
+    cliCapability = await detectCodexPluginCliCapability(operation);
 
     if (cliCapability.mode === "legacy-marketplace") {
       if (operation !== "register") {
@@ -1882,8 +1933,19 @@ async function runCodexMarketplaceGitMode(
       };
 
       if (operation === "upgrade") {
+        const beforeUpgrade = parseCodexPluginList(await runOfficialCommand(preflightStatusArgs));
+        const preflightInstalled = beforeUpgrade.installed as Record<string, unknown>[];
+        const targetRecords = preflightInstalled.filter((record) => record.pluginId === pluginId);
+        const ambiguousIdentity = preflightInstalled.some((record) =>
+          record.name === codexMarketplacePluginName && typeof record.pluginId !== "string");
+        const targetDisabled = targetRecords.some((record) => record.enabled === false);
+        if (targetDisabled || ambiguousIdentity || targetRecords.some((record) => record.enabled !== true)) {
+          throw new Error(
+            `zc-toolkit@zc-toolkit 的启用状态${targetDisabled ? "为 disabled" : "无法确认"}；为避免 codex plugin add 意外启用插件，已在升级前停止。`,
+          );
+        }
         const marketplaceListResult = await runOfficialCommand(marketplaceListArgs);
-        const marketplace = findCodexMarketplaceRecord(parseCodexCliJsonOutput(marketplaceListResult));
+        const marketplace = findCodexMarketplaceRecord(parseCodexMarketplaceList(marketplaceListResult));
 
         if (!marketplace) {
           marketplaceMigration = "registered-git";
@@ -2046,9 +2108,17 @@ async function runCodexMarketplaceGitMode(
   })();
 
   const parsedResults = commandResults.map((result) => parseCodexCliJsonOutput(result));
+  const hasStatusEvidence = executed && (operation === "status" || operation === "upgrade");
+  const statusResult = hasStatusEvidence ? commandResults.at(-1) : null;
+  const statusEvidence = statusResult ? parseCodexPluginList(statusResult) : null;
+  if (statusEvidence) {
+    parsedResults[parsedResults.length - 1] = statusEvidence;
+  }
   const directPlugin = findCodexPluginRecord(parsedResults, null);
-  const installedPlugin = findCodexPluginRecord(parsedResults, "installed") ?? directPlugin;
-  const availablePlugin = findCodexPluginRecord(parsedResults, "available");
+  const installedPlugin = statusEvidence
+    ? findCodexPluginRecord([statusEvidence], "installed")
+    : findCodexPluginRecord(parsedResults, "installed") ?? directPlugin;
+  const availablePlugin = findCodexPluginRecord(statusEvidence ? [statusEvidence] : parsedResults, "available");
   const installedPluginPath = resolveCodexPluginPath(installedPlugin);
   const installedVersion = typeof installedPlugin?.version === "string"
     ? installedPlugin.version
@@ -2061,6 +2131,21 @@ async function runCodexMarketplaceGitMode(
     && availableVersion
     && installedVersion !== availableVersion,
   );
+  const installed: boolean | "unknown" = statusEvidence
+    ? installedPlugin !== null
+    : operation === "uninstall" && executed ? false : "unknown";
+  const enabled: boolean | "unknown" = installedPlugin && typeof installedPlugin.enabled === "boolean"
+    ? installedPlugin.enabled
+    : installed === false ? false : "unknown";
+  const updateStatus = installed === false ? "not-installed"
+    : installedVersion && availableVersion
+      ? installedVersion === availableVersion ? "up-to-date" : "update-available"
+      : "unknown";
+  const reason = installed === false ? "plugin-not-installed"
+    : !statusEvidence ? "status-not-collected"
+      : !installedVersion ? "installed-version-unknown"
+        : !availableVersion ? "available-version-unknown"
+          : updateStatus === "update-available" ? "versions-differ" : "versions-match";
   const payload = {
     mode: executed ? "result" : "plan",
     action: "plugin",
@@ -2075,7 +2160,7 @@ async function runCodexMarketplaceGitMode(
     commands: plannedCommands,
     commandArgs: plannedArgs.map((args) => ["codex", ...args]),
     migrationCommands: operation === "upgrade"
-      ? [marketplaceListArgs, removeMarketplaceArgs, addArgs, installArgs, statusArgs]
+      ? [preflightStatusArgs, marketplaceListArgs, removeMarketplaceArgs, addArgs, installArgs, statusArgs]
         .map((args) => formatShellCommand("codex", args))
       : [],
     legacyPluginRepairCommands: operation === "upgrade"
@@ -2090,9 +2175,13 @@ async function runCodexMarketplaceGitMode(
     cliMode: cliCapability?.mode ?? null,
     cliVersion: cliCapability?.version ?? null,
     installedPluginPath,
+    installed,
+    enabled,
     installedVersion,
     availableVersion,
     updatePending,
+    updateStatus,
+    reason,
     marketplaceMigration,
     legacyPluginBackupPath,
     installCommand,
@@ -2111,6 +2200,9 @@ async function runCodexMarketplaceGitMode(
     ...plannedCommands.map((command) => `- ${command}`),
     ...(cliCapability
       ? [`CLI：${cliCapability.version ?? "unknown"}（${cliCapability.mode}）`]
+      : []),
+    ...(hasStatusEvidence
+      ? [`插件安装：${installed}；启用：${enabled}；更新：${updateStatus}（${reason}）`]
       : []),
     ...nextSteps.map((step) => `下一步：${step}`),
   ].join("\n");
@@ -2150,7 +2242,10 @@ function buildCodexPluginCompanionPayload(args: {
       requiresCompanion: true,
     },
     plugin: {
-      status: args.mode === "plan" ? "planned" : "complete",
+      status: args.mode === "plan" ? "planned"
+        : args.pluginResult.operation === "status"
+          && (args.pluginResult.payload.installed !== true || args.pluginResult.payload.enabled !== true)
+          ? "needs-attention" : "complete",
       version: args.pluginResult.installedVersion,
       availableVersion: args.pluginResult.availableVersion,
       installedPath: args.pluginResult.installedPluginPath,
@@ -2403,9 +2498,11 @@ async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void>
 
     if (pluginResult.operation === "status") {
       const status = await inspectCodexAgents(plan, root, existingReceipt);
+      const pluginHealthy = pluginResult.payload.installed === true
+        && pluginResult.payload.enabled === true;
       const payload = buildCodexPluginCompanionPayload({
         mode: "result",
-        overallStatus: status.kind === "up-to-date" ? "complete" : "partial",
+        overallStatus: status.kind === "up-to-date" && pluginHealthy ? "complete" : "partial",
         pluginResult,
         agents: {
           requested: true,
@@ -2422,7 +2519,7 @@ async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void>
           artifactStatus: status.artifacts,
         },
         phases: [
-          { name: "plugin-lifecycle", status: "complete" },
+          { name: "plugin-lifecycle", status: pluginHealthy ? "complete" : "needs-attention" },
           {
             name: "agents-lifecycle",
             status: status.kind === "up-to-date" ? "complete" : "needs-attention",
@@ -3592,6 +3689,12 @@ export async function runPlatformGenerate(
   const format = resolveOutputFormat(opts.json);
 
   try {
+    if (opts.pluginManifestFormat !== undefined) {
+      parseCodexPluginManifestFormat(opts.pluginManifestFormat);
+      if (target !== "codex" || (opts.bundle !== "codex-plugin" && opts.bundle !== "codex-marketplace")) {
+        throw new Error("--plugin-manifest-format 仅支持 codex 的 codex-plugin/codex-marketplace bundle。");
+      }
+    }
     const outputTarget = await resolveGenerateOutputRoot(target, opts);
     const outputRoot = outputTarget.root;
     const outputMetadata = outputTarget.metadata;
@@ -3631,6 +3734,7 @@ export async function runPlatformGenerate(
           manifestSource: manifest.source,
           pluginVersion: getCliVersion(),
           extensionVersion: getCliVersion(),
+          pluginManifestFormat: opts.pluginManifestFormat,
         }));
       }
 
@@ -3649,10 +3753,15 @@ export async function runPlatformGenerate(
           pluginVersion: getCliVersion(),
           extensionVersion: getCliVersion(),
           scope: outputMetadata.scope === "global" ? "global" : "project",
+          pluginManifestFormat: opts.pluginManifestFormat,
         }));
       }
     }
 
+    const resolvedArtifacts = plan.artifacts.map((artifact) => resolveGenerateArtifact(outputRoot, artifact));
+    if (bundleType === "codex-plugin" || bundleType === "codex-marketplace") {
+      await assertNoStalePortableManifest(resolvedArtifacts);
+    }
     if (opts.plan) {
       const outputPlan = {
         ...plan,
@@ -3674,7 +3783,6 @@ export async function runPlatformGenerate(
       return;
     }
 
-    const resolvedArtifacts = plan.artifacts.map((artifact) => resolveGenerateArtifact(outputRoot, artifact));
     await cleanupCodexPluginContentForForce(bundleType, resolvedArtifacts, opts.force);
 
     const result = await writePlatformArtifacts(
@@ -5163,6 +5271,11 @@ function parsePlatformName(value: string): PlatformName {
   throw new InvalidArgumentError(`不支持的平台：${value}。可选值：${platformNames.join(" | ")}`);
 }
 
+function parseCodexPluginManifestFormat(value: string): CodexPluginManifestFormat {
+  if (value === "compatibility" || value === "portable") return value;
+  throw new InvalidArgumentError("plugin manifest 格式必须为 compatibility 或 portable。");
+}
+
 export function registerPlatformCommand(program: Command): void {
   const platform = program.command("platform").description("查看、安装、更新和诊断平台内容");
 
@@ -5175,6 +5288,7 @@ export function registerPlatformCommand(program: Command): void {
     .option("-p, --project", "输出到当前目录向上解析出的最近项目根（当前仅 codex marketplace）")
     .option("-g, --global", "输出到用户级默认位置（当前仅 codex marketplace）")
     .option("-b, --bundle <type>", "导出指定 bundle 布局（qwen: release-bundle；codex: codex-plugin/codex-marketplace）", parseGenerateBundleType)
+    .option("--plugin-manifest-format <format>", "Codex 插件清单：compatibility（默认）或 portable（同时生成兼容清单）", parseCodexPluginManifestFormat)
     .option("--plan", "只查看生成计划，不写文件")
     .option("-j, --json", "输出 JSON")
     .option("-f, --force", "覆盖目标目录中已有但内容不同的产物")
@@ -5192,7 +5306,7 @@ export function registerPlatformCommand(program: Command): void {
     .option("--ref <ref>", "Git marketplace ref（仅注册/安装）")
     .option("--register", "直接调用 codex plugin marketplace add 注册 Git marketplace")
     .option("--install", "注册 marketplace 并调用 codex plugin add 安装 zc-toolkit")
-    .option("--upgrade", "调用 codex plugin marketplace upgrade 刷新目录并检查插件状态")
+    .option("--upgrade", "刷新 Codex marketplace 并调用 plugin add 安装当前快照；禁用状态停止")
     .option("--status", "调用 codex plugin list --available 检查插件状态")
     .option("--uninstall", "与 --git 合用时调用 codex plugin remove；否则卸载本地 marketplace bundle")
     .option("--with-agents", "组合管理官方插件与承载显式运行时配置的全局 companion custom agents")

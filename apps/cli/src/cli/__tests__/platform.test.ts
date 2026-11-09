@@ -317,7 +317,11 @@ function mockCodexSpawnResults(results: Array<{
 }>, onSpawn?: (args: string[]) => void): void {
   platformMocks.spawn.mockImplementation((_command: string, args: string[]) => {
     onSpawn?.(args);
-    const result = results.shift();
+    const legacyUpgradeFixture = args[0] === "plugin" && args[1] === "list"
+      && results[0]?.stdout?.includes('"marketplaces"');
+    const result = legacyUpgradeFixture
+      ? { code: 0, stdout: JSON.stringify({ installed: [{ pluginId: "zc-toolkit@zc-toolkit", enabled: true }], available: [] }) }
+      : results.shift();
     if (!result) {
       throw new Error("unexpected codex spawn");
     }
@@ -863,6 +867,40 @@ describe("platform CLI", () => {
     );
   });
 
+  it("forwards the opt-in portable manifest format to Codex marketplace generation", async () => {
+    platformMocks.createCodexGenerationPlan.mockReturnValue(createGenerationPlan([]));
+    platformMocks.createCodexMarketplaceGenerationPlan.mockReturnValue(createGenerationPlan([]));
+    const options = { dir: "/tmp/portable", bundle: "codex-marketplace" as const, plan: true, pluginManifestFormat: "portable" as const };
+    await runPlatformGenerate("codex", options);
+    expect(platformMocks.createCodexMarketplaceGenerationPlan).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({ pluginManifestFormat: "portable" }));
+  });
+
+  it("rejects a plugin manifest format for non-plugin generation", async () => {
+    const options = { dir: "/tmp/portable", plan: true, pluginManifestFormat: "portable" as const };
+    await runPlatformGenerate("qwen", options);
+    expect(process.exitCode).toBe(1);
+    expect(platformMocks.loadToolkitManifest).not.toHaveBeenCalled();
+    expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
+  });
+
+  it("refuses to leave a stale portable root when generating compatibility format even with force", async () => {
+    const root = mkdtempSync(join(tmpdir(), "zc-portable-conflict-"));
+    try {
+      writeFileSync(join(root, "plugin.json"), '{"name":"user-owned"}');
+      platformMocks.createCodexGenerationPlan.mockReturnValue(createGenerationPlan([]));
+      platformMocks.createCodexMarketplaceGenerationPlan.mockReturnValue(createGenerationPlan([
+        { path: ".codex-plugin/plugin.json", content: "{}" },
+      ]));
+      await runPlatformGenerate("codex", { dir: root, bundle: "codex-marketplace", force: true });
+      expect(process.exitCode).toBe(1);
+      expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
+      expect(platformMocks.removeManagedPaths).not.toHaveBeenCalled();
+      expect(readFileSync(join(root, "plugin.json"), "utf8")).toContain("user-owned");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("exports codex marketplace to the resolved project root with --project", async () => {
     const projectRoot = join("/repo", "project");
     platformMocks.resolveInstallTarget.mockResolvedValue({
@@ -1152,12 +1190,14 @@ describe("platform CLI", () => {
       mode: "plan",
       operation: "upgrade",
       commands: [
+        "codex plugin list --available --json",
         "codex plugin marketplace list --json",
         "codex plugin marketplace upgrade zc-toolkit --json",
         "codex plugin add zc-toolkit@zc-toolkit --json",
         "codex plugin list --marketplace zc-toolkit --available --json",
       ],
       migrationCommands: [
+        "codex plugin list --available --json",
         "codex plugin marketplace list --json",
         "codex plugin marketplace remove zc-toolkit --json",
         "codex plugin marketplace add zmice/zc-codex-marketplace --json",
@@ -1214,7 +1254,8 @@ describe("platform CLI", () => {
 
     expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
       ["--version"],
-      ["plugin", "add", "--help"],
+      ["plugin", "marketplace", "upgrade", "--help"],
+      ["plugin", "list", "--available", "--json"],
       ["plugin", "marketplace", "list", "--json"],
       ["plugin", "marketplace", "remove", "zc-toolkit", "--json"],
       ["plugin", "marketplace", "add", "zmice/zc-codex-marketplace", "--json"],
@@ -1265,7 +1306,8 @@ describe("platform CLI", () => {
     expect(errorSpy).not.toHaveBeenCalled();
     expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
       ["--version"],
-      ["plugin", "add", "--help"],
+      ["plugin", "marketplace", "upgrade", "--help"],
+      ["plugin", "list", "--available", "--json"],
       ["plugin", "marketplace", "list", "--json"],
       ["plugin", "marketplace", "remove", "zc-toolkit", "--json"],
       ["plugin", "marketplace", "add", "zmice/zc-codex-marketplace", "--json"],
@@ -1306,7 +1348,7 @@ describe("platform CLI", () => {
     expect(logSpy).not.toHaveBeenCalled();
     const payload = JSON.parse(errorSpy.mock.calls[0]?.[0] ?? "{}");
     expect(payload.error).toContain("permission denied");
-    expect(platformMocks.spawn).toHaveBeenCalledTimes(4);
+    expect(platformMocks.spawn).toHaveBeenCalledTimes(5);
 
     errorSpy.mockRestore();
     logSpy.mockRestore();
@@ -1336,7 +1378,8 @@ describe("platform CLI", () => {
 
     expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
       ["--version"],
-      ["plugin", "add", "--help"],
+      ["plugin", "marketplace", "upgrade", "--help"],
+      ["plugin", "list", "--available", "--json"],
       ["plugin", "marketplace", "list", "--json"],
       ["plugin", "marketplace", "add", "zmice/zc-codex-marketplace", "--json"],
       ["plugin", "add", "zc-toolkit@zc-toolkit", "--json"],
@@ -1426,7 +1469,8 @@ describe("platform CLI", () => {
 
     expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
       ["--version"],
-      ["plugin", "add", "--help"],
+      ["plugin", "marketplace", "upgrade", "--help"],
+      ["plugin", "list", "--available", "--json"],
       ["plugin", "marketplace", "list", "--json"],
       ["plugin", "marketplace", "upgrade", "zc-toolkit", "--json"],
       ["plugin", "add", "zc-toolkit@zc-toolkit", "--json"],
@@ -1543,7 +1587,8 @@ describe("platform CLI", () => {
 
     expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
       ["--version"],
-      ["plugin", "add", "--help"],
+      ["plugin", "marketplace", "upgrade", "--help"],
+      ["plugin", "list", "--available", "--json"],
       ["plugin", "marketplace", "list", "--json"],
       ["plugin", "marketplace", "remove", "zc-toolkit", "--json"],
       ["plugin", "marketplace", "add", "zmice/zc-codex-marketplace", "--json"],
@@ -1606,12 +1651,129 @@ describe("platform CLI", () => {
     }));
     expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
       ["--version"],
-      ["plugin", "add", "--help"],
+      ["plugin", "marketplace", "add", "--help"],
       ["marketplace", "add", "--help"],
       ["marketplace", "add", "zmice/zc-codex-marketplace"],
     ]);
 
     logSpy.mockRestore();
+  });
+
+  it.each([
+    ["enabled", { installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.0.0", enabled: true }], available: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.0.0" }] }, true, "up-to-date"],
+    ["disabled", { installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.0.0", enabled: false }], available: [] }, false, "unknown"],
+    ["newer", { installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.0.0", enabled: true }], available: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.1.0" }] }, true, "update-available"],
+    ["absent", { installed: [], available: [] }, false, "not-installed"],
+  ] as const)("normalizes Codex plugin %s status", async (_case, list, enabled, updateStatus) => {
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.167.0\n" },
+      { code: 0, stdout: "Usage: codex plugin list\n" },
+      { code: 0, stdout: `${JSON.stringify(list)}\n` },
+    ]);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    await runPlatformPlugin("codex", { status: true, json: true });
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(payload).toEqual(expect.objectContaining({ enabled, updateStatus }));
+    logSpy.mockRestore();
+  });
+
+  it("rejects malformed Codex plugin list JSON", async () => {
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.167.0\n" },
+      { code: 0, stdout: "Usage: codex plugin list\n" },
+      { code: 0, stdout: "{bad json\n" },
+    ]);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await runPlatformPlugin("codex", { status: true, json: true });
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(errorSpy.mock.calls[0]?.[0]).toContain("Codex plugin list");
+    errorSpy.mockRestore();
+    logSpy.mockRestore();
+  });
+
+  it("stops upgrade before mutation when the installed plugin is disabled", async () => {
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.167.0\n" },
+      { code: 0, stdout: "Usage: codex plugin marketplace upgrade\n" },
+      { code: 0, stdout: JSON.stringify({ installed: [{ pluginId: "zc-toolkit@zc-toolkit", enabled: false }], available: [] }) },
+    ]);
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await runPlatformPlugin("codex", { upgrade: true, json: true });
+    expect(JSON.parse(errorSpy.mock.calls[0]?.[0] ?? "{}").error).toContain("disabled");
+    expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
+      ["--version"],
+      ["plugin", "marketplace", "upgrade", "--help"],
+      ["plugin", "list", "--available", "--json"],
+    ]);
+    errorSpy.mockRestore();
+  });
+
+  it.each([
+    ["other marketplace first", [
+      { pluginId: "zc-toolkit@other", name: "zc-toolkit", enabled: true },
+      { pluginId: "zc-toolkit@zc-toolkit", name: "zc-toolkit", enabled: false },
+    ], "disabled"],
+    ["missing identity", [
+      { name: "zc-toolkit", enabled: true },
+    ], "无法确认"],
+  ] as const)("does not upgrade on ambiguous or disabled target: %s", async (_case, installed, reason) => {
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.167.0\n" },
+      { code: 0, stdout: "Usage: codex plugin marketplace upgrade\n" },
+      { code: 0, stdout: JSON.stringify({ installed, available: [] }) },
+    ]);
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await runPlatformPlugin("codex", { upgrade: true, json: true });
+    expect(JSON.parse(errorSpy.mock.calls[0]?.[0] ?? "{}").error).toContain(reason);
+    expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
+      ["--version"],
+      ["plugin", "marketplace", "upgrade", "--help"],
+      ["plugin", "list", "--available", "--json"],
+    ]);
+    errorSpy.mockRestore();
+  });
+
+  it("reports unknown enabled and update states for unrecognized fields", async () => {
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.167.0\n" },
+      { code: 0, stdout: "Usage: codex plugin list\n" },
+      { code: 0, stdout: JSON.stringify({ installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.0.0", active: true }], available: [] }) },
+    ]);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    await runPlatformPlugin("codex", { status: true, json: true });
+    expect(JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}")).toEqual(expect.objectContaining({
+      installed: true,
+      enabled: "unknown",
+      updateStatus: "unknown",
+      reason: "available-version-unknown",
+    }));
+    logSpy.mockRestore();
+  });
+
+  it("rejects an unsupported Codex plugin list structure", async () => {
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.167.0\n" },
+      { code: 0, stdout: "Usage: codex plugin list\n" },
+      { code: 0, stdout: JSON.stringify({ installed: ["zc-toolkit"], available: [] }) },
+    ]);
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await runPlatformPlugin("codex", { status: true, json: true });
+    expect(JSON.parse(errorSpy.mock.calls[0]?.[0] ?? "{}").error).toContain("不受支持的结构");
+    errorSpy.mockRestore();
+  });
+
+  it("reports missing Codex status command before attempting status", async () => {
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.121.0\n" },
+      { code: 2, stderr: "unrecognized subcommand 'list'\n" },
+      { code: 2, stderr: "unrecognized subcommand 'marketplace'\n" },
+    ]);
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await runPlatformPlugin("codex", { status: true, json: true });
+    expect(JSON.parse(errorSpy.mock.calls[0]?.[0] ?? "{}").error).toContain("codex plugin list --help");
+    expect(platformMocks.spawn).toHaveBeenCalledTimes(3);
+    errorSpy.mockRestore();
   });
 
   it("executes register and install through a current Codex plugin CLI", async () => {
@@ -1904,7 +2066,7 @@ describe("platform CLI", () => {
       },
       {
         code: 0,
-        stdout: "{\"installed\":[{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.6.0\"}],\"available\":[{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.6.0\"}]}\n",
+        stdout: "{\"installed\":[{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.6.0\",\"enabled\":true}],\"available\":[{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.6.0\"}]}\n",
       },
     ]);
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
@@ -1958,7 +2120,7 @@ describe("platform CLI", () => {
       { code: 0, stdout: "Usage: codex plugin add\n" },
       {
         code: 0,
-        stdout: "{\"installed\":[{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.6.0\"}],\"available\":[{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.6.0\"}]}\n",
+        stdout: "{\"installed\":[{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.6.0\",\"enabled\":true}],\"available\":[{\"pluginId\":\"zc-toolkit@zc-toolkit\",\"version\":\"0.6.0\"}]}\n",
       },
     ]);
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
@@ -1985,6 +2147,24 @@ describe("platform CLI", () => {
         receiptInstalled: true,
       }),
     }));
+
+    for (const enabled of [false, null]) {
+      logSpy.mockClear();
+      mockCodexSpawnResults([
+        { code: 0, stdout: "codex-cli 0.167.0\n" },
+        { code: 0, stdout: "Usage: codex plugin list\n" },
+        { code: 0, stdout: JSON.stringify({
+          installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "0.6.0", ...(enabled === null ? {} : { enabled }) }],
+          available: [],
+        }) },
+      ]);
+      await runPlatformPlugin("codex", { status: true, withAgents: true, json: true });
+      expect(JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}")).toEqual(expect.objectContaining({
+        overallStatus: "partial",
+        plugin: expect.objectContaining({ status: "needs-attention" }),
+        agents: expect.objectContaining({ status: "up-to-date" }),
+      }));
+    }
 
     logSpy.mockRestore();
   });

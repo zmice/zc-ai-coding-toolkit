@@ -223,7 +223,7 @@ Stage 1 的命令面应保持与当前仓库级 upstream 治理入口一致，�
 
 - `pnpm upstream -- diff <id> [--against <baseline>] [--format text|json] [--with-remote]`
 - `pnpm upstream -- snapshot <id> [--label <label>] [--format text|json|md] [--with-remote]`
-- `pnpm upstream -- report <id|all> [--format text|json|md] [--output <path>] [--with-remote]`
+- `pnpm upstream -- report <id|all> [--format text|json|md] [--output <path>] [--with-remote] [--strict]`
 - `pnpm upstream -- import <id> --dry-run [--format text|json] [--output <path>]`
 
 `--with-remote` 不能只通过 `git ls-remote <source_url> HEAD` 采集远端 HEAD 证据。HEAD 只能证明远端 commit 是否变化，不能证明登记的 `source_paths` 是否覆盖了真实内容变化。
@@ -240,6 +240,8 @@ Stage 1 的命令面应保持与当前仓库级 upstream 治理入口一致，�
 `report all --with-remote` 最多并发采集 4 个上游，并对只需要 tree / diff 元数据的 fetch 使用 `--filter=blob:none --no-tags`；路径 diff 使用 `--no-renames`，避免 rename detection 从 promisor remote 懒加载 blob。这样不会让 13 个仓库同时下载无用内容、放大超时和 Windows 子进程残留风险。重命名在治理报告中表现为删除加新增，结果仍按 registry 登记顺序输出，进度按实际完成顺序写入 stderr。
 
 `report --with-remote` 默认应至少展示 `remote-head`，并在远端 HEAD 与 baseline 不同时提示是否已完成 `remote-content`。任何声称“上游无内容变化”的结论都必须基于 `remote-content`，不能只基于 `remote-head`。
+
+`report --strict` 只可与 `--with-remote` 一起使用。报告的 text、JSON、Markdown 输出共用远端采集汇总和退出策略：先完整输出，再在远端 HEAD 或必要内容 diff 未完成时返回非零。默认模式仍为 best-effort。JSON 顶层保留 `results`、`review_status` 并增加 `collection_summary`：`requested/succeeded/failed` 为计数，`status` 取 `complete/partial/failed/not-requested`，`source_paths_gaps` 单独计数。有效证据表明无变化时算采集成功；`source_paths_gap` 需要审阅但不算采集失败。`--output` 写入失败仍返回非零。
 
 如果某个 upstream 的登记路径没有覆盖实际有价值的上游变更，报告必须把它列为 `source_paths_gap`，而不是输出“无更新”。
 

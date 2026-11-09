@@ -1,7 +1,18 @@
-import { describe, it, expect } from "vitest";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, describe, it, expect } from "vitest";
 import { Orchestrator } from "../orchestrator.js";
 import { SessionManager } from "../../runtime/session-manager.js";
 import { WorktreeManager } from "../../runtime/worktree-manager.js";
+
+const ownedStateDirectories = new Set<string>();
+afterEach(async () => {
+  for (const directory of ownedStateDirectories) {
+    await rm(directory, { recursive: true, force: true });
+  }
+  ownedStateDirectories.clear();
+});
 
 class FakeSessionManager extends SessionManager {
   sent: string[] = [];
@@ -39,7 +50,8 @@ describe("Orchestrator", () => {
 
   it("injects explicit task skills into dispatched worker prompts", async () => {
     const session = new FakeSessionManager();
-    const stateDir = `/tmp/zc-orchestrator-${Date.now()}`;
+    const stateDir = await mkdtemp(join(tmpdir(), "zc-orchestrator-"));
+    ownedStateDirectories.add(stateDir);
     const orch = new Orchestrator(stateDir, session, new FakeWorktreeManager());
 
     await orch.startTeam({

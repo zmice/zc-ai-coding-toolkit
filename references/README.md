@@ -37,12 +37,15 @@ pnpm upstream -- import agent-skills --dry-run
 
 ```bash
 pnpm upstream -- report all --format md --with-remote
+pnpm upstream -- report all --format json --with-remote --strict
 pnpm upstream -- snapshot agent-skills --label remote-review --with-remote
 ```
 
 默认不访问网络，以保证本地审阅、CI 和快照生成可重复。
 
 `--with-remote` 会先读取远端 HEAD；当远端 HEAD 与基线不一致时，会拉取远端对象并对 `source_paths` 执行真实 diff。如果远端有变化但登记路径没有命中，报告会标记 `source_paths_gap`，提醒先修正 upstream 登记范围。
+
+`report --with-remote --strict` 适合需要根据远端采集结果设置命令退出码的自动化流程。报告会先完整输出或写入 `--output`，再在 HEAD 或必要内容 diff 采集失败时返回非零；默认 `report --with-remote` 仍为 best-effort。单独使用 `--strict` 会报参数错误，不会隐式访问网络。JSON 顶层的 `collection_summary` 包含 `requested`、`succeeded`、`failed`、`status`（`complete` / `partial` / `failed` / `not-requested`）和单独的 `source_paths_gaps` 计数。范围缺口需人工复核，但不计作采集失败；采集成功也不代表人工审阅通过。
 
 `snapshot --with-remote` 还会把登记路径的 Git tree manifest 内联到 snapshot JSON，记录每个文件的 mode、object hash、路径、条目数和 manifest SHA-256。后续读取 baseline 时会校验 HEAD、scope、条目数和摘要；它用于冻结文件身份，不等于归档上游原始字节。
 

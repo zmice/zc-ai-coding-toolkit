@@ -33,6 +33,7 @@ Codex 界面任务可以直接使用：
 
 - `$zc-toolkit:ui`：构建、修复或重构生产级界面
 - `$zc-toolkit:ui-ux-review`：基于设计契约、运行路径和渲染证据执行只读审查
+- `$zc-toolkit:visual-refinement`：实验性视觉重塑流程，吸收 Unslop 的方向构建、九轮改造、素材方法与可选 snapshot/story 工具（源码新增，需使用包含该资产的构建）
 - `frontend-specialist`：随插件安装的原生 agent，负责在实现、审查和浏览器验证之间分流
 
 如果已经安装 `@zmice/zc`，也可以让 CLI 输出或执行同一条官方注册命令：
@@ -290,6 +291,11 @@ CLI 和安装语义还参考：
 - toolkit 内容改动：`zc toolkit lint --json` + 对应测试
 - CLI 或平台逻辑改动：对应包测试 + `pnpm verify`
 - 生成内容体量审计：`pnpm audit:context`
+- 模拟插件技能发现目录预算：`node scripts/content-budget-audit.mjs --codex-plugin --description-chars 24 --catalog-budget-chars 8000 --json`
+- 校验技能评测 fixtures：`pnpm eval:skills validate`；评测事件和结果约定见 [tests/skill-evals](tests/skill-evals/README.md)
+- 核对源码预期、分发清单和宿主实际发现：`pnpm audit:distribution <evidence.json>`；采集契约见 [tests/skill-distribution](tests/skill-distribution/README.md)
+
+技能评测支持 baseline/candidate 及可选 no-skill 对照。`controlledSkills` 可限定被测技能，保留三组一致的宿主背景技能；默认入口只导入和判定事件。另提供显式启用的 Windows `pnpm eval:review` 真实 Codex 对照配方，使用隔离 home 和测试仓库；范围、登录副本处理与结果边界见 [评测说明](tests/skill-evals/README.md)。分发审计只证明身份集合一致，不能代替模型加载或行为验收。
 
 验证门禁分层：
 

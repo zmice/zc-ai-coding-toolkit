@@ -37,7 +37,7 @@ zc platform plugin codex --status
 zc platform plugin codex --upgrade
 ```
 
-`--upgrade` 会先识别已配置 marketplace：Git 来源会刷新后重新安装当前快照，缺失来源会自动注册；旧版 Desktop / 本地来源会事务式迁移到 Git marketplace，迁移失败时恢复原来源和旧插件。随后立即列出 installed/available 状态。`zc` 会先探测当前 Codex CLI：新版使用稳定的 `codex plugin ...` 命令，旧版注册时兼容 `codex marketplace add`，但安装、状态和卸载会要求先升级 Codex。
+`--upgrade` 会先用 `codex plugin list --available --json` 检查启用状态：已安装插件为 disabled 或启用状态未知时停止，避免重新安装时意外启用。随后识别已配置 marketplace：Git 来源先执行 `codex plugin marketplace upgrade`，再执行 `codex plugin add` 安装当前快照；缺失来源先注册再安装；旧版 Desktop / 本地来源会事务式迁移到 Git marketplace，迁移失败时恢复原来源和旧插件。最后重新读取 installed/available 状态。`--status --json` 的 `installed`、`enabled` 可为 true、false 或 `unknown`；`updateStatus` 为 `up-to-date`、`update-available`、`unknown`、`not-installed`，`reason` 给出机器可读原因。`available: []` 只表示没有可比较的版本，不能证明已是最新。`zc` 按操作探测当前 Codex CLI 命令：旧版注册时兼容 `codex marketplace add`，缺失其他命令时会报错。
 
 Windows 上通过 npm 安装的 `codex.cmd` / `qwen.cmd` 会由跨平台启动器直接解析，不需要把用户输入拼进 `cmd.exe`。Codex 全局直装回执写到 `%USERPROFILE%\.codex\platform-state\`，并兼容识别旧版本误写的 `%USERPROFILE%\.codex\.codex\platform-state\`。如果 Codex 返回了残留的本地 marketplace 记录，但删除时确认该记录已经不存在，`--upgrade` 会继续注册 Git marketplace 并完成自愈；其他删除错误仍会中断迁移。如果刷新 Git marketplace 后，已安装插件仍指向旧直装目录 `%USERPROFILE%\.codex\plugins\zc-toolkit`，`--upgrade` 会先把旧目录和 `%USERPROFILE%\.agents\plugins\marketplace.json` 中受管的旧 source 条目复制到 `%USERPROFILE%\.codex\platform-state\legacy-plugin-backups\`，保持旧 source 可读并完成官方 `plugin remove`，再精确移除残留目录与旧条目，通过官方 `plugin add` 从 Git marketplace 重新安装和同步 companion agents；替换安装失败时会恢复原目录和 marketplace，不直接删除用户资产。companion 完整性校验会把 Windows Git checkout 的 CRLF 文本归一化为 LF，发布 bundle 也通过 `.gitattributes` 固定这些文件为 LF。
 
@@ -374,7 +374,7 @@ zc context init --dir /path/to/project --write
 - `plugin codex --git` 不写本地文件，只输出 `codex plugin marketplace add` 命令
 - `plugin codex --register` 注册默认 Git marketplace；旧 CLI 自动兼容顶层 `codex marketplace add`
 - `plugin codex --install` 注册 marketplace 后安装 `zc-toolkit`
-- `plugin codex --upgrade` 刷新 marketplace，并列出 installed/available 状态
+- `plugin codex --upgrade` 预检启用状态，刷新 marketplace，再调用 `plugin add` 安装当前快照并列出 installed/available 状态
 - `plugin codex --status` 只读检查插件状态
 - `plugin codex --git --uninstall` 通过官方 CLI 卸载插件 bundle，不自动断开 connector 授权
 

@@ -81,6 +81,7 @@ describe("zc command surface", () => {
       "-p, --project",
       "-g, --global",
       "-b, --bundle <type>",
+      "--plugin-manifest-format <format>",
       "--plan",
       "-j, --json",
       "-f, --force",

@@ -3,7 +3,7 @@ import { access, mkdir, mkdtemp, readFile, realpath, rm, symlink, unlink, writeF
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { promisify } from "node:util";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi, type TestContext } from "vitest";
 import { CodexAgentWorktreeManager } from "../codex-worktree-manager.js";
 
 const execFileAsync = promisify(execFile);
@@ -23,8 +23,18 @@ vi.mock("node:fs/promises", async (importOriginal) => {
   };
 });
 
-async function createDirectoryLink(target: string, path: string): Promise<void> {
-  await symlink(target, path, process.platform === "win32" ? "junction" : "dir");
+async function createDirectoryLink(target: string, path: string, context: TestContext): Promise<void> {
+  try {
+    await symlink(target, path, process.platform === "win32" ? "junction" : "dir");
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    // Local restricted filesystems may not permit the fixture. CI must still
+    // execute these security assertions, so capability loss remains a failure there.
+    if (!process.env.CI && ["EPERM", "EACCES", "ENOTSUP"].includes(code ?? "")) {
+      context.skip(`Cannot create directory-link fixture in this environment: ${code}`);
+    }
+    throw error;
+  }
 }
 
 async function git(cwd: string, ...args: string[]): Promise<string> {
@@ -214,7 +224,7 @@ describe("CodexAgentWorktreeManager", () => {
     );
   });
 
-  it("rejects the Codex Desktop worktree namespace through a CODEX_HOME symlink", async () => {
+  it("rejects the Codex Desktop worktree namespace through a CODEX_HOME symlink", async (context) => {
     const repoRoot = await createRepository();
     const actualCodexHome = await mkdtemp(join(tmpdir(), "zc-codex-home-"));
     const linkParent = await mkdtemp(join(tmpdir(), "zc-codex-home-link-"));
@@ -223,7 +233,7 @@ describe("CodexAgentWorktreeManager", () => {
     cleanupPaths.add(actualCodexHome);
     cleanupPaths.add(linkParent);
     await mkdir(nativeWorktreeRoot, { recursive: true });
-    await createDirectoryLink(actualCodexHome, codexHomeLink);
+    await createDirectoryLink(actualCodexHome, codexHomeLink, context);
     const manager = new CodexAgentWorktreeManager({
       repoRoot,
       tempRoot: nativeWorktreeRoot,
@@ -235,13 +245,13 @@ describe("CodexAgentWorktreeManager", () => {
     );
   });
 
-  it("rejects a symlinked ancestor that redirects a managed worktree outside the temp root", async () => {
+  it("rejects a symlinked ancestor that redirects a managed worktree outside the temp root", async (context) => {
     const { manager, tempRoot } = await createManager();
     const outsideRoot = await mkdtemp(join(tmpdir(), "zc-codex-worktree-outside-"));
     cleanupPaths.add(outsideRoot);
     const plan = await manager.planPrepare({ runId: "run-link", taskId: "task-link" });
     await mkdir(dirname(dirname(plan.path)), { recursive: true });
-    await createDirectoryLink(outsideRoot, dirname(plan.path));
+    await createDirectoryLink(outsideRoot, dirname(plan.path), context);
 
     await expect(
       manager.prepare({ runId: plan.runId, taskId: plan.taskId }),
@@ -252,13 +262,13 @@ describe("CodexAgentWorktreeManager", () => {
     expect(relative(await realpath(tempRoot), plan.path)).not.toMatch(/^\.\./u);
   });
 
-  it("rejects a symlinked receipt ancestor that redirects controller metadata outside the repository", async () => {
+  it("rejects a symlinked receipt ancestor that redirects controller metadata outside the repository", async (context) => {
     const repoRoot = await createRepository();
     const tempRoot = await mkdtemp(join(tmpdir(), "zc-codex-worktree-temp-"));
     const outsideRoot = await mkdtemp(join(tmpdir(), "zc-codex-receipt-outside-"));
     cleanupPaths.add(tempRoot);
     cleanupPaths.add(outsideRoot);
-    await createDirectoryLink(outsideRoot, join(repoRoot, ".codex"));
+    await createDirectoryLink(outsideRoot, join(repoRoot, ".codex"), context);
     const manager = new CodexAgentWorktreeManager({ repoRoot, tempRoot });
 
     await expect(
@@ -290,7 +300,11 @@ describe("CodexAgentWorktreeManager", () => {
     await expect(access(lockPath)).rejects.toThrow();
   });
 
-  it("recovers stale malformed lease locks", async () => {
+  it.each([
+    ["empty", ""],
+    ["truncated", "{\"schemaVersion\":1"],
+    ["invalid-metadata", "{}\n"],
+  ])("recovers stale malformed lease locks: %s", async (suffix, contents) => {
     const { repoRoot, tempRoot } = await createManager();
     const manager = new CodexAgentWorktreeManager({
       repoRoot,
@@ -298,24 +312,18 @@ describe("CodexAgentWorktreeManager", () => {
       lockStaleAfterMs: 0,
     });
 
-    for (const [suffix, contents] of [
-      ["empty", ""],
-      ["truncated", "{\"schemaVersion\":1"],
-      ["invalid-metadata", "{}\n"],
-    ]) {
-      const plan = await manager.planPrepare({
-        runId: `run-malformed-${suffix}`,
-        taskId: `task-malformed-${suffix}`,
-      });
-      const lockPath = `${plan.receiptPath}.lock`;
-      await mkdir(dirname(lockPath), { recursive: true });
-      await writeFile(lockPath, contents, "utf8");
+    const plan = await manager.planPrepare({
+      runId: `run-malformed-${suffix}`,
+      taskId: `task-malformed-${suffix}`,
+    });
+    const lockPath = `${plan.receiptPath}.lock`;
+    await mkdir(dirname(lockPath), { recursive: true });
+    await writeFile(lockPath, contents, "utf8");
 
-      const lease = await manager.prepare({ runId: plan.runId, taskId: plan.taskId });
+    const lease = await manager.prepare({ runId: plan.runId, taskId: plan.taskId });
 
-      await access(lease.path);
-      await expect(access(lockPath)).rejects.toThrow();
-    }
+    await access(lease.path);
+    await expect(access(lockPath)).rejects.toThrow();
   });
 
   it("tolerates a released lock disappearing during path canonicalization", async () => {

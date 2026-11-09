@@ -31,3 +31,9 @@ function run(command, args, label) {
 for (const pkg of workspacePackages) {
   run("pnpm", ["--dir", pkg, task], `${pkg}#${task}`);
 }
+
+if (task === "test" || task === "verify") {
+  run(process.execPath, ["scripts/skill-evals.mjs", "validate"], "skill-evals#validate");
+  run(process.execPath, ["--test", "tests/skill-evals/runner.test.mjs", "tests/skill-evals/codex-capture.test.mjs", "tests/skill-evals/review-coverage-cases.test.mjs", "scripts/content-budget-audit.test.mjs", "tests/skill-distribution/audit.test.mjs"], "evaluation-catalog-and-distribution#test");
+  run(process.execPath, ["--test", "tests/visual-refinement/*.test.mjs"], "visual-refinement#test");
+}
