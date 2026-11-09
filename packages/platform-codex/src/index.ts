@@ -37,6 +37,7 @@ export interface GenerationOptions {
   readonly pluginVersion?: string;
   readonly marketplaceName?: string;
   readonly marketplaceDisplayName?: string;
+  readonly pluginManifestFormat?: "compatibility" | "portable";
 }
 
 export type InstallScope = "project" | "global" | "dir";
@@ -434,9 +435,9 @@ ${compatibilityExamples}
 function renderPluginManifest(options: {
   readonly name: string;
   readonly version: string;
+  readonly portable?: boolean;
 }): string {
-  return `${JSON.stringify(
-    {
+  const metadata = {
       name: options.name,
       version: options.version,
       description: "Codex 工程工作流：规划、实现、审查、验证、多代理协作与 UI/UX。",
@@ -471,10 +472,16 @@ function renderPluginManifest(options: {
           "仅在任务可独立拆分时使用 team-orchestration 组织多代理协作。",
         ],
       },
-    },
-    null,
-    2,
-  )}\n`;
+    };
+  if (options.portable) {
+    const { skills: _skills, interface: presentation, ...identity } = metadata;
+    return `${JSON.stringify({
+      $schema: "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+      ...identity,
+      extensions: { "com.openai": { interface: presentation } },
+    }, null, 2)}\n`;
+  }
+  return `${JSON.stringify(metadata, null, 2)}\n`;
 }
 
 function renderMarketplaceManifest(options: {
@@ -805,6 +812,10 @@ export function createCodexPluginGenerationPlan(
           version: pluginVersion,
         }),
       },
+      ...(options.pluginManifestFormat === "portable" ? [{
+        path: "plugin.json",
+        content: renderPluginManifest({ name: pluginName, version: pluginVersion, portable: true }),
+      }] : []),
       ...renderCodexCommandAliasArtifacts(commandAssets, layout, pluginSkillNaming),
       ...renderCodexSkillArtifacts(skillAssets, layout, pluginSkillNaming),
       ...renderCodexPluginAgentArtifacts(agentAssets),

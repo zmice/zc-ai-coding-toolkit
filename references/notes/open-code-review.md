@@ -2,6 +2,10 @@
 
 日期：2026-09-26（Asia/Shanghai）。状态：`evaluating`，未安装、未接入运行时、未调用其模型端点。
 
+2026-11-09 续审：上游 delegation skill 在 `plugins/open-code-review/skills/open-code-review-delegate/` 提供可独立分发的镜像，登记范围补入此精确路径，同时保留 canonical 路径。原始补丁采集与同路径变更身份的本地候选见 [Review/UI 候选](content-adoption-candidates-2026-11-09.md)；现已通过独立合成 Git fixture 的窄范围真实 Codex 对照并吸纳到本地技能，结果及版本限制见 [行为验收](review-behavior-validation-2026-11-09.md)。未调用 OCR CLI、模型端点或其脚本。下面的发布版研究和历史 PR 实验仍保持原日期与未执行状态，不由本次小样本替代。
+
+08:33 UTC 追加范围快照时远端已前进至 `34517e30100214a335a654e0ae5834da9fd5f9b1`，比早间 `0d403392073b` 多 3 个提交、12 个变化文件。GitHub compare 确认本次采用参考的 delegation skill 未变化；新变化涉及 README、agent/scan trace parent、telemetry shutdown 及 OpenCode 测试，未作为本次技能改进一并采用。新快照记录 172 个 tree entries，仍为观察状态，不能视为整个新 HEAD 已批准。
+
 ## 版本与证据边界
 
 - 项目：[alibaba/open-code-review](https://github.com/alibaba/open-code-review)。

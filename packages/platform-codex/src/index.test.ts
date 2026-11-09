@@ -534,6 +534,25 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.ok(!entry.includes("### 上下文、发布和治理入口"));
   });
 
+  it("optionally emits portable identity with an equivalent compatibility overlay", () => {
+    const options = { pluginVersion: "0.2.5", pluginManifestFormat: "portable" as const };
+    const plan = createCodexPluginGenerationPlan(manifest, options);
+    const portable = plan.artifacts.find((artifact) => artifact.path === "plugin.json");
+    assert.ok(portable, "portable root manifest is emitted only when requested");
+    const root = JSON.parse(portable.content);
+    const overlay = JSON.parse(plan.artifacts.find((artifact) => artifact.path === templateFiles.pluginManifest)!.content);
+    assert.equal(root.$schema, "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
+    for (const key of ["name", "version", "description", "author", "homepage", "repository", "license", "keywords"]) {
+      assert.deepEqual(root[key], overlay[key]);
+    }
+    assert.deepEqual(root.extensions["com.openai"], { interface: overlay.interface });
+    assert.equal(root.skills, undefined);
+    const original = createCodexPluginGenerationPlan(manifest, { pluginVersion: "0.2.5" });
+    assert.deepEqual(plan.artifacts.filter((artifact) => artifact.path !== "plugin.json"), original.artifacts);
+    const marketplace = createCodexMarketplaceGenerationPlan(manifest, options);
+    assert.ok(marketplace.artifacts.some((artifact) => artifact.path === "plugins/zc-toolkit/plugin.json"));
+  });
+
   it("creates a Codex plugin generation plan with manifest and bundled skills", () => {
     const plan = createCodexPluginGenerationPlan(manifest, {
       pluginVersion: "0.2.5",

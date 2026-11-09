@@ -8,6 +8,7 @@ stability: stable
 requires:
   - skill:frontend-ui-engineering
 suggests:
+  - skill:visual-refinement
   - skill:ui-ux-review
   - command:qa
   - skill:browser-qa-testing

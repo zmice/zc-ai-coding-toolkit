@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -20,7 +20,7 @@ const cleanupPaths = new Set<string>();
 const workspaceRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const execFileMock = vi.mocked(execFile);
 
-function mockGitExecFile(handler: (args: string[]) => string): void {
+function mockGitExecFile(handler: (args: string[]) => string | Error): void {
   execFileMock.mockImplementation(((file, args, optionsOrCallback, maybeCallback) => {
     const callback = (typeof optionsOrCallback === "function" ? optionsOrCallback : maybeCallback) as
       | ((error: Error | null, stdout: string, stderr: string) => void)
@@ -31,7 +31,8 @@ function mockGitExecFile(handler: (args: string[]) => string): void {
     }
 
     queueMicrotask(() => {
-      callback(null, handler(Array.isArray(args) ? args.map(String) : []), "");
+      const result = handler(Array.isArray(args) ? args.map(String) : []);
+      callback(result instanceof Error ? result : null, result instanceof Error ? "" : result, "");
     });
 
     return {} as ReturnType<typeof execFile>;
@@ -373,7 +374,7 @@ describe("upstream governance commands", () => {
     };
 
     expect(payload.mode).toBe("report");
-    expect(payload.results).toHaveLength(15);
+    expect(payload.results).toHaveLength(16);
     expect(payload.results.map((entry) => entry.upstream)).toEqual([
       "agent-skills",
       "superpowers",
@@ -389,10 +390,113 @@ describe("upstream governance commands", () => {
       "ui-skills",
       "awesome-design-md",
       "open-code-review",
+      "unslop",
       "ponytail",
     ]);
-    expect(result.stderr).toContain("正在采集远端证据：0/15");
-    expect(result.stderr).toContain("远端证据采集完成：15/15");
+    expect(result.stderr).toContain("正在采集远端证据：0/16");
+    expect(result.stderr).toContain("远端证据采集完成：16/16");
+  });
+
+  it("report 未请求远端时保留原输出并标记未采集", async () => {
+    const result = await runCli(["report", "agent-skills", "--format", "json"]);
+    const payload = JSON.parse(result.stdout) as { collection_summary: { requested: number; succeeded: number; failed: number; status: string } };
+    expect(payload.collection_summary).toEqual({ requested: 0, succeeded: 0, failed: 0, status: "not-requested", source_paths_gaps: 0 });
+    expect(result.stderr).toBe("");
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it("远端 HEAD 与基线相同且证据有效时 strict 成功", async () => {
+    const snapshotsRoot = join(workspaceRoot, "references/snapshots/agent-skills");
+    const latestSnapshot = readdirSync(snapshotsRoot).filter((name) => name.endsWith(".json")).sort().at(-1);
+    expect(latestSnapshot).toBeDefined();
+    const baseline = JSON.parse(readFileSync(join(snapshotsRoot, latestSnapshot!), "utf8")) as { remote: { head_sha: string } };
+    mockGitExecFile((args) => args[0] === "ls-remote" ? `${baseline.remote.head_sha}\tHEAD\n` : "");
+    const result = await runCli(["report", "agent-skills", "--with-remote", "--strict", "--format", "json"]);
+    const payload = JSON.parse(result.stdout) as { collection_summary: { status: string; succeeded: number }; results: Array<{ evidence: { remote_content: { status: string } } }> };
+    expect(payload.collection_summary).toMatchObject({ status: "complete", succeeded: 1 });
+    expect(payload.results[0].evidence.remote_content.status).toBe("unchanged-same-head");
+    expect(process.exitCode).toBeUndefined();
+    expect(execFileMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("report all 远端采集全部成功时 strict 返回完整汇总", async () => {
+    mockGitExecFile((args) => args[0] === "ls-remote"
+      ? "3333333333333333333333333333333333333333\tHEAD\n" : "");
+    const result = await runCli(["report", "all", "--with-remote", "--strict", "--format", "json"]);
+    const payload = JSON.parse(result.stdout) as { collection_summary: { requested: number; succeeded: number; failed: number; status: string }; results: unknown[] };
+    expect(payload.results).toHaveLength(16);
+    expect(payload.collection_summary).toMatchObject({ requested: 16, succeeded: 16, failed: 0, status: "complete" });
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it("report --strict 必须显式请求远端", async () => {
+    const result = await runCli(["report", "agent-skills", "--strict", "--format", "json"]);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("--strict 需要同时指定 --with-remote");
+    expect(process.exitCode).toBe(1);
+    expect(execFileMock).not.toHaveBeenCalled();
+  });
+
+  it.each(["json", "text", "md"])("report --strict 全失败仍完整输出 %s，随后设置失败状态", async (format) => {
+    mockGitExecFile((args) => args[0] === "ls-remote" ? new Error("network unavailable") : "");
+    const result = await runCli(["report", "agent-skills", "--with-remote", "--strict", "--format", format]);
+    expect(result.stdout).toContain(format === "json" ? '"results"' : "agent-skills");
+    expect(result.stdout).toContain(format === "json" ? '"status": "failed"' : "failed");
+    expect(process.exitCode).toBe(1);
+  });
+
+  it("report 默认远端失败仍成功退出，strict 部分失败计数准确", async () => {
+    mockGitExecFile((args) => args[0] === "ls-remote" && args[1].includes("agent-skills")
+      ? new Error("network unavailable")
+      : "3333333333333333333333333333333333333333\tHEAD\n");
+    const bestEffort = await runCli(["report", "all", "--with-remote", "--format", "json"]);
+    expect(JSON.parse(bestEffort.stdout).collection_summary.status).toBe("partial");
+    expect(process.exitCode).toBeUndefined();
+    const strict = await runCli(["report", "all", "--with-remote", "--strict", "--format", "json"]);
+    const payload = JSON.parse(strict.stdout) as { results: unknown[]; collection_summary: { requested: number; failed: number; status: string } };
+    expect(payload.results).toHaveLength(16);
+    expect(payload.collection_summary.requested).toBe(16);
+    expect(payload.collection_summary.failed).toBeGreaterThan(0);
+    expect(payload.collection_summary.status).toBe("partial");
+    expect(process.exitCode).toBe(1);
+  });
+
+  it("远端 HEAD 成功但必要 diff 失败时 strict 非零", async () => {
+    mockGitExecFile((args) => args[0] === "ls-remote"
+      ? "1111111111111111111111111111111111111111\tHEAD\n"
+      : args.includes("--name-status") ? new Error("diff unavailable") : "");
+    const result = await runCli(["report", "agent-skills", "--with-remote", "--strict", "--format", "json"]);
+    const payload = JSON.parse(result.stdout) as { results: Array<{ evidence: { remote: { head_sha: string }; remote_content: { status: string } } }>; collection_summary: { failed: number } };
+    expect(payload.results[0].evidence.remote.head_sha).toBe("1111111111111111111111111111111111111111");
+    expect(payload.results[0].evidence.remote_content.status).toBe("unknown");
+    expect(payload.collection_summary.failed).toBe(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it("登记范围缺口单列告警且不算采集失败", async () => {
+    mockGitExecFile((args) => args[0] === "ls-remote"
+      ? "2222222222222222222222222222222222222222\tHEAD\n"
+      : args.includes("--name-only") ? "agents/reviewer.md\n" : "");
+    const result = await runCli(["report", "agent-skills", "--with-remote", "--strict", "--format", "json"]);
+    const payload = JSON.parse(result.stdout) as { collection_summary: { succeeded: number; failed: number; source_paths_gaps: number; status: string } };
+    expect(payload.collection_summary).toMatchObject({ succeeded: 1, failed: 0, source_paths_gaps: 1, status: "complete" });
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it("strict 写入输出文件后才设置失败状态，写入失败本身也非零", async () => {
+    mockGitExecFile((args) => args[0] === "ls-remote" ? new Error("network unavailable") : "");
+    const outputDir = join(tmpdir(), `ai-coding-strict-report-${Date.now()}`);
+    const outputPath = join(outputDir, "report.json");
+    cleanupPaths.add(outputDir);
+    const written = await runCli(["report", "agent-skills", "--with-remote", "--strict", "--format", "json", "--output", outputPath]);
+    expect(written.stdout).toContain("已写入输出");
+    expect(JSON.parse(readFileSync(outputPath, "utf8")).collection_summary.status).toBe("failed");
+    expect(process.exitCode).toBe(1);
+
+    process.exitCode = undefined;
+    const failedWrite = await runCli(["report", "agent-skills", "--with-remote", "--strict", "--format", "json", "--output", outputDir]);
+    expect(failedWrite.stderr).toContain("[upstream governance] 错误");
+    expect(process.exitCode).toBe(1);
   });
 
   it("snapshot 会追加不可变快照，并输出生成路径", async () => {

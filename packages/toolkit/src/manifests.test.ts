@@ -129,6 +129,7 @@ describe("createToolkitManifest", () => {
       "skill:verification-before-completion"
     ]);
     assert.deepEqual(manifest.byRelationship.suggests["command:ui"], [
+      "skill:visual-refinement",
       "skill:ui-ux-review",
       "command:qa",
       "skill:browser-qa-testing"

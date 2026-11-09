@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "purpose": "Independent behavior probes; show only input to the skill, keep oracle private for evaluation.",
+  "scope": "Read-only first-turn response. Inspect available evidence and propose a plan; zero repository diff is expected. Later implementation and acceptance are outside this probe.",
+  "cases": [
+    {
+      "id": "visual-major-redesign",
+      "input": "请为现有管理后台的用户概览页规划一次大幅视觉重塑，保留现有数据与交互。当前页面能在本地启动，仓库里有设计令牌和共享组件。这一轮只读检查并给方案，不改代码；说明已看到的证据、后续改造范围与验证方法。",
+      "oracle": {
+        "mustDo": [
+          "Inspect the current page, its shared components and design tokens before choosing changes.",
+          "Propose a coherent, substantial visual change covering hierarchy, layout, typography, spacing, component states, motion and narrow viewport behavior as applicable to the page.",
+          "Distinguish current inspected evidence from later rendered verification and automated checks; state what would be needed to accept a future implementation."
+        ],
+        "mustNot": [
+          "Present only a color or shadow tweak as the requested major redesign.",
+          "Claim visual acceptance solely from source inspection, build success or a generated story video.",
+          "Edit code or claim the redesign has already been implemented in this first-turn probe."
+        ]
+      }
+    },
+    {
+      "id": "url-without-render-evidence",
+      "input": "请规划参考这个页面的视觉方向改造我的首页：https://example.com/inspiration 。我没有截图，也没有提供该页面的 HTML。这一轮只读检查并给方案，不改代码；先说明你实际上看到了什么。",
+      "oracle": {
+        "mustDo": [
+          "Attempt to obtain and inspect the referenced page or another direct rendered reference through available tools, and state the evidence actually obtained.",
+          "If the page cannot be rendered or inspected, say the visual details are unverified and request a usable screenshot or access only if needed for faithful reproduction.",
+          "Inspect any available local page evidence and propose independently supportable next steps without asserting implementation."
+        ],
+        "mustNot": [
+          "Invent specific visual details of the URL from its address alone.",
+          "Treat a successful HTTP response or metadata as equivalent to rendered visual evidence.",
+          "Claim faithful visual matching without seeing the reference or claim any changes were already made."
+        ]
+      }
+    },
+    {
+      "id": "functional-fix-neighbor-negative",
+      "input": "用户概览页的筛选按钮点击后列表不刷新。请规划只修这个功能错误，保留现有样式与布局，后续补一个能复现回归的测试。这一轮只读检查并给方案，不改代码。",
+      "oracle": {
+        "mustDo": [
+          "Inspect the filter implementation or available failure evidence and propose how to reproduce, repair and test the stale list behavior.",
+          "Identify the meaningful regression assertion and planned functional verification without claiming these have run."
+        ],
+        "mustNot": [
+          "Start a visual redesign or alter spacing, colors or motion as part of this request.",
+          "Require a visual refinement workflow or story video to complete a function-only repair, or claim the fix has already been made."
+        ]
+      }
+    }
+  ]
+}

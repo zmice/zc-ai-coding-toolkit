@@ -251,6 +251,34 @@ type DiffFormat = "text" | "json";
 type ReportFormat = "text" | "json" | "md";
 type ImportFormat = "text" | "json";
 
+interface CollectionSummary {
+  requested: number;
+  succeeded: number;
+  failed: number;
+  source_paths_gaps: number;
+  status: "complete" | "partial" | "failed" | "not-requested";
+}
+
+function summarizeCollection(results: readonly UpstreamDiffResult[], withRemote: boolean): CollectionSummary {
+  if (!withRemote) {
+    return { requested: 0, succeeded: 0, failed: 0, source_paths_gaps: 0, status: "not-requested" };
+  }
+
+  const succeeded = results.filter(({ evidence }) =>
+    Boolean(evidence.remote?.head_sha) && !evidence.remote?.error &&
+    evidence.remote_content !== undefined && evidence.remote_content.status !== "unknown" &&
+    !evidence.remote_content.error,
+  ).length;
+  const failed = results.length - succeeded;
+  return {
+    requested: results.length,
+    succeeded,
+    failed,
+    source_paths_gaps: results.filter(({ evidence }) => evidence.remote_content?.source_paths_gap === true).length,
+    status: failed === 0 ? "complete" : succeeded === 0 ? "failed" : "partial",
+  };
+}
+
 function getUpstreamsFile(): string {
   return resolveWorkspacePath("references/upstreams.yaml");
 }
@@ -1077,8 +1105,12 @@ function formatDiffText(result: UpstreamDiffResult): string {
   ].join("\n");
 }
 
-function formatReportText(results: readonly UpstreamDiffResult[]): string {
-  return results
+function formatReportText(results: readonly UpstreamDiffResult[], summary: CollectionSummary): string {
+  return [
+    `远端采集：${summary.status}（requested=${summary.requested}, succeeded=${summary.succeeded}, failed=${summary.failed}）`,
+    `登记范围缺口：${summary.source_paths_gaps}`,
+    "",
+    results
     .map((result) =>
       [
         `上游：${result.upstream}`,
@@ -1100,10 +1132,11 @@ function formatReportText(results: readonly UpstreamDiffResult[]): string {
         "- 人工审阅仍是最终决策入口。",
       ].join("\n"),
     )
-    .join("\n\n---\n\n");
+    .join("\n\n---\n\n"),
+  ].join("\n");
 }
 
-function formatReportMarkdown(results: readonly UpstreamDiffResult[]): string {
+function formatReportMarkdown(results: readonly UpstreamDiffResult[], summary: CollectionSummary): string {
   const sections = results.map((result) =>
     [
       "# Upstream Report",
@@ -1134,7 +1167,17 @@ function formatReportMarkdown(results: readonly UpstreamDiffResult[]): string {
     ].join("\n"),
   );
 
-  return sections.join("\n\n---\n\n");
+  return [
+    "# Collection Summary",
+    "",
+    `- status: \`${summary.status}\``,
+    `- requested: ${summary.requested}`,
+    `- succeeded: ${summary.succeeded}`,
+    `- failed: ${summary.failed}`,
+    `- source_paths_gaps: ${summary.source_paths_gaps}`,
+    "",
+    sections.join("\n\n---\n\n"),
+  ].join("\n");
 }
 
 function createImportDryRunResult(diff: UpstreamDiffResult): ImportDryRunResult {
@@ -1490,8 +1533,12 @@ function buildUpstreamCommand(): CommanderCommand {
     .option("--format <format>", "输出格式：text | json | md", "text")
     .option("--output <path>", "把输出写入文件，而不是打印到终端")
     .option("--with-remote", "采集远端 HEAD，并在 HEAD 变化时对 source_paths 执行真实内容 diff")
-    .action(async (target: string, options: { format?: ReportFormat; output?: string; withRemote?: boolean }) => {
+    .option("--strict", "远端采集失败时保留完整报告并返回非零状态；需要 --with-remote")
+    .action(async (target: string, options: { format?: ReportFormat; output?: string; withRemote?: boolean; strict?: boolean }) => {
       try {
+        if (options.strict && !options.withRemote) {
+          throw new Error("--strict 需要同时指定 --with-remote。");
+        }
         const upstreams = await loadUpstreams();
         const items =
           target === "all"
@@ -1528,18 +1575,22 @@ function buildUpstreamCommand(): CommanderCommand {
           },
         );
         const format = options.format ?? "text";
+        const collectionSummary = summarizeCollection(results, options.withRemote === true);
 
         if (format === "md") {
-          await emitOutput(`${formatReportMarkdown(results)}\n`, options.output);
-          return;
+          await emitOutput(`${formatReportMarkdown(results, collectionSummary)}\n`, options.output);
+        } else {
+          await emitPayload(
+            format,
+            { mode: "report", review_status: "pending-manual-review", results, collection_summary: collectionSummary },
+            formatReportText(results, collectionSummary),
+            options.output,
+          );
         }
 
-        await emitPayload(
-          format,
-          { mode: "report", review_status: "pending-manual-review", results },
-          formatReportText(results),
-          options.output,
-        );
+        if (options.strict && collectionSummary.failed > 0) {
+          process.exitCode = 1;
+        }
       } catch (error) {
         printCommandError(error);
       }

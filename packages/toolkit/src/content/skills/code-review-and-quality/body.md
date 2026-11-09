@@ -15,6 +15,14 @@
 
 ## 执行步骤
 
+首次采集补丁前就关闭 Git 外部 diff 与 textconv，避免执行仓库配置的转换程序或把转换结果当作原始变更。所有用于审查或哈希的 `diff` / `show` 补丁命令都带 `--no-ext-diff --no-textconv`；不要先运行普通 diff 试探再补安全版本。工作树示例：
+
+```sh
+git --no-pager diff --no-ext-diff --no-textconv --no-color HEAD -- <path>
+```
+
+提交或范围审查替换为对应 refs；untracked 文件直接读取。完整身份、截断和回执要求见 `references/review-coverage-contract.md`。
+
 1. 固定本轮 diff identity，枚举完整 changed-file manifest；逐文件留下 `reviewed`、`skipped(reason)` 或 `failed` 回执。未知或未审范围阻断 Approve。
 2. 先理解变更意图，再看测试和验证证据
 3. 按五个维度审查：

@@ -50,6 +50,7 @@ zc platform plugin codex
 zc platform plugin codex --global
 zc platform p codex
 zc platform generate codex --bundle codex-plugin --dir /tmp/zc-codex-plugin
+zc platform generate codex --bundle codex-plugin --plugin-manifest-format portable --dir /tmp/zc-codex-portable
 zc platform generate codex --bundle codex-marketplace --project
 zc platform generate codex --bundle codex-marketplace --dir /tmp/zc-codex-marketplace
 zc platform generate codex --bundle codex-marketplace --global
@@ -58,6 +59,10 @@ zc platform install codex --plan --json
 ```
 
 `--global` 默认会安装到 `~/.codex/AGENTS.md`。
+
+`generate --plugin-manifest-format portable` 仅适用于 `codex-plugin` / `codex-marketplace`，在插件根增加标准 `plugin.json`（schema 1.0.0），并继续生成 `.codex-plugin/plugin.json` 兼容清单。两份清单来自同一 metadata；Codex 专属界面字段放在 `extensions["com.openai"]`，技能使用标准 `skills/` 发现路径。默认 `compatibility` 保持旧布局。portable 输出已在 CLI 0.167.0 的隔离 home 中验证安装及 `skills/list` 发现；桌面和旧 CLI 加载尚未验证，因此暂不切换默认发布格式。
+
+若目录已有根 `plugin.json`，以 compatibility 模式重新生成会在写入前停止（包括 `--force`），避免留下优先级更高的旧清单。可继续使用 portable 模式，或选择空目录；工具不会自动删除用户根清单。此参数不用于 `plugin codex` 安装别名。
 
 当前安装模型：
 
@@ -90,8 +95,8 @@ zc platform install codex --plan --json
   - `plugin codex --git` 默认输出 `codex plugin marketplace add zmice/zc-codex-marketplace`
   - `plugin codex --register` 直接调用 Codex CLI 注册默认 Git marketplace；旧 CLI 自动兼容 `codex marketplace add`
   - `plugin codex --install` 注册 marketplace 后安装 `zc-toolkit`
-  - `plugin codex --status` 使用 `codex plugin list --available --json` 检查 installed/available/version/enabled
-  - `plugin codex --upgrade` 刷新 Git marketplace 后检查插件状态，不擅自重装或覆盖用户启用状态
+  - `plugin codex --status` 使用 `codex plugin list --available --json` 检查 installed/available/version/enabled；`available: []` 时更新状态为 unknown，不代表最新
+  - `plugin codex --upgrade` 先检查插件启用状态，已安装且 disabled 或状态未知时停止；随后执行 marketplace upgrade + plugin add 安装当前快照，再检查状态
   - `plugin codex --git --uninstall` 使用 `codex plugin remove` 移除官方安装的 bundle；connector 授权仍需在 ChatGPT Plugins/Apps 中单独处理
   - 插件 Markdown agents 随官方 lifecycle 安装，但不承载 `model`、`model_reasoning_effort` 或 `sandbox_mode`；`--with-agents` 编排官方 standalone TOML 配置面
   - 组合安装只从官方 CLI 返回的 `installedPath` 或 `source.path` 精确定位本地插件根并读取 companion；status 可用既有回执续接，升级待应用时 agents 保持不变
@@ -172,7 +177,7 @@ Codex UI/UX 入口：
 1. 发布态同步：`scripts/export-codex-marketplace-bundle.mjs` 导出 marketplace 仓库根。
 2. Git 仓库分发：`.github/workflows/publish-codex-marketplace-repo.yml` 同步到 `zmice/zc-codex-marketplace`。
 3. 用户安装：只需要 skills / 插件角色说明时运行 `zc platform plugin codex --install`；需要逐角色显式档位时运行 `zc platform plugin codex --install --with-agents`。
-4. 状态检查：`zc platform plugin codex --status` 只证明插件 installed / enabled / version；逐角色档位必须用 `zc platform plugin codex --status --with-agents --json` 检查 companion 回执和 artifacts。
+4. 状态检查：`zc platform plugin codex --status --json` 输出 `installed`、`enabled`、`updateStatus` 和 `reason`，缺少可用版本时更新状态为 unknown；逐角色档位必须用 `zc platform plugin codex --status --with-agents --json` 检查 companion 回执和 artifacts。
 5. 插件升级：`zc platform plugin codex --upgrade`；Git 来源会刷新并重新安装当前快照，旧版非 Git 来源会在可回滚保护下迁移到 Git marketplace。
 
 官方能力依据：
@@ -189,7 +194,7 @@ Codex UI/UX 入口：
 2. 个人级验证：`platform plugin codex --global` 生成 personal marketplace 和 `~/.codex/AGENTS.md` 薄入口。
 3. 仓库内验证：`--bundle codex-marketplace --dir <repo>` 生成 repo-local marketplace 和仓库根 `AGENTS.md` 薄入口。
 
-注意：已归档的官方 `openai/plugins` 仓库给出过 plugin-level `commands/`、`agents/` 和 `hooks.json` 实例；当前官方 Subagents 文档只承诺 standalone TOML 可以覆盖 session settings。插件 Markdown agent 与 TOML companion 使用同一份角色正文，但只有后者携带显式模型、推理和 sandbox 配置。
+注意：官方 `openai/plugins` 仓库的历史示例包含 plugin-level `commands/`、`agents/` 和 `hooks.json`；当前官方 Subagents 文档以 standalone TOML 作为显式 session settings 配置面。插件 Markdown agent 与 TOML companion 使用同一份角色正文，但只有后者携带显式模型、推理和 sandbox 配置。仓库当前未归档（2026-11-09 核对 GitHub 元数据），历史目录示例不能代替当前宿主契约。
 
 ## 验证
 

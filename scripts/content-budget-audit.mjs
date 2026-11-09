@@ -1,13 +1,25 @@
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { auditSkillCatalog } from "./lib/skill-catalog-audit.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const platformNames = ["codex", "qwen", "claude", "opencode", "qoder-cn"];
 
 function parseArgs(argv) {
-  return {
-    json: argv.includes("--json"),
-  };
+  const result = { json: false, omitDescriptions: false };
+  const valued = { "--catalog-budget-chars": "budgetChars", "--description-chars": "descriptionChars", "--catalog-path-prefix": "pathPrefix" };
+  for (let index = 0; index < argv.length; index++) {
+    const flag = argv[index];
+    if (flag === "--json") result.json = true;
+    else if (flag === "--codex-plugin") result.codexPlugin = true;
+    else if (flag === "--omit-descriptions") result.omitDescriptions = true;
+    else if (valued[flag]) {
+      const value = argv[++index];
+      if (value === undefined || value.startsWith("--")) throw new Error(`Missing value for ${flag}`);
+      result[valued[flag]] = flag === "--catalog-path-prefix" ? value : Number(value);
+    } else throw new Error(`Unknown option: ${flag}`);
+  }
+  return result;
 }
 
 async function importWorkspaceModule(relativePath) {
@@ -84,7 +96,7 @@ function summarizeArtifacts(artifacts) {
   return buckets;
 }
 
-function summarizePlan(platform, plan) {
+function summarizePlan(platform, plan, options) {
   const artifacts = plan.artifacts.map((artifact) => {
     const size = measure(artifact.content);
     return {
@@ -103,6 +115,7 @@ function summarizePlan(platform, plan) {
     totalBytes,
     totalLines,
     byCategory: summarizeArtifacts(plan.artifacts),
+    initialCatalog: auditSkillCatalog(plan.artifacts, options),
     largestArtifacts: [...artifacts]
       .sort((left, right) => right.bytes - left.bytes)
       .slice(0, 10),
@@ -138,7 +151,16 @@ function renderMarkdown(result) {
     );
   }
 
-  lines.push("", "## Largest Artifacts", "");
+  lines.push("", "## Initial Skill Catalog Simulation", "",
+    "Characters are Unicode code points, not tokens. Sorted generated paths simulate one possible catalog; actual host loading and other installed plugins are not measured.", "",
+    "| Platform | Skills | Characters | UTF-8 bytes | Truncated descriptions | Prefix collisions | Over budget |",
+    "| --- | ---: | ---: | ---: | ---: | ---: | --- |",
+  );
+  for (const platform of result.platforms) {
+    const catalog = platform.initialCatalog;
+    lines.push(`| ${platform.platform} | ${catalog.entries.length} | ${catalog.chars} | ${catalog.bytes} | ${catalog.truncatedDescriptions} | ${catalog.prefixCollisions.length} | ${catalog.budgetChars === null ? "not configured" : catalog.exceedsBudget} |`);
+  }
+  lines.push("", "Each catalog entry in JSON includes selected-body bytes separately. Supporting files are excluded from the initial catalog.", "", "## Largest Artifacts", "");
 
   for (const platform of result.platforms) {
     lines.push(`### ${platform.platform}`, "");
@@ -161,11 +183,11 @@ function renderMarkdown(result) {
   return `${lines.join("\n")}\n`;
 }
 
-async function createPlan(platform, manifest) {
+async function createPlan(platform, manifest, options) {
   const moduleMap = {
     codex: {
       path: "packages/platform-codex/dist/index.js",
-      create: "createCodexGenerationPlan",
+      create: options.codexPlugin ? "createCodexPluginGenerationPlan" : "createCodexGenerationPlan",
     },
     qwen: {
       path: "packages/platform-qwen/dist/index.js",
@@ -216,11 +238,15 @@ async function main() {
   const platforms = [];
 
   for (const platform of platformNames) {
-    platforms.push(summarizePlan(platform, await createPlan(platform, manifest)));
+    platforms.push(summarizePlan(platform, await createPlan(platform, manifest, options), {
+      ...options,
+      namespace: platform === "codex" && options.codexPlugin ? "zc-toolkit" : "",
+    }));
   }
 
   const result = {
     contentRoot: loadedManifest.contentRoot,
+    codexLayout: options.codexPlugin ? "plugin" : "standalone",
     platforms,
   };
 

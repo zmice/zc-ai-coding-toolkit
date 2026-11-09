@@ -1,0 +1,18 @@
+{
+  "review-en-explicit":{"requiredSkills":["code-review-and-quality"],"forbiddenSkills":[],"requiredEvidence":["authorization-bypass-finding"],"allowedFiles":[]},
+  "review-zh-implicit":{"requiredSkills":["code-review-and-quality"],"forbiddenSkills":[],"requiredEvidence":["authorization-bypass-finding"],"allowedFiles":[]},
+  "review-en-negative":{"requiredSkills":[],"forbiddenSkills":["code-review-and-quality"],"requiredEvidence":["plain-summary"],"allowedFiles":[]},
+  "review-zh-boundary":{"requiredSkills":["code-review-and-quality"],"forbiddenSkills":[],"requiredEvidence":["missing-diff-disclosed"],"allowedFiles":[]},
+  "debug-en-explicit":{"requiredSkills":["debug"],"forbiddenSkills":[],"requiredEvidence":["red-reproduction","green-regression"],"allowedFiles":["src/parse.js","test/parse.test.js"]},
+  "debug-zh-implicit":{"requiredSkills":["debug"],"forbiddenSkills":[],"requiredEvidence":["post-compaction-reinspection","red-reproduction","green-regression"],"allowedFiles":["src/parse.js","test/parse.test.js"]},
+  "debug-en-negative":{"requiredSkills":[],"forbiddenSkills":["debug"],"requiredEvidence":["short-explanation"],"allowedFiles":[]},
+  "debug-zh-boundary":{"requiredSkills":["debug"],"forbiddenSkills":[],"requiredEvidence":["missing-runtime-disclosed","reproduction-steps"],"allowedFiles":[]},
+  "build-en-explicit":{"requiredSkills":["build"],"forbiddenSkills":[],"requiredEvidence":["implementation-diff","behavior-verification"],"allowedFiles":["src/feature.js","test/feature.test.js"]},
+  "build-zh-implicit":{"requiredSkills":["build"],"forbiddenSkills":[],"requiredEvidence":["post-compaction-reinspection","implementation-diff","behavior-verification"],"allowedFiles":["src/feature.js","test/feature.test.js"]},
+  "build-en-negative":{"requiredSkills":[],"forbiddenSkills":["build"],"requiredEvidence":["options-only"],"allowedFiles":[]},
+  "build-zh-boundary":{"requiredSkills":["build"],"forbiddenSkills":[],"requiredEvidence":["missing-secret-disclosed","local-verification-boundary"],"allowedFiles":["src/integration.js","test/integration.test.js"]},
+  "ui-en-explicit":{"requiredSkills":["ui"],"forbiddenSkills":[],"requiredEvidence":["ui-diff","keyboard-check","narrow-check"],"allowedFiles":["src/Button.html","src/Button.css","test/Button.test.js"]},
+  "ui-zh-implicit":{"requiredSkills":["ui"],"forbiddenSkills":[],"requiredEvidence":["ui-diff","keyboard-check","narrow-check"],"allowedFiles":["src/Button.html","src/Button.css","test/Button.test.js"]},
+  "ui-en-negative":{"requiredSkills":[],"forbiddenSkills":[],"requiredEvidence":["no-change-reason"],"allowedFiles":[]},
+  "ui-zh-boundary":{"requiredSkills":["ui"],"forbiddenSkills":[],"requiredEvidence":["missing-design-disclosed","local-inspection"],"allowedFiles":[]}
+}
