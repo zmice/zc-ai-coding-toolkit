@@ -1,7 +1,7 @@
 kind: skill
 name: visual-refinement
 title: 视觉重塑
-description: 对现有界面做专项视觉重塑或去模板化改造时使用；适用于排版、层级、色彩、文案与素材等多层问题需要统一方向和分轮落实的任务。
+description: 新页面需要确定结构与视觉方向，或现有页面需要整屏重塑、去模板化时使用；适用于缺少可执行设计蓝图或多层视觉问题需要统一规划的任务，无需用户点名 Unslop。
 tier: optional
 audience: advanced
 stability: experimental
@@ -12,6 +12,7 @@ tags:
   - 视觉重塑
   - 去模板化
   - 界面精修
+  - 页面设计
 suggests:
   - skill:ui-ux-review
   - skill:frontend-ui-engineering
@@ -33,4 +34,4 @@ source:
   origin_name: unslop
   origin_path: skills/unslop/SKILL.md
   origin_id: skill:unslop
-  notes: 基于 Damir Sokolovsky 的 unslop 固定提交 97daa3eb365670ea3f87ed85356cbfcee18105a5 改写为按需视觉重塑工作流；保留 CC BY 4.0 来源与许可。
+  notes: 基于 Damir Sokolovsky 的 unslop 固定提交 97daa3eb365670ea3f87ed85356cbfcee18105a5 改写；本仓库扩展新页蓝图、计划追踪与验收映射，保留 CC BY 4.0 来源与许可。

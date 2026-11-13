@@ -39,5 +39,6 @@
 ## 与其他技能的衔接
 
 - 接在 `planning-and-task-breakdown` 之后
+- 页面切片由 `skill:frontend-ui-engineering` 沿已有 owner/计划 ID 实现，回填状态、真实证据和偏差。直接进入且新页设计/整屏重塑缺蓝图时，按 `skill:visual-refinement` 设计计划附件中的共享契约在原计划补齐；已有设计复用，其他任务不扩展设计范围。
 - 与 `test-driven-development` 配合执行红绿重构
 - 每个切片结束后由 `verification-before-completion` 兜底验证

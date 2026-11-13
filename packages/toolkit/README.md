@@ -114,7 +114,7 @@ Recommendation: <action> because <specific evidence, trade-off, and rejected alt
 - `documentation-and-adrs`：文档与 ADR — 记录关键决策和长期文档，沉淀未来工程师和代理需要的上下文。
 - `engineering-principles`：工程原则 — 在规格、实现、审查和验证前先校准工程行为原则。
 - `frontend-ui-engineering`：前端界面工程 — 构建具备真实产品质感的前端界面、组件和布局。
-- `visual-refinement`：视觉重塑 — 实验性 Unslop 适配，按需执行方向构建、九轮改造与可比验证，附带可选参考截图和展示视频脚本。
+- `visual-refinement`：视觉重塑 — 实验性 Unslop 适配，覆盖新页设计与已有页重塑，按产品方向 → 页面蓝图 → 执行计划 → 实现 → 九轮复核与渲染验收推进，附带可选参考截图和展示视频脚本。
 - `git-workflow-and-versioning`：Git 工作流 — 规范提交、分支、冲突解决和多并行流组织方式。
 - `idea-refine`：想法细化 — 通过结构化发散和收敛过程，在进入规格阶段前先把核心想法打磨清楚。
 - `incremental-implementation`：增量实现 — 以薄切片循环持续交付变更，保持系统始终可运行、可验证。

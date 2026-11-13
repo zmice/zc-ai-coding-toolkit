@@ -22,8 +22,8 @@ const env = { ...process.env, TMP: temp, TEMP: temp, TMPDIR: temp };
 const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40"><rect width="80" height="40" fill="#40b98d"/></svg>';
 const html = `<!doctype html><html><head><meta charset="utf-8"><style>
 body{padding:24px;font:18px system-ui;background:#182027;color:#f0f5f7}.row{display:flex;gap:16px}canvas{background:white}.spacer{height:1400px}
-</style></head><body><h1>Reference capture fixture</h1><div class="row"><picture><source media="(min-width:700px)" srcset="/wide.svg"><img id="responsive" src="/small.svg"></picture><canvas id="drawing" width="80" height="40"></canvas><div id="shadow"></div></div><p><input id="edited" value="initial"></p><button id="handler" onclick="document.body.dataset.clicked='yes'">Local handler</button><img src="/large.svg" width="80" height="40"><div class="spacer"></div><img id="lazy" loading="lazy" src="/lazy.svg"><script>
-document.querySelector('#edited').value='runtime-edited';const c=document.querySelector('#drawing').getContext('2d');c.fillStyle='#ff7043';c.fillRect(0,0,80,40);document.querySelector('#shadow').attachShadow({mode:'open'}).innerHTML='<strong>Shadow content</strong>';
+</style></head><body><h1>Reference capture fixture</h1><div class="row"><picture><source media="(min-width:700px)" srcset="/wide.svg"><img id="responsive" src="/small.svg"></picture><canvas id="drawing" width="80" height="40"></canvas><div id="shadow"></div></div><p><input id="edited" value="initial"><textarea id="notes">initial notes</textarea></p><input id="csrf" type="hidden" value="SYNTHETIC_INITIAL_CSRF"><input id="password" type="password" value="SYNTHETIC_INITIAL_PASSWORD"><input id="upload" type="file" value="SYNTHETIC_FILE_VALUE"><button id="handler" onclick="document.body.dataset.clicked='yes'">Local handler</button><img src="/large.svg" width="80" height="40"><div class="spacer"></div><img id="lazy" loading="lazy" src="/lazy.svg"><script>
+document.querySelector('#edited').value='runtime-edited';document.querySelector('#notes').value='runtime notes';document.querySelector('#csrf').value='SYNTHETIC_RUNTIME_CSRF';document.querySelector('#password').value='SYNTHETIC_RUNTIME_PASSWORD';const c=document.querySelector('#drawing').getContext('2d');c.fillStyle='#ff7043';c.fillRect(0,0,80,40);document.querySelector('#shadow').attachShadow({mode:'open'}).innerHTML='<strong>Shadow content</strong>';
 </script></body></html>`;
 const server = createServer((req, res) => {
   if (req.url === '/page') { res.setHeader('content-type', 'text/html'); res.end(html); }
@@ -57,11 +57,16 @@ try {
   for (const name of ['reference.html', 'source.png', 'report.json']) assert.ok(existsSync(join(snap, name)), name);
   const snapshotReport = JSON.parse(readFileSync(join(snap, 'report.json')));
   assert.ok(Array.isArray(snapshotReport.warnings) && snapshotReport.warnings.length > 0, 'Capture limitations must be reported');
+  const snapshotHtml = readFileSync(join(snap, 'reference.html'), 'utf8');
+  assert.doesNotMatch(snapshotHtml, /SYNTHETIC_(?:INITIAL|RUNTIME)_(?:CSRF|PASSWORD)|SYNTHETIC_FILE_VALUE/, 'Hidden, password and file values must not be exported');
+  assert.equal(snapshotReport.warnings.find(item => item.code === 'redacted')?.count, 3);
   browser = await chromium.launch({ headless: true, ...(env.CHROME_PATH ? { executablePath: env.CHROME_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 800, height: 600 }, colorScheme: 'dark' });
   await page.goto(pathToFileURL(join(snap, 'reference.html')).href);
   const copy = await page.evaluate(() => ({
     input: document.querySelector('#edited').value,
+    notes: document.querySelector('#notes').value,
+    redactedValues: ['csrf', 'password', 'upload'].map(id => document.getElementById(id).value),
     responsiveInlined: document.querySelector('#responsive').currentSrc.startsWith('data:'),
     lazyInlined: document.querySelector('#lazy').src.startsWith('data:'),
     shadow: document.querySelector('#shadow').shadowRoot?.textContent ?? null,
@@ -69,6 +74,9 @@ try {
     activeHandler: document.querySelector('#handler').hasAttribute('onclick')
   }));
   assert.ok(copy.responsiveInlined && copy.lazyInlined, 'Responsive and lazy resources are captured');
+  assert.equal(copy.input, 'runtime-edited', 'Visible input state remains faithful');
+  assert.equal(copy.notes, 'runtime notes', 'Ordinary textarea state remains faithful');
+  assert.deepEqual(copy.redactedValues, ['', '', '']);
   await page.screenshot({ path: join(root, 'reference-render.png') });
   await browser.close(); browser = undefined;
 

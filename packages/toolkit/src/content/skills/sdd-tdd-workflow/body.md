@@ -28,6 +28,7 @@
 |---|---|---|
 | Brainstorm（可选） | `brainstorming-and-design` | 目标、约束、方案方向已收敛 |
 | Specify | `spec-driven-development` | 规格可测试，假设已显式列出 |
+| 页面设计（按需） | `visual-refinement` | 新页结构/视觉或整屏重塑已有方向、宽窄屏蓝图、组件 owner 与可验收实施项；已有设计则复用 |
 | Plan | `planning-and-task-breakdown` | 任务有依赖、文件边界和验证方式 |
 | Plan Review（可选） | `multi-perspective-review` | `GO / REVISE / NO-GO` 结论明确 |
 | Build | `incremental-implementation`，行为变更配合 `test-driven-development` | 切片完成并通过与行为、风险及项目门禁相称的验证；纯文档等非行为切片使用相关 diff、lint 或内容检查 |
@@ -35,6 +36,8 @@
 | Verify | `verification-before-completion` | 新鲜验证命令通过，输出已读 |
 | Commit（可选） | `git-workflow-and-versioning` | 提交在用户授权范围内，内容与消息可审阅 |
 | Retro（可选） | `sprint-retrospective` | 偏差、复盘和行动项已记录 |
+
+页面设计沿用 start 判型；直接进入时仅为新页设计/整屏重塑补缺失蓝图，已有设计复用。共享交接契约见 `skill:visual-refinement` 的设计计划附件。Specify/Plan 共用原规格和计划；Build 沿 owner/ID 实现，Review 核对偏差，Verify 回填真实渲染与交互证据。其他任务不强加设计步骤；只给方案的边界贯穿所有阶段。
 
 ## 构建模式选择
 

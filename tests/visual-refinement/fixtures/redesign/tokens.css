@@ -1,0 +1,5 @@
+:root { --brand: #1c6556; --ink: #172b26; --muted: #52645e; --surface: #fff; --canvas: #f1f4f0; --border: #cbd7d0; --danger: #a62924; --space: 8px; --radius: 8px; }
+body { margin: 24px; color: var(--ink); background: var(--canvas); font: 16px/1.6 system-ui, sans-serif; }
+button,input,select { font: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; }

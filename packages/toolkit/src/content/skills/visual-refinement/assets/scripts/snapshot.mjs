@@ -72,7 +72,7 @@ async function main() {
     const pending = [...document.images].filter((image) => !image.complete);
     await Promise.race([Promise.all(pending.map(loaded)), pause(5000)]);
   });
-  const features = await page.evaluate(() => ({ canvas: document.querySelectorAll("canvas").length, shadowDom: [...document.querySelectorAll("*")].filter(el => el.shadowRoot).length, forms: document.querySelectorAll("input,textarea,select").length, redacted: document.querySelectorAll('input[type="password"],input[type="file"]').length, active: document.querySelectorAll("iframe,object,embed,form,[onclick],[onload]").length }));
+  const features = await page.evaluate(() => ({ canvas: document.querySelectorAll("canvas").length, shadowDom: [...document.querySelectorAll("*")].filter(el => el.shadowRoot).length, forms: document.querySelectorAll("input,textarea,select").length, redacted: document.querySelectorAll('input[type="hidden"],input[type="password"],input[type="file"]').length, active: document.querySelectorAll("iframe,object,embed,form,[onclick],[onload]").length }));
   const html = await page.evaluate(async ([label, scheme]) => {
     const LIMIT = 3_000_000;
     const absolute = (value, base = location.href) => {
@@ -138,7 +138,16 @@ async function main() {
 
     const copy = document.documentElement.cloneNode(true);
     const inputs = [...document.querySelectorAll("input")];
-    copy.querySelectorAll("input").forEach((node,i) => { const source=inputs[i]; if (!source) return; if(source.type==="file" || source.type==="password") node.removeAttribute("value"); else node.setAttribute("value",source.value); if(source.checked) node.setAttribute("checked",""); else node.removeAttribute("checked"); });
+    copy.querySelectorAll("input").forEach((node, i) => {
+      const source = inputs[i];
+      if (!source) return;
+      // Hidden values do not contribute to the picture and may hold session/CSRF tokens.
+      // Remove the original attribute too, not just the live property copied below.
+      if (["hidden", "file", "password"].includes(source.type)) node.removeAttribute("value");
+      else node.setAttribute("value", source.value);
+      if (source.checked) node.setAttribute("checked", "");
+      else node.removeAttribute("checked");
+    });
     const areas=[...document.querySelectorAll("textarea")];
     copy.querySelectorAll("textarea").forEach((node,i) => { if(areas[i]) node.textContent=areas[i].value; });
     // Freeze the browser's selected image before removing responsive markup.
