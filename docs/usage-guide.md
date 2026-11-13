@@ -436,7 +436,8 @@ qodercn plugins uninstall zc-toolkit
   - 插件内 skill 使用无前缀目录和 frontmatter，例如 `skills/start/SKILL.md`、`skills/sdd-tdd-workflow/SKILL.md`
   - 插件生成 `agents/<agent>.md`；command 由同名 `skills/<command>/SKILL.md` 承接，不再生成重复的 `commands/<command>.md`
   - 界面实现使用 `$zc-toolkit:ui`；只读界面审查使用 `$zc-toolkit:ui-ux-review`；`frontend-specialist` 会按任务意图在实现、审查和浏览器验证之间分流
-  - 整体视觉重塑、去模板化或 Unslop 使用实验性 `$zc-toolkit:visual-refinement`；复用前端实现、界面审查和浏览器 QA，普通 UI 修复不强制九轮流程。需使用包含该资产的构建，源码新增不等于已安装插件升级
+  - `$zc-toolkit:start` 会按任务自动衔接页面设计：新页需要结构/视觉方向，或已有页需要整体重塑时，选择实验性 `visual-refinement`，按产品方向、页面蓝图、执行计划、前端实现和真实浏览器验收推进，无需点名 Unslop。已有可执行设计直接复用；局部修复、纯审查和非前端任务走各自路线。新页规划和 start 自动衔接是 0.12.0 之后的源码扩展，需使用包含该变更的构建，源码新增不等于已安装插件升级
+  - 示例：`$zc-toolkit:start 设计并实现仓库异常处理页，让用户快速找到异常并分派责任人，复用现有组件和 token，完成后验证宽窄屏和主要操作`。也可直接使用 `$zc-toolkit:ui` 或 `$zc-toolkit:visual-refinement`。只需要方案时加上“只给方案，不改文件”；需要实现时无需逐轮重复确认。新页不要求旧截图，缺少实际渲染则不能声称视觉验收通过
   - `visual-refinement` 的参考资料和可选 `scripts/snapshot.mjs`、`scripts/story.mjs` 随 Codex、Qwen、OpenCode、Qoder CN 的 skill 分发；当前 Claude 适配器跳过 skills，不能直接调用该资产。脚本先执行 `--check`，按环境准备 Playwright、浏览器及 story 所需 ffmpeg，不会自动安装依赖
   - UI/UX 清单、许可证和设计系统参考随 skill 生成到 `skills/<skill>/references/`，运行时不依赖联网下载
   - 插件路线的 `AGENTS.md` 只保留全局规则、入口映射和文件索引，入口写成 `$zc-toolkit:start` / `$zc-toolkit:sdd-tdd`；传统直装的 `AGENTS.md` 继续写成 `$zc-start` / `$zc-sdd-tdd`

@@ -6,7 +6,10 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const suite = JSON.parse(readFileSync(fileURLToPath(new URL('./review-coverage-cases.json', import.meta.url)), 'utf8'));
-const scratchPrefix = fileURLToPath(new URL('./.review-coverage-', import.meta.url));
+// Keep disposable Git fixtures outside source ACL scans and Windows redirected system temp.
+const scratchRoot = fileURLToPath(new URL('../../.cache/review-coverage/', import.meta.url));
+mkdirSync(scratchRoot, { recursive: true });
+const scratchPrefix = join(scratchRoot, 'run-');
 
 function git(cwd, ...args) {
   const result = spawnSync('git', args, { cwd, encoding: 'utf8' });
@@ -113,7 +116,8 @@ for (const item of suite.cases) {
         assert.doesNotMatch(raw, /EVAL_TEXTCONV_RAN/);
       }
     } finally {
-      rmSync(root, { recursive: true, force: true });
+      // Git helpers can leave short-lived Windows locks; never skip the assertions or cleanup.
+      rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
     }
   });
 }

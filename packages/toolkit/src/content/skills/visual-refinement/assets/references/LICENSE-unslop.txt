@@ -1,7 +1,7 @@
 Upstream attribution: unslop by Damir Sokolovsky (heydamir)
 Source: https://github.com/heydamir/unslop/tree/97daa3eb365670ea3f87ed85356cbfcee18105a5
 License: Creative Commons Attribution 4.0 International (CC BY 4.0)
-Changes: Adapted the upstream visual redesign workflow, visuals/effects methods, and snapshot/story guidance for this toolkit. Added local routing, evidence boundaries, design-system priority, accessibility and tool contracts. No upstream example images are included.
+Changes: Adapted the upstream visual redesign workflow, visuals/effects methods, and snapshot/story guidance for this toolkit. Added local routing, evidence boundaries, design-system priority, accessibility and tool contracts. Extended the workflow with new-page blueprints, implementation tracking and plan-to-render acceptance. Excluded hidden form values from exported HTML. No upstream example images are included.
 
 Attribution 4.0 International
 

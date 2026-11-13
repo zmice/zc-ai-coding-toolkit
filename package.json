@@ -15,6 +15,7 @@
     "test:skill-evals": "node --test tests/skill-evals/runner.test.mjs tests/skill-evals/codex-capture.test.mjs tests/skill-evals/review-coverage-cases.test.mjs",
     "eval:skills": "node scripts/skill-evals.mjs",
     "eval:review": "node scripts/skill-evals-review-study.mjs",
+    "eval:design": "node scripts/skill-evals-design-study.mjs",
     "audit:distribution": "node scripts/skill-distribution-audit.mjs",
     "test:distribution": "node --test tests/skill-distribution/audit.test.mjs",
     "test:visual-refinement": "node --test tests/visual-refinement/*.test.mjs",

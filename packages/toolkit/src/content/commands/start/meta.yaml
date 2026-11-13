@@ -6,6 +6,10 @@ tier: core
 audience: default
 stability: stable
 suggests:
+  - skill:visual-refinement
+  - skill:frontend-ui-engineering
+  - skill:ui-ux-review
+  - skill:browser-qa-testing
   - command:product-analysis
   - agent:product-owner
   - skill:brainstorming-and-design

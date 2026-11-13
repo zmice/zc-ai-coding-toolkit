@@ -40,4 +40,4 @@ story 使用自己编写、可信的独立 HTML。将它与必要素材放入专
 
 `unslop-frame` 是源页面的 `x y width` 裁剪范围；视频默认正方形，`--wide` 为横版。可选标记：相邻块使用同名 `data-gap` 展示间距，`data-radius` 展示圆角，`data-slop` 标注待调整区域；`data-in="2"` / `data-out="2"` 表示第二轮出现／退出。文字更换使用 `.swap[data-at="2"]`，内部 `.from` 和 `.to` 承载前后文字。标记只是演示效果，不是产品缺陷判定。报告中的构图建议属于展示提示，可按页面目的取舍。
 
-snapshot 报告会移除 URL 用户信息、query 和 fragment，但 HTML／图片仍可能含业务内容和主动链接。需要分享时单独检查产物，不将日志脱敏等同于整份快照脱敏。
+snapshot 报告会移除 URL 用户信息、query 和 fragment；导出 HTML 会移除 hidden、password、file 输入的 value，只报告移除数量。普通可见输入与 textarea 的当前值仍用于还原画面；其他属性、文本、HTML／图片可能含业务内容或主动链接。需要分享时单独检查产物，这些有限处理不等同于整份快照脱敏或安全净化。
