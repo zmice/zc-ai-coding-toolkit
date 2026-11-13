@@ -33,8 +33,10 @@ Codex 界面任务可以直接使用：
 
 - `$zc-toolkit:ui`：构建、修复或重构生产级界面
 - `$zc-toolkit:ui-ux-review`：基于设计契约、运行路径和渲染证据执行只读审查
-- `$zc-toolkit:visual-refinement`：实验性视觉重塑流程，吸收 Unslop 的方向构建、九轮改造、素材方法与可选 snapshot/story 工具（源码新增，需使用包含该资产的构建）
+- `$zc-toolkit:visual-refinement`：实验性页面设计与重塑流程，吸收 Unslop 的方向构建、九轮改造、素材方法与可选 snapshot/story 工具；0.13.0 起由 `start` 自动接入规划、实现和浏览器验收，覆盖新页与已有页
 - `frontend-specialist`：随插件安装的原生 agent，负责在实现、审查和浏览器验证之间分流
+
+已有安装请同时升级 CLI 和插件，并在新线程使用新版能力；升级、验证边界与回退步骤见 [0.13.0 发布说明](docs/releases/0.13.0.md)。
 
 如果已经安装 `@zmice/zc`，也可以让 CLI 输出或执行同一条官方注册命令：
 
