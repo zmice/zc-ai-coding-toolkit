@@ -5,8 +5,9 @@ import { basename, dirname, join, resolve } from "node:path";
 type ParentSnapshot = {
   readonly resolved: string;
   readonly anchor: string;
-  readonly dev: number;
-  readonly ino: number;
+  readonly dev: bigint;
+  readonly ino: bigint;
+  readonly birthtimeNs: bigint;
 };
 type Snapshot = { readonly path: string; readonly content: Buffer | null; readonly parent: ParentSnapshot };
 
@@ -84,12 +85,13 @@ async function resolvedParent(path: string): Promise<ParentSnapshot> {
   while (true) {
     try {
       const resolved = await realpath(candidate);
-      const identity = await stat(candidate);
+      const identity = await stat(candidate, { bigint: true });
       return {
         resolved: resolve(resolved, ...missing),
         anchor: candidate,
         dev: identity.dev,
         ino: identity.ino,
+        birthtimeNs: identity.birthtimeNs,
       };
     } catch (error) {
       if (!isMissing(error)) throw error;
@@ -107,11 +109,13 @@ function samePath(a: string, b: string): boolean {
 
 async function restore(saved: Snapshot): Promise<void> {
   const currentParent = await resolvedParent(saved.path);
-  const originalAnchor = await stat(saved.parent.anchor);
+  const originalAnchor = await stat(saved.parent.anchor, { bigint: true });
   if (
     !samePath(saved.parent.resolved, currentParent.resolved)
     || originalAnchor.dev !== saved.parent.dev
     || originalAnchor.ino !== saved.parent.ino
+    // A removed directory's inode may immediately be reused by its replacement.
+    || originalAnchor.birthtimeNs !== saved.parent.birthtimeNs
   ) {
     throw new Error(`Rollback verification failed: ${saved.path} parent was redirected.`);
   }

@@ -1,9 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import * as fsPromises from "node:fs/promises";
 import { mkdtemp, mkdir, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { withCodexAgentConfigReceiptRollback, withCodexTargetLock } from "./codex-agent-config-transaction.js";
 import { mergeOwnedCodexAgentConfigWithDefaults, stripManagedZcAgentSections } from "./codex-config-merge.js";
+
+vi.mock("node:fs/promises", async (importOriginal) => ({
+  ...await importOriginal<typeof import("node:fs/promises")>(),
+}));
 
 const generated = '[agents]\ndefault_subagent_model = "gpt-6-sol"\ndefault_subagent_reasoning_effort = "medium"\n\n[agents.zc_reviewer]\nconfig_file = "agents/zc-reviewer.toml"\n';
 
@@ -285,6 +290,42 @@ describe("Codex agent config and receipt failure recovery", () => {
       })).rejects.toBeInstanceOf(AggregateError);
       expect((await stat(artifact)).isDirectory()).toBe(true);
     } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("preserves a replacement directory even when the filesystem reuses its inode", async () => {
+    const root = await mkdtemp(join(tmpdir(), "zc-agent-inode-reuse-"));
+    const agents = join(root, "agents");
+    const artifact = join(agents, "zc-agent.toml");
+    await mkdir(agents);
+    await writeFile(artifact, "original agent");
+    let replaced = false;
+    const realStat = fsPromises.stat;
+    const mockedStat = vi.spyOn(fsPromises, "stat");
+    mockedStat.mockImplementation((async (...args: Parameters<typeof realStat>) => {
+      const entry = await realStat(...args);
+      if (args[0] !== agents) return entry;
+      // Reproduce inode reuse without depending on the host allocator or clock resolution.
+      return typeof entry.ino === "bigint"
+        ? { ...entry, dev: 1n, ino: 1n, birthtimeNs: replaced ? 200n : 100n }
+        : { ...entry, dev: 1, ino: 1 };
+    }) as typeof realStat);
+    try {
+      await expect(withCodexAgentConfigReceiptRollback([artifact], join(root, "receipt.json"), async () => {
+        await rm(agents, { recursive: true });
+        await mkdir(agents);
+        await writeFile(artifact, "unmanaged replacement");
+        replaced = true;
+        throw new Error("write failed");
+      })).rejects.toMatchObject({
+        errors: expect.arrayContaining([
+          expect.objectContaining({ message: expect.stringContaining("parent was redirected") }),
+        ]),
+      });
+      expect(await readFile(artifact, "utf8")).toBe("unmanaged replacement");
+    } finally {
+      mockedStat.mockRestore();
       await rm(root, { recursive: true, force: true });
     }
   });

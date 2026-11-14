@@ -46,7 +46,7 @@
     "test:built": "vitest run src",
     "lint": "tsc --noEmit",
     "generate": "pnpm build",
-    "verify": "pnpm lint && pnpm build && pnpm run test:built",
+    "verify": "pnpm build && pnpm lint && pnpm run test:built",
     "prepublishOnly": "pnpm verify"
   },
   "dependencies": {
