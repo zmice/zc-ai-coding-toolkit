@@ -185,7 +185,9 @@ test('reports startup failure as inconclusive', async () => {
   assert.equal(receipt.status, 'inconclusive');
   assert.match(receipt.reason, /app-server startup/);
   assert.ok(Date.now() - started < 4_000, 'failed startup must return within bounded cleanup');
-  if (process.platform === 'win32') assert.equal(receipt.cleanupUnconfirmed, true);
+  assert.equal(receipt.cleanupUnconfirmed, true);
+  assert.equal(receipt.cleanupEvidence.reason, 'missing PID');
+  assert.equal(receipt.cleanupBlockPersisted, true);
 });
 
 test('counts stdout without waiting for a newline', async () => {

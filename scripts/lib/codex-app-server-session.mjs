@@ -99,6 +99,12 @@ export function startCodexAppServer({ binary, args = [], cwd, env, timeoutMs, ma
       }
       if (!exited) { child.kill('SIGKILL'); await waitExit(500); }
       child.stdin.end();
+    } else if (!child.pid) {
+      // Failed spawn emits error/close, not exit. Do not wait through signal
+      // escalation for a PID that was never assigned; retain the cleanup block.
+      child.stdin.end();
+      cleanupUnconfirmed = true;
+      cleanupEvidence = { ...cleanupEvidence, reason: 'missing PID' };
     } else {
       child.stdin.end();
       await waitExit(500);
