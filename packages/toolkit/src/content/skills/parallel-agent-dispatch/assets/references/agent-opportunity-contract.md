@@ -38,13 +38,18 @@ agent_opportunity:
 
 ## 容量、所有权与上下文
 
+- 角色定义职责、技能与验收标准，不默认绑定模型或推理强度。派发时默认省略模型覆盖，遵循宿主的配置优先级；仅在用户明确指定或适用指令有依据且宿主支持时覆盖。不要根据角色名自动套用固定模型表，也不要把省略字段误报为已验证的实际模型。
 - 按 host session limit、活跃 child threads 和 ready tasks 计算容量；不写死跨版本 worker 上限，主线程保留 controller / integrator 职责。
+- 先归一化上限口径：若配置的并发上限只统计 child threads，可派余额为该上限减活跃 child threads；若 host 工具容量统计主线程和 child threads，总容量须先减主线程占用，再减活跃 child threads。两种口径同时存在时取较小的非负余额，并以 ready tasks 数截断；不能把同一个数字直接当两种上限。
 - 容量只是上限。只派当前有独立交付物且收益覆盖上下文与协调开销的最小批次；新增 worker 必须说明新增证据或交付物，不能只因有空位就补位。
+- 对相关追问或同一问题的新证据，优先复用仍可用且已有上下文的 agent；先看其已完成调查，再决定是否需要新的独立任务，避免重复调查和重复派发。
 - 容量允许不等于允许同文件并写。写入 worker 必须有互斥文件所有权、验证命令和返回格式。
 - `agent:context-steward` 是 sidecar，不是 mode。它只拥有 `.codex/context/**` 和 `AGENTS.md` managed block；同文件冲突、来源不明或越界时停在 fan-in。
 - 临时独立构建环境使用 `codex-temp-worktree`；tmux / 多 CLI 才使用 `zc-team-worktrees`。
 
 ## Fan-in 与有界循环
+
+- 执行授权与环境复用以 `skill:engineering-principles` 的共享契约为准。主线程是唯一交互负责人；worker 不得各自发起认证、提权或重复环境初始化。预期外确认、取消或环境失败时暂停后续派发，保留不依赖该环境的工作。
 
 - `producer owns fix`，`reviewer owns regression`，`controller owns fan-in`。
 - 只读 consult 默认 1 轮；单 worker 缺失产物最多补交 2 次；同一 finding 最多 2 轮修复与回归。

@@ -15,8 +15,6 @@ tools:
   - Glob
   - Bash
 codex_agent:
-  model: gpt-6-sol
-  model_reasoning_effort: high
   sandbox_mode: read-only
 platforms:
   - qwen

@@ -1,5 +1,5 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 import {
   getCodexAgentsReceiptOwnedPaths,
@@ -9,9 +9,12 @@ import {
   type CodexAgentsReceiptScope,
 } from "../platform-state/codex-agents-receipt.js";
 import {
+  filterOwnedCodexAgentSections,
   isCodexAgentConfigContent,
+  listCodexAgentConfigReferences,
   stripManagedZcAgentSections,
   type ManagedCodexAgentDefault,
+  type ManagedCodexAgentSection,
 } from "./codex-config-merge.js";
 
 export interface ReceiptManagedCodexAgents {
@@ -60,9 +63,11 @@ export async function stripCodexAgentConfigFile(
   dryRun: boolean,
   managedAgentNames?: readonly string[],
   managedDefaults: readonly ManagedCodexAgentDefault[] = [],
+  managedSections: readonly ManagedCodexAgentSection[] = [],
 ): Promise<{
   readonly changed: boolean;
   readonly missing: boolean;
+  readonly nextContent?: string;
 }> {
   let existing: string;
 
@@ -92,7 +97,14 @@ export async function stripCodexAgentConfigFile(
     return {
       changed: false,
       missing: false,
+      nextContent: existing,
     };
+  }
+
+  const ownedNames = filterOwnedCodexAgentSections(existing, managedSections)
+    .filter((name) => managedAgentNames?.includes(name) ?? false);
+  if (ownedNames.length === 0 && managedDefaults.length === 0) {
+    return { changed: false, missing: false, nextContent: existing };
   }
 
   const hasManagedContent =
@@ -105,10 +117,11 @@ export async function stripCodexAgentConfigFile(
     return {
       changed: false,
       missing: false,
+      nextContent: existing,
     };
   }
 
-  const stripped = stripManagedZcAgentSections(existing, managedAgentNames, managedDefaults);
+  const stripped = stripManagedZcAgentSections(existing, ownedNames, managedDefaults);
   const nextContent = stripped.trim().length > 0 ? `${stripped}\n` : "";
   const changed = existing !== nextContent;
 
@@ -119,5 +132,30 @@ export async function stripCodexAgentConfigFile(
   return {
     changed,
     missing: false,
+    nextContent,
   };
+}
+
+/** Preserve an owned role when a registration that will remain still points at it. */
+export async function assertNoDanglingCodexAgentRegistrations(
+  configPath: string,
+  pathsToDelete: readonly string[],
+  managedSections: readonly ManagedCodexAgentSection[] = [],
+): Promise<void> {
+  let existing: string;
+  try { existing = await readFile(configPath, "utf8"); }
+  catch (error) {
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") return;
+    throw error;
+  }
+  const removableNames = new Set(filterOwnedCodexAgentSections(existing, managedSections));
+  const comparable = (path: string) => process.platform === "win32" ? resolve(path).toLowerCase() : resolve(path);
+  const deleting = new Set(pathsToDelete.map(comparable));
+  for (const reference of listCodexAgentConfigReferences(existing)) {
+    if (removableNames.has(reference.name)) continue;
+    const referencedPath = comparable(resolve(dirname(configPath), reference.configFile));
+    if (deleting.has(referencedPath)) {
+      throw new Error(`保留角色注册 ${reference.name}：config_file 仍引用待删除文件 ${referencedPath}；请先人工合并 config.toml，未卸载该角色。`);
+    }
+  }
 }

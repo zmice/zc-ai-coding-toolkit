@@ -119,6 +119,16 @@ const uiManifest: ToolkitManifestLike = {
 };
 
 describe("@zmice/platform-codex scaffold", () => {
+  it("maps canonical skill IDs to each installation's discovery names", () => {
+    const standalone = createCodexGenerationPlan(manifest).artifacts.find((artifact) => artifact.path.endsWith("zc-code-reviewer.toml"))!;
+    assert.match(standalone.content, /skill:<id>[\s\S]*zc-<id>/);
+    const plugin = createCodexPluginGenerationPlan(manifest, { pluginName: "custom-toolkit" });
+    for (const suffix of ["agents/code-reviewer.md", "agents/zc-code-reviewer.toml"]) {
+      const agent = plugin.artifacts.find((artifact) => artifact.path.endsWith(suffix))!;
+      assert.match(agent.content, /skill:<id>[\s\S]*custom-toolkit:<id>/);
+      assert.match(agent.content, /实际发现名/);
+    }
+  });
   it("includes skill supporting files in a Codex marketplace bundle", () => {
     const attachmentManifest: ToolkitManifestLike = {
       source: "toolkit-manifest",
@@ -430,7 +440,7 @@ describe("@zmice/platform-codex scaffold", () => {
     assert.ok(plan.artifacts[0]?.content.includes("不裁剪 Codex 安装资产"));
     assert.ok(plan.artifacts[0]?.content.includes("config.toml"));
     assert.ok(plan.artifacts[1]?.content.includes("[agents.zc_code_reviewer]"));
-    assert.match(plan.artifacts[1]?.content ?? "", /\[agents\]\ndefault_subagent_model = "gpt-6-sol"\ndefault_subagent_reasoning_effort = "medium"/);
+    assert.doesNotMatch(plan.artifacts[1]?.content ?? "", /default_subagent_/);
     assert.ok(plan.artifacts[1]?.content.includes('config_file = "agents/zc-code-reviewer.toml"'));
     assert.ok(plan.artifacts[2]?.content.includes("command-alias skill"));
     assert.ok(plan.artifacts[2]?.content.includes("$zc-start"));
@@ -484,7 +494,22 @@ describe("@zmice/platform-codex scaffold", () => {
       join(destinationRoot, "agents/zc-code-reviewer.toml"),
     ]);
     assert.ok(plan.artifacts[0]?.content.includes("[agents.zc_code_reviewer]"));
+    assert.doesNotMatch(plan.artifacts[0]?.content ?? "", /default_subagent_/);
     assert.ok(plan.artifacts[1]?.content.includes('name = "zc_code_reviewer"'));
+  });
+
+  it("allows an agent to inherit parent model settings while preserving explicit role pins", () => {
+    const inheritedManifest: ToolkitManifestLike = {
+      ...manifest,
+      assets: manifest.assets.map((asset) => asset.kind === "agent"
+        ? { ...asset, codexAgent: undefined }
+        : asset),
+    };
+    const inheritedAgent = createCodexAgentGenerationPlan(inheritedManifest).artifacts.find((artifact) => artifact.path.endsWith("zc-code-reviewer.toml"));
+    const pinnedAgent = createCodexAgentGenerationPlan(manifest).artifacts.find((artifact) => artifact.path.endsWith("zc-code-reviewer.toml"));
+    assert.doesNotMatch(inheritedAgent?.content ?? "", /^model(?:_reasoning_effort)? = /mu);
+    assert.match(pinnedAgent?.content ?? "", /^model = "gpt-5.6-terra"$/mu);
+    assert.match(pinnedAgent?.content ?? "", /^model_reasoning_effort = "high"$/mu);
   });
 
   it("installs project AGENTS.md and project-local .codex skills", () => {
@@ -637,7 +662,7 @@ describe("@zmice/platform-codex scaffold", () => {
     const companionConfig = plan.artifacts.find(
       (artifact) => artifact.path === "assets/zc-agents/config/agents.toml",
     );
-    assert.match(companionConfig?.content ?? "", /\[agents\]\ndefault_subagent_model = "gpt-6-sol"\ndefault_subagent_reasoning_effort = "medium"/);
+    assert.doesNotMatch(companionConfig?.content ?? "", /default_subagent_/);
     assert.match(companionManifest.config.sha256, /^[a-f0-9]{64}$/u);
     assert.deepEqual(companionManifest.agents.map((agent) => ({
       name: agent.name,

@@ -12,8 +12,6 @@ tools:
   - Grep
   - Glob
 codex_agent:
-  model: gpt-6-luna
-  model_reasoning_effort: high
   sandbox_mode: read-only
 platforms:
   - codex

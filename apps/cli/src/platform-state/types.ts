@@ -1,4 +1,5 @@
 import type { OverwriteMode, PlatformArtifact, PlatformName } from "@zmice/platform-core";
+import type { ManagedCodexAgentDefault, ManagedCodexAgentSection } from "../utils/codex-config-merge.js";
 
 export interface PlatformInstallPlanLike {
   readonly platform: PlatformName;
@@ -34,6 +35,8 @@ export interface PlatformInstallReceipt {
   readonly sourceRef?: string;
   readonly bundleType?: "source-bundle" | "release-bundle" | "qoder-cn-plugin";
   readonly bundlePath?: string;
+  readonly managedCodexAgentSections?: readonly ManagedCodexAgentSection[];
+  readonly managedCodexAgentDefaults?: readonly ManagedCodexAgentDefault[];
   readonly artifacts: readonly PlatformInstallReceiptArtifact[];
 }
 

@@ -9,10 +9,12 @@ import {
   writeCodexAgentsReceipt,
 } from "../platform-state/codex-agents-receipt.js";
 import {
+  assertNoDanglingCodexAgentRegistrations,
   inspectReceiptManagedCodexAgents,
   resolveCodexAgentsRootFromMarketplace,
   stripCodexAgentConfigFile,
 } from "./codex-agents-lifecycle.js";
+import { mergeCodexAgentConfig, resolveManagedCodexAgentSections } from "./codex-config-merge.js";
 
 describe("Codex agents lifecycle", () => {
   it("maps a personal marketplace root to Codex home", () => {
@@ -71,17 +73,20 @@ describe("Codex agents lifecycle", () => {
       configPath,
       false,
       ["zc_owned"],
+      [],
+      resolveManagedCodexAgentSections(undefined, await readFile(configPath, "utf8"), '[agents.zc_owned]\nconfig_file = "agents/zc-owned.toml"\n'),
     );
 
-    expect(result).toEqual({ changed: true, missing: false });
-    expect(await readFile(configPath, "utf8")).toBe([
+    const expectedContent = [
       "[agents.zc_local]",
       'config_file = "agents/zc-local.toml"',
       "",
       "[[mcp_servers]]",
       'name = "keep-me"',
       "",
-    ].join("\n"));
+    ].join("\n");
+    expect(result).toEqual({ changed: true, missing: false, nextContent: expectedContent });
+    expect(await readFile(configPath, "utf8")).toBe(expectedContent);
   });
 
   it("removes only unchanged receipt-owned subagent defaults", async () => {
@@ -104,5 +109,27 @@ describe("Codex agents lifecycle", () => {
       'default_subagent_model = "gpt-user"',
       "",
     ].join("\n"));
+  });
+
+  it("blocks legacy or edited registrations that still reference a role being removed", async () => {
+    const root = await mkdtemp(join(tmpdir(), "zc-agent-dangling-"));
+    const configPath = join(root, "config.toml");
+    const rolePath = join(root, "agents", "zc-review.toml");
+    const original = '[agents.zc_review]\nconfig_file = "agents/zc-review.toml"\n';
+    await writeFile(configPath, original);
+    await expect(assertNoDanglingCodexAgentRegistrations(configPath, [rolePath], []))
+      .rejects.toThrow(/请先人工合并/);
+    const upgradedLegacyOwnership = resolveManagedCodexAgentSections(
+      original, mergeCodexAgentConfig(original, original), original, [],
+    );
+    expect(upgradedLegacyOwnership).toEqual([]);
+    await expect(assertNoDanglingCodexAgentRegistrations(configPath, [rolePath], upgradedLegacyOwnership))
+      .rejects.toThrow(/请先人工合并/);
+    const owned = resolveManagedCodexAgentSections(undefined, original, original);
+    await expect(assertNoDanglingCodexAgentRegistrations(configPath, [rolePath], owned))
+      .resolves.toBeUndefined();
+    await writeFile(configPath, original.replace("[agents.zc_review]", '[agents.zc_review]\ndescription = "user"'));
+    await expect(assertNoDanglingCodexAgentRegistrations(configPath, [rolePath], owned))
+      .rejects.toThrow(/请先人工合并/);
   });
 });

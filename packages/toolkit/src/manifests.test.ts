@@ -199,23 +199,22 @@ describe("loadToolkitManifest", () => {
       manifest.byId["agent:test-engineer"]?.meta.platforms,
       ["qwen", "codex", "claude", "opencode", "qoder-cn"]
     );
-    const codexRoleMatrix = {
-      "agent:architect": ["gpt-6-sol", "high", "read-only"],
-      "agent:security-auditor": ["gpt-6-sol", "high", "read-only"],
-      "agent:code-reviewer": ["gpt-6-sol", "high", "read-only"],
-      "agent:performance-engineer": ["gpt-6-sol", "high", "read-only"],
-      "agent:backend-specialist": ["gpt-6-sol", "medium", "workspace-write"],
-      "agent:frontend-specialist": ["gpt-6-sol", "medium", "workspace-write"],
-      "agent:test-engineer": ["gpt-6-sol", "medium", "workspace-write"],
-      "agent:product-owner": ["gpt-6-sol", "medium", "read-only"],
-      "agent:context-steward": ["gpt-6-luna", "high", "workspace-write"],
-      "agent:lightweight-researcher": ["gpt-6-luna", "high", "read-only"]
+    const codexRoleSandboxModes = {
+      "agent:architect": "read-only",
+      "agent:security-auditor": "read-only",
+      "agent:code-reviewer": "read-only",
+      "agent:performance-engineer": "read-only",
+      "agent:backend-specialist": "workspace-write",
+      "agent:frontend-specialist": "workspace-write",
+      "agent:test-engineer": "workspace-write",
+      "agent:product-owner": "read-only",
+      "agent:context-steward": "workspace-write",
+      "agent:lightweight-researcher": "read-only"
     } as const;
 
-    for (const [agentId, [model, modelReasoningEffort, sandboxMode]] of Object.entries(codexRoleMatrix)) {
+    assert.equal(Object.keys(codexRoleSandboxModes).length, listToolkitAssetsByKind(manifest, "agent").length);
+    for (const [agentId, sandboxMode] of Object.entries(codexRoleSandboxModes)) {
       assert.deepEqual(manifest.byId[agentId]?.meta.codexAgent, {
-        model,
-        modelReasoningEffort,
         sandboxMode
       });
     }
@@ -275,6 +274,9 @@ describe("loadToolkitManifest", () => {
       codexLifecycle?.contents ?? "",
       /fork_turns[\s\S]*available child slots[\s\S]*controller/
     );
+    assert.match(codexLifecycle?.contents ?? "", /canonical 角色不固定 model[\s\S]*由宿主继承/);
+    assert.match(codexLifecycle?.contents ?? "", /权限继承父会话[\s\S]*不建立独立权限边界/);
+    assert.doesNotMatch(codexLifecycle?.contents ?? "", /meta\.yaml.*model 与 reasoning effort 的唯一事实源/);
     const subagentSkill = manifest.byId["skill:subagent-driven-development"];
     assert.match(
       subagentSkill?.body ?? "",

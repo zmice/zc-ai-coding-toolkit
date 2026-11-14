@@ -6,10 +6,40 @@ import {
   mergeOwnedCodexAgentConfigWithDefaults,
   mergeOwnedCodexAgentConfig,
   mergeCodexAgentConfig,
+  resolveManagedCodexAgentSections,
+  filterOwnedCodexAgentSections,
+  stripGeneratedCodexAgentDefaults,
   stripManagedZcAgentSections,
 } from "./codex-config-merge.js";
 
 describe("codex config merge", () => {
+  it("claims only newly injected registrations and drops ownership after user edits", () => {
+    const generated = '[agents.zc_review]\nconfig_file = "agents/zc-review.toml"\n';
+    const user = '[agents.zc_review]\nconfig_file = "my-review.toml"\n';
+    const userMerged = mergeCodexAgentConfig(user, generated);
+    assert.deepEqual(resolveManagedCodexAgentSections(user, userMerged, generated), []);
+    const inserted = mergeCodexAgentConfig(undefined, generated);
+    const owned = resolveManagedCodexAgentSections(undefined, inserted, generated);
+    assert.equal(owned.length, 1);
+    assert.deepEqual(filterOwnedCodexAgentSections(inserted, owned), ["zc_review"]);
+    assert.deepEqual(filterOwnedCodexAgentSections(inserted.replace("zc-review.toml", "custom.toml"), owned), []);
+  });
+
+  it("recognizes whitespace and trailing comments without duplicating a user registration", () => {
+    const existing = '[ agents . zc_review ] # custom\nconfig_file = "my-review.toml"\n';
+    const generated = '[agents.zc_review]\nconfig_file = "agents/zc-review.toml"\n';
+    const merged = mergeCodexAgentConfig(existing, generated);
+    assert.equal((merged.match(/zc_review/g) ?? []).length, 1);
+    assert.match(merged, /my-review\.toml/);
+    assert.deepEqual(resolveManagedCodexAgentSections(existing, merged, generated), []);
+    assert.throws(() => mergeCodexAgentConfig('[agents."zc_review"]\nconfig_file = "mine.toml"\n', generated), /quoted \[agents\.zc_\*\]/);
+  });
+
+  it("drops generated global model defaults from legacy bundles", () => {
+    const oldBundle = '[agents]\ndefault_subagent_model = "gpt-6-sol"\ndefault_subagent_reasoning_effort = "medium"\n\n[agents.zc_code_reviewer]\nconfig_file = "agents/zc-code-reviewer.toml"\n';
+    const newBundle = '[agents.zc_code_reviewer]\nconfig_file = "agents/zc-code-reviewer.toml"\n';
+    assert.equal(stripGeneratedCodexAgentDefaults(oldBundle), newBundle.trimEnd());
+  });
   it("detects zc agent config content", () => {
     assert.equal(isCodexAgentConfigContent("[agents.zc_code_reviewer]\nconfig_file = \"agents/zc-code-reviewer.toml\"\n"), true);
     assert.equal(isCodexAgentConfigContent("[agents.other]\nconfig_file = \"agents/other.toml\"\n"), false);
@@ -43,7 +73,7 @@ describe("codex config merge", () => {
     assert.match(merged, /\[agents\.zc_code_reviewer\]/);
   });
 
-  it("replaces previous zc agent sections without removing unrelated sections", () => {
+  it("preserves existing registration values including custom role paths", () => {
     const existing = [
       'model = "gpt-5.5"',
       "",
@@ -69,13 +99,14 @@ describe("codex config merge", () => {
     const merged = mergeCodexAgentConfig(existing, generated);
     const mergedAgain = mergeCodexAgentConfig(merged, generated);
 
-    assert.doesNotMatch(merged, /description = "old"/);
+    assert.match(merged, /description = "old"/);
+    assert.match(merged, /config_file = "agents\/old.toml"/);
     assert.match(merged, /\[agents\.custom\]/);
-    assert.match(merged, /description = "new"/);
+    assert.doesNotMatch(merged, /description = "new"/);
     assert.equal(mergedAgain, merged);
   });
 
-  it("replaces only receipt-owned and newly generated zc agent sections", () => {
+  it("refuses to silently remove retired registrations without section ownership evidence", () => {
     const existing = [
       "[agents.zc_code_reviewer]",
       'description = "old owned"',
@@ -93,15 +124,22 @@ describe("codex config merge", () => {
       "",
     ].join("\n");
 
-    const merged = mergeOwnedCodexAgentConfig(
-      existing,
-      generated,
-      ["zc_code_reviewer", "zc_removed_role"],
-    );
+    assert.throws(() => mergeOwnedCodexAgentConfig(existing, generated, ["zc_code_reviewer", "zc_removed_role"]), /保留已退休角色注册：zc_removed_role/);
+    const merged = mergeOwnedCodexAgentConfig(existing, generated, ["zc_code_reviewer"]);
+    assert.match(merged, /stale owned/);
+    assert.match(merged, /\[agents\.zc_local_role\]/);
+  });
 
-    assert.doesNotMatch(merged, /old owned|stale owned/);
-    assert.match(merged, /\[agents\.zc_local_role\]\n(?:description = "local")/);
-    assert.match(merged, /description = "new owned"/);
+  it("retains user registration keys while adding new roles and retiring owned defaults", () => {
+    const existing = '[agents]\ndefault_subagent_model = "old"\n\n[agents.zc_review]\ndescription = "custom"\nconfig_file = "my-review.toml"\ncustom_key = "keep"\n';
+    const generated = '[agents.zc_review]\ndescription = "new"\nconfig_file = "agents/zc-review.toml"\n\n[agents.zc_test]\nconfig_file = "agents/zc-test.toml"\n';
+    const merged = mergeOwnedCodexAgentConfigWithDefaults(existing, generated, ["zc_review"], [{ key: "default_subagent_model", value: "old" }]);
+    assert.doesNotMatch(merged.content, /default_subagent_model/);
+    assert.match(merged.content, /custom_key = "keep"/);
+    assert.match(merged.content, /config_file = "my-review.toml"/);
+    assert.equal((merged.content.match(/\[agents\.zc_review\]/g) ?? []).length, 1);
+    assert.match(merged.content, /\[agents\.zc_test\]/);
+    assert.equal(mergeOwnedCodexAgentConfig(merged.content, generated, ["zc_review", "zc_test"]), merged.content);
   });
 
   it("preserves TOML array tables after a managed zc agent section", () => {
@@ -114,9 +152,9 @@ describe("codex config merge", () => {
       "",
     ].join("\n");
 
-    const merged = mergeOwnedCodexAgentConfig(existing, "", ["zc_code_reviewer"]);
+    const merged = stripManagedZcAgentSections(existing, ["zc_code_reviewer"]);
 
-    assert.equal(merged, '[[mcp_servers]]\nname = "keep-me"\n');
+    assert.equal(merged, '[[mcp_servers]]\nname = "keep-me"');
   });
 
   it("keeps user subagent defaults and avoids a duplicate agents table", () => {
@@ -170,6 +208,24 @@ describe("codex config merge", () => {
         'default_subagent_model = "gpt-user"',
       ].join("\n"),
     );
+  });
+
+  it("removes obsolete receipt-owned defaults while retaining user-modified values", () => {
+    const existing = '[agents]\ndefault_subagent_model = "gpt-6-sol"\ndefault_subagent_reasoning_effort = "high"\n';
+    const generated = '[agents.zc_code_reviewer]\nconfig_file = "agents/zc-code-reviewer.toml"\n';
+    const result = mergeOwnedCodexAgentConfigWithDefaults(existing, generated, [], [
+      { key: "default_subagent_model", value: "gpt-6-sol" },
+      { key: "default_subagent_reasoning_effort", value: "medium" },
+    ]);
+    assert.doesNotMatch(result.content, /default_subagent_model/);
+    assert.match(result.content, /default_subagent_reasoning_effort = "high"/);
+    assert.deepEqual(result.managedDefaults, []);
+    assert.match(stripManagedZcAgentSections(result.content, ["zc_code_reviewer"], result.managedDefaults), /default_subagent_reasoning_effort = "high"/);
+    assert.doesNotMatch(stripManagedZcAgentSections(result.content, ["zc_code_reviewer"], result.managedDefaults), /default_subagent_model/);
+    assert.equal(mergeOwnedCodexAgentConfigWithDefaults(result.content, generated, ["zc_code_reviewer"], []).content, result.content);
+    const unowned = mergeOwnedCodexAgentConfigWithDefaults(existing, generated, [], []);
+    assert.match(unowned.content, /default_subagent_model = "gpt-6-sol"/);
+    assert.match(unowned.content, /default_subagent_reasoning_effort = "high"/);
   });
 
   it("ends managed-agent stripping before a following agents defaults table", () => {

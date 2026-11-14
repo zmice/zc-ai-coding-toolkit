@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, it } from "vitest";
@@ -11,6 +11,8 @@ import {
   writePlatformInstallReceipt,
   writePlatformInstallReceiptForPlan,
 } from "../utils/platform-install-receipt.js";
+import { mergeCodexAgentConfig, resolveManagedCodexAgentSections } from "../utils/codex-config-merge.js";
+import { stripCodexAgentConfigFile } from "../utils/codex-agents-lifecycle.js";
 
 const tempDirs: string[] = [];
 
@@ -164,5 +166,42 @@ describe("resolvePlatformInstallStatus", () => {
     });
     assert.equal(status.artifacts[0]?.matchesReceiptOnDisk, false);
     assert.equal(status.artifacts[0]?.differsFromPlan, false);
+  });
+
+  it("checks required Codex registrations even when every registration is user-owned", async () => {
+    const root = await createTempDir();
+    const configPath = join(root, ".codex", "config.toml");
+    const plan = {
+      platform: "codex" as const, destinationRoot: root, manifestSource: "fixture",
+      overwrite: "error" as const,
+      artifacts: [{ path: configPath, content: '[agents.zc_review]\nconfig_file = "agents/zc-review.toml"\n' }],
+    };
+    await writeArtifact(configPath, '[agents.zc_review]\nconfig_file = "custom.toml"\n\n[features]\nsearch = true\n');
+    await writePlatformInstallReceiptForPlan(plan, { managedCodexAgentSections: [] });
+    assert.equal((await resolvePlatformInstallStatus(plan)).kind, "up-to-date");
+    await rm(configPath);
+    assert.equal((await resolvePlatformInstallStatus(plan)).kind, "drifted");
+  });
+
+  it("tracks role bytes and injected config sections without claiming user config", async () => {
+    const root = await createTempDir();
+    const configPath = join(root, ".codex", "config.toml");
+    const rolePath = join(root, ".codex", "agents", "zc-review.toml");
+    const generated = '[agents.zc_review]\nconfig_file = "agents/zc-review.toml"\n';
+    const userConfig = '[features]\nsearch = true\n';
+    const merged = mergeCodexAgentConfig(userConfig, generated);
+    const sections = resolveManagedCodexAgentSections(userConfig, merged, generated);
+    const plan = {
+      platform: "codex" as const, destinationRoot: root, manifestSource: "fixture", overwrite: "error" as const,
+      artifacts: [{ path: configPath, content: generated }, { path: rolePath, content: 'name = "zc_review"\n' }],
+    };
+    await writeArtifact(configPath, merged);
+    await writeArtifact(rolePath, plan.artifacts[1]!.content);
+    await writePlatformInstallReceiptForPlan(plan, { managedCodexAgentSections: sections });
+    assert.equal((await resolvePlatformInstallStatus(plan)).kind, "up-to-date");
+    const changedPlan = { ...plan, artifacts: [plan.artifacts[0]!, { path: rolePath, content: 'name = "zc_review"\ndescription = "new"\n' }] };
+    assert.equal((await resolvePlatformInstallStatus(changedPlan)).kind, "update-available");
+    await stripCodexAgentConfigFile(configPath, false, ["zc_review"], [], sections);
+    assert.equal(await readFile(configPath, "utf8"), userConfig);
   });
 });

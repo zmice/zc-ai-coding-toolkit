@@ -248,6 +248,11 @@ function renderAgentArtifacts(
       asset,
       name: slug,
       tools: assetTools,
+      body: [
+        asset.body ?? `# ${describeAsset(asset)}\n`,
+        "## 平台技能可用性",
+        "本适配器未分发 skill。正文的 `skill:<id>` 是 toolkit 资产标识，不代表已安装的 Claude 技能；先检查宿主可用技能，缺失时按角色正文完成已授权范围并报告验证限制，不声称执行了该技能。已有 `/zc-*` 命令只作为任务入口，不视为对应技能已加载。工具允许列表及宿主权限仍然生效。",
+      ].join("\n\n"),
     });
   });
 }

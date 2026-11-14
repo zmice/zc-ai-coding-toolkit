@@ -72,13 +72,13 @@ batch size <= min(independent ready tasks with justified benefit, available chil
 
 ## Role And Model Defaults
 
-优先使用已经生成的 `zc_*` role。每个角色的 `meta.yaml` 是 model 与 reasoning effort 的唯一事实源；普通任务、高风险任务、轻量核查和 context steward 的当前映射都从该元数据读取，不在本 lifecycle 复制角色名单。用户已有默认设置优先保留；role TOML 的 `model`、`model_reasoning_effort` 仍优先于显式 spawn、`[agents]` default 和 parent default。
+优先按职责使用已经加载的 `zc_*` role。canonical 角色不固定 model 或 reasoning effort；未显式配置时由宿主继承。用户自定义 role TOML、调用参数、`[agents]` 默认值和父任务设置按当前宿主优先级解析，不在本 lifecycle 再维护模型分档表，也不保证子任务一定与父任务同模型。
 
 当前 host 尚未加载匹配角色或其元数据时，不虚报可用：由主线程处理，或在 host 允许显式模型选择时使用同等边界的通用 agent。实际生效的 role、model 和 effort 以当前 host 配置及新子任务记录为准。
 
-如果任务需要临时升级但某个 role 已硬 pin 模型，改用更合适的 role 或不带硬 pin 的通用 worker；不要声称显式 spawn 一定覆盖 role TOML。
+只有用户要求、适用的项目规则或有证据的任务约束才选择显式模型；否则省略模型覆盖。若用户自定义 role 固定模型，先核对实际优先级，不为绕过用户设置而悄悄改派其他角色。
 
-`sandbox_mode` 不按上述模型优先级推断。role TOML 可以声明期望的隔离档位，但 Codex 会把 parent turn 的 live sandbox / approval override 重新应用到子代理。派发、写入和 fan-in 一律以 host 实际生效权限为准；配置为 `workspace-write` 不代表当前运行态一定获准写入。
+权限继承父会话。角色中的 legacy `sandbox_mode` 不建立独立权限边界，也不覆盖父会话的 sandbox / approval 设置；只读角色正文同样不是强制只读沙箱。派发、写入和 fan-in 以 host 实际生效权限为准，生成配置或静态检查不等于真实子任务已经验证。
 
 ## Thread Reuse
 

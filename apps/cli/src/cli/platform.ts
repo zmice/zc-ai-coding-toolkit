@@ -1,9 +1,10 @@
 import { Command, InvalidArgumentError } from "commander";
 import type { Dirent } from "node:fs";
 import { readFileSync } from "node:fs";
-import { readFile, readdir } from "node:fs/promises";
+import { lstat, readFile, readdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { assertCodexAgentDeletesOwned, assertCodexAgentWritesOwned } from "../utils/codex-agent-write-guard.js";
 import {
   attachPlanMetadata,
   type GenerationPlan,
@@ -26,10 +27,12 @@ import {
 } from "../platform-state/codex-agents-receipt.js";
 import type {
   PlatformInstallDoctorResult,
+  PlatformInstallReceipt,
   PlatformInstallStatusResult,
 } from "../platform-state/types.js";
 import { normalizeInstallSelector, resolveInstallTarget } from "../utils/install-target.js";
-import { spawnCommand } from "../utils/cross-platform-spawn.js";
+import { runCodexCliCommand, createCodexCliCommandFailure, type CodexCliCommandResult } from "../utils/codex-cli-process.js";
+import { sanitizeCommandArgs, sanitizeCommandText } from "../utils/command-output-redaction.js";
 import {
   deletePlatformInstallReceipt,
   resolvePlatformInstallReceiptPath,
@@ -51,14 +54,19 @@ import {
   writeArtifacts,
 } from "../utils/workspace.js";
 import {
+  filterOwnedCodexAgentSections,
   isCodexAgentConfigContent,
   listZcAgentConfigNames,
   mergeCodexAgentConfig,
   mergeOwnedCodexAgentConfig,
   mergeOwnedCodexAgentConfigWithDefaults,
+  resolveManagedCodexAgentSections,
+  stripGeneratedCodexAgentDefaults,
   type ManagedCodexAgentDefault,
+  type ManagedCodexAgentSection,
 } from "../utils/codex-config-merge.js";
 import {
+  assertNoDanglingCodexAgentRegistrations,
   inspectReceiptManagedCodexAgents,
   stripCodexAgentConfigFile,
 } from "../utils/codex-agents-lifecycle.js";
@@ -66,7 +74,8 @@ import {
   createCodexCompanionAgentInstallPlan,
   loadCodexAgentCompanion,
 } from "../utils/codex-agent-companion.js";
-import { withCodexAgentConfigReceiptRollback } from "../utils/codex-agent-config-transaction.js";
+import { withCodexAgentConfigReceiptRollback, withCodexTargetLock } from "../utils/codex-agent-config-transaction.js";
+import { withCodexPluginUninstallRollback } from "../utils/codex-plugin-uninstall-transaction.js";
 import {
   QwenOfficialCliUnavailableError,
   installQwenExtensionFromOfficialRepoWithCli,
@@ -486,7 +495,7 @@ async function loadPlatformModule(platform: PlatformName): Promise<PlatformModul
 function createGenerationPlan(
   platform: PlatformName,
   platformModule: PlatformModule,
-  manifest: PlatformManifestLike
+  manifest: PlatformManifestLike,
 ): GenerationPlan {
   const extensionVersion = getCliVersion();
 
@@ -528,7 +537,7 @@ function createInstallPlan(
   manifest: PlatformManifestLike,
   destinationRoot: string,
   scope: InstallScope,
-  overwrite: OverwriteMode
+  overwrite: OverwriteMode,
 ): InstallPlan {
   const extensionVersion = getCliVersion();
   switch (platform) {
@@ -624,6 +633,10 @@ function mergeHints(...hints: Array<string | undefined>): string | undefined {
 
 function resolveScopeFromSelector(opts: PlatformTargetSelectorOpts): PlatformInstallScope {
   return normalizeInstallSelector(opts).mode;
+}
+
+function resolveCodexConfigLockRoot(root: string, scope: PlatformInstallScope): string {
+  return scope === "project" ? join(resolve(root), ".codex") : resolve(root);
 }
 
 function resolveLifecycleSelector(
@@ -1197,6 +1210,7 @@ async function inspectCodexAgentConfigArtifact(
   artifact: GeneratedArtifact,
   managedAgentNames: readonly string[],
   managedAgentDefaults: readonly ManagedCodexAgentDefault[] = [],
+  managedAgentSections: readonly ManagedCodexAgentSection[] = [],
 ): Promise<CodexAgentArtifactStatus> {
   const existing = await readTextIfExists(artifact.path);
 
@@ -1217,25 +1231,32 @@ async function inspectCodexAgentConfigArtifact(
   return {
     path: artifact.path,
     kind: "config",
-    state: existing === merged ? "up-to-date" : "drifted",
+    state: existing === merged
+      && filterOwnedCodexAgentSections(existing, managedAgentSections).length === managedAgentSections.length
+      && listZcAgentConfigNames(artifact.content).every((name) => listZcAgentConfigNames(existing).includes(name))
+      ? "up-to-date" : "drifted",
   };
 }
 
-async function resolveNextManagedCodexAgentDefaults(
+async function resolveNextManagedCodexAgentConfigOwnership(
   plan: PlatformPlanLike,
   receipt: CodexAgentsReceipt | null,
-): Promise<readonly ManagedCodexAgentDefault[]> {
+): Promise<{ readonly defaults: readonly ManagedCodexAgentDefault[]; readonly sections: readonly ManagedCodexAgentSection[] }> {
   const configArtifact = getCodexAgentConfigArtifact(plan);
   if (!configArtifact) {
-    return [];
+    return { defaults: [], sections: [] };
   }
   const existing = await readTextIfExists(configArtifact.path);
-  return mergeOwnedCodexAgentConfigWithDefaults(
+  const merged = mergeOwnedCodexAgentConfigWithDefaults(
     existing ?? undefined,
     configArtifact.content,
     receipt?.managedAgentNames ?? [],
     receipt?.managedAgentDefaults ?? [],
-  ).managedDefaults;
+  );
+  return {
+    defaults: merged.managedDefaults,
+    sections: resolveManagedCodexAgentSections(existing ?? undefined, merged.content, configArtifact.content, receipt?.managedAgentSections ?? []),
+  };
 }
 
 async function inspectCodexAgents(
@@ -1260,6 +1281,7 @@ async function inspectCodexAgents(
         configArtifact,
         receipt?.managedAgentNames ?? [],
         receipt?.managedAgentDefaults ?? [],
+        receipt?.managedAgentSections ?? [],
       )]
       : []),
     ...(await Promise.all(agentArtifacts.map(inspectCodexAgentArtifact))),
@@ -1293,6 +1315,10 @@ async function inspectCodexAgents(
       return "needs-attention" as const;
     }
 
+    if (!receipt) {
+      return "needs-attention" as const;
+    }
+
     return "up-to-date" as const;
   })();
 
@@ -1302,6 +1328,21 @@ async function inspectCodexAgents(
     artifacts,
     staleAgentFiles,
     untrackedAgentFiles,
+  };
+}
+
+function describeCodexRoleConfiguration(requiresCompanion: boolean) {
+  return {
+    explicitRuntimeConfigSurface: "standalone-custom-agent-toml",
+    // Kept for JSON compatibility; these are supported fields, not observed values.
+    fields: ["model", "model_reasoning_effort", "sandbox_mode"],
+    fieldsScope: "supported-serialization-fields",
+    modelResolution: "host-configuration-precedence",
+    effectiveModel: null,
+    effectiveReasoningEffort: null,
+    permissionBoundary: "parent-session",
+    runtimeVerified: false,
+    requiresCompanion,
   };
 }
 
@@ -1326,6 +1367,7 @@ function buildCodexAgentsPayload(args: {
     capability: getPlanCapabilitySummary(args.plan),
     artifactCount: args.plan.artifacts.length,
     contentFingerprint: args.plan.metadata?.fingerprint.value ?? null,
+    roleConfiguration: describeCodexRoleConfiguration(false),
     ...(args.mode === "plan" ? { artifacts: args.plan.artifacts } : {}),
     ...(args.result ?? {}),
   };
@@ -1361,6 +1403,7 @@ function summarizeCodexAgents(args: {
     `范围：${args.metadata.scope ?? "project"}`,
     `目录：${args.root}`,
     ...(args.metadata.hint ? [`提示：${args.metadata.hint}`] : []),
+    ...(args.operation !== "uninstall" ? ["模型与推理强度：由 Codex 按角色覆盖、派发参数、用户默认值及父会话解析；实际生效值尚未验证"] : []),
   ];
 
   if (args.status) {
@@ -1508,7 +1551,7 @@ function quoteShellArg(value: string): string {
 }
 
 function formatShellCommand(command: string, args: readonly string[]): string {
-  return [command, ...args].map(quoteShellArg).join(" ");
+  return [command, ...sanitizeCommandArgs(args)].map(quoteShellArg).join(" ");
 }
 
 function assertCodexGitMarketplaceOptions(opts: PlatformPluginOpts): void {
@@ -1545,67 +1588,6 @@ function assertCodexGitMarketplaceOptions(opts: PlatformPluginOpts): void {
   }
 }
 
-interface CodexCliCommandResult {
-  readonly args: readonly string[];
-  readonly code: number | null;
-  readonly signal: NodeJS.Signals | null;
-  stdout: string;
-  stderr: string;
-}
-
-async function runCodexCliCommand(
-  args: readonly string[],
-  options: {
-    readonly mirrorOutput?: boolean;
-    readonly allowFailure?: boolean;
-  } = {},
-): Promise<CodexCliCommandResult> {
-  return await new Promise((resolvePromise, rejectPromise) => {
-    const child = spawnCommand("codex", args, {
-      shell: false,
-      stdio: ["inherit", "pipe", "pipe"],
-    });
-    let stdout = "";
-    let stderr = "";
-
-    child.stdout?.on("data", (chunk: Buffer) => {
-      const text = chunk.toString();
-      stdout += text;
-      if (options.mirrorOutput) {
-        process.stdout.write(text);
-      }
-    });
-    child.stderr?.on("data", (chunk: Buffer) => {
-      const text = chunk.toString();
-      stderr += text;
-      if (options.mirrorOutput) {
-        process.stderr.write(text);
-      }
-    });
-    child.once("error", (error) => {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        rejectPromise(new Error("未检测到 codex CLI，无法自动注册 Git marketplace。"));
-        return;
-      }
-
-      rejectPromise(error);
-    });
-    child.once("close", (code, signal) => {
-      if (code === 0 || options.allowFailure) {
-        resolvePromise({ args, code, signal, stdout, stderr });
-        return;
-      }
-
-      rejectPromise(createCodexCliCommandFailure({
-        args,
-        code,
-        signal,
-        stdout,
-        stderr,
-      }));
-    });
-  });
-}
 
 type CodexPluginCliMode = "official-plugin" | "legacy-marketplace";
 
@@ -1722,33 +1704,44 @@ function findCodexPluginRecord(
       continue;
     }
 
-    if (collection === null) {
-      if (
-        output.pluginId === `${codexMarketplacePluginName}@${codexMarketplacePluginName}`
-        || output.name === codexMarketplacePluginName
-      ) {
-        return output;
-      }
-      continue;
-    }
-
-    const entries = output[collection];
+    const entries = collection === null ? [output] : output[collection];
     if (!Array.isArray(entries)) {
       continue;
     }
-    const entry = entries.find(
+    const matches = entries.filter(
       (candidate) =>
         isUnknownRecord(candidate)
-        && (
-          candidate.pluginId === `${codexMarketplacePluginName}@${codexMarketplacePluginName}`
-          || candidate.name === codexMarketplacePluginName
-        ),
+        && candidate.pluginId === `${codexMarketplacePluginName}@${codexMarketplacePluginName}`,
     );
+    const unknownIdentity = collection !== null && entries.some((candidate) => isUnknownRecord(candidate)
+      && candidate.name === codexMarketplacePluginName && typeof candidate.pluginId !== "string");
+    if (matches.length > 1 || unknownIdentity) {
+      // Catalog uncertainty must not erase a confirmed local installation.
+      if (collection === "available") return null;
+      throw new Error("zc-toolkit@zc-toolkit 的插件身份无法确认（ambiguous-plugin-identity）；请检查重复或缺少来源的记录。");
+    }
+    const entry = matches[0];
     if (isUnknownRecord(entry)) {
       return entry;
     }
   }
   return null;
+}
+
+// Only stable numeric release versions are ordered. Tags and prereleases remain
+// unknown rather than guessing their precedence or requesting an accidental downgrade.
+function compareCodexPluginVersions(installed: string | null, available: string | null): number | null {
+  if (!installed || !available) return null;
+  if (installed === available) return 0;
+  const release = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
+  if (!release.test(installed) || !release.test(available)) return null;
+  const current = installed.split(".").map(BigInt);
+  const candidate = available.split(".").map(BigInt);
+  for (let index = 0; index < 3; index++) {
+    if (candidate[index]! > current[index]!) return 1;
+    if (candidate[index]! < current[index]!) return -1;
+  }
+  return 0;
 }
 
 function resolveCodexPluginPath(plugin: Record<string, unknown> | null): string | null {
@@ -1813,18 +1806,6 @@ function isCodexPluginAlreadyAbsent(result: CodexCliCommandResult): boolean {
   return message.includes("plugin") && message.includes("not installed");
 }
 
-function createCodexCliCommandFailure(result: CodexCliCommandResult): Error {
-  const command = formatShellCommand("codex", result.args);
-  return new Error(
-    result.signal
-      ? `${command} 被信号 ${result.signal} 中断。`
-      : `${command} 退出码为 ${result.code ?? "unknown"}：${result.stderr.trim() || result.stdout.trim() || "无错误输出"}`,
-  );
-}
-
-// Official lifecycle and JSON contracts:
-// https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin
-// https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin-marketplace
 function resolveCodexPluginGitOperation(opts: PlatformPluginOpts): CodexPluginGitOperation {
   if (opts.install) {
     return "install";
@@ -1861,7 +1842,9 @@ async function runCodexMarketplaceGitMode(
     "--available",
     "--json",
   ];
-  const preflightStatusArgs = ["plugin", "list", "--available", "--json"];
+  // An unscoped list still queries the remote GLOBAL catalog, even without --available.
+  // Scope by marketplace identity, not source path, so legacy local sources remain visible.
+  const preflightStatusArgs = ["plugin", "list", "--marketplace", codexMarketplacePluginName, "--json"];
   const uninstallArgs = ["plugin", "remove", pluginId, "--json"];
   const installCommand = formatShellCommand("codex", installArgs);
   const upgradeCommand = formatShellCommand("codex", upgradeArgs);
@@ -1916,7 +1899,10 @@ async function runCodexMarketplaceGitMode(
       const executed: string[][] = [];
       const runOfficialCommand = async (
         args: readonly string[],
-        commandOptions: { readonly allowFailure?: boolean } = {},
+        commandOptions: {
+          readonly allowFailure?: boolean;
+          readonly inspectRawOutput?: (raw: { readonly stdout: string; readonly stderr: string }) => void;
+        } = {},
       ): Promise<CodexCliCommandResult> => {
         const command = formatShellCommand("codex", args);
         if (format === "text" && options.emit !== false) {
@@ -1926,6 +1912,7 @@ async function runCodexMarketplaceGitMode(
         const result = await runCodexCliCommand(args, {
           mirrorOutput: format === "text" && options.emit !== false,
           allowFailure: commandOptions.allowFailure,
+          inspectRawOutput: commandOptions.inspectRawOutput,
         });
         executed.push([...args]);
         results.push(result);
@@ -1934,18 +1921,22 @@ async function runCodexMarketplaceGitMode(
 
       if (operation === "upgrade") {
         const beforeUpgrade = parseCodexPluginList(await runOfficialCommand(preflightStatusArgs));
-        const preflightInstalled = beforeUpgrade.installed as Record<string, unknown>[];
-        const targetRecords = preflightInstalled.filter((record) => record.pluginId === pluginId);
-        const ambiguousIdentity = preflightInstalled.some((record) =>
-          record.name === codexMarketplacePluginName && typeof record.pluginId !== "string");
-        const targetDisabled = targetRecords.some((record) => record.enabled === false);
-        if (targetDisabled || ambiguousIdentity || targetRecords.some((record) => record.enabled !== true)) {
+        const target = findCodexPluginRecord([beforeUpgrade], "installed");
+        const targetDisabled = target?.enabled === false;
+        if (!target || target.enabled !== true) {
           throw new Error(
-            `zc-toolkit@zc-toolkit 的启用状态${targetDisabled ? "为 disabled" : "无法确认"}；为避免 codex plugin add 意外启用插件，已在升级前停止。`,
+            `zc-toolkit@zc-toolkit 的启用状态${targetDisabled ? "为 disabled" : "无法确认"}；为避免 codex plugin add 意外启用插件，已在升级前停止。${!target ? "目标安装记录不可见，请先核对 marketplace 和插件配置；首次安装请使用 --install。" : ""}`,
           );
         }
-        const marketplaceListResult = await runOfficialCommand(marketplaceListArgs);
-        const marketplace = findCodexMarketplaceRecord(parseCodexMarketplaceList(marketplaceListResult));
+        let rawMarketplace: Record<string, unknown> | null = null;
+        const marketplaceListResult = await runOfficialCommand(marketplaceListArgs, {
+          inspectRawOutput: ({ stdout }) => {
+            try { rawMarketplace = findCodexMarketplaceRecord(JSON.parse(stdout) as unknown); }
+            catch { /* The validated parse below reports invalid JSON. */ }
+          },
+        });
+        const visibleMarketplace = findCodexMarketplaceRecord(parseCodexMarketplaceList(marketplaceListResult));
+        const marketplace = visibleMarketplace ? rawMarketplace ?? visibleMarketplace : null;
 
         if (!marketplace) {
           marketplaceMigration = "registered-git";
@@ -1992,7 +1983,7 @@ async function runCodexMarketplaceGitMode(
             throw new Error(
               rollbackSucceeded
                 ? `${migrationMessage}；已恢复原 ${previousSourceType} marketplace 和旧版插件。`
-                : `${migrationMessage}；自动回滚未完整成功，请使用旧来源 ${rollbackSource} 手动恢复。`,
+                : `${migrationMessage}；自动回滚未完整成功，请使用旧来源 ${sanitizeCommandText(rollbackSource)} 手动恢复。`,
             );
           }
         }
@@ -2126,11 +2117,8 @@ async function runCodexMarketplaceGitMode(
   const availableVersion = typeof availablePlugin?.version === "string"
     ? availablePlugin.version
     : null;
-  const updatePending = Boolean(
-    installedVersion
-    && availableVersion
-    && installedVersion !== availableVersion,
-  );
+  const versionOrder = compareCodexPluginVersions(installedVersion, availableVersion);
+  const updatePending = versionOrder === 1;
   const installed: boolean | "unknown" = statusEvidence
     ? installedPlugin !== null
     : operation === "uninstall" && executed ? false : "unknown";
@@ -2138,27 +2126,29 @@ async function runCodexMarketplaceGitMode(
     ? installedPlugin.enabled
     : installed === false ? false : "unknown";
   const updateStatus = installed === false ? "not-installed"
-    : installedVersion && availableVersion
-      ? installedVersion === availableVersion ? "up-to-date" : "update-available"
-      : "unknown";
+    : versionOrder === null ? "unknown"
+      : versionOrder === 0 ? "up-to-date"
+        : versionOrder > 0 ? "update-available" : "installed-newer";
   const reason = installed === false ? "plugin-not-installed"
     : !statusEvidence ? "status-not-collected"
       : !installedVersion ? "installed-version-unknown"
         : !availableVersion ? "available-version-unknown"
-          : updateStatus === "update-available" ? "versions-differ" : "versions-match";
+          : versionOrder === null ? "versions-not-comparable"
+            : versionOrder < 0 ? "installed-version-newer"
+              : versionOrder > 0 ? "versions-differ" : "versions-match";
   const payload = {
     mode: executed ? "result" : "plan",
     action: "plugin",
     target: "codex",
     distribution: "git-marketplace",
     operation,
-    source,
-    ref: opts.ref ?? null,
+    source: sanitizeCommandText(source),
+    ref: opts.ref ? sanitizeCommandText(opts.ref) : null,
     register: executed && operation === "register",
     command: plannedCommands[0],
-    args: ["codex", ...plannedArgs[0]!],
+    args: ["codex", ...sanitizeCommandArgs(plannedArgs[0]!)],
     commands: plannedCommands,
-    commandArgs: plannedArgs.map((args) => ["codex", ...args]),
+    commandArgs: plannedArgs.map((args) => ["codex", ...sanitizeCommandArgs(args)]),
     migrationCommands: operation === "upgrade"
       ? [preflightStatusArgs, marketplaceListArgs, removeMarketplaceArgs, addArgs, installArgs, statusArgs]
         .map((args) => formatShellCommand("codex", args))
@@ -2195,8 +2185,8 @@ async function runCodexMarketplaceGitMode(
   };
   const text = [
     `Codex Git marketplace：${operationLabel[operation]}${executed ? "完成" : "计划"}`,
-    `来源：${source}`,
-    ...(opts.ref ? [`Ref：${opts.ref}`] : []),
+    `来源：${sanitizeCommandText(source)}`,
+    ...(opts.ref ? [`Ref：${sanitizeCommandText(opts.ref)}`] : []),
     ...plannedCommands.map((command) => `- ${command}`),
     ...(cliCapability
       ? [`CLI：${cliCapability.version ?? "unknown"}（${cliCapability.mode}）`]
@@ -2236,16 +2226,12 @@ function buildCodexPluginCompanionPayload(args: {
     target: "codex",
     operation: args.pluginResult.operation,
     overallStatus: args.overallStatus,
-    roleConfiguration: {
-      explicitRuntimeConfigSurface: "standalone-custom-agent-toml",
-      fields: ["model", "model_reasoning_effort", "sandbox_mode"],
-      requiresCompanion: true,
-    },
+    roleConfiguration: describeCodexRoleConfiguration(true),
     plugin: {
       status: args.mode === "plan" ? "planned"
         : args.pluginResult.operation === "status"
           && (args.pluginResult.payload.installed !== true || args.pluginResult.payload.enabled !== true)
-          ? "needs-attention" : "complete",
+          ? "needs-attention" : args.pluginResult.updatePending ? "update-pending" : "complete",
       version: args.pluginResult.installedVersion,
       availableVersion: args.pluginResult.availableVersion,
       installedPath: args.pluginResult.installedPluginPath,
@@ -2258,7 +2244,34 @@ function buildCodexPluginCompanionPayload(args: {
 }
 
 async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void> {
+  if (opts.plan || opts.status) {
+    await runCodexPluginWithAgentsLocked(opts);
+    return;
+  }
+  const target = await resolveInstallTarget("codex", { cwd: process.cwd(), global: true });
+  if (opts.uninstall) {
+    try { await stat(resolve(target.root)); }
+    catch (error) {
+      if (hasNodeErrorCode(error, "ENOENT")) { await runCodexPluginWithAgentsLocked(opts); return; }
+      throw error;
+    }
+  }
+  await withCodexTargetLock(resolve(target.root), () => runCodexPluginWithAgentsLocked(opts), {
+    createRoot: Boolean(opts.install || opts.upgrade),
+  });
+}
+
+async function runCodexPluginWithAgentsLocked(opts: PlatformPluginOpts): Promise<void> {
   const format = resolveOutputFormat(opts.json);
+  if (opts.uninstall && !opts.plan) {
+    // Reject a protected companion before the official plugin removal occurs.
+    const target = await resolveInstallTarget("codex", { cwd: process.cwd(), global: true });
+    const root = resolve(target.root);
+    const receipt = await readCodexAgentsReceipt(resolveCodexAgentsReceiptPath(root, "global"), { root, scope: "global" });
+    await assertCodexAgentDeletesOwned(receipt ? getCodexAgentsReceiptOwnedPaths(receipt) : [], receipt);
+    await assertNoDanglingCodexAgentRegistrations(join(root, "config.toml"),
+      receipt ? getCodexAgentsReceiptOwnedPaths(receipt) : [], receipt?.managedAgentSections ?? []);
+  }
   const pluginResult = await runCodexMarketplaceGitMode(opts, { emit: false });
 
   if (!pluginResult.executed) {
@@ -2282,7 +2295,7 @@ async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void>
       [
         `Codex 插件与 companion agents ${pluginResult.operation}计划`,
         pluginResult.text,
-        "Companion agents：计划写入 Codex 全局目录，承载显式 model / reasoning / sandbox 配置",
+        "Companion agents：计划注册全局角色；模型与推理强度按 Codex 配置优先级解析，权限继承父会话，实际生效值尚未验证",
       ].join("\n"),
     );
     return;
@@ -2336,14 +2349,22 @@ async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void>
       const ownedPaths = existingReceipt
         ? getCodexAgentsReceiptOwnedPaths(existingReceipt)
         : [];
-      const removal = await removeManagedPaths(ownedPaths);
-      const configResult = await stripCodexAgentConfigFile(
-        join(root, "config.toml"),
-        false,
-        existingReceipt?.managedAgentNames ?? [],
-        existingReceipt?.managedAgentDefaults ?? [],
+      await assertCodexAgentDeletesOwned(ownedPaths, existingReceipt);
+      await assertNoDanglingCodexAgentRegistrations(join(root, "config.toml"), ownedPaths, existingReceipt?.managedAgentSections ?? []);
+      const { removal, configResult } = await withCodexAgentConfigReceiptRollback(
+        [...ownedPaths, join(root, "config.toml")], receiptPath,
+        async () => {
+          const removal = await removeManagedPaths(ownedPaths);
+          const configResult = await stripCodexAgentConfigFile(
+            join(root, "config.toml"), false,
+            existingReceipt?.managedAgentNames ?? [],
+            existingReceipt?.managedAgentDefaults ?? [],
+            existingReceipt?.managedAgentSections ?? [],
+          );
+          await deleteCodexAgentsReceipt(receiptPath);
+          return { removal, configResult };
+        },
       );
-      await deleteCodexAgentsReceipt(receiptPath);
       const payload = buildCodexPluginCompanionPayload({
         mode: "result",
         overallStatus: "complete",
@@ -2491,7 +2512,10 @@ async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void>
         `companion 版本 ${companion.pluginVersion} 与已安装插件版本 ${pluginResult.installedVersion} 不一致`,
       );
     }
-    const plan = createCodexCompanionAgentInstallPlan(companion, {
+    const plan = createCodexCompanionAgentInstallPlan({
+      ...companion,
+      configContent: `${stripGeneratedCodexAgentDefaults(companion.configContent)}\n`,
+    }, {
       root,
       scope: "global",
     });
@@ -2502,7 +2526,8 @@ async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void>
         && pluginResult.payload.enabled === true;
       const payload = buildCodexPluginCompanionPayload({
         mode: "result",
-        overallStatus: status.kind === "up-to-date" && pluginHealthy ? "complete" : "partial",
+        overallStatus: status.kind !== "up-to-date" || !pluginHealthy ? "partial"
+          : pluginResult.updatePending ? "update-pending" : "complete",
         pluginResult,
         agents: {
           requested: true,
@@ -2519,7 +2544,8 @@ async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void>
           artifactStatus: status.artifacts,
         },
         phases: [
-          { name: "plugin-lifecycle", status: pluginHealthy ? "complete" : "needs-attention" },
+          { name: "plugin-lifecycle", status: !pluginHealthy ? "needs-attention"
+            : pluginResult.updatePending ? "update-pending" : "complete" },
           {
             name: "agents-lifecycle",
             status: status.kind === "up-to-date" ? "complete" : "needs-attention",
@@ -2541,7 +2567,8 @@ async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void>
       return;
     }
 
-    const nextManagedDefaults = await resolveNextManagedCodexAgentDefaults(plan, existingReceipt);
+    await assertCodexAgentWritesOwned(plan.artifacts, existingReceipt);
+    const nextOwnership = await resolveNextManagedCodexAgentConfigOwnership(plan, existingReceipt);
     const receipt = createCodexAgentsReceipt({
       root,
       scope: "global",
@@ -2549,11 +2576,12 @@ async function runCodexPluginWithAgents(opts: PlatformPluginOpts): Promise<void>
       pluginVersion: companion.pluginVersion,
       installedPluginPath: companion.installedPluginPath,
       contentFingerprint: companion.contentFingerprint,
-      managedAgentDefaults: nextManagedDefaults,
+      managedAgentDefaults: nextOwnership.defaults,
+      managedAgentSections: nextOwnership.sections,
       artifacts: plan.artifacts,
     });
     const writeResult = await withCodexAgentConfigReceiptRollback(
-      plan.artifacts.filter((artifact) => isCodexAgentConfigArtifact("codex", artifact)).map((artifact) => artifact.path),
+      plan.artifacts.map((artifact) => artifact.path),
       receiptPath,
       async () => {
         const result = await writePlatformArtifacts(
@@ -2972,6 +3000,22 @@ async function createCodexMarketplacePlanForPluginOperation(
 }
 
 async function runCodexPluginLocalUninstall(opts: PlatformPluginOpts): Promise<void> {
+  if (opts.plan) { await runCodexPluginLocalUninstallLocked(opts); return; }
+  const useProject = opts.project || (!opts.dir && !opts.global);
+  const target = await resolveGenerateOutputRoot("codex", {
+    dir: opts.dir, project: useProject, global: opts.global, bundle: "codex-marketplace",
+  });
+  const scope = target.metadata.scope ?? "project";
+  const lockRoot = scope === "global" ? join(target.root, ".codex") : resolveCodexConfigLockRoot(target.root, scope);
+  try { await stat(lockRoot); }
+  catch (error) {
+    if (hasNodeErrorCode(error, "ENOENT")) { await runCodexPluginLocalUninstallLocked(opts); return; }
+    throw error;
+  }
+  await withCodexTargetLock(lockRoot, () => runCodexPluginLocalUninstallLocked(opts));
+}
+
+async function runCodexPluginLocalUninstallLocked(opts: PlatformPluginOpts): Promise<void> {
   const format = resolveOutputFormat(opts.json);
   const useProject = opts.project || (!opts.dir && !opts.global);
   const outputTarget = await resolveGenerateOutputRoot("codex", {
@@ -2997,6 +3041,9 @@ async function runCodexPluginLocalUninstall(opts: PlatformPluginOpts): Promise<v
 
   targets = [...new Map(targets.map((target) => [target.path, target])).values()];
   const resolvedTargets = await resolveCodexPluginRemovableTargets(targets, plan.artifacts, Boolean(opts.force));
+  if (agents) await assertNoDanglingCodexAgentRegistrations(
+    agents.configPath, agents.ownedPaths, agents.receipt?.managedAgentSections ?? [],
+  );
 
   if (opts.plan) {
     const configResult = agents
@@ -3005,6 +3052,7 @@ async function runCodexPluginLocalUninstall(opts: PlatformPluginOpts): Promise<v
         true,
         agents.receipt?.managedAgentNames ?? [],
         agents.receipt?.managedAgentDefaults ?? [],
+        agents.receipt?.managedAgentSections ?? [],
       )
       : { changed: false, missing: false };
     emitOutput(
@@ -3041,19 +3089,49 @@ async function runCodexPluginLocalUninstall(opts: PlatformPluginOpts): Promise<v
     return;
   }
 
-  const removal = await removeManagedPaths(resolvedTargets.removable.map((target) => target.path));
-  const configResult = agents
+  if (agents) await assertCodexAgentDeletesOwned(agents.ownedPaths, agents.receipt);
+  const configPreview = agents
     ? await stripCodexAgentConfigFile(
       agents.configPath,
-      false,
+      true,
       agents.receipt?.managedAgentNames ?? [],
       agents.receipt?.managedAgentDefaults ?? [],
+      agents.receipt?.managedAgentSections ?? [],
     )
-    : { changed: false, missing: false };
-
-  if (agents) {
-    await deleteCodexAgentsReceipt(agents.receiptPath);
-  }
+    : null;
+  const removalPaths = resolvedTargets.removable.map((target) => target.path);
+  const snapshotPaths = [
+    ...removalPaths,
+    ...(agents ? [agents.configPath, agents.receiptPath] : []),
+  ];
+  const executeRemoval = async (acknowledge: (path: string, expected: { readonly kind: "absent" } | { readonly kind: "file-content"; readonly content: string }) => Promise<void>) => {
+    const removal = await removeManagedPaths(removalPaths);
+    for (const path of removalPaths) await acknowledge(path, { kind: "absent" });
+    const configResult = agents
+      ? await stripCodexAgentConfigFile(
+        agents.configPath,
+        false,
+        agents.receipt?.managedAgentNames ?? [],
+        agents.receipt?.managedAgentDefaults ?? [],
+        agents.receipt?.managedAgentSections ?? [],
+      )
+      : { changed: false, missing: false };
+    if (agents) {
+      await acknowledge(agents.configPath, configPreview?.nextContent === undefined
+        ? { kind: "absent" }
+        : { kind: "file-content", content: configPreview.nextContent });
+      await deleteCodexAgentsReceipt(agents.receiptPath);
+      await acknowledge(agents.receiptPath, { kind: "absent" });
+    }
+    return { removal, configResult };
+  };
+  const physicalTargets = await Promise.all(snapshotPaths.map(async (path) => {
+    try { await lstat(path); return true; }
+    catch (error) { if (hasNodeErrorCode(error, "ENOENT")) return false; throw error; }
+  }));
+  const { removal, configResult } = physicalTargets.some(Boolean)
+    ? await withCodexPluginUninstallRollback(root, snapshotPaths, executeRemoval)
+    : await executeRemoval(async () => {});
 
   emitOutput(
     format,
@@ -3478,6 +3556,47 @@ export async function runPlatformAgents(
   target: PlatformName,
   opts: PlatformAgentsOpts,
 ): Promise<void> {
+  try {
+    if (target !== "codex") {
+      await runPlatformAgentsLocked(target, opts);
+      return;
+    }
+    const operation = resolveCodexAgentsOperation(opts);
+    if (opts.plan || operation === "status") {
+      await runPlatformAgentsLocked(target, opts);
+      return;
+    }
+    const targetResolution = await resolveInstallTarget(target, {
+      dir: opts.dir,
+      cwd: process.cwd(),
+      project: opts.project,
+      global: opts.global,
+    });
+    const lockRoot = resolveCodexConfigLockRoot(targetResolution.root, resolveScopeFromSelector(opts));
+    if (operation === "uninstall") {
+      try { await stat(lockRoot); }
+      catch (error) {
+        if (hasNodeErrorCode(error, "ENOENT")) {
+          await runPlatformAgentsLocked(target, opts);
+          return;
+        }
+        throw error;
+      }
+    }
+    await withCodexTargetLock(lockRoot, () => runPlatformAgentsLocked(target, opts), {
+      createRoot: operation === "sync",
+    });
+  } catch (error) {
+    emitPlatformError(resolveOutputFormat(opts.json), target, "agents",
+      error instanceof Error ? `Codex custom agents 处理失败：${error.message}` : "Codex custom agents 处理失败。");
+    process.exitCode = 1;
+  }
+}
+
+async function runPlatformAgentsLocked(
+  target: PlatformName,
+  opts: PlatformAgentsOpts,
+): Promise<void> {
   const format = resolveOutputFormat(opts.json);
 
   try {
@@ -3539,21 +3658,30 @@ export async function runPlatformAgents(
 
     if (operation === "uninstall") {
       const configArtifact = getCodexAgentConfigArtifact(plan);
-      const expectedAgentPaths = getCodexAgentFileArtifacts(plan).map((artifact) => artifact.path);
-      const pathsToRemove = uniquePaths(
-        receipt ? getCodexAgentsReceiptOwnedPaths(receipt) : expectedAgentPaths,
+      const pathsToRemove = uniquePaths(receipt ? getCodexAgentsReceiptOwnedPaths(receipt) : []);
+      await assertCodexAgentDeletesOwned(pathsToRemove, receipt);
+      if (configArtifact) await assertNoDanglingCodexAgentRegistrations(
+        configArtifact.path, pathsToRemove, receipt?.managedAgentSections ?? [],
       );
-      const removal = opts.plan
-        ? await estimateRemovedPaths(pathsToRemove)
-        : await removeManagedPaths(pathsToRemove);
-      const configResult = configArtifact
-        ? await stripCodexAgentConfigFile(
-          configArtifact.path,
-          Boolean(opts.plan),
-          receipt?.managedAgentNames ?? listZcAgentConfigNames(configArtifact.content),
-          receipt?.managedAgentDefaults ?? [],
-        )
-        : { changed: false, missing: true };
+      const performRemoval = async (dryRun: boolean) => {
+        const removal = dryRun ? await estimateRemovedPaths(pathsToRemove) : await removeManagedPaths(pathsToRemove);
+        const configResult = configArtifact
+          ? await stripCodexAgentConfigFile(
+            configArtifact.path, dryRun,
+            receipt?.managedAgentNames ?? [],
+            receipt?.managedAgentDefaults ?? [],
+            receipt?.managedAgentSections ?? [],
+          )
+          : { changed: false, missing: true };
+        if (!dryRun) await deleteCodexAgentsReceipt(receiptPath);
+        return { removal, configResult };
+      };
+      const { removal, configResult } = opts.plan
+        ? await performRemoval(true)
+        : await withCodexAgentConfigReceiptRollback(
+          [...pathsToRemove, ...(configArtifact ? [configArtifact.path] : [])], receiptPath,
+          () => performRemoval(false),
+        );
       const result = {
         removed: removal.removed,
         missing: removal.missing,
@@ -3562,10 +3690,6 @@ export async function runPlatformAgents(
         receiptPath,
         receiptRemoved: !opts.plan,
       };
-
-      if (!opts.plan) {
-        await deleteCodexAgentsReceipt(receiptPath);
-      }
 
       emitOutput(
         format,
@@ -3606,7 +3730,9 @@ export async function runPlatformAgents(
       const owned = new Set(receipt ? getCodexAgentsReceiptOwnedPaths(receipt) : []);
       return paths.filter((path) => owned.has(path) && !expected.has(path));
     });
-    const nextManagedDefaults = await resolveNextManagedCodexAgentDefaults(plan, receipt);
+    await assertCodexAgentWritesOwned(plan.artifacts, receipt);
+    if (opts.prune) await assertCodexAgentDeletesOwned(staleAgentFiles, receipt);
+    const nextOwnership = await resolveNextManagedCodexAgentConfigOwnership(plan, receipt);
     const writeAgents = () => writePlatformArtifacts(
       target,
       plan.artifacts,
@@ -3625,7 +3751,7 @@ export async function runPlatformAgents(
           : { removed: 0, missing: 0 },
       }
       : await withCodexAgentConfigReceiptRollback(
-        plan.artifacts.filter((artifact) => isCodexAgentConfigArtifact(target, artifact)).map((artifact) => artifact.path),
+        [...plan.artifacts.map((artifact) => artifact.path), ...(opts.prune ? staleAgentFiles : [])],
         receiptPath,
         async () => {
           const writeResult = await writeAgents();
@@ -3638,7 +3764,8 @@ export async function runPlatformAgents(
             pluginId: `${codexMarketplacePluginName}@${codexMarketplacePluginName}`,
             pluginVersion: getCliVersion(),
             contentFingerprint: plan.metadata?.fingerprint.value ?? getCliVersion(),
-            managedAgentDefaults: nextManagedDefaults,
+            managedAgentDefaults: nextOwnership.defaults,
+            managedAgentSections: nextOwnership.sections,
             artifacts: plan.artifacts,
           });
           await writeCodexAgentsReceipt(receiptPath, nextReceipt);
@@ -3918,7 +4045,94 @@ async function removeOptionalManagedPath(path: string | null | undefined): Promi
   };
 }
 
+async function withCodexLifecycleLock<T>(
+  target: PlatformName,
+  opts: PlatformTargetSelectorOpts & { readonly plan?: boolean },
+  work: () => Promise<T>,
+  createRoot = false,
+): Promise<T> {
+  if (target !== "codex" || opts.plan) return work();
+  const selector = resolveLifecycleSelector(target, opts);
+  const resolution = await resolveInstallTarget(target, {
+    dir: selector.dir,
+    cwd: process.cwd(),
+    project: selector.project,
+    global: selector.global,
+  });
+  const root = resolveCodexConfigLockRoot(resolution.root, resolveScopeFromSelector(selector));
+  if (!createRoot) {
+    try { await stat(root); }
+    catch (error) {
+      if (hasNodeErrorCode(error, "ENOENT")) return work();
+      throw error;
+    }
+  }
+  return withCodexTargetLock(root, work, { createRoot });
+}
+
+async function runCodexLifecycleSafely(
+  action: "install" | "update" | "uninstall" | "repair",
+  target: PlatformName,
+  opts: PlatformTargetSelectorOpts & { readonly plan?: boolean; readonly json?: boolean },
+  work: () => Promise<void>,
+  createRoot = false,
+): Promise<void> {
+  try { await withCodexLifecycleLock(target, opts, work, createRoot); }
+  catch (error) {
+    emitPlatformError(resolveOutputFormat(opts.json), target, action,
+      error instanceof Error ? `${target} ${action} 失败：${error.message}` : `${target} ${action} 失败。`);
+    process.exitCode = 1;
+  }
+}
+
+async function writeCodexDirectInstall(
+  plan: InstallPlan,
+  previous: PlatformInstallReceipt | null,
+  overwrite: OverwriteMode,
+): Promise<WriteArtifactsResult> {
+  const configArtifact = getCodexAgentConfigArtifact(plan);
+  const existing = configArtifact ? await readTextIfExists(configArtifact.path) : null;
+  const priorNames = previous?.managedCodexAgentSections?.map((entry) => entry.name) ?? [];
+  const priorDefaults = previous?.managedCodexAgentDefaults ?? [];
+  const merged = configArtifact
+    ? mergeOwnedCodexAgentConfigWithDefaults(existing ?? undefined, configArtifact.content, priorNames, priorDefaults)
+    : null;
+  const sections = configArtifact && merged
+    ? resolveManagedCodexAgentSections(existing ?? undefined, merged.content, configArtifact.content, previous?.managedCodexAgentSections ?? [])
+    : [];
+  const receiptPath = resolvePlatformInstallReceiptPath(plan);
+  return withCodexAgentConfigReceiptRollback(
+    plan.artifacts.map((artifact) => artifact.path), receiptPath,
+    async () => {
+      await assertCodexAgentWritesOwned(plan.artifacts, previous);
+      const result = await writePlatformArtifacts("codex", plan.artifacts.map((artifact) => ({
+        path: artifact.path, content: artifact.content,
+      })), {
+        dryRun: false, overwrite, managedAgentNames: priorNames, managedAgentDefaults: priorDefaults,
+      });
+      await writePlatformInstallReceiptForPlan(plan, {
+        installedAt: new Date().toISOString(), zcVersion: getCliVersion(),
+        installMethod: previous?.installMethod,
+        installSource: previous?.installSource,
+        sourceRef: previous?.sourceRef,
+        bundleType: previous?.bundleType,
+        bundlePath: previous?.bundlePath,
+        managedCodexAgentSections: sections,
+        managedCodexAgentDefaults: merged?.managedDefaults ?? [],
+      });
+      return result;
+    },
+  );
+}
+
 export async function runPlatformInstall(
+  target: PlatformName,
+  opts: PlatformTargetSelectorOpts & { force?: boolean; plan?: boolean; json?: boolean },
+): Promise<void> {
+  return runCodexLifecycleSafely("install", target, opts, () => runPlatformInstallLocked(target, opts), true);
+}
+
+async function runPlatformInstallLocked(
   target: PlatformName,
   opts: PlatformTargetSelectorOpts & {
     force?: boolean;
@@ -4182,7 +4396,9 @@ export async function runPlatformInstall(
       }
     }
 
-    const result = await writePlatformArtifacts(
+    const result = target === "codex"
+      ? await writeCodexDirectInstall(plan, (await resolvePlatformInstallStatus(plan)).receipt, overwrite)
+      : await writePlatformArtifacts(
       target,
       plan.artifacts.map((artifact) => ({
         path: artifact.path,
@@ -4193,9 +4409,8 @@ export async function runPlatformInstall(
         overwrite
       }
     );
-    await writePlatformInstallReceiptForPlan(plan, {
-      installedAt: new Date().toISOString(),
-      zcVersion: getCliVersion(),
+    if (target !== "codex") await writePlatformInstallReceiptForPlan(plan, {
+      installedAt: new Date().toISOString(), zcVersion: getCliVersion(),
     });
 
     emitOutput(
@@ -4249,6 +4464,13 @@ export async function runPlatformInstall(
 }
 
 export async function runPlatformStatus(
+  target: PlatformName,
+  opts: PlatformTargetSelectorOpts & { json?: boolean },
+): Promise<void> {
+  return runPlatformStatusLocked(target, opts);
+}
+
+async function runPlatformStatusLocked(
   target: PlatformName,
   opts: PlatformTargetSelectorOpts & { json?: boolean },
 ): Promise<void> {
@@ -4345,6 +4567,13 @@ export async function runPlatformStatus(
 }
 
 export async function runPlatformUpdate(
+  target: PlatformName,
+  opts: PlatformTargetSelectorOpts & { force?: boolean; plan?: boolean; json?: boolean },
+): Promise<void> {
+  return runCodexLifecycleSafely("update", target, opts, () => runPlatformUpdateLocked(target, opts));
+}
+
+async function runPlatformUpdateLocked(
   target: PlatformName,
   opts: PlatformTargetSelectorOpts & {
     force?: boolean;
@@ -4603,7 +4832,9 @@ export async function runPlatformUpdate(
       }
     }
 
-    const result = await writePlatformArtifacts(
+    const result = target === "codex"
+      ? await writeCodexDirectInstall(plan, status.receipt, overwrite)
+      : await writePlatformArtifacts(
       target,
       plan.artifacts.map((artifact) => ({
         path: artifact.path,
@@ -4614,9 +4845,8 @@ export async function runPlatformUpdate(
         overwrite,
       },
     );
-    await writePlatformInstallReceiptForPlan(plan, {
-      installedAt: new Date().toISOString(),
-      zcVersion,
+    if (target !== "codex") await writePlatformInstallReceiptForPlan(plan, {
+      installedAt: new Date().toISOString(), zcVersion,
     });
 
     emitOutput(
@@ -4670,6 +4900,13 @@ export async function runPlatformUpdate(
 }
 
 export async function runPlatformUninstall(
+  target: PlatformName,
+  opts: PlatformTargetSelectorOpts & { force?: boolean; plan?: boolean; json?: boolean },
+): Promise<void> {
+  return runCodexLifecycleSafely("uninstall", target, opts, () => runPlatformUninstallLocked(target, opts));
+}
+
+async function runPlatformUninstallLocked(
   target: PlatformName,
   opts: PlatformTargetSelectorOpts & {
     force?: boolean;
@@ -4774,6 +5011,7 @@ export async function runPlatformUninstall(
     }
 
     let artifactCleanup = { removed: 0, missing: 0 };
+    const receiptExisted = await pathExists(status.receiptPath);
 
     if (target === "qwen" && installMethod === "qwen-cli") {
       const extensionName = plan.capability?.extension?.name ?? "zc-toolkit";
@@ -4789,13 +5027,35 @@ export async function runPlatformUninstall(
       }
 
       await uninstallQoderCnPluginWithOfficialCli(qoderCnPluginName);
+    } else if (target === "codex") {
+      const configArtifact = getCodexAgentConfigArtifact(plan);
+      const paths = status.receipt.artifacts
+        .map((artifact) => artifact.path)
+        .filter((path) => path !== configArtifact?.path && !/(?:^|[\\/])config\.toml$/u.test(path));
+      await assertCodexAgentDeletesOwned(paths, status.receipt);
+      if (configArtifact) await assertNoDanglingCodexAgentRegistrations(
+        configArtifact.path, paths, status.receipt.managedCodexAgentSections ?? [],
+      );
+      artifactCleanup = await withCodexAgentConfigReceiptRollback(
+        [...paths, ...(configArtifact ? [configArtifact.path] : [])], status.receiptPath,
+        async () => {
+          const removal = await removeManagedPaths(paths);
+          if (configArtifact) await stripCodexAgentConfigFile(
+            configArtifact.path, false,
+            status.receipt!.managedCodexAgentSections?.map((section) => section.name) ?? [],
+            status.receipt!.managedCodexAgentDefaults ?? [],
+            status.receipt!.managedCodexAgentSections ?? [],
+          );
+          await deletePlatformInstallReceipt(status.receiptPath);
+          return removal;
+        },
+      );
     } else {
       artifactCleanup = await removeManagedPaths(status.receipt.artifacts.map((artifact) => artifact.path));
     }
 
     const bundleCleanup = await removeOptionalManagedPath(bundlePath);
-    const receiptExisted = await pathExists(status.receiptPath);
-    if (receiptExisted) {
+    if (receiptExisted && target !== "codex") {
       await deletePlatformInstallReceipt(status.receiptPath);
     }
 
@@ -4845,6 +5105,13 @@ export async function runPlatformUninstall(
 }
 
 export async function runPlatformRepair(
+  target: PlatformName,
+  opts: PlatformTargetSelectorOpts & { plan?: boolean; json?: boolean },
+): Promise<void> {
+  return runCodexLifecycleSafely("repair", target, opts, () => runPlatformRepairLocked(target, opts));
+}
+
+async function runPlatformRepairLocked(
   target: PlatformName,
   opts: PlatformTargetSelectorOpts & {
     plan?: boolean;
@@ -5103,7 +5370,9 @@ export async function runPlatformRepair(
       return;
     }
 
-    const result = await writePlatformArtifacts(
+    const result = target === "codex"
+      ? await writeCodexDirectInstall(plan, status.receipt, overwrite)
+      : await writePlatformArtifacts(
       target,
       plan.artifacts.map((artifact) => ({
         path: artifact.path,
@@ -5114,7 +5383,7 @@ export async function runPlatformRepair(
         overwrite,
       },
     );
-    await writePlatformInstallReceiptForPlan(plan, {
+    if (target !== "codex") await writePlatformInstallReceiptForPlan(plan, {
       installedAt: new Date().toISOString(),
       zcVersion: getCliVersion(),
       installMethod,
