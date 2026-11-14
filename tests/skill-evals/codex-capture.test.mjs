@@ -201,6 +201,12 @@ test('rejects an evaluation home containing copied auth before starting a proces
   await assert.rejects(captureCodex(options), /must not contain copied auth/);
 });
 
+test('capture refuses an empty auth.json directory without reporting copied credentials', async () => {
+  const options = await fixture('happy');
+  await mkdir(join(options.home, 'auth.json'));
+  await assert.rejects(captureCodex(options), /auth.json directory; sandbox sentinel state requires review/);
+});
+
 test('one capture session reuses initialization but gives each case its own thread, cwd and evidence', async () => {
   const options = await fixture('batch-late');
   const secondCwd = join(options.cwd, '..', 'cwd-two'), secondOutput = join(options.cwd, '..', 'capture-two');
@@ -351,6 +357,12 @@ test('reusable environment rejects copied auth before spawning', async () => {
   const options = await reusableFixture('reuse');
   await writeFile(join(options.home, 'auth.json'), 'synthetic secret');
   assert.throws(() => createReusableEvaluationEnvironment(options), /must not contain copied auth/);
+});
+
+test('discovery refuses an empty auth.json directory before spawning', async () => {
+  const options = await reusableFixture('reuse');
+  await mkdir(join(options.home, 'auth.json'));
+  assert.throws(() => createReusableEvaluationEnvironment(options), /auth.json directory; sandbox sentinel state requires review/);
 });
 
 test('discovery rejects a home blocked by capture cleanup before startup', async () => {

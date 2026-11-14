@@ -29,7 +29,7 @@ if (args['--prepare-only']) {
   cpSync(snapshot, market, { recursive: true, errorOnExist: true });
   writeFileSync(join(project, 'README.md'), '# Design planning probe\nSynthetic read-only fixture.\n');
   const quote = value => JSON.stringify(value.replaceAll('\\', '/'));
-  writeFileSync(join(home, 'config.toml'), `# Prepared only. Sandbox and provider are not initialized.\nmodel = ${JSON.stringify(args['--model'])}\nmodel_reasoning_effort = ${JSON.stringify(args['--effort'])}\napproval_policy = "never"\nweb_search = "disabled"\n[permissions.eval.filesystem]\n":root" = "read"\n${quote(workspace)} = "deny"\n${quote(snapshot)} = "deny"\n${quote(otherSnapshot)} = "deny"\n${quote(join(home, 'auth.json'))} = "deny"\n[permissions.eval.network]\nenabled = false\n`);
+  writeFileSync(join(home, 'config.toml'), `# Prepared only. Sandbox and provider are not initialized.\nmodel = ${JSON.stringify(args['--model'])}\nmodel_reasoning_effort = ${JSON.stringify(args['--effort'])}\napproval_policy = "never"\nweb_search = "disabled"\n[permissions.eval.filesystem]\n":root" = "read"\n${quote(workspace)} = "deny"\n${quote(snapshot)} = "deny"\n${quote(otherSnapshot)} = "deny"\n${quote(join(home, 'config.toml'))} = "deny"\n${quote(join(home, 'auth.json'))} = "deny"\n[permissions.eval.network]\nenabled = false\n`);
   const status = { ...executionGate(args), root, plan, externalProcessesStarted: 0, credentialsCopied: false, sandboxInitialized: false };
   writeFileSync(join(root, 'preparation.json'), JSON.stringify(status, null, 2));
   console.log(JSON.stringify(status));

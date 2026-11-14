@@ -20,7 +20,13 @@ export function createEvaluationHomeGuard(home) {
   };
   const assertReusable = () => {
     assertIdentity();
-    if (present(join(home, 'auth.json'))) throw new Error('evaluation home must not contain copied auth');
+    const authPath = join(home, 'auth.json');
+    if (present(authPath)) {
+      if (lstatSync(authPath).isDirectory()) {
+        throw new Error('evaluation home contains an auth.json directory; sandbox sentinel state requires review before reuse');
+      }
+      throw new Error('evaluation home must not contain copied auth');
+    }
     if (present(join(home, cleanupBlockName))) throw new Error('evaluation home blocked by unconfirmed cleanup');
   };
   assertReusable();

@@ -47,6 +47,7 @@ test('execute blocks before binary startup and prepare-only creates no auth or s
     const prepared = spawnSync(process.execPath, [script, ...common, '--prepare-only'], { cwd: workspace, encoding: 'utf8' });
     assert.equal(prepared.status, 2, prepared.stderr);
     const result = JSON.parse(prepared.stdout);
+    roots.push(result.root);
     assert.equal(result.status, 'needs-environment');
     assert.equal(result.externalProcessesStarted, 0);
     assert.equal(result.credentialsCopied, false);
@@ -54,7 +55,9 @@ test('execute blocks before binary startup and prepare-only creates no auth or s
     assert.equal(existsSync(join(result.root, 'home/auth.json')), false);
     assert.equal(existsSync(join(result.root, 'home/.sandbox')), false);
     assert.equal(existsSync(join(result.root, 'evidence')), false);
-    rmSync(result.root, { recursive: true, force: true });
+    const preparedConfig = readFileSync(join(result.root, 'home/config.toml'), 'utf8');
+    const protectedConfigPath = JSON.stringify(join(result.root, 'home/config.toml').replaceAll('\\', '/'));
+    assert.ok(preparedConfig.includes(`${protectedConfigPath} = "deny"`), 'evaluation config needs an explicit deny, not only an ancestor deny');
   } finally { for (const root of roots) rmSync(root, { recursive: true, force: true }); }
 });
 

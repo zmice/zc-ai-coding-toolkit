@@ -66,6 +66,8 @@ pnpm eval:design --suite start --case new-page-implicit --arm candidate --baseli
 
 默认只输出计划，不调用模型、不复制凭据。`--suite design` 使用设计套件；`--suite start` 计划只标记 `start`。`--prepare-only` 创建冻结快照副本与配置并以 `needs-environment` 退出；这不是可执行环境验证。`--execute` 返回 `blocked`，退出码 2。
 
+准备配置对评测 `config.toml` 和 `auth.json` 使用显式拒读规则，不只依赖祖先目录的拒读。规则存在仍不等于宿主实际隔离通过；恢复模型执行前必须分别验证文件权限、网络限制和进程清理。Windows 沙箱可能将缺失的拒读路径创建为空目录，不能将 `auth.json` 空目录误报成已复制凭据，也不能据此放行该环境。
+
 准备模式必须同时提供两个不同的冻结目录，避免把同一版本当作前后对照。当前没有沙箱拒读探针、登录复制、`frozen.json`、模型捕获或评分结果；不能将计划或准备文件视为行为改善证据。
 
 `--retry-preflight` 已禁用；会话复用已经实现，但恢复执行仍须解决真实宿主隔离和清理验证缺口。
