@@ -44,6 +44,13 @@ const manifest: ToolkitManifestLike = {
 };
 
 describe("@zmice/platform-qwen scaffold", () => {
+  it("keeps governance dependencies out of runtime skill restrictions", () => {
+    const plan = createQwenGenerationPlan(manifest);
+    const agent = plan.artifacts.find((artifact) => artifact.path.endsWith("agents/zc-reviewer.md"))!;
+    assert.match(agent.content, /^tools:/m);
+    assert.doesNotMatch(agent.content, /^skills:/m);
+    assert.match(agent.content, /skill:<id>[\s\S]*zc-<id>/);
+  });
   it("includes supporting files beside generated skills", () => {
     const attachmentManifest: ToolkitManifestLike = {
       source: "toolkit-manifest",

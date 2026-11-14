@@ -599,20 +599,17 @@ function renderQoderCnAgentArtifact(
   asset: ToolkitAssetLike,
 ): PlatformArtifact {
   const slug = stripAssetKindPrefix(asset.id);
-  const skillRefs = asset.requires
-    ?.filter((entry) => entry.startsWith("skill:"))
-    .map((entry) => entry.slice("skill:".length));
-
   return createMarkdownAgentArtifact({
     path: `agents/${slug}.md`,
     asset,
     name: slug,
     description: describeAsset(asset),
-    body:
-      asset.body
-      ?? `这是由工具包资产 \`${asset.id}\` 生成的 Qoder CN agent，用于承接 \`${qoderCnPluginName}:${slug}\` 角色能力。`,
+    body: [
+      asset.body ?? `这是由工具包资产 \`${asset.id}\` 生成的 Qoder CN agent，用于承接 \`${qoderCnPluginName}:${slug}\` 角色能力。`,
+      "## 平台技能定位",
+      "正文的 `skill:<id>` 是 toolkit 资产标识，本插件内技能名为 `<id>`，宿主可能附加插件命名空间；先核对实际发现名再读取。治理依赖不转换为技能允许列表。未发现时报告缺失并按角色降级，不声称执行了该技能。",
+    ].join("\n\n"),
     tools: asset.tools,
-    skills: skillRefs,
   });
 }
 

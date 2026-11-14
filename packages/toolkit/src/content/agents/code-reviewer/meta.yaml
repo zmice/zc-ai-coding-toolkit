@@ -1,7 +1,7 @@
 kind: agent
 name: code-reviewer
 title: 代码审查
-description: 资深代码审查专家，含重构建议和开发者体验评估。在完成代码编写或修改后，主动进行七维度代码审查（正确性、可读性、架构、安全性、性能、重构建议、DX 评估）。
+description: 资深代码审查专家，含重构建议和开发者体验评估。适用于合并前、较大功能或重构完成后，以及存在独立审查收益的高风险改动；按七维度给出有证据的结论。
 tier: recommended
 audience: advanced
 stability: stable
@@ -17,8 +17,6 @@ tools:
   - Glob
   - Bash
 codex_agent:
-  model: gpt-6-sol
-  model_reasoning_effort: high
   sandbox_mode: read-only
 platforms:
   - qwen

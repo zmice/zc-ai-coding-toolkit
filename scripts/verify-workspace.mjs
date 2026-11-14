@@ -6,21 +6,6 @@ import { tmpdir } from "node:os";
 
 const root = process.cwd();
 
-function resolveTscBin() {
-  const candidates = [
-    "node_modules/typescript/bin/tsc",
-    "apps/cli/node_modules/typescript/bin/tsc",
-    "packages/toolkit/node_modules/typescript/bin/tsc"
-  ].map((relativePath) => resolve(root, relativePath));
-
-  const match = candidates.find((candidate) => existsSync(candidate));
-  if (!match) {
-    throw new Error(`TypeScript compiler not found. Tried:\n${candidates.join("\n")}`);
-  }
-
-  return match;
-}
-
 function resolveInstalledPackageRoot(dependencyName, requiringPackageJsonPath) {
   const requireFromPackage = createRequire(requiringPackageJsonPath);
   let candidate = dirname(requireFromPackage.resolve(dependencyName));
@@ -110,8 +95,6 @@ function assertFile(filePath, pattern) {
 }
 
 function main() {
-  const tscBin = resolveTscBin();
-
   assertFile(
     resolve(root, ".github/workflows/publish-codex-marketplace-repo.yml"),
     /rsync -a --checksum --delete --exclude '\.git\/'/
@@ -121,13 +104,9 @@ function main() {
     /rsync -a --checksum --delete --exclude '\.git\/'/
   );
 
-  run("node", [tscBin, "-p", "packages/toolkit/tsconfig.json"], "build toolkit");
-  run("node", [tscBin, "-p", "packages/platform-core/tsconfig.json"], "build platform-core");
-  run("node", [tscBin, "-p", "packages/platform-qwen/tsconfig.json"], "build platform-qwen");
-  run("node", [tscBin, "-p", "packages/platform-codex/tsconfig.json"], "build platform-codex");
-  run("node", [tscBin, "-p", "packages/platform-claude/tsconfig.json"], "build platform-claude");
-  run("node", [tscBin, "-p", "packages/platform-opencode/tsconfig.json"], "build platform-opencode");
-  run("pnpm", ["--dir", "apps/cli", "build"], "build apps/cli");
+  if (!process.argv.includes("--built")) {
+    run("pnpm", ["--dir", "apps/cli", "build"], "build apps/cli (includes internal packages)");
+  }
 
   run(
     "node",

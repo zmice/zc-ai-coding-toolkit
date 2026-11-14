@@ -69,3 +69,24 @@ test('Codex bundles the complete start-to-design lifecycle and its planning refe
   assert.ok(reference);
   assert.ok(plan.artifacts.some(item => item.path.endsWith('/visual-refinement/references/design-plan.md') && item.content === reference.contents));
 });
+
+test('Codex ships the shared approval contract alongside its workflow entrypoints', () => {
+  const ids = new Set(['command:start', 'command:build', 'skill:engineering-principles',
+    'skill:verification-before-completion', 'skill:skill-authoring-and-evaluation']);
+  const selected = toolkit.assets.filter(asset => ids.has(asset.id));
+  assert.equal(selected.length, ids.size);
+  const plan = createCodexPluginGenerationPlan({ source: 'approval-contract-test', assets: selected.map(asset => ({
+    id: asset.id, kind: asset.meta.kind, name: asset.meta.name, title: asset.meta.title,
+    summary: asset.meta.description, platforms: asset.meta.platforms, body: asset.body, attachments: asset.attachments,
+  })) });
+  const owner = selected.find(asset => asset.id === 'skill:engineering-principles');
+  const contract = owner.attachments.find(item => item.relativePath === 'assets/references/approval-and-environment-reuse.md');
+  assert.ok(contract);
+  const shipped = plan.artifacts.filter(item => item.path.endsWith('/engineering-principles/references/approval-and-environment-reuse.md'));
+  assert.equal(shipped.length, 1);
+  assert.equal(shipped[0].content, contract.contents);
+  for (const asset of selected) {
+    const artifact = plan.artifacts.find(item => ('/' + item.path).endsWith(`/skills/${asset.meta.name}/SKILL.md`));
+    assert.ok(artifact?.content.includes('授权与执行环境复用契约'), asset.id);
+  }
+});

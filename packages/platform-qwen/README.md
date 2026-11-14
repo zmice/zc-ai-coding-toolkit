@@ -18,6 +18,10 @@
 - 本包只负责 Qwen 平台表达、模板渲染和安装计划
 - 不直接参与 upstream 治理
 
+角色正文中的 `skill:<id>` 映射到本扩展的 `zc-<id>`，运行时仍需核对实际发现名。治理字段 `requires` 不再写入 agent 的 `skills` frontmatter；技能读取由正文按任务条件指导。既有 `tools` frontmatter 继续作为 Qwen 的工具允许列表，未改成继承全部工具。宿主权限和工具是否实际可用需要单独验证。
+
+字段依据：[Qwen 官方 subagents 文档](https://github.com/QwenLM/qwen-code/blob/main/docs/users/features/sub-agents.md)；生成验证不等同于已安装宿主验收。
+
 ## 常用用法
 
 ```bash

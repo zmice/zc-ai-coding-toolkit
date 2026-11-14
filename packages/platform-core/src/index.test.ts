@@ -365,7 +365,7 @@ describe("Qoder CN (qoder-cn) generation plan", () => {
     assert.ok(skillArtifact.content.includes("Alpha skill body"));
   });
 
-  it("generates agent artifacts with tools and skill references", () => {
+  it("preserves explicit tool restrictions without converting governance into a skill allowlist", () => {
     const plan = createQoderCnGenerationPlan(qoderCnManifest);
     const agentArtifact = plan.artifacts[3];
 
@@ -374,7 +374,8 @@ describe("Qoder CN (qoder-cn) generation plan", () => {
     assert.ok(agentArtifact.content.includes("Reviewer agent body"));
     assert.ok(agentArtifact.content.includes('"read"'));
     assert.ok(agentArtifact.content.includes('"grep"'));
-    assert.ok(agentArtifact.content.includes("alpha"));
+    assert.doesNotMatch(agentArtifact.content, /^skills:/m);
+    assert.match(agentArtifact.content, /skill:<id>[\s\S]*<id>/);
   });
 
   it("filters out assets that do not target qoder-cn platform", () => {

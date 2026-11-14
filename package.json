@@ -17,13 +17,13 @@
     "eval:review": "node scripts/skill-evals-review-study.mjs",
     "eval:design": "node scripts/skill-evals-design-study.mjs",
     "audit:distribution": "node scripts/skill-distribution-audit.mjs",
-    "test:distribution": "node --test tests/skill-distribution/audit.test.mjs",
+    "test:distribution": "node --test tests/skill-distribution/audit.test.mjs tests/skill-distribution/discovery.test.mjs",
     "test:visual-refinement": "node --test tests/visual-refinement/*.test.mjs",
     "upstream": "node scripts/upstream-governance.mjs",
     "changeset": "changeset",
     "release:check": "node scripts/release-check.mjs pre-version",
     "release:check:post-version": "node scripts/release-check.mjs post-version",
-    "release": "changeset publish"
+    "release": "node scripts/publish-tested-tarball.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.4"

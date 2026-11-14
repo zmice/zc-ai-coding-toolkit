@@ -5,8 +5,8 @@
     "delete-index": "Run git rm -- <path>. This stages deletion and removes the working file; a later write to the same path is a separate untracked file.",
     "write": "Write the exact UTF-8 text to <path>, creating parent directories; do not stage it.",
     "rename": "Run git mv -- <from> <to>. This stages the rename.",
-    "configure-external-diff": "Create .git/eval-diff-helper.cjs containing only console.log of a fixed marker and set repository-local diff.external to the absolute Node executable plus that helper. No arbitrary command is accepted from the case.",
-    "configure-textconv": "Create .git/eval-textconv-helper.cjs containing only console.log of a fixed marker plus its last argument and set repository-local diff.eval.textconv to the absolute Node executable plus that helper. No arbitrary command is accepted from the case."
+    "configure-external-diff": "Create .git/eval-diff-helper.cjs that prints a fixed marker and exits successfully. Set repository-local diff.external to node; only fixture Git children receive PATH prefixed by the current Node directory and NODE_OPTIONS preloading that helper. Git spawns Node directly without a shell. No arbitrary command is accepted from the case.",
+    "configure-textconv": "Create .git/eval-textconv-helper.cjs that prints a fixed marker plus its last argument and exits successfully. Set repository-local diff.eval.textconv to node; only fixture Git children receive PATH prefixed by the current Node directory and NODE_OPTIONS preloading that helper. Git spawns Node directly without a shell. No arbitrary command is accepted from the case."
   },
   "cases": [
     {

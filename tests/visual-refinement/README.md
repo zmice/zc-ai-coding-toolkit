@@ -24,15 +24,15 @@ node <repo>/tests/visual-refinement/browser-smoke.mjs --execute
 
 它在 `.cache/visual-browser-*` 下创建自己拥有的输入、输出与临时目录，实际生成参考副本和 MP4，验证已有帧目录保留及启动失败、超时后的清理。`receipt.json` 固定源码哈希并记录结果。环境不允许浏览器或回环 HTTP 时保留失败结果，不自动申请提权。此检查只证明合成页面上的工具集成，不是产品视觉验收。
 
-## 手动首轮行为对照
+## 历史首轮行为对照
 
-Windows 专项实验使用 [评测脚本](../../scripts/skill-evals-visual-study.mjs)，必须从仓库根运行并显式选择场景、臂和现有 Codex 可执行文件：
+历史 Windows 专项实验的案例仍保留，但 [评测脚本](../../scripts/skill-evals-visual-study.mjs) 当前仅输出计划。必须从仓库根显式选择场景和臂：
 
 ```powershell
-node scripts/skill-evals-visual-study.mjs <case-id> <baseline|candidate> <absolute-codex.exe> --execute
+node scripts/skill-evals-visual-study.mjs <case-id> <baseline|candidate> --plan
 ```
 
-场景见 [behavior-cases.json](behavior-cases.json)。它使用真实模型调用，创建隔离临时 home 和只读 fixture；在复制登录信息前执行拒读探针，失败就停止。临时登录副本在 `finally` 删除；强制终止可能绕过清理，需核查该次运行自己拥有的 `home/auth.json`。不要将凭据或原始宿主事件提交到仓库。
+场景见 [behavior-cases.json](behavior-cases.json)。`--execute` 返回 `blocked`，不会创建 home、复制登录信息或调用模型。旧版真实模型实验的结果见历史行为记录；要恢复执行，须先完成可复用评测环境、无交互预检和清理验证。
 
 `complete` 仅说明调用结束，必须独立检查 oracle。首轮方案、静态改写、真实实现、浏览器验收与发布分别记账。本轮结果见 [行为记录](../../references/notes/visual-refinement-behavior-2026-11-09.md)与[实现记录](../../references/notes/visual-refinement-implementation-2026-11-09.md)。
 
@@ -53,7 +53,7 @@ node scripts/skill-evals-visual-study.mjs <case-id> <baseline|candidate> <absolu
 
 `start-routing-cases.json` 的输入不点名 Unslop 或 `visual-refinement`，覆盖新页、整屏重塑、只读方案、已批准计划续接、功能 bug 与纯后端负例。采用同样的人工 micro-test 协议，但生产者先读各自快照的 `commands/start/body.md`，再按选择的路线读取阶段技能；只提供 `id/input`，保留 oracle 给独立盲评。结果区分路由是否选中、设计产物是否传递到实现/验收和授权边界，不要求回答中机械出现某个技能名。
 
-默认单测仅校验用例、start 推荐关系的可达性、六条 workflow 不变以及 Codex 整条技能链和附件的完整分发。历史首轮行为结论见 [本轮记录](../../references/notes/unslop-design-workflow-2026-11-13.md)。原生采集需要显式执行以下入口。
+默认单测仅校验用例、start 推荐关系的可达性、六条 workflow 不变以及 Codex 整条技能链和附件的完整分发。历史首轮行为结论见 [本轮记录](../../references/notes/unslop-design-workflow-2026-11-13.md)。原生采集仍处于封禁状态；以下入口只可生成计划或准备文件。
 
 ## 原生设计行为采集
 
@@ -61,16 +61,18 @@ node scripts/skill-evals-visual-study.mjs <case-id> <baseline|candidate> <absolu
 
 ```powershell
 pnpm eval:design --suite start --case new-page-implicit --arm baseline --baseline <绝对baseline目录>
-pnpm eval:design --suite start --case new-page-implicit --arm candidate --baseline <绝对baseline目录> --candidate <绝对candidate目录> --binary <绝对codex.exe> --model <同一模型> --effort <同一推理档位> --execute
+pnpm eval:design --suite start --case new-page-implicit --arm candidate --baseline <绝对baseline目录> --candidate <绝对candidate目录> --binary <绝对codex.exe> --model <同一模型> --effort <同一推理档位> --prepare-only
 ```
 
-默认只输出计划，不调用模型、不复制凭据。`--suite design` 使用设计套件；`--suite start` 只显式注入 `start`，由模型选择后续能力。两臂分别执行；每个案例单独会话，模型只收到 `id/input` 对应的输入，没有 oracle。执行当前支持 Windows，沿用现有 capture adapter 的工具/时间/token 上限和进程树清理。
+默认只输出计划，不调用模型、不复制凭据。`--suite design` 使用设计套件；`--suite start` 计划只标记 `start`。`--prepare-only` 创建冻结快照副本与配置并以 `needs-environment` 退出；这不是可执行环境验证。`--execute` 返回 `blocked`，退出码 2。
 
-执行时必须同时提供两个冻结目录，以便显式拒读并实测两臂源快照，不能只依赖仓库根 ACL 继承。先做快照/安装字节核对及拒读探针，通过后才将当前本机登录复制到 ACL 保护的临时 home，`finally` 清理；强制终止后须核查该次拥有的临时登录文件。不要提交临时 home 或宿主原始日志。`frozen.json` 固定输入、资产、suite 和脚本哈希，`receipt.json` 核对修改与清理边界，`final.md` 和 `turn-evidence.json` 用于独立评分。`captureStatus=complete` 不代表行为通过；基础设施失败记为 inconclusive，不能计成模型回归。
+准备配置对评测 `config.toml` 和 `auth.json` 使用显式拒读规则，不只依赖祖先目录的拒读。规则存在仍不等于宿主实际隔离通过；恢复模型执行前必须分别验证文件权限、网络限制和进程清理。Windows 沙箱可能将缺失的拒读路径创建为空目录，不能将 `auth.json` 空目录误报成已复制凭据，也不能据此放行该环境。
 
-仅预检失败且尚无凭据或模型捕获的目录，可追加 `--retry-preflight <该次root绝对路径>` 重试。入口核对 case/arm、disposable marker、快照字节，并拒绝整个目录树中的 junction、symlink、硬链接或特殊文件，再重新执行全部拒读探针。这个选项不放宽沙箱，也不保证修复 Windows 初始化超时；已开始模型捕获的目录不可复用。
+准备模式必须同时提供两个不同的冻结目录，避免把同一版本当作前后对照。当前没有沙箱拒读探针、登录复制、`frozen.json`、模型捕获或评分结果；不能将计划或准备文件视为行为改善证据。
 
-`scripts/verify-codex-design-install.mjs <隔离home绝对路径> <codex.exe绝对路径> --execute` 可在无登录凭据的临时安装中启动新的 app-server，只调用技能发现接口并核对 start 到 QA 的启用路径，不启动模型。该 home 必须位于仓库 `.cache` 内且带 `.skill-eval-home` 标记；不能用于宿主安装目录。
+`--retry-preflight` 已禁用；会话复用已经实现，但恢复执行仍须解决真实宿主隔离和清理验证缺口。
+
+`scripts/verify-codex-design-install.mjs <隔离home绝对路径> <codex.exe绝对路径> --execute` 可在无登录凭据的临时安装中启动新的 app-server，只调用技能发现接口并核对 start 到 QA 的启用路径，不启动模型。该 home 必须位于仓库 `.cache` 内且带 `.skill-eval-home` 标记；不能用于宿主安装目录。发现与采集共用清理阻断标记，清理未确认的 home 不得重启；发现失败停止当前批次，不自动认证或初始化沙箱。
 
 ## 隔离页面完整交付
 

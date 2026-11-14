@@ -1,6 +1,6 @@
 {
   "name": "@zmice/zc",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "Unified CLI for installing, updating, and querying zc AI coding workflows across Codex, Claude Code, OpenCode, Qwen, and Qoder CN",
   "homepage": "https://github.com/zmice/zc-ai-coding-toolkit#readme",
   "repository": {
@@ -33,16 +33,21 @@
   "files": [
     "dist",
     "vendor",
-    "README.md"
+    "README.md",
+    "!dist/**/*.test.*",
+    "!dist/**/__tests__/**",
+    "!vendor/**/dist/**/*.test.*",
+    "!vendor/**/dist/**/__tests__/**"
   ],
   "scripts": {
-    "build": "node ./scripts/ensure-internal-builds.mjs && tsc && node ./scripts/vendor-internal-packages.mjs",
+    "build": "node ./scripts/build.mjs",
     "dev": "tsc --watch",
-    "test": "node ./scripts/ensure-internal-builds.mjs && vitest run",
+    "test": "node ./scripts/ensure-internal-builds.mjs && pnpm run test:built",
+    "test:built": "vitest run src",
     "lint": "tsc --noEmit",
     "generate": "pnpm build",
-    "verify": "pnpm test && pnpm build",
-    "prepublishOnly": "pnpm lint && pnpm test && pnpm build"
+    "verify": "pnpm build && pnpm lint && pnpm run test:built",
+    "prepublishOnly": "pnpm verify"
   },
   "dependencies": {
     "commander": "^13.0.0",

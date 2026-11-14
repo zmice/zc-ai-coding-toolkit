@@ -216,7 +216,9 @@ async function createPlan(platform, manifest, options) {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
 
-  await importWorkspaceModule("apps/cli/scripts/ensure-internal-builds.mjs");
+  if (process.env.ZC_WORKSPACE_BUILT !== "1") {
+    await importWorkspaceModule("apps/cli/scripts/ensure-internal-builds.mjs");
+  }
   const toolkit = await importWorkspaceModule("packages/toolkit/dist/index.js");
   const loadedManifest = await toolkit.loadToolkitManifest();
   const manifest = {

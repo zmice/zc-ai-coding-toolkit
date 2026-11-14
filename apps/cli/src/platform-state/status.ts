@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 import { hashPlatformArtifactContent } from "./receipt.js";
+import { filterOwnedCodexAgentSections, listZcAgentConfigNames } from "../utils/codex-config-merge.js";
 import type {
   PlatformInstallArtifactStatus,
   PlatformInstallPlanLike,
@@ -71,8 +72,13 @@ export async function resolvePlatformInstallStatus(
     };
   }
 
+  const codexConfigArtifact = plan.platform === "codex" && receipt.managedCodexAgentSections !== undefined
+    ? plan.artifacts.find((artifact) => /(?:^|[\\/])config\.toml$/u.test(artifact.path))
+    : undefined;
   const plannedDigests = new Map(
-    plan.artifacts.map((artifact) => [artifact.path, hashPlatformArtifactContent(artifact.content)]),
+    plan.artifacts
+      .filter((artifact) => artifact.path !== codexConfigArtifact?.path)
+      .map((artifact) => [artifact.path, hashPlatformArtifactContent(artifact.content)]),
   );
   const receiptDigests = new Map(receipt.artifacts.map((artifact) => [artifact.path, artifact.sha256]));
   const paths = [...new Set([...receiptDigests.keys(), ...plannedDigests.keys()])].sort();
@@ -94,7 +100,22 @@ export async function resolvePlatformInstallStatus(
     }),
   );
 
-  const driftedArtifacts = artifacts.filter((artifact) => artifact.matchesReceiptOnDisk === false).length;
+  let configOwnershipDrift = false;
+  if (codexConfigArtifact) {
+    try {
+      const actualConfig = await readFile(codexConfigArtifact.path, "utf8");
+      const expectedNames = listZcAgentConfigNames(codexConfigArtifact.content);
+      const actualNames = new Set(listZcAgentConfigNames(actualConfig));
+      const owned = receipt.managedCodexAgentSections ?? [];
+      configOwnershipDrift = expectedNames.some((name) => !actualNames.has(name))
+        || filterOwnedCodexAgentSections(actualConfig, owned).length !== owned.length;
+    } catch (error) {
+      if (!isRecord(error) || error.code !== "ENOENT") throw error;
+      configOwnershipDrift = true;
+    }
+  }
+  const driftedArtifacts = artifacts.filter((artifact) => artifact.matchesReceiptOnDisk === false).length
+    + Number(configOwnershipDrift);
   const missingArtifacts = artifacts.filter(
     (artifact) => artifact.receiptSha256 !== null && artifact.actualSha256 === null,
   ).length;

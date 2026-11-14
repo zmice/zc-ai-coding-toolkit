@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import type { ManagedCodexAgentDefault } from "../utils/codex-config-merge.js";
+import type { ManagedCodexAgentDefault, ManagedCodexAgentSection } from "../utils/codex-config-merge.js";
 
 export const codexAgentsReceiptSchemaVersion = 1 as const;
 export const codexAgentsReceiptFileName = "zc-toolkit-agents.install-receipt.json";
@@ -25,6 +25,7 @@ export interface CodexAgentsReceipt {
   readonly installedAt: string;
   readonly managedAgentNames: readonly string[];
   readonly managedAgentDefaults?: readonly ManagedCodexAgentDefault[];
+  readonly managedAgentSections?: readonly ManagedCodexAgentSection[];
   readonly artifacts: readonly CodexAgentsReceiptArtifact[];
 }
 
@@ -41,6 +42,7 @@ export interface CreateCodexAgentsReceiptInput {
     readonly content: string;
   }[];
   readonly managedAgentDefaults?: readonly ManagedCodexAgentDefault[];
+  readonly managedAgentSections?: readonly ManagedCodexAgentSection[];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -103,6 +105,14 @@ function isManagedCodexAgentDefault(value: unknown): value is ManagedCodexAgentD
   );
 }
 
+function isManagedCodexAgentSection(value: unknown): value is ManagedCodexAgentSection {
+  return isRecord(value)
+    && typeof value.name === "string"
+    && /^zc_[A-Za-z0-9_]+$/u.test(value.name)
+    && typeof value.sha256 === "string"
+    && /^[a-f0-9]{64}$/u.test(value.sha256);
+}
+
 function isCodexAgentsReceipt(value: unknown): value is CodexAgentsReceipt {
   if (!(
     isRecord(value)
@@ -118,6 +128,8 @@ function isCodexAgentsReceipt(value: unknown): value is CodexAgentsReceipt {
     && value.managedAgentNames.every((name) => typeof name === "string")
     && (value.managedAgentDefaults === undefined
       || (Array.isArray(value.managedAgentDefaults) && value.managedAgentDefaults.every(isManagedCodexAgentDefault)))
+    && (value.managedAgentSections === undefined
+      || (Array.isArray(value.managedAgentSections) && value.managedAgentSections.every(isManagedCodexAgentSection)))
     && Array.isArray(value.artifacts)
     && value.artifacts.every(isCodexAgentsReceiptArtifact)
   )) {
@@ -163,6 +175,7 @@ export function createCodexAgentsReceipt(
     installedAt: typeof installedAt === "string" ? installedAt : installedAt.toISOString(),
     managedAgentNames,
     managedAgentDefaults: input.managedAgentDefaults ?? [],
+    managedAgentSections: input.managedAgentSections ?? [],
     artifacts: agentArtifacts.map((artifact) => ({
       path: artifact.path,
       sha256: hashContent(artifact.content),

@@ -301,20 +301,17 @@ function renderAgentArtifact(
   asset: ToolkitAssetLike,
 ): PlatformArtifact {
   const slug = stripAssetKindPrefix(asset.id);
-  const skillRefs = asset.requires
-    ?.filter((entry) => entry.startsWith("skill:"))
-    .map((entry) => `zc-${entry.slice("skill:".length)}`);
-
   return createMarkdownAgentArtifact({
     path: `${extensionRoot}/agents/zc-${slug}.md`,
     asset,
     name: `zc-${slug}`,
     description: describeAsset(asset),
-    body:
-      asset.body ??
-      `这是由工具包资产 \`${asset.id}\` 生成的 Qwen agent，用于承接 \`zc-${slug}\` 角色能力。`,
+    body: [
+      asset.body ?? `这是由工具包资产 \`${asset.id}\` 生成的 Qwen agent，用于承接 \`zc-${slug}\` 角色能力。`,
+      "## 平台技能定位",
+      "正文的 `skill:<id>` 是 toolkit 资产标识，本扩展对应技能名为 `zc-<id>`。先核对宿主实际发现名再读取；治理依赖不会自动加载或限制技能。未发现时报告缺失并按角色降级，不声称执行了该技能。",
+    ].join("\n\n"),
     tools: asset.tools,
-    skills: skillRefs,
   });
 }
 

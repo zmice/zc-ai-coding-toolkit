@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { PlatformArtifact } from "@zmice/platform-core";
 
 import type { PlatformInstallPlanLike, PlatformInstallReceipt, PlatformInstallReceiptArtifact } from "./types.js";
+import type { ManagedCodexAgentDefault, ManagedCodexAgentSection } from "../utils/codex-config-merge.js";
 
 export const platformInstallReceiptSchemaVersion = 1 as const;
 
@@ -13,6 +14,8 @@ export interface CreatePlatformInstallReceiptOptions {
   readonly sourceRef?: string;
   readonly bundleType?: "source-bundle" | "release-bundle" | "qoder-cn-plugin";
   readonly bundlePath?: string;
+  readonly managedCodexAgentSections?: readonly ManagedCodexAgentSection[];
+  readonly managedCodexAgentDefaults?: readonly ManagedCodexAgentDefault[];
 }
 
 export function hashPlatformArtifactContent(content: string): string {
@@ -49,6 +52,14 @@ export function createPlatformInstallReceipt(
     ...(options.sourceRef ? { sourceRef: options.sourceRef } : {}),
     ...(options.bundleType ? { bundleType: options.bundleType } : {}),
     ...(options.bundlePath ? { bundlePath: options.bundlePath } : {}),
-    artifacts: plan.artifacts.map((artifact) => createPlatformInstallReceiptArtifact(artifact)),
+    ...(options.managedCodexAgentSections !== undefined
+      ? { managedCodexAgentSections: options.managedCodexAgentSections,
+        managedCodexAgentDefaults: options.managedCodexAgentDefaults ?? [] }
+      : {}),
+    artifacts: plan.artifacts
+      .filter((artifact) => options.managedCodexAgentSections === undefined
+        || plan.platform !== "codex"
+        || !/(?:^|[\\/])config\.toml$/u.test(artifact.path))
+      .map((artifact) => createPlatformInstallReceiptArtifact(artifact)),
   };
 }

@@ -61,6 +61,14 @@ function isPlatformInstallReceipt(value: unknown): value is PlatformInstallRecei
     (value.sourceRef === undefined || typeof value.sourceRef === "string") &&
     (value.bundleType === undefined || value.bundleType === "source-bundle" || value.bundleType === "release-bundle" || value.bundleType === "qoder-cn-plugin") &&
     (value.bundlePath === undefined || typeof value.bundlePath === "string") &&
+    (value.managedCodexAgentSections === undefined || (Array.isArray(value.managedCodexAgentSections)
+      && value.managedCodexAgentSections.every((entry) => isRecord(entry)
+        && typeof entry.name === "string" && /^zc_[A-Za-z0-9_]+$/u.test(entry.name)
+        && typeof entry.sha256 === "string" && /^[a-f0-9]{64}$/u.test(entry.sha256)))) &&
+    (value.managedCodexAgentDefaults === undefined || (Array.isArray(value.managedCodexAgentDefaults)
+      && value.managedCodexAgentDefaults.every((entry) => isRecord(entry)
+        && (entry.key === "default_subagent_model" || entry.key === "default_subagent_reasoning_effort")
+        && typeof entry.value === "string"))) &&
     Array.isArray(value.artifacts) &&
     value.artifacts.every((artifact) => isPlatformInstallReceiptArtifact(artifact))
   );

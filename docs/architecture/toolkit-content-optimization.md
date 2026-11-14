@@ -304,3 +304,19 @@ source:
 `openai/plugins` 已由 OpenAI 于 2026-08-16 归档，远端 HEAD 仍为 `11c74d6ba24d3a6d48f54a194cd00ef3beea18f9`。上表保留 2026-07-29 当次审阅结论，但从本次起该仓库降为历史 plugin-layout reference；当前 Codex plugin、custom agent、subagent runtime 和权限行为以官方 Plugins、Subagents、Config Reference 及实际 runtime smoke 为准。
 
 当前项目对齐状态和 Multi-agent V2 升级任务见 `references/notes/codex-multi-agent-execution-plan.md`。
+
+### 授权与评测环境复用
+
+交互规范的唯一内容源为 `packages/toolkit/src/content/skills/engineering-principles/assets/references/approval-and-environment-reuse.md`。Codex 入口、start、build、并行调度、技能评测和完成前验证引用该规范。已有任务授权不重复询问，宿主审批、系统提权和服务认证分别处理；批次由主线程统一负责交互，首次意外交互、用户取消或未确认清理即停止依赖该环境的后续执行。
+
+内部原生模型评测的当前限制：
+
+- `scripts/skill-evals-design-study.mjs` 默认只输出计划；`--prepare-only` 仅生成冻结快照副本和准备文件，返回 `needs-environment`、退出码 2，不启动 Codex、不初始化沙箱、不复制凭据。
+- `scripts/skill-evals-review-study.mjs` 默认使用 `--plan`，只校验合成案例与输出计划。
+- `scripts/skill-evals-visual-study.mjs` 的历史执行流程已退役，仅保留案例计划；不再复制认证或固定历史 commit/model 执行。
+- 三个入口的 `--execute` 当前返回 `blocked`、退出码 2。采集会话复用已实现，可信宿主权限隔离与清理验收仍缺失，不能恢复逐案例新建 home 和沙箱初始化的旧路径；`--retry-preflight` 已禁用。技能发现与采集共用环境身份检查及清理阻断标记；发现失败停止复用，重复关闭等待同一份最终清理记录。
+- `scripts/lib/codex-app-server-session.mjs` 集中管理有界 JSON-RPC、取消、交互请求拒绝、输出预算及清理证据；`reusable-eval-environment.mjs` 只复用无凭据的技能发现会话，关闭或失败即进入终态。这不是可执行模型的环境。真实宿主发现也须显式运行，默认 CI 只使用 fake server。
+- `codex-eval-capture.mjs` 的 `createCodexCaptureSession` 提供共用采集会话，`captureCodex` 作为单例包装器消费同一实现。一个进程顺序采集不同 workspace/outputDir 的 ephemeral thread，按 cwd 核实技能发现；采集结果在 close 完成清理核验后才成为最终状态。该结构经过 fake server 测试，不提供可自行声明 verified 的生产执行许可，也不解除上述 CLI 门禁。
+- 进程清理未确认时，采集器在核对 home 身份后写 `.eval-capture-cleanup-unconfirmed.json`；新会话在启动前拒绝该 home，不自动清除标记。写标记失败会在回执中明确记录 `cleanupBlockPersisted=false`，不能据此声称跨批次阻断已持久化。
+- Windows 传输关闭时先在父进程仍存活的情况下尝试清理本次拥有的进程树，再关闭 stdin；已退出、无 PID 或树清理失败仍为未确认。`ready` 和 `permissionProfile/list` 的 allowed 不能替代同档位的真实命令探针；评测执行门禁以 `trusted-runtime-validation-required` 区分已有会话复用能力和仍未完成的宿主隔离验证。
+- 本地分发、契约和采集器夹具测试继续运行；它们不证明真实模型行为改善。以后恢复原生执行时必须先补齐 runner 复用、无交互预检、失败停批及清理证据，不通过关闭沙箱来恢复。

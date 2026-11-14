@@ -28,6 +28,8 @@ If the platform cannot spawn usable Codex custom agents, the controller must say
 - `context-fanout` + `isolation=codex-temp-worktree`: host-native workers use receipt-backed OS temporary worktrees
 - `worktree-team`: tmux / multi-CLI writable workers in repository-managed worktrees, explicit user approval required
 
+`readonly-consult` 和 `context-fanout` 中的“只读”是任务指令与交付范围；若需要强制只读，controller 必须在父会话选择相应的宿主权限，并核对子任务实际权限。
+
 `worktree-team` is the heavy mode. It should not be the default for ordinary tasks.
 
 ## Run Artifacts
@@ -68,7 +70,7 @@ Current Codex runtime boundary:
 
 - current Codex releases can spawn subagents after a direct user request or an applicable `AGENTS.md` / skill instruction
 - the host owns agent-thread lifecycle, including spawn, follow-up routing, waiting, steering, interruption, status visibility, and thread closure
-- standalone `~/.codex/agents/*.toml` / `.codex/agents/*.toml` files can request model, reasoning effort, sandbox, MCP servers, and skills; omitted settings inherit through the Codex configuration chain, while the parent turn's live sandbox / approval override remains authoritative
+- standalone `~/.codex/agents/*.toml` / `.codex/agents/*.toml` files can set model and reasoning effort, and disable supported capabilities or skills; permissions, provider and MCP servers inherit from the parent. `sandbox_mode`, `approval_policy`, `model_provider` and `mcp_servers` in a custom agent file do not override the parent configuration. Read-only instructions do not create a separate read-only sandbox; set the effective permission boundary on the parent session.
 - session concurrency is runtime-configured through `[agents]`; controller content must not hardcode a universal worker count
 - the current host integration also exposes context-fork and reusable-thread controls, but their tool-level schema is Codex-specific and must stay out of the cross-platform canonical contract
 
@@ -80,14 +82,12 @@ Toolkit execution policy now maps these controls to the current Codex lifecycle:
 
 Codex dispatch does not use a universal `1-3` or `max 5` worker limit. The controller reads the current host session capacity, subtracts capacity-consuming child threads reported by that host, and fills only useful independent slots. It preserves the primary thread as controller/integrator, refills from the ready queue as agents finish, and degrades to batched or serial execution when capacity is exhausted.
 
-`zc` does not silently merge a top-level `[agents]` table into user config because the current receipt owns only `[agents.zc_*]` role registrations. Users who intentionally want a broader local ceiling can merge a reviewed setting themselves, for example:
+`zc` owns `[agents.zc_*]` role registrations and no longer emits top-level default model or effort values. When a prior receipt owns a global default and the current value still matches it, the new merge removes that key because it is absent from generated configuration. User-edited values and values without a receipt remain untouched. Other top-level settings, such as the concurrency ceiling, remain user-managed. For example:
 
 ```toml
 [agents]
 enabled = true
 max_concurrent_threads_per_session = 6
-default_subagent_model = "gpt-5.6-terra"
-default_subagent_reasoning_effort = "medium"
 interrupt_message = true
 ```
 
@@ -95,21 +95,22 @@ Six is a starting point for a host that actually exposes that capacity, not a gu
 
 ## Role Model Policy
 
-Canonical agent metadata now carries the three documented scalar custom-agent settings and the Codex renderer writes them into standalone / companion TOML:
+Canonical agent metadata now keeps role duties separate from model policy. The renderer emits no role `model` or `model_reasoning_effort`; host inheritance applies by default. A user-provided global `[agents]` default still follows host precedence and may differ from the parent task's model. The table records the remaining legacy `sandbox_mode` metadata, not effective child permissions:
 
-| Role | Model | Effort | Sandbox | Intent |
-|---|---|---|---|---|
-| `zc_architect` | `gpt-5.6-sol` | `high` | `read-only` | high-impact architecture decisions |
-| `zc_security_auditor` | `gpt-5.6-sol` | `high` | `read-only` | security and trust-boundary analysis |
-| `zc_code_reviewer` | `gpt-5.6-terra` | `high` | `read-only` | correctness and regression review |
-| `zc_performance_engineer` | `gpt-5.6-terra` | `high` | `read-only` | profiling and performance diagnosis |
-| `zc_backend_specialist` | `gpt-5.6-terra` | `medium` | `workspace-write` | bounded backend implementation |
-| `zc_frontend_specialist` | `gpt-5.6-terra` | `medium` | `workspace-write` | bounded frontend implementation |
-| `zc_test_engineer` | `gpt-5.6-terra` | `medium` | `workspace-write` | tests and coverage implementation |
-| `zc_product_owner` | `gpt-5.6-terra` | `medium` | `read-only` | scope and acceptance decisions |
-| `zc_context_steward` | `gpt-5.6-luna` | `medium` | `workspace-write` | narrow context-index maintenance |
+| Role | Generated `sandbox_mode` | Intent |
+|---|---|---|
+| `zc_architect` | `read-only` | high-impact architecture decisions |
+| `zc_security_auditor` | `read-only` | security and trust-boundary analysis |
+| `zc_code_reviewer` | `read-only` | correctness and regression review |
+| `zc_performance_engineer` | `read-only` | profiling and performance diagnosis |
+| `zc_backend_specialist` | `workspace-write` | bounded backend implementation |
+| `zc_frontend_specialist` | `workspace-write` | bounded frontend implementation |
+| `zc_test_engineer` | `workspace-write` | tests and coverage implementation |
+| `zc_product_owner` | `read-only` | scope and acceptance decisions |
+| `zc_context_steward` | `workspace-write` | narrow context-index maintenance |
+| `zc_lightweight_researcher` | `read-only` | narrow evidence gathering |
 
-All nine roles intentionally hard-pin model and reasoning effort. Those two fields have higher precedence than explicit spawn and `[agents]` defaults, so a caller cannot temporarily upgrade them through spawn alone; it must select another role or an unpinned generic worker. `sandbox_mode` is a requested role default, not an authority boundary: the parent turn's live sandbox / approval override is reapplied and actual host permissions govern every write. The scalar schema accepts model IDs without enumerating them so a future model refresh does not require a schema release. `mcp_servers` and `skills.config` need a separate nested-table design and are not generated yet.
+The generated `sandbox_mode` does not override parent permissions under the current official custom-agent contract and must not be treated as isolation. MCP servers are configured on the parent session; this renderer does not generate `mcp_servers` or `skills.config`. Existing standalone / companion role files are protected: if contents differ from the candidate and their SHA does not match the old receipt, or there is no receipt, agent writing stops and user configuration is preserved for manual merge. Neither generated surface proves that a running Codex session discovered the role or inherited a model; this source change has not been installed or runtime-verified locally.
 
 ## Temporary Worktree Lifecycle
 
@@ -170,10 +171,10 @@ Successful fan-in must leave a concise summary:
 
 1. Done: dry-run planning and run artifact schema through `zc agent plan`.
 2. Done at policy layer: native dispatch, follow-up, context injection, waiting, interruption, reusable-thread, context-fork and runtime-capacity mapping.
-3. Done: scalar role model / reasoning / sandbox metadata and Codex TOML rendering.
+3. Done in source: role model / reasoning pins removed; legacy sandbox metadata and Codex TOML rendering retained. Local installation and host runtime inheritance remain unverified.
 4. Done: Codex-only OS temporary worktree lease, cleanup gates and recovery branch policy.
 5. Next: automated host runtime behavioral smoke for named-role spawn, reuse, interrupt, nested delegation and approval failure.
 6. Next: add host thread outcomes to persistent controller artifacts and extend proximity checks to line-range / intent collisions.
-7. Deferred: nested `mcp_servers` / `skills.config` rendering and ownership-aware top-level `[agents]` config merge.
+7. Deferred: supported `skills.config` rendering and runtime verification of effective parent permissions, MCP access and role settings. New top-level `[agents]` default model/effort values are not emitted; old receipt-owned matching values are removed by merge, while user values remain user-managed.
 
 Detailed alignment status and the next upgrade backlog live in `references/notes/codex-multi-agent-execution-plan.md`.

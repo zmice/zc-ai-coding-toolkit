@@ -26,6 +26,12 @@
 - `source`
 - `requires / suggests / conflicts_with / supersedes`
 
+`requires` / `suggests` 是内容治理与推荐关系，不自动转换成宿主的技能预加载或允许列表。需要执行的 skill 须在角色正文写明适用条件，并在运行时确认可发现、读取；不可用时按角色正文的降级路径继续，记录缺少的能力和验证限制。
+
+`tools` 的平台语义必须区分：Codex 不将其序列化成工具权限；现有 Qwen、Claude 和 Qoder CN adapter 将它显式输出为角色的 `tools` 允许列表，继续保留这一兼容行为。工具名以各宿主实际识别结果为准，允许列表也不替代 sandbox / approval。不能用它推断所有平台的有效权限，或为获得更多工具自动删除用户限制。
+
+Codex 的 Markdown agent 与 companion TOML 都来自本内容源；当前 `codex_agent` 仅保留角色沙箱元数据，角色职责与模型策略分离，模型和 effort 默认继承宿主。核对入口时应分别检查实际发现名和有效指令，不把两者视为相同配置。
+
 发现元数据分成两类：
 
 - `aliases`：稳定、全局唯一、可被 `show` / `recommend` 精确解析的替代名称；每个资产最多 5 个，单项最多 64 字符
@@ -142,10 +148,10 @@ Recommendation: <action> because <specific evidence, trade-off, and rejected alt
 
 ### Agents
 
-- `lightweight-researcher`：轻量只读研究员 — 对指定范围做代码定位、文档事实核查和清单整理；Codex 使用 GPT-6 Luna/high，不承担实现或专项审计。
+- `lightweight-researcher`：轻量只读研究员 — 对指定范围做代码定位、文档事实核查和清单整理，不承担实现或专项审计。
 - `architect`：架构师 — 负责系统设计决策、技术选型评估、模块边界划分和架构权衡分析。
 - `backend-specialist`：后端工程师 — 专注服务端实现模式、中间件设计、数据访问层、错误处理和缓存策略。
-- `code-reviewer`：代码审查 — 在代码完成后进行七维度代码审查，并给出重构建议与 DX 评估。
+- `code-reviewer`：代码审查 — 在风险或独立审查收益明确时执行七维度审查，并给出重构建议与 DX 评估；不因每次代码完成自动派发。
 - `frontend-specialist`：前端工程师 — 负责生产级界面实现，或基于设计契约和渲染证据执行只读 UI/UX 审查。
 - `performance-engineer`：性能工程师 — 专注性能剖析、瓶颈定位、优化方案设计和 benchmark 验证。
 - `product-owner`：产品负责人 — 负责需求洞察、功能优先级、需求拆解和验收标准定义。

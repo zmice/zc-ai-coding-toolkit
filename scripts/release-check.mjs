@@ -5,6 +5,7 @@ import {
   parseCliArgs,
   parseGitStatus
 } from "./release-check-lib.mjs";
+import { packAndSmoke } from "./release-tarball.mjs";
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -74,7 +75,7 @@ function printPackageMatrix(root) {
 }
 
 function main() {
-  const { mode, root, skipCommands } = parseCliArgs(process.argv.slice(2));
+  const { mode, root, skipCommands, pack } = parseCliArgs(process.argv.slice(2));
   printPackageMatrix(root);
 
   if (!skipCommands) {
@@ -91,6 +92,9 @@ function main() {
   }
 
   checkGitState(root, mode);
+  if (!skipCommands || pack) {
+    packAndSmoke(root, { record: mode === "post-version" });
+  }
   console.log(`\n发布预检查通过：${mode}。`);
 }
 

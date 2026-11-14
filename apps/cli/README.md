@@ -37,11 +37,13 @@ zc platform plugin codex --status
 zc platform plugin codex --upgrade
 ```
 
-`--upgrade` 会先用 `codex plugin list --available --json` 检查启用状态：已安装插件为 disabled 或启用状态未知时停止，避免重新安装时意外启用。随后识别已配置 marketplace：Git 来源先执行 `codex plugin marketplace upgrade`，再执行 `codex plugin add` 安装当前快照；缺失来源先注册再安装；旧版 Desktop / 本地来源会事务式迁移到 Git marketplace，迁移失败时恢复原来源和旧插件。最后重新读取 installed/available 状态。`--status --json` 的 `installed`、`enabled` 可为 true、false 或 `unknown`；`updateStatus` 为 `up-to-date`、`update-available`、`unknown`、`not-installed`，`reason` 给出机器可读原因。`available: []` 只表示没有可比较的版本，不能证明已是最新。`zc` 按操作探测当前 Codex CLI 命令：旧版注册时兼容 `codex marketplace add`，缺失其他命令时会报错。
+`--upgrade` 先用 `codex plugin list --marketplace zc-toolkit --json` 检查目标插件启用状态，避免无 scope 查询触发远端全局目录；已配置的旧版本地来源仍可见。目标安装记录不可见、插件为 disabled 或启用状态未知时停止，避免重新安装时意外启用。随后识别已配置 marketplace：Git 来源先执行 `codex plugin marketplace upgrade`，再执行 `codex plugin add` 安装当前快照；只有预检仍能确认目标启用时，才补注册缺失来源；首次安装使用 `--install`；旧版 Desktop / 本地来源会事务式迁移到 Git marketplace，迁移失败时恢复原来源和旧插件。最后重新读取 installed/available 状态。`--status --json` 的 `installed`、`enabled` 可为 true、false 或 `unknown`；`updateStatus` 为 `up-to-date`、`update-available`、`installed-newer`、`unknown`、`not-installed`，`reason` 给出机器可读原因。版本相同视为匹配；版本不同时，只有双方都是三段数字稳定版本才比较方向：候选版本更高为 `update-available`，已安装版本更高为 `installed-newer`；预发布或 tag 等不可比较版本为 `unknown`，原因是 `versions-not-comparable`。`available: []` 只表示没有可比较的版本，不能证明已是最新。`zc` 按操作探测当前 Codex CLI 命令：旧版注册时兼容 `codex marketplace add`，缺失其他命令时会报错。
+
+插件记录按完整 `pluginId` 定位；同名但属于其他 marketplace 的记录不视为目标。已安装记录重复或缺少来源身份时以 `ambiguous-plugin-identity` 停止；可用目录记录重复或缺少来源身份时仅使候选版本变为 unknown，不抹去已确认的本地安装。官方 Codex CLI 子进程按操作设置时间与输出上限：查询默认 15 秒 / 8 MiB，安装与升级等变更默认 300 秒 / 16 MiB；超限时只尝试清理本次启动的进程树，并报告清理结果。候选版本更高时 `updatePending=true`；`--with-agents` 的 `overallStatus=update-pending` 表示插件更新仍待应用，不能当作 `complete`。companion 和 standalone agent 写入发生普通异常时，会恢复本次全部受管 artifacts 与 receipt；`--prune` 中的受管过期文件也纳入恢复范围。插件 lifecycle 与 companion 同步是两个事务边界，静态状态不代表新会话已应用。
 
 Windows 上通过 npm 安装的 `codex.cmd` / `qwen.cmd` 会由跨平台启动器直接解析，不需要把用户输入拼进 `cmd.exe`。Codex 全局直装回执写到 `%USERPROFILE%\.codex\platform-state\`，并兼容识别旧版本误写的 `%USERPROFILE%\.codex\.codex\platform-state\`。如果 Codex 返回了残留的本地 marketplace 记录，但删除时确认该记录已经不存在，`--upgrade` 会继续注册 Git marketplace 并完成自愈；其他删除错误仍会中断迁移。如果刷新 Git marketplace 后，已安装插件仍指向旧直装目录 `%USERPROFILE%\.codex\plugins\zc-toolkit`，`--upgrade` 会先把旧目录和 `%USERPROFILE%\.agents\plugins\marketplace.json` 中受管的旧 source 条目复制到 `%USERPROFILE%\.codex\platform-state\legacy-plugin-backups\`，保持旧 source 可读并完成官方 `plugin remove`，再精确移除残留目录与旧条目，通过官方 `plugin add` 从 Git marketplace 重新安装和同步 companion agents；替换安装失败时会恢复原目录和 marketplace，不直接删除用户资产。companion 完整性校验会把 Windows Git checkout 的 CRLF 文本归一化为 LF，发布 bundle 也通过 `.gitattributes` 固定这些文件为 LF。
 
-插件包携带 `agents/*.md` 角色说明，但 Markdown 角色不证明逐角色的模型、推理和 sandbox 配置已经生效。需要固定 `model`、`model_reasoning_effort` 或 `sandbox_mode` 时，把官方插件 lifecycle 和 standalone custom-agent companion 合并为一个流程：
+插件包携带 `agents/*.md` 角色说明；需要 standalone 角色注册时，把官方插件 lifecycle 和 custom-agent companion 合并为一个流程。角色职责与模型策略分离：当前 companion TOML 不固定 `model` 或 `model_reasoning_effort`，默认交给宿主继承；用户已有 `[agents]` 全局默认值时按宿主优先级选择，不保证等于父任务模型。companion TOML 仍生成 legacy `sandbox_mode`，但按照官方 custom-agent 契约，该字段不覆盖父会话权限；`approval_policy`、`model_provider`、`mcp_servers` 同样不能在子角色中覆盖父配置。MCP servers 应在父会话配置，角色中的“只读”指令不等于强制只读隔离：
 
 ```bash
 zc platform plugin codex --install --with-agents
@@ -50,16 +52,23 @@ zc platform plugin codex --upgrade --with-agents
 zc platform plugin codex --uninstall --with-agents
 ```
 
+当前只注册 `zc` 角色，不注入全局子 agent 默认模型或 effort。旧回执拥有且当前值仍匹配的全局默认字段，在新生成配置不含该键时移除；用户自行修改的值和无回执值保留。角色 TOML 的写入和删除须有匹配 SHA 的回执；即使磁盘内容碰巧与候选相同，无回执也不自动认领。`config.toml` 只按回执记录的注册段签名和默认字段值清理，用户自有或修改过的注册保留。旧回执没有注册段签名时，若保留的 `config_file` 仍指向待删除角色，卸载会停止并提示人工合并，避免留下悬空引用。传统 `platform install codex` 与独立 agents、插件 companion 共用这套角色所有权检查；状态为 `up-to-date` 还要求存在有效回执。
+
+本地 marketplace bundle 卸载将 bundle、选择删除的 agents、共享配置和回执纳入同一次恢复范围。开始前校验路径、文件类型与快照总量（最多 128 MiB / 5000 项）；普通失败只自动恢复能够确认由本次操作改变的目标。部分删除、配置写入未完成或外部进程修改目标时，停止自动覆盖并报告 `.zc-plugin-uninstall-*` 恢复目录；其中 `manifest.json` 记录原路径、副本编号、摘要和阶段，保留副本供人工核对，勿直接删除。成功后的备份清理失败单独报告，不再回滚已完成的卸载。此机制不等于进程崩溃恢复或官方外部 CLI 的跨进程原子事务。
+
+插件的 `start`、实现、调度与验证共同遵守 engineering-principles 的“授权与执行环境复用契约”：复用既有授权和已准备环境；首次意外确认/认证或用户要求停止弹窗时立即停止后续交互批次。批量评测不逐案例新建需提权的 Codex home，不并发发起登录，也不通过放宽权限消除弹窗。
+
 插件目录包含 `skills/` 与 `agents/`，command 通过同名 skill 提供，不再生成重复的 `commands/`。`$<skill>`（含插件 namespace）与 `zc:*` 语义保留；旧 slash 和 `source-command-*` 迁移入口不再分发。已安装缓存需在后续升级及新会话中核验。`assets/zc-agents/` 是显式运行时配置桥：`zc` 从官方 CLI 返回的 `installedPath` 或 `source.path` 精确定位插件根，再按回执写入 `~/.codex/config.toml` 和 `~/.codex/agents/`。升级仍显示 `updatePending` 时不会提前覆盖 agents；卸载只删除回执明确拥有的文件。
 
 确认标准不是只看插件已安装。运行 `zc platform plugin codex --status --with-agents --json`，应同时满足：
 
 - `overallStatus` 为 `complete`
 - `roleConfiguration.explicitRuntimeConfigSurface` 为 `standalone-custom-agent-toml`
+- `roleConfiguration.permissionBoundary` 为 `parent-session`；`roleConfiguration.runtimeVerified` 仍为 `false`，须另做新任务运行时核验
 - `agents.status` 为 `up-to-date`
 - `agents.summary.missingArtifacts` 和 `agents.summary.driftedArtifacts` 都为 `0`
 
-同步后启动一个新的 Codex 任务，让运行时重新加载 `~/.codex/agents/zc-*.toml`。
+上述状态只确认安装和受管文件同步，不证明版本最新或当前会话已加载角色。本次改动尚未安装到本机；安装同步后需启动新的 Codex 任务，核对角色发现、实际模型与 reasoning、父会话权限及子任务可用工具。
 
 `plugin` 子命令当前只支持 Codex。Codex 本地生成/开发态验证仍可使用 `zc platform plugin codex --project|--global|--dir <repo>`。其他平台使用 install 路线，可按需追加 `--global`：
 

@@ -33,6 +33,8 @@
 
 ## 原则落点
 
+涉及批量命令、隔离评测、提权或服务认证时，遵守[授权与执行环境复用契约](references/approval-and-environment-reuse.md)：复用已授权范围和已准备环境，第一次意外交互就停止后续批次；用户要求停止弹窗时不再发起新的交互。该契约是相关流程的唯一详细 owner。
+
 | 原则 | 主要落点 |
 | --- | --- |
 | 疑点优先收敛 | `spec-driven-development`、`planning-and-task-breakdown`、`debugging-and-error-recovery` |

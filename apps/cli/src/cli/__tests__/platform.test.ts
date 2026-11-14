@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EventEmitter } from "node:events";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const abs = (path: string) => resolve(path);
+const fileHash = (path: string) => createHash("sha256").update(readFileSync(path)).digest("hex");
 
 const platformMocks = vi.hoisted(() => ({
   ArtifactConflictError: class ArtifactConflictError extends Error {
@@ -21,6 +23,7 @@ const platformMocks = vi.hoisted(() => ({
   createCodexMarketplaceGenerationPlan: vi.fn(),
   createCodexInstallPlan: vi.fn(),
   createCodexAgentInstallPlan: vi.fn(),
+  withCodexTargetLock: vi.fn(),
   createCodexAgentsReceipt: vi.fn(),
   createCodexCompanionAgentInstallPlan: vi.fn(),
   createClaudeInstallPlan: vi.fn(),
@@ -66,6 +69,11 @@ const platformMocks = vi.hoisted(() => ({
   migrateQoderCnLegacyInstall: vi.fn(),
   resolveQoderCnLegacyInstallRoot: vi.fn(),
   spawn: vi.fn(),
+}));
+
+vi.mock("../../utils/codex-agent-config-transaction.js", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../../utils/codex-agent-config-transaction.js")>(),
+  withCodexTargetLock: platformMocks.withCodexTargetLock,
 }));
 
 vi.mock("../../utils/cross-platform-spawn.js", () => ({
@@ -356,6 +364,8 @@ describe("platform CLI", () => {
     platformMocks.createCodexMarketplaceGenerationPlan.mockReset();
     platformMocks.createCodexInstallPlan.mockReset();
     platformMocks.createCodexAgentInstallPlan.mockReset();
+    platformMocks.withCodexTargetLock.mockReset();
+    platformMocks.withCodexTargetLock.mockImplementation(async (_root: string, work: () => Promise<unknown>) => work());
     platformMocks.createCodexAgentsReceipt.mockReset();
     platformMocks.createCodexCompanionAgentInstallPlan.mockReset();
     platformMocks.createClaudeInstallPlan.mockReset();
@@ -1190,14 +1200,14 @@ describe("platform CLI", () => {
       mode: "plan",
       operation: "upgrade",
       commands: [
-        "codex plugin list --available --json",
+        "codex plugin list --marketplace zc-toolkit --json",
         "codex plugin marketplace list --json",
         "codex plugin marketplace upgrade zc-toolkit --json",
         "codex plugin add zc-toolkit@zc-toolkit --json",
         "codex plugin list --marketplace zc-toolkit --available --json",
       ],
       migrationCommands: [
-        "codex plugin list --available --json",
+        "codex plugin list --marketplace zc-toolkit --json",
         "codex plugin marketplace list --json",
         "codex plugin marketplace remove zc-toolkit --json",
         "codex plugin marketplace add zmice/zc-codex-marketplace --json",
@@ -1255,7 +1265,7 @@ describe("platform CLI", () => {
     expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
       ["--version"],
       ["plugin", "marketplace", "upgrade", "--help"],
-      ["plugin", "list", "--available", "--json"],
+      ["plugin", "list", "--marketplace", "zc-toolkit", "--json"],
       ["plugin", "marketplace", "list", "--json"],
       ["plugin", "marketplace", "remove", "zc-toolkit", "--json"],
       ["plugin", "marketplace", "add", "zmice/zc-codex-marketplace", "--json"],
@@ -1271,6 +1281,32 @@ describe("platform CLI", () => {
     }));
 
     logSpy.mockRestore();
+  });
+
+  it("uses the original source for rollback while redacting failed migration output", async () => {
+    const oldSource = "https://alice:private-pass@example.test/repo?token=private-token";
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.146.0\n" },
+      { code: 0, stdout: "Usage: codex plugin add\n" },
+      { code: 0, stdout: JSON.stringify({ installed: [{ pluginId: "zc-toolkit@zc-toolkit", enabled: true }], available: [] }) },
+      { code: 0, stdout: JSON.stringify({ marketplaces: [{ name: "zc-toolkit", marketplaceSource: { sourceType: "local", source: oldSource } }] }) },
+      { code: 0, stdout: "{}" },
+      { code: 1, stderr: "synthetic migration failure" },
+      { code: 0, stdout: "{}" },
+      { code: 1, stderr: "synthetic restore failure" },
+    ]);
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      await runPlatformPlugin("codex", { upgrade: true, json: true });
+      expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toContainEqual([
+        "plugin", "marketplace", "add", oldSource, "--json",
+      ]);
+      const output = errorSpy.mock.calls.map((call) => String(call[0])).join("\n");
+      expect(output).toContain("自动回滚未完整成功");
+      expect(output).not.toContain("private-pass");
+      expect(output).not.toContain("private-token");
+      expect(output).toContain("[REDACTED]");
+    } finally { errorSpy.mockRestore(); }
   });
 
   it("recovers when a stale non-Git marketplace is already absent on Windows", async () => {
@@ -1307,7 +1343,7 @@ describe("platform CLI", () => {
     expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
       ["--version"],
       ["plugin", "marketplace", "upgrade", "--help"],
-      ["plugin", "list", "--available", "--json"],
+      ["plugin", "list", "--marketplace", "zc-toolkit", "--json"],
       ["plugin", "marketplace", "list", "--json"],
       ["plugin", "marketplace", "remove", "zc-toolkit", "--json"],
       ["plugin", "marketplace", "add", "zmice/zc-codex-marketplace", "--json"],
@@ -1379,7 +1415,7 @@ describe("platform CLI", () => {
     expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
       ["--version"],
       ["plugin", "marketplace", "upgrade", "--help"],
-      ["plugin", "list", "--available", "--json"],
+      ["plugin", "list", "--marketplace", "zc-toolkit", "--json"],
       ["plugin", "marketplace", "list", "--json"],
       ["plugin", "marketplace", "add", "zmice/zc-codex-marketplace", "--json"],
       ["plugin", "add", "zc-toolkit@zc-toolkit", "--json"],
@@ -1470,7 +1506,7 @@ describe("platform CLI", () => {
     expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
       ["--version"],
       ["plugin", "marketplace", "upgrade", "--help"],
-      ["plugin", "list", "--available", "--json"],
+      ["plugin", "list", "--marketplace", "zc-toolkit", "--json"],
       ["plugin", "marketplace", "list", "--json"],
       ["plugin", "marketplace", "upgrade", "zc-toolkit", "--json"],
       ["plugin", "add", "zc-toolkit@zc-toolkit", "--json"],
@@ -1588,7 +1624,7 @@ describe("platform CLI", () => {
     expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
       ["--version"],
       ["plugin", "marketplace", "upgrade", "--help"],
-      ["plugin", "list", "--available", "--json"],
+      ["plugin", "list", "--marketplace", "zc-toolkit", "--json"],
       ["plugin", "marketplace", "list", "--json"],
       ["plugin", "marketplace", "remove", "zc-toolkit", "--json"],
       ["plugin", "marketplace", "add", "zmice/zc-codex-marketplace", "--json"],
@@ -1600,6 +1636,19 @@ describe("platform CLI", () => {
     expect(payload.error).toContain("已恢复原 local marketplace 和旧版插件");
 
     errorSpy.mockRestore();
+  });
+
+  it("redacts URL credentials from Codex marketplace plans without executing Codex", async () => {
+    const source = "https://alice:private-pass@example.test/repo?token=private-token";
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      await runPlatformPlugin("codex", { git: source, plan: true, json: true });
+      const output = logSpy.mock.calls.map((call) => String(call[0])).join("\n");
+      expect(output).not.toContain("private-pass");
+      expect(output).not.toContain("private-token");
+      expect(output).toContain("[REDACTED]");
+      expect(platformMocks.spawn).not.toHaveBeenCalled();
+    } finally { logSpy.mockRestore(); }
   });
 
   it("plans official Codex plugin removal when --git and --uninstall are combined", async () => {
@@ -1663,6 +1712,8 @@ describe("platform CLI", () => {
     ["enabled", { installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.0.0", enabled: true }], available: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.0.0" }] }, true, "up-to-date"],
     ["disabled", { installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.0.0", enabled: false }], available: [] }, false, "unknown"],
     ["newer", { installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.0.0", enabled: true }], available: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.1.0" }] }, true, "update-available"],
+    ["installed ahead", { installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.1.0", enabled: true }], available: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.0.0" }] }, true, "installed-newer"],
+    ["uncomparable", { installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.1.0-beta", enabled: true }], available: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.0.0" }] }, true, "unknown"],
     ["absent", { installed: [], available: [] }, false, "not-installed"],
   ] as const)("normalizes Codex plugin %s status", async (_case, list, enabled, updateStatus) => {
     mockCodexSpawnResults([
@@ -1674,6 +1725,55 @@ describe("platform CLI", () => {
     await runPlatformPlugin("codex", { status: true, json: true });
     const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
     expect(payload).toEqual(expect.objectContaining({ enabled, updateStatus }));
+    logSpy.mockRestore();
+  });
+
+  it("does not use a same-name plugin from another marketplace as the installed target", async () => {
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.167.0\n" },
+      { code: 0, stdout: "Usage: codex plugin list\n" },
+      { code: 0, stdout: JSON.stringify({
+        installed: [{ pluginId: "zc-toolkit@other", name: "zc-toolkit", enabled: true, version: "9.0.0" }],
+        available: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.0.0" }],
+      }) },
+    ]);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    await runPlatformPlugin("codex", { status: true, json: true });
+    expect(JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}")).toMatchObject({
+      installed: false, enabled: false, installedVersion: null, updateStatus: "not-installed",
+    });
+    logSpy.mockRestore();
+  });
+
+  it("rejects ambiguous installed plugin identities", async () => {
+    const entry = { pluginId: "zc-toolkit@zc-toolkit", name: "zc-toolkit", enabled: true, version: "1.0.0" };
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.167.0\n" },
+      { code: 0, stdout: "Usage: codex plugin list\n" },
+      { code: 0, stdout: JSON.stringify({ installed: [entry, entry], available: [entry] }) },
+    ]);
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await runPlatformPlugin("codex", { status: true, json: true });
+    expect(JSON.parse(errorSpy.mock.calls[0]?.[0] ?? "{}").error).toContain("ambiguous-plugin-identity");
+    errorSpy.mockRestore();
+  });
+
+  it.each([
+    [{ name: "zc-toolkit", version: "9.0.0" }],
+    [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.0.0" }, { pluginId: "zc-toolkit@zc-toolkit", version: "9.0.0" }],
+  ])("keeps installation status when available identities are incomplete or duplicated: %j", async (...available) => {
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.167.0\n" },
+      { code: 0, stdout: "Usage: codex plugin list\n" },
+      { code: 0, stdout: JSON.stringify({
+        installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "1.0.0", enabled: true }], available,
+      }) },
+    ]);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    await runPlatformPlugin("codex", { status: true, json: true });
+    expect(JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}")).toMatchObject({
+      installed: true, enabled: true, availableVersion: null, updateStatus: "unknown", updatePending: false,
+    });
     logSpy.mockRestore();
   });
 
@@ -1704,7 +1804,7 @@ describe("platform CLI", () => {
     expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
       ["--version"],
       ["plugin", "marketplace", "upgrade", "--help"],
-      ["plugin", "list", "--available", "--json"],
+      ["plugin", "list", "--marketplace", "zc-toolkit", "--json"],
     ]);
     errorSpy.mockRestore();
   });
@@ -1716,6 +1816,11 @@ describe("platform CLI", () => {
     ], "disabled"],
     ["missing identity", [
       { name: "zc-toolkit", enabled: true },
+    ], "无法确认"],
+    ["invisible installation or orphaned marketplace", [], "无法确认"],
+    ["duplicate identity", [
+      { pluginId: "zc-toolkit@zc-toolkit", enabled: true },
+      { pluginId: "zc-toolkit@zc-toolkit", enabled: true },
     ], "无法确认"],
   ] as const)("does not upgrade on ambiguous or disabled target: %s", async (_case, installed, reason) => {
     mockCodexSpawnResults([
@@ -1729,7 +1834,7 @@ describe("platform CLI", () => {
     expect(platformMocks.spawn.mock.calls.map((call) => call[1])).toEqual([
       ["--version"],
       ["plugin", "marketplace", "upgrade", "--help"],
-      ["plugin", "list", "--available", "--json"],
+      ["plugin", "list", "--marketplace", "zc-toolkit", "--json"],
     ]);
     errorSpy.mockRestore();
   });
@@ -1833,6 +1938,12 @@ describe("platform CLI", () => {
       roleConfiguration: {
         explicitRuntimeConfigSurface: "standalone-custom-agent-toml",
         fields: ["model", "model_reasoning_effort", "sandbox_mode"],
+        fieldsScope: "supported-serialization-fields",
+        modelResolution: "host-configuration-precedence",
+        effectiveModel: null,
+        effectiveReasoningEffort: null,
+        permissionBoundary: "parent-session",
+        runtimeVerified: false,
         requiresCompanion: true,
       },
       plugin: expect.objectContaining({
@@ -1849,6 +1960,30 @@ describe("platform CLI", () => {
     expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
 
     logSpy.mockRestore();
+  });
+
+  it("does not import global model defaults from a legacy companion bundle", async () => {
+    platformMocks.loadCodexAgentCompanion.mockResolvedValueOnce({
+      pluginId: "zc-toolkit@zc-toolkit",
+      pluginVersion: "0.6.0",
+      installedPluginPath: "/cache/zc-toolkit",
+      contentFingerprint: "companion-fingerprint",
+      configContent: '[agents]\ndefault_subagent_model = "gpt-6-sol"\ndefault_subagent_reasoning_effort = "medium"\n\n[agents.zc_code_reviewer]\nconfig_file = "agents/zc-code-reviewer.toml"\n',
+      agents: [],
+    });
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.140.0\n" },
+      { code: 0, stdout: "Usage: codex plugin add\n" },
+      { code: 0, stdout: '{"alreadyAdded":true}\n' },
+      { code: 0, stdout: '{"pluginId":"zc-toolkit@zc-toolkit","name":"zc-toolkit","version":"0.6.0","source":{"source":"local","path":"/cache/zc-toolkit"}}\n' },
+    ]);
+    vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await runPlatformPlugin("codex", { install: true, withAgents: true, json: true });
+    expect(platformMocks.createCodexCompanionAgentInstallPlan).toHaveBeenCalledWith(
+      expect.objectContaining({ configContent: '[agents.zc_code_reviewer]\nconfig_file = "agents/zc-code-reviewer.toml"\n' }),
+      expect.anything(),
+    );
   });
 
   it("installs companion agents from the exact local source path returned by Codex", async () => {
@@ -2091,6 +2226,63 @@ describe("platform CLI", () => {
     logSpy.mockRestore();
   });
 
+  it("restores all companion files when receipt persistence fails and permits retry", async () => {
+    const root = mkdtempSync(join(tmpdir(), "zc-companion-rollback-"));
+    const configPath = join(root, "config.toml");
+    const agentPath = join(root, "agents/zc-code-reviewer.toml");
+    const newPath = join(root, "agents/zc-new.toml");
+    const receiptPath = join(root, "platform-state/zc-toolkit-agents.install-receipt.json");
+    mkdirSync(join(root, "agents"), { recursive: true });
+    mkdirSync(join(root, "platform-state"), { recursive: true });
+    writeFileSync(configPath, "# original config\n");
+    writeFileSync(agentPath, "# original agent\n");
+    writeFileSync(receiptPath, "original receipt\n");
+    platformMocks.readCodexAgentsReceipt.mockResolvedValue({
+      root, scope: "global", managedAgentNames: ["zc_code_reviewer"], managedAgentDefaults: [],
+      artifacts: [{ path: agentPath, sha256: createHash("sha256").update("# original agent\n").digest("hex") }],
+    });
+    platformMocks.resolveInstallTarget.mockResolvedValue({ root, source: "official-global" });
+    platformMocks.createCodexCompanionAgentInstallPlan.mockReturnValue(createCodexAgentInstallPlan(root, [
+      { path: configPath, content: "[agents.zc_code_reviewer]\n" },
+      { path: agentPath, content: "# updated agent\n" },
+      { path: newPath, content: "# new agent\n" },
+    ], "global"));
+    platformMocks.writeArtifacts.mockImplementation(async (artifacts: Array<{ path: string; content: string }>) => {
+      for (const artifact of artifacts) writeFileSync(artifact.path, artifact.content);
+      return { created: 1, overwritten: 2, unchanged: 0, skipped: 0, dryRun: false };
+    });
+    platformMocks.writeCodexAgentsReceipt.mockImplementationOnce(async () => {
+      writeFileSync(receiptPath, "partial receipt");
+      throw new Error("injected receipt failure");
+    }).mockResolvedValue(undefined);
+    const mockInstall = () => mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.167.0\n" },
+      { code: 0, stdout: "Usage: codex plugin add\n" },
+      { code: 0, stdout: "{}" },
+      { code: 0, stdout: JSON.stringify({ pluginId: "zc-toolkit@zc-toolkit", version: "0.6.0", installedPath: "/cache/zc-toolkit" }) },
+    ]);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      mockInstall();
+      await runPlatformPlugin("codex", { install: true, withAgents: true, json: true });
+      expect(JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}")).toMatchObject({ overallStatus: "partial" });
+      expect(readFileSync(configPath, "utf8")).toBe("# original config\n");
+      expect(readFileSync(agentPath, "utf8")).toBe("# original agent\n");
+      expect(readFileSync(receiptPath, "utf8")).toBe("original receipt\n");
+      expect(existsSync(newPath)).toBe(false);
+      logSpy.mockClear();
+      process.exitCode = undefined;
+      mockInstall();
+      await runPlatformPlugin("codex", { install: true, withAgents: true, json: true });
+      expect(JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}")).toMatchObject({ overallStatus: "complete" });
+      expect(readFileSync(agentPath, "utf8")).toBe("# updated agent\n");
+      expect(readFileSync(newPath, "utf8")).toBe("# new agent\n");
+    } finally {
+      logSpy.mockRestore();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("aggregates plugin and receipt-backed companion status without writing", async () => {
     const codexRoot = mkdtempSync(join(tmpdir(), "zc-codex-status-"));
     const agentPath = join(codexRoot, "agents/zc-code-reviewer.toml");
@@ -2140,6 +2332,12 @@ describe("platform CLI", () => {
       roleConfiguration: {
         explicitRuntimeConfigSurface: "standalone-custom-agent-toml",
         fields: ["model", "model_reasoning_effort", "sandbox_mode"],
+        fieldsScope: "supported-serialization-fields",
+        modelResolution: "host-configuration-precedence",
+        effectiveModel: null,
+        effectiveReasoningEffort: null,
+        permissionBoundary: "parent-session",
+        runtimeVerified: false,
         requiresCompanion: true,
       },
       agents: expect.objectContaining({
@@ -2147,6 +2345,22 @@ describe("platform CLI", () => {
         receiptInstalled: true,
       }),
     }));
+
+    logSpy.mockClear();
+    mockCodexSpawnResults([
+      { code: 0, stdout: "codex-cli 0.167.0\n" },
+      { code: 0, stdout: "Usage: codex plugin list\n" },
+      { code: 0, stdout: JSON.stringify({
+        installed: [{ pluginId: "zc-toolkit@zc-toolkit", version: "0.6.0", enabled: true }],
+        available: [{ pluginId: "zc-toolkit@zc-toolkit", version: "0.7.0" }],
+      }) },
+    ]);
+    await runPlatformPlugin("codex", { status: true, withAgents: true, json: true });
+    expect(JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}")).toMatchObject({
+      overallStatus: "update-pending",
+      plugin: { status: "update-pending" },
+      agents: { status: "up-to-date" },
+    });
 
     for (const enabled of [false, null]) {
       logSpy.mockClear();
@@ -2200,8 +2414,12 @@ describe("platform CLI", () => {
       root: codexRoot,
       installedAt: "2026-07-28T00:00:00.000Z",
       managedAgentNames: ["zc_code_reviewer"],
+      managedAgentSections: [{
+        name: "zc_code_reviewer",
+        sha256: createHash("sha256").update('[agents.zc_code_reviewer]\nconfig_file = "agents/zc-code-reviewer.toml"').digest("hex"),
+      }],
       artifacts: [
-        { path: ownedPath, sha256: "digest", bytes: 32 },
+        { path: ownedPath, sha256: fileHash(ownedPath), bytes: 32 },
       ],
     });
     mockCodexSpawnResults([
@@ -2434,9 +2652,9 @@ describe("platform CLI", () => {
         { path: "plugins/zc-toolkit/skills/start/SKILL.md", content: "# start" },
       ],
     });
-    platformMocks.removeManagedPaths.mockResolvedValue({
-      removed: 2,
-      missing: 0,
+    platformMocks.removeManagedPaths.mockImplementation(async (paths: string[]) => {
+      for (const path of paths) rmSync(path, { recursive: true, force: true });
+      return { removed: 2, missing: 0 };
     });
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -2525,9 +2743,9 @@ describe("platform CLI", () => {
         { path: "plugins/zc-toolkit/skills/start/SKILL.md", content: "# start" },
       ],
     });
-    platformMocks.removeManagedPaths.mockResolvedValue({
-      removed: 3,
-      missing: 0,
+    platformMocks.removeManagedPaths.mockImplementation(async (paths: string[]) => {
+      for (const path of paths) rmSync(path, { recursive: true, force: true });
+      return { removed: 3, missing: 0 };
     });
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -2538,12 +2756,12 @@ describe("platform CLI", () => {
       json: true,
     });
 
-    expect(platformMocks.removeManagedPaths).toHaveBeenCalledWith([
+    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+    expect(platformMocks.removeManagedPaths, JSON.stringify(payload)).toHaveBeenCalledWith([
       join(projectRoot, ".agents/plugins/marketplace.json"),
       join(projectRoot, "AGENTS.md"),
       join(projectRoot, "plugins/zc-toolkit"),
     ]);
-    const payload = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
     expect(payload).toEqual(expect.objectContaining({
       skipped: [],
       force: true,
@@ -2669,7 +2887,15 @@ describe("platform CLI", () => {
       root: projectRoot,
       scope: "dir",
       managedAgentNames: ["zc_code_reviewer"],
-      artifacts: [{ path: ownedAgentPath }],
+      managedAgentSections: [{
+        name: "zc_code_reviewer",
+        sha256: createHash("sha256").update('[agents.zc_code_reviewer]\nconfig_file = "agents/zc-code-reviewer.toml"').digest("hex"),
+      }],
+      artifacts: [{ path: ownedAgentPath, sha256: fileHash(ownedAgentPath) }],
+    });
+    platformMocks.removeManagedPaths.mockImplementation(async (paths: string[]) => {
+      for (const path of paths) rmSync(path, { recursive: true, force: true });
+      return { removed: paths.length, missing: 0 };
     });
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -2699,6 +2925,57 @@ describe("platform CLI", () => {
     );
 
     logSpy.mockRestore();
+  });
+
+  it("restores the local marketplace bundle, agents, config, and receipt when receipt deletion fails", async () => {
+    const root = mkdtempSync(join(tmpdir(), "zc-plugin-rollback-"));
+    const marketplacePath = join(root, ".agents/plugins/marketplace.json");
+    const entryPath = join(root, "AGENTS.md");
+    const pluginManifest = join(root, "plugins/zc-toolkit/.codex-plugin/plugin.json");
+    const rolePath = join(root, "agents/zc-code-reviewer.toml");
+    const configPath = join(root, "config.toml");
+    const receiptPath = join(root, "platform-state/zc-toolkit-agents.install-receipt.json");
+    for (const path of [marketplacePath, pluginManifest, rolePath, receiptPath]) mkdirSync(join(path, ".."), { recursive: true });
+    writeFileSync(marketplacePath, "{}");
+    writeFileSync(entryPath, "# plugin entry");
+    writeFileSync(pluginManifest, "{}");
+    writeFileSync(rolePath, 'name = "zc_code_reviewer"\n');
+    const configContent = '[agents.zc_code_reviewer]\nconfig_file = "agents/zc-code-reviewer.toml"\n';
+    writeFileSync(configPath, configContent);
+    writeFileSync(receiptPath, "receipt");
+    platformMocks.createCodexMarketplaceGenerationPlan.mockReturnValue({
+      platform: "codex", packageName: "@zmice/platform-codex", manifestSource: "/repo/toolkit",
+      matchedAssets: [], artifacts: [
+        { path: ".agents/plugins/marketplace.json", content: "{}" },
+        { path: "AGENTS.md", content: "# plugin entry" },
+        { path: "plugins/zc-toolkit/.codex-plugin/plugin.json", content: "{}" },
+      ],
+    });
+    platformMocks.readCodexAgentsReceipt.mockResolvedValue({
+      schemaVersion: 1, root, scope: "dir", managedAgentNames: ["zc_code_reviewer"],
+      managedAgentSections: [{ name: "zc_code_reviewer", sha256: createHash("sha256").update(configContent.trim()).digest("hex") }],
+      artifacts: [{ path: rolePath, sha256: fileHash(rolePath) }],
+    });
+    platformMocks.removeManagedPaths.mockImplementation(async (paths: string[]) => {
+      for (const path of paths) rmSync(path, { recursive: true, force: true });
+      return { removed: paths.length, missing: 0 };
+    });
+    platformMocks.deleteCodexAgentsReceipt.mockImplementationOnce(async () => { throw new Error("receipt deletion failed"); });
+    const planSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    await runPlatformPlugin("codex", { dir: root, uninstall: true, includeAgents: true, plan: true, json: true });
+    planSpy.mockRestore();
+    expect(readFileSync(configPath, "utf8")).toBe(configContent);
+    expect(existsSync(pluginManifest)).toBe(true);
+    expect(existsSync(receiptPath)).toBe(true);
+    expect(readdirSync(root).some((name) => name.startsWith(".zc-plugin-uninstall-"))).toBe(false);
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await runPlatformPlugin("codex", {
+      dir: root, uninstall: true, includeAgents: true, json: true,
+    });
+    expect(errorSpy.mock.calls.map((call) => String(call[0])).join("\n")).toContain("receipt deletion failed");
+    errorSpy.mockRestore();
+    for (const path of [marketplacePath, entryPath, pluginManifest, rolePath, receiptPath]) expect(existsSync(path)).toBe(true);
+    expect(readFileSync(configPath, "utf8")).toBe(configContent);
   });
 
   it("prints a Codex custom agents sync plan without writing files", async () => {
@@ -2758,6 +3035,13 @@ describe("platform CLI", () => {
       operation: "sync",
       target: "codex",
       artifactCount: 2,
+      roleConfiguration: expect.objectContaining({
+        modelResolution: "host-configuration-precedence",
+        effectiveModel: null,
+        effectiveReasoningEffort: null,
+        runtimeVerified: false,
+        requiresCompanion: false,
+      }),
     }));
 
     logSpy.mockRestore();
@@ -2814,6 +3098,55 @@ describe("platform CLI", () => {
     logSpy.mockRestore();
   });
 
+  it("treats matching unowned agents as unowned and preserves custom registration on uninstall", async () => {
+    const root = mkdtempSync(join(tmpdir(), "zc-unowned-agent-"));
+    const configPath = join(root, "config.toml");
+    const rolePath = join(root, "agents", "zc-code-reviewer.toml");
+    mkdirSync(join(root, "agents"));
+    const customConfig = '[agents.zc_code_reviewer]\nconfig_file = "my-custom-reviewer.toml"\n';
+    writeFileSync(configPath, customConfig);
+    writeFileSync(rolePath, 'name = "zc_code_reviewer"\n');
+    platformMocks.resolveInstallTarget.mockResolvedValue({ root, source: "explicit" });
+    platformMocks.createCodexAgentInstallPlan.mockReturnValue(createCodexAgentInstallPlan(root, [
+      { path: configPath, content: '[agents.zc_code_reviewer]\nconfig_file = "agents/zc-code-reviewer.toml"\n' },
+      { path: rolePath, content: 'name = "zc_code_reviewer"\n' },
+    ], "global"));
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      await runPlatformAgents("codex", { global: true, status: true, json: true });
+      const status = JSON.parse(logSpy.mock.calls[0]?.[0] ?? "{}");
+      expect(status.status).toBe("needs-attention");
+      expect(status.receiptInstalled).toBe(false);
+      logSpy.mockClear();
+      await runPlatformAgents("codex", { global: true, uninstall: true, json: true });
+      expect(platformMocks.removeManagedPaths).toHaveBeenCalledWith([]);
+      expect(readFileSync(configPath, "utf8")).toBe(customConfig);
+      expect(readFileSync(rolePath, "utf8")).toBe('name = "zc_code_reviewer"\n');
+    } finally {
+      logSpy.mockRestore();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("uses one config lock for direct project install and standalone dir sync", async () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), "zc-project-lock-"));
+    const codexRoot = join(projectRoot, ".codex");
+    platformMocks.resolveInstallTarget.mockImplementation(async (_target: string, opts: { dir?: string }) => ({
+      root: opts.dir ?? projectRoot, source: "explicit",
+    }));
+    platformMocks.createCodexInstallPlan.mockReturnValue(createInstallPlan("codex", projectRoot, []));
+    platformMocks.createCodexAgentInstallPlan.mockReturnValue(createCodexAgentInstallPlan(codexRoot, [], "dir"));
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      await runPlatformInstall("codex", { project: true });
+      await runPlatformAgents("codex", { dir: codexRoot, sync: true });
+      expect(platformMocks.withCodexTargetLock.mock.calls.map((call) => call[0])).toEqual([codexRoot, codexRoot]);
+    } finally {
+      logSpy.mockRestore();
+      rmSync(projectRoot, { recursive: true, force: true });
+    }
+  });
+
   it("prunes only receipt-owned stale Codex agents and preserves untracked files", async () => {
     const codexRoot = mkdtempSync(join(tmpdir(), "zc-codex-agents-"));
     const agentsDir = join(codexRoot, "agents");
@@ -2841,8 +3174,8 @@ describe("platform CLI", () => {
     platformMocks.readCodexAgentsReceipt.mockResolvedValue({
       schemaVersion: 1,
       artifacts: [
-        { path: currentPath },
-        { path: staleOwnedPath },
+        { path: currentPath, sha256: fileHash(currentPath) },
+        { path: staleOwnedPath, sha256: fileHash(staleOwnedPath) },
       ],
     });
     platformMocks.writeArtifacts.mockResolvedValue({
@@ -2868,6 +3201,42 @@ describe("platform CLI", () => {
     expect(platformMocks.writeCodexAgentsReceipt).toHaveBeenCalledTimes(1);
 
     logSpy.mockRestore();
+  });
+
+  it.each(["sync", "prune", "uninstall", "plugin-uninstall"])("preserves edited role configuration before %s writes or deletes", async (operation) => {
+    const root = mkdtempSync(join(tmpdir(), "zc-user-model-"));
+    const path = join(root, "agents/zc-code-reviewer.toml");
+    const configPath = join(root, "config.toml");
+    mkdirSync(join(root, "agents"));
+    const original = 'name = "zc_code_reviewer"\nmodel = "old-default"\n';
+    const custom = original.replace("old-default", "user-choice");
+    writeFileSync(path, custom);
+    writeFileSync(configPath, "# keep configuration\n");
+    platformMocks.resolveInstallTarget.mockResolvedValue({ root, source: "official-global" });
+    platformMocks.readCodexAgentsReceipt.mockResolvedValue({
+      root, scope: "global", managedAgentNames: ["zc_code_reviewer"],
+      artifacts: [{ path, sha256: createHash("sha256").update(original).digest("hex") }],
+    });
+    platformMocks.createCodexAgentInstallPlan.mockReturnValue(createCodexAgentInstallPlan(root, [
+      { path: configPath, content: "[agents.zc_code_reviewer]\n" },
+      ...(operation === "prune" ? [] : [{ path, content: 'name = "zc_code_reviewer"\n' }]),
+    ], "global"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      if (operation === "plugin-uninstall") {
+        await runPlatformPlugin("codex", { withAgents: true, uninstall: true, json: true });
+      } else {
+        await runPlatformAgents("codex", { global: true, sync: operation !== "uninstall", prune: operation === "prune", uninstall: operation === "uninstall", json: true });
+      }
+      expect(process.exitCode).toBe(1);
+      expect(platformMocks.spawn).not.toHaveBeenCalled();
+      expect(platformMocks.writeArtifacts).not.toHaveBeenCalled();
+      expect(platformMocks.removeManagedPaths).not.toHaveBeenCalled();
+      expect(platformMocks.writeCodexAgentsReceipt).not.toHaveBeenCalled();
+      expect(platformMocks.deleteCodexAgentsReceipt).not.toHaveBeenCalled();
+      expect(readFileSync(path, "utf8")).toBe(custom);
+      expect(readFileSync(configPath, "utf8")).toBe("# keep configuration\n");
+    } finally { rmSync(root, { recursive: true, force: true }); }
   });
 
   it("uses safe overwrite defaults for platform install and writes a receipt", async () => {
@@ -3005,7 +3374,7 @@ describe("platform CLI", () => {
     writeFileSync(stalePath, 'name = "zc_old_reviewer"\n');
     const receiptPath = join(codexRoot, "platform-state/zc-toolkit-agents.install-receipt.json");
     mkdirSync(join(codexRoot, "platform-state"));
-    const oldReceipt = { schemaVersion: 1, artifacts: [{ path: stalePath }] };
+    const oldReceipt = { schemaVersion: 1, artifacts: [{ path: stalePath, sha256: fileHash(stalePath) }] };
     writeFileSync(receiptPath, JSON.stringify(oldReceipt));
     platformMocks.resolveInstallTarget.mockResolvedValue({ root: codexRoot, source: "official-global" });
     platformMocks.createCodexAgentInstallPlan.mockReturnValue(createCodexAgentInstallPlan(

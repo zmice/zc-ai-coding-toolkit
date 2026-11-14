@@ -67,6 +67,7 @@ describe("@zmice/platform-claude scaffold", () => {
     assert.ok(plan.artifacts[0]?.content.includes("未生成的 skill 资产：1 个"));
     assert.ok(plan.artifacts[1]?.content.includes('name: "zc-start"'));
     assert.ok(plan.artifacts[2]?.content.includes('tools:'));
+    assert.match(plan.artifacts[2]?.content ?? "", /本适配器未分发 skill[\s\S]*不声称执行/);
   });
 
   it("creates a project-scoped install plan with .claude directories", () => {
