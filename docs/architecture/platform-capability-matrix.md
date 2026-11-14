@@ -35,8 +35,8 @@
   - plugin 优先交给官方 `codex plugin add/list/remove` 与 `codex plugin marketplace add/list/upgrade/remove`
   - 插件目录可携带 `skills/`、`commands/`、`agents/`、`hooks.json`、MCP servers/connectors 和安装面元数据
   - `.codex-plugin/plugin.json` 提供稳定身份；agent / command 文件可按官方示例作为同级自动发现 surface，不要求虚构 manifest 字段
-  - 当前官方 Subagents 文档以 `.codex/agents/*.toml` 和 `[agents]` 作为 custom agent 配置面，支持 model、reasoning、sandbox、MCP、skills 和并发控制
-  - `zc --with-agents` 的 receipt-backed companion 承担已安装插件与 standalone custom-agent 显式 session settings 之间的桥接；不能在官方为插件 Markdown agent 提供同等配置契约前删除
+  - 当前官方 Subagents 文档以 `.codex/agents/*.toml` 和 `[agents]` 作为 custom agent 配置面；custom agent 可设置 model / reasoning 并关闭受支持的能力或技能，`[agents]` 管理默认值和并发。权限、provider 和 MCP servers 继承父会话，custom agent 文件中的 `sandbox_mode`、`approval_policy`、`model_provider`、`mcp_servers` 不覆盖父配置
+  - `zc --with-agents` 的 receipt-backed companion 承担已安装插件与 standalone custom-agent 角色注册之间的桥接；当前不固定模型或 effort，不能在官方为插件 Markdown agent 提供同等配置契约前删除
 
 ### 2. Entry File + Native Directories
 
@@ -89,8 +89,8 @@
 - plugin manifest 可声明 `skills`、`mcpServers`、兼容 `apps` 和 `interface`；commands / agents / hooks 作为插件目录 surface
 - 插件支持面是 ChatGPT Work web、ChatGPT/Codex desktop 和 Codex CLI；不包括 IDE extension、Chat、mobile
 - 当前 Codex releases 默认启用 subagent workflow，可由用户请求或 `AGENTS.md` / skill 指令触发，并在 Desktop、CLI 和 IDE 中显示 agent threads
-- standalone custom agent 支持 `model`、`model_reasoning_effort`、`sandbox_mode`、`mcp_servers` 和 `skills.config`；model / reasoning 可形成 role hard pin，sandbox 仍受 parent turn live override 约束；`[agents]` 提供动态并发、默认模型和 interrupt 配置
-- plugin-level Markdown agents 随插件目录分发，但当前不作为 `model`、`model_reasoning_effort`、`sandbox_mode` 的配置面；standalone TOML roles 与 `[agents.*] config_file` 负责显式配置和 companion 同步
+- standalone custom agent 的 `model` / `model_reasoning_effort` 可形成 role hard pin，但本工具包当前不生成这两个字段；`skills.config` 可关闭技能。权限、provider、MCP servers 从父会话继承，角色中的只读指令不创建独立只读沙箱；`[agents]` 提供并发、默认模型和 interrupt 配置。已有用户全局默认值按宿主优先级生效，不能保证子任务模型等于父任务模型
+- plugin-level Markdown agents 随插件目录分发，提供角色说明；standalone TOML roles 与 `[agents.*] config_file` 提供角色注册和 companion 同步。两种安装面均需经新任务验证角色发现与有效设置，不能仅凭文件存在宣称运行时生效
 - `zc-toolkit` 保留带哈希的 companion payload，并用结构化 status 区分“插件已安装”和“逐角色配置已同步”
 
 来源：
@@ -196,9 +196,17 @@
 
 ## 当前目标覆盖面
 
+### 治理关系与运行时字段
+
+`requires` / `suggests` 只表达 toolkit 关系，不生成宿主的 skill 预加载或允许列表。Qoder CN 和 Qwen adapter 已移除 `requires -> skills` 的旧转换；角色按正文条件发现技能。`tools` 保留现有平台差异：Qwen、Claude 和 Qoder CN 将其作为角色工具允许列表输出，Codex 不按此字段授权。生成文件中的允许列表不代替宿主 sandbox / approval，也不证明工具名在已安装版本中有效。
+
+依据：[Qoder Subagent](https://docs.qoder.com/cli/subagent)、[Qwen Subagents](https://github.com/QwenLM/qwen-code/blob/main/docs/users/features/sub-agents.md)、[Claude Subagents](https://code.claude.com/docs/en/sub-agents)（2026-11-15 核对）。Qoder 的 `skills` 有限制技能范围的语义；因此不能用前端实现依赖排除该角色的 UI 审查分流。现有工具允许列表没有在本轮被移除或放宽。
+
+Codex 角色显式映射 standalone `zc-<id>` 与 plugin `<pluginName>:<id>`，实际调用仍以发现列表为准。Claude 角色显式报告本 adapter 尚未分发技能并给出降级规则；不以角色正文引用技能代替安装能力。
+
 | 平台 | 目标实现 | 覆盖评价 |
 | --- | --- | --- |
-| Codex | 项目级传统安装仍支持 `AGENTS.md` + `.codex/config.toml` + skills + agents；推荐分发使用 Git marketplace plugin。插件包携带 skills / agents，command 保留同名 skill 与 `zc:*` 语义；receipt-backed companion 同步 standalone TOML roles；toolkit 已映射 native lifecycle、context fork、runtime capacity、thread reuse 和 Codex temp-worktree policy | 新包不再提供旧 slash / `source-command-*` 入口；已安装缓存去重需升级后验证；host runtime 自动 smoke、MCP/skills nested config 和全局 `[agents]` 所有权合并待补 |
+| Codex | 项目级传统安装仍支持 `AGENTS.md` + `.codex/config.toml` + skills + agents；推荐分发使用 Git marketplace plugin。插件包携带 skills / agents，command 保留同名 skill 与 `zc:*` 语义；receipt-backed companion 同步 standalone TOML roles；toolkit 已映射 native lifecycle、context fork、runtime capacity、thread reuse 和 Codex temp-worktree policy | 新包不再提供旧 slash / `source-command-*` 入口；已安装缓存去重需升级后验证；host runtime 自动 smoke 和受支持的 skills nested config 待补。新配置不写顶层默认模型/effort，旧回执拥有且当前值相同的字段会移除，用户改值或无回执值保留；角色 `sandbox_mode` 不构成权限隔离 |
 | Claude Code | `CLAUDE.md` + `commands/zc-*.md` + `agents/zc-*.md`；不覆盖 `enterprise policy`、`CLAUDE.local.md`、`@imports` 目标文件 | 目录化原生安装 |
 | Qwen | 优先通过官方 `qwen extensions` CLI 管理 `zc-toolkit` 的发布态 extension bundle；扩展内容为 `.qwen/extensions/zc-toolkit/` 下的 `QWEN.md` + `qwen-extension.json` + `commands` + `skills` + `agents` | extension 原生安装 |
 | OpenCode | `AGENTS.md` + `.opencode/commands/zc-*.md` + `.opencode/skills/zc-*/SKILL.md` + `.opencode/agents/zc-*.md` + 全局对应目录 | 目录化原生安装 |
@@ -208,7 +216,7 @@
 
 当前阶段结论：
 
-- `Codex`：plugin lifecycle、九个角色、companion、role model/reasoning/sandbox 渲染、native lifecycle policy 和 OS 临时 worktree manager 已具备；下一门禁是可重复的 host runtime behavioral smoke 与复杂 nested config
+- `Codex`：plugin lifecycle、十个角色、companion、legacy `sandbox_mode` 渲染、native lifecycle policy 和 OS 临时 worktree manager 已具备；角色模型与 effort 默认继承宿主。现有角色文件 SHA 不匹配旧回执或无回执时停止写入，内容相同也不自动认领。共享 config 按注入注册段签名管理，普通用户配置变更不等于受管内容漂移；卸载不制造悬空角色引用。下一门禁是可重复的 host runtime behavioral smoke 与受支持的 skills nested config；本次源码变更尚未安装，不证明本机会话已继承或子任务隔离已生效
 - `Claude Code`：走官方目录结构，不做插件抽象
 - `Qwen`：走官方 extension 生命周期
 - `OpenCode`：走官方目录结构，覆盖 `AGENTS.md + commands + skills + agents`

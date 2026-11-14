@@ -27,6 +27,7 @@
 - 发布前必须先跑 `pnpm verify`。
 - 发布前必须先确认 `pnpm changeset status` 只包含 `@zmice/zc`。
 - `zc` 的发布必须包含最新 vendored 运行时产物。
+- CLI 构建完成后写入 `.cache/release/zc-build-receipt.json`，绑定构建前后的源码、HEAD 与产物摘要；发布门禁只对匹配该回执的产物离线打出真实 npm tarball，解包到独立临时目录执行 smoke，并记录 tarball SHA-256。`pnpm release` 只发布该已验证 tarball。源码或版本变化后重新构建并运行 `pnpm release:check:post-version`。
 - `post-version` 阶段不再运行 `changeset status`，因为 changeset 已被 `changeset version` 正常消费。
 
 ## 标准命令
@@ -54,12 +55,14 @@
 1. 确认当前 changeset 只包含 `@zmice/zc`。
 2. 运行 `pnpm release:check`。
 3. 运行 `pnpm changeset version`。
-4. 运行 `pnpm install`。
-5. 运行 `pnpm release:check:post-version`。
-6. 运行 `pnpm verify`，确认 `zc` build 后携带的 vendored 运行时正常。
-7. 审阅 `apps/cli/package.json`、`pnpm-lock.yaml` 和 changeset 消耗后的 `.changeset/*.md` 变化。
-8. 运行 `pnpm release`。
+4. 运行 `pnpm install`，审阅版本文件、lockfile 和已消费的 changeset，并提交版本变更。
+5. 在提交后的 HEAD 运行 `pnpm release:check:post-version`。
+6. 审阅 `.cache/release/zc-release-receipt.json` 的版本、HEAD、源码摘要、tarball 路径和摘要；`post-version` 门禁已运行 `pnpm verify` 与真实 tarball smoke。
+7. 确认发布输入无未提交更改；如有新更改，提交后重跑 `post-version` 门禁。
+8. 运行 `pnpm release`，它在发布前校验 HEAD、已提交版本、工作区发布输入和 tarball 摘要，然后发布同一 tarball，并把本地 `@zmice/zc@<version>` tag 指向回执记录的 HEAD。
 9. 推送 tag 后，检查 GitHub Release 是否已生成，并确认 Qwen bundle 附件、`zc-codex-marketplace` 和 `zc-qwen-extension` 同步成功。
+
+真实 tarball smoke 会从打包产物启动 CLI，在隔离目录实际运行 Codex 文件系统安装、更新和卸载，检查生成角色不固定模型、用户配置保留、角色被用户修改后拒绝更新/卸载且不写其他文件，以及本地 marketplace 的漂移保留和显式强制卸载。回执的 `codexLifecycle` 记录这层结果；整个过程不启动 Codex 宿主或模型，也不能替代插件市场在线安装及实际会话验收。
 
 ## 失败处理
 
@@ -89,6 +92,6 @@
 - 确认 `zc platform plugin codex --git --json` 输出的默认源仍是 `zmice/zc-codex-marketplace`。
 - 确认 `zc platform plugin codex --global --uninstall --plan --json` 能输出本地 plugin bundle 卸载计划，且默认不删除 custom agents。
 - 确认 `zc platform agents codex --global --status --json` 能识别当前 custom agents 状态；如有过期 zc agent，运行 `zc platform agents codex --global --sync --prune`。
-- 确认 Codex plugin `agents/*.md` 不输出未文档化的 session settings；确认 companion TOML 保留角色清单中的 `model`、`model_reasoning_effort` 与 `sandbox_mode`。
-- 确认 `zc platform plugin codex --status --with-agents --json` 返回 `roleConfiguration.explicitRuntimeConfigSurface=standalone-custom-agent-toml`；运行态门禁为 `overallStatus=complete`、`agents.status=up-to-date` 且 missing / drifted artifacts 都为 `0`。
+- 确认 Codex plugin `agents/*.md` 不输出未文档化的 session settings；companion TOML 保留 `sandbox_mode`，未固定 `model` 或 `model_reasoning_effort`，模型与 effort 遵循宿主配置优先级。
+- 确认 `zc platform plugin codex --status --with-agents --json` 返回 `roleConfiguration.explicitRuntimeConfigSurface=standalone-custom-agent-toml`；安装状态检查要求 `overallStatus=complete`、`agents.status=up-to-date` 且 missing / drifted artifacts 都为 `0`。这些静态状态不等于当前会话已加载；实际模型、权限与技能仍需新会话证据。
 - 确认 `zc agent worktree prepare|cleanup|recover` 默认 dry-run，实际目录位于 OS temp 的 `zc-codex-worktrees/`，并且 cleanup 后没有遗留 worktree、恢复 ref 或空临时目录。

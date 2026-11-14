@@ -17,6 +17,10 @@
 - 不感知具体 upstream 治理逻辑
 - 只定义平台包共享的生成/安装语义
 
+Qoder CN 角色生成不再将 toolkit 的 `requires` 转为 `skills` frontmatter。官方将 `skills` 定义为允许使用的技能范围，不能用治理依赖限制角色的条件分流；例如前端角色还需要按任务读取 UI 审查技能。现有 `tools` 允许列表继续保留。通用 Markdown renderer 仍支持调用方显式传入运行时 `tools` / `skills`，但资产治理关系不隐式赋予这类语义。
+
+字段依据：[Qoder 官方 Subagent 文档](https://docs.qoder.com/cli/subagent)。Qoder CN 安装版本的真实发现和执行需另行验证。
+
 ## 适用场景
 
 当你在处理下面这些问题时，应优先看这个包：

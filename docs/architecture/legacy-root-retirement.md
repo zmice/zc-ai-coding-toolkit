@@ -54,6 +54,11 @@ The retirement is now complete:
 3. legacy root files and directories have been removed
 4. remaining historical context lives in git history and `references/`
 
+The one-time `scripts/import-legacy-root-to-toolkit.mjs` importer has also been
+removed. It depended on the retired root inputs and reset the canonical target
+directories; it must not be used to refresh current toolkit content. Historical
+migration recipes remain in Git history, not as executable maintenance commands.
+
 The only intentional root reintroduction is the thin `AGENTS.md` context entry for agent setup.
 
 ## Governance Cleanup
