@@ -81,7 +81,9 @@ async function cleanupQuietly(path) {
 }
 
 async function main() {
-  await import("./ensure-internal-builds.mjs");
+  if (!process.argv.includes("--built")) {
+    await import("./ensure-internal-builds.mjs");
+  }
   await mkdir(tmpRoot, { recursive: true });
 
   for (const entry of copyEntries) {

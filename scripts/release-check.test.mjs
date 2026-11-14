@@ -8,6 +8,7 @@ import {
   classifyDirtyPaths,
   findUnexpectedDirtyPaths,
   loadPublishablePackages,
+  parseCliArgs,
   parseGitStatus
 } from "./release-check-lib.mjs";
 
@@ -20,6 +21,12 @@ const fixturePackages = [
   ["packages/platform-claude/package.json", { name: "@zmice/platform-claude", version: "0.1.0", private: true }],
   ["packages/platform-opencode/package.json", { name: "@zmice/platform-opencode", version: "0.1.0", private: true }]
 ];
+
+test("release check can pack after a separately completed verify", () => {
+  const args = parseCliArgs(["pre-version", "--skip-commands", "--pack"]);
+  assert.equal(args.skipCommands, true);
+  assert.equal(args.pack, true);
+});
 
 function writeFixtureFile(root, relativePath, content) {
   mkdirSync(join(root, relativePath, ".."), { recursive: true });

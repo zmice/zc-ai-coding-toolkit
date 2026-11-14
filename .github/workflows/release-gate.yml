@@ -37,4 +37,13 @@ jobs:
         run: pnpm changeset status
 
       - name: Run release preflight
-        run: node scripts/release-check.mjs pre-version --skip-commands
+        run: node scripts/release-check.mjs pre-version --skip-commands --pack
+
+      - name: Upload verified npm tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: zc-verified-tarball
+          path: |
+            .cache/release/*.tgz
+            .cache/release/*.tgz.sha256
+          if-no-files-found: error

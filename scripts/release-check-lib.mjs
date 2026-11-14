@@ -12,12 +12,13 @@ export function parseCliArgs(argv) {
   const [mode, ...rest] = argv;
   if (!mode || !["pre-version", "post-version"].includes(mode)) {
     throw new Error(
-      "Usage: node scripts/release-check.mjs <pre-version|post-version> [--root <dir>] [--skip-commands]"
+      "Usage: node scripts/release-check.mjs <pre-version|post-version> [--root <dir>] [--skip-commands] [--pack]"
     );
   }
 
   let root = process.cwd();
   let skipCommands = false;
+  let pack = false;
 
   for (let index = 0; index < rest.length; index += 1) {
     const arg = rest[index];
@@ -31,11 +32,15 @@ export function parseCliArgs(argv) {
       skipCommands = true;
       continue;
     }
+    if (arg === "--pack") {
+      pack = true;
+      continue;
+    }
 
     throw new Error(`Unknown argument: ${arg}`);
   }
 
-  return { mode, root, skipCommands };
+  return { mode, root, skipCommands, pack };
 }
 
 export function parseGitStatus(stdout) {
